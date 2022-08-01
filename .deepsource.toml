@@ -56,3 +56,4 @@ enabled = true
 
   [analyzers.meta]
   import_root = "github.com/kube-tarian/integrator"
+  dependencies_vendored = true
