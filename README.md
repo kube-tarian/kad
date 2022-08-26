@@ -1,4 +1,4 @@
-<p align="center"><img src="integrator-logo1.png" width="300"></p>
+<p align="center"><img src="kad-logo1.png" width="300"></p>
 <p align="center"><b>Extensible open-source framework that Integrates & Scales your DevSecOps and MLOps stacks as you need</b></p>
 
 # Kad 
