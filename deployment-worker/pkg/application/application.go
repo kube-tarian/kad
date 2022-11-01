@@ -20,7 +20,7 @@ const (
 )
 
 type Configuration struct {
-	Port int `envconfig:"PORT" default:"8080"`
+	Port int `envconfig:"PORT" default:"9080"`
 }
 
 type Application struct {

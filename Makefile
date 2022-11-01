@@ -21,11 +21,12 @@ oapi-gen-deployment-worker:
 	${GOBIN}/oapi-codegen -config ./${APP_NAME}/cfg.yaml ./${APP_NAME}/openapi.yaml
 
 start-docker-compose-test:
-	docker compose -f ./docker-compose-mysql-es.yaml up -d --no-recreate
-	go test -timeout 120s -run ^Test* github.com/kube-tarian/container-bridge/integration_tests -v
+	docker compose -f ./docker-compose-mysql-es.yml up -d --no-recreate
+	sleep 20
+	go test -timeout 120s -run ^TestIntegration* github.com/kube-tarian/kad/deployment-worker/integration_tests -v
 
 stop-docker-compose-test:
-	docker compose -f ./docker-compose-mysql-es.yaml down -v
+	docker compose -f ./docker-compose-mysql-es.yml down -v
 
 build:
 	go mod download
@@ -38,7 +39,7 @@ docker-build:
 	docker build -f dockerfiles/deployment-worker/Dockerfile -t ${DEPLOYMENT_WORKER_APP_NAME}:${BUILD} .
 
 start-manual-test:
-	docker compose -f ./docker-compose-mysql-es.yaml up -d --no-recreate
+	docker compose -f ./docker-compose-mysql-es.yml up -d --no-recreate
 
 stop-manual-test:
-	docker compose -f ./docker-compose-mysql-es.yaml down -v
+	docker compose -f ./docker-compose-mysql-es.yml down -v
