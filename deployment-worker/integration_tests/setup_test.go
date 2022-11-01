@@ -16,10 +16,6 @@ type TestContextData struct {
 }
 
 func setupENV() {
-	os.Setenv("NATS_TOKEN", "UfmrJOYwYCCsgQvxvcfJ3BdI6c8WBbnD")
-	os.Setenv("NATS_ADDRESS", "nats://localhost:4222")
-	os.Setenv("STREAM_NAME", "CONTAINERMETRICS")
-	os.Setenv("DB_ADDRESS", "localhost:9000")
 }
 
 func setup() *TestContextData {
@@ -43,20 +39,17 @@ func startMain() chan bool {
 	time.Sleep(2 * time.Second)
 
 	// Wait till Agent and Client healthy
-	isAgentHealthy := false
-	isClientHealthy := false
+	isApplicationHealthy := false
 	for {
 		select {
 		// wait till 1min, after that exit 1
 		case <-time.After(1 * time.Minute):
-			log.Fatalf("Agent/Client not healthy")
+			log.Fatalf("Deployment worker application not healthy")
 		case <-time.After(2 * time.Second):
 			// Check Agent health
-			isAgentHealthy = getHealth(http.MethodGet, "http://localhost:8090", "status", "agent")
-			// Check Client health
-			isClientHealthy = getHealth(http.MethodGet, "http://localhost:8091", "status", "client")
+			isApplicationHealthy = getHealth(http.MethodGet, "http://localhost:9080", "status", "agent")
 		}
-		if isAgentHealthy && isClientHealthy {
+		if isApplicationHealthy {
 			break
 		}
 	}
@@ -78,7 +71,7 @@ func checkResponse(resp *http.Response, statusCode int) bool {
 }
 
 func startApplication(stop chan bool) {
-	os.Setenv("PORT", "8090")
+	os.Setenv("PORT", "9080")
 	app := application.New()
 	go app.Start()
 

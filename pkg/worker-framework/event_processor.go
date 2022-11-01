@@ -19,7 +19,7 @@ type Action interface {
 }
 
 type Configuration struct {
-	TemporalServiceAddress string `envconfig:"TEMPORAL_SERVICE_URL"`
+	TemporalServiceAddress string `envconfig:"TEMPORAL_SERVICE_URL" default:"http://localhost:7233"`
 }
 
 type Worker struct {
