@@ -1,5 +1,12 @@
 version: "3.5"
 services:
+  cassandra:
+    container_name: temporal-cassandra
+    image: cassandra:${CASSANDRA_VERSION}
+    networks:
+      - temporal-network
+    ports:
+      - 9042:9042
   elasticsearch:
     container_name: temporal-elasticsearch
     environment:
@@ -15,26 +22,14 @@ services:
       - temporal-network
     ports:
       - 9200:9200
-  mysql:
-    container_name: temporal-mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-    image: mysql:${MYSQL_VERSION}
-    networks:
-      - temporal-network
-    ports:
-      - 3306:3306
   temporal:
     container_name: temporal
     depends_on:
-      - mysql
+      - cassandra
       - elasticsearch
     environment:
-      - DB=mysql
-      - MYSQL_USER=root
-      - MYSQL_PWD=root
-      - MYSQL_SEEDS=mysql
-      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+      - CASSANDRA_SEEDS=cassandra
+      - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-cass.yaml
       - ENABLE_ES=true
       - ES_SEEDS=elasticsearch
       - ES_VERSION=v7
@@ -44,7 +39,7 @@ services:
     ports:
       - 7233:7233
     volumes:
-      - ./tests/dynamicconfig:/etc/temporal/config/dynamicconfig
+      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
   temporal-admin-tools:
     container_name: temporal-admin-tools
     depends_on:
@@ -68,18 +63,6 @@ services:
       - temporal-network
     ports:
       - 8080:8080
-  # temporal-web:
-  #   container_name: temporal-web
-  #   restart: on-failure
-  #   depends_on:
-  #     - temporal
-  #   environment:
-  #     - TEMPORAL_GRPC_ENDPOINT=temporal:7233
-  #   image: temporalio/web:${TEMPORAL_WEB_VERSION}
-  #   networks:
-  #     - temporal-network
-  #   ports:
-  #     - 8088:8088
 networks:
   temporal-network:
     driver: bridge
