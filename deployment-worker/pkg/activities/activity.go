@@ -2,15 +2,21 @@ package activities
 
 import (
 	"context"
+	"log"
 
+	"github.com/kube-tarian/kad/deployment-worker/pkg/model"
 	"go.temporal.io/sdk/activity"
 )
 
 type Activities struct {
 }
 
-func (a *Activities) Activity(ctx context.Context, name string) (string, error) {
+func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPayload) (model.ResponsePayload, error) {
 	logger := activity.GetLogger(ctx)
-	logger.Info("Activity", "name", name)
-	return "Hello " + name + "!", nil
+	e := activity.GetInfo(ctx)
+	logger.Info("Activity", "name", req)
+	log.Printf("activity info: %+v\n", e)
+	return model.ResponsePayload{
+		Status: "Success",
+	}, nil
 }

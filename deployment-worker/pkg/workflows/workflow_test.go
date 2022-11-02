@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/kube-tarian/kad/deployment-worker/pkg/activities"
+	"github.com/kube-tarian/kad/deployment-worker/pkg/model"
 	"go.temporal.io/sdk/worker"
 
 	"github.com/stretchr/testify/mock"
@@ -27,11 +28,11 @@ func (s *UnitTestSuite) Test_Workflow() {
 	})
 	var a *activities.Activities
 
-	env.OnActivity(a.Activity, mock.Anything, "file1").Return("file2", nil)
+	env.OnActivity(a.DeploymentActivity, mock.Anything, model.RequestPayload{SubAction: "file1"}).Return(model.ResponsePayload{Status: "file2"}, nil)
 
 	env.RegisterActivity(a)
 
-	env.ExecuteWorkflow(Workflow, "file1")
+	env.ExecuteWorkflow(Workflow, model.RequestPayload{SubAction: "file1"})
 
 	s.True(env.IsWorkflowCompleted())
 	s.NoError(env.GetWorkflowError())

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kube-tarian/kad/deployment-worker/pkg/model"
 	"github.com/kube-tarian/kad/deployment-worker/pkg/workflows"
 	"go.temporal.io/sdk/client"
 )
@@ -41,7 +42,7 @@ func sendDeploymentEvent(t *testing.T) {
 		TaskQueue: "Deployment",
 	}
 
-	we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, workflows.Workflow, "Temporal")
+	we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, workflows.Workflow, model.RequestPayload{SubAction: "Temporal"})
 	if err != nil {
 		t.Errorf("Unable to execute workflow, %v", err)
 	}
@@ -49,10 +50,10 @@ func sendDeploymentEvent(t *testing.T) {
 	t.Logf("Started workflow, WorkflowID: %v RunID: %v", we.GetID(), we.GetRunID())
 
 	// Synchronously wait for the workflow completion.
-	var result string
+	var result model.ResponsePayload
 	err = we.Get(context.Background(), &result)
 	if err != nil {
 		t.Errorf("Unable get workflow result, %v", err)
 	}
-	t.Logf("Workflow result: %v\n", result)
+	t.Logf("Workflow result: %+v\n", result)
 }
