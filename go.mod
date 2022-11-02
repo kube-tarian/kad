@@ -6,6 +6,7 @@ require (
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/kelseyhightower/envconfig v1.4.0
+	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.8.0
 	go.temporal.io/sdk v1.17.0
 )
@@ -23,6 +24,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/invopop/yaml v0.1.0 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
