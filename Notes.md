@@ -2,7 +2,7 @@
 
 This component will have below components:
 
-- Deployment Worker
+- Integrator
 - CLI
-
-
+- gRPC Agent
+- SaaS Server
