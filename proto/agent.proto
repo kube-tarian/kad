@@ -1,6 +1,8 @@
 
 syntax = "proto3";
 
+import "google/protobuf/any.proto";
+
 option go_package = "/agentpb";
 
 package agentpb;
@@ -12,9 +14,11 @@ service Agent {
 
 message JobRequest {
   string operation = 1;
-  string payload   = 3;
+  google.protobuf.Any payload   = 2;
 }
 
 message JobResponse {
-  string jobId = 1;
+  string id = 1;
+  string runID = 2;
+  string workflowName = 3;
 }

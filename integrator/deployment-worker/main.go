@@ -1,17 +1,18 @@
 package main
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/application"
+	"github.com/kube-tarian/kad/integrator/pkg/logging"
 )
 
 func main() {
-	log.Printf("Started deployment worker\n")
-	app := application.New()
+	logger := logging.NewLogger()
+	logger.Infof("Started deployment worker\n")
+	app := application.New(logger)
 	go app.Start()
 
 	signals := make(chan os.Signal, 1)
@@ -19,5 +20,5 @@ func main() {
 	<-signals
 
 	app.Close()
-	log.Printf("Exiting deployment worker\n")
+	logger.Infof("Exiting deployment worker\n")
 }

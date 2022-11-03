@@ -38,8 +38,22 @@ clean:
 docker-build:
 	docker build -f dockerfiles/deployment-worker/Dockerfile -t ${DEPLOYMENT_WORKER_APP_NAME}:${BUILD} .
 
-start-manual-test:
-	docker compose -f ./docker-compose-cass-es.yml up -d --no-recreate
+start-kind:
+	kind create cluster --config=tests/kind-config.yaml
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+	# helm install     --set server.replicaCount=1     --set cassandra.config.cluster_size=1     --set prometheus.enabled=false     --set grafana.enabled=false     --set elasticsearch.enabled=false     temporal . --timeout 8m
 
-stop-manual-test:
-	docker compose -f ./docker-compose-cass-es.yml down -v
+stop-kind:
+	kind delete cluster
+
+kind-integration-argocd-test:
+	go test -timeout 120s -run ^TestIntegrationArgocdDepl* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v
+
+kind-integration-argocd-delete-test:
+	go test -timeout 120s -run ^TestIntegrationArgocdDelete* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v
+
+kind-integration-helm-test:
+	go test -timeout 120s -run ^TestIntegrationHelmDepl* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v
+
+kind-integration-helm-delete-test:
+	go test -timeout 120s -run ^TestIntegrationHelmDelete* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v

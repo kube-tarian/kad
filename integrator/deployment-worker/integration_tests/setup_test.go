@@ -3,13 +3,13 @@ package integrationtests
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/application"
+	"github.com/kube-tarian/kad/integrator/pkg/logging"
 )
 
 type TestContextData struct {
@@ -22,7 +22,7 @@ func setup() *TestContextData {
 	setupENV()
 	cfg := &application.Configuration{}
 	if err := envconfig.Process("", cfg); err != nil {
-		log.Fatalf("Could not parse env Config: %v", err)
+		logger.Fatalf("Could not parse env Config: %v", err)
 	}
 
 	return &TestContextData{}
@@ -44,7 +44,7 @@ func startMain() chan bool {
 		select {
 		// wait till 1min, after that exit 1
 		case <-time.After(1 * time.Minute):
-			log.Fatalf("Deployment worker application not healthy")
+			logger.Fatalf("Deployment worker application not healthy")
 		case <-time.After(2 * time.Second):
 			// Check Agent health
 			isApplicationHealthy = getHealth(http.MethodGet, "http://localhost:9080", "status", "agent")
@@ -59,7 +59,7 @@ func startMain() chan bool {
 func getHealth(method, url, path, serviceName string) bool {
 	resp, err := callHTTPRequest(method, url, path, nil)
 	if err != nil {
-		log.Printf("%v health check call failed: %v", serviceName, err)
+		logger.Errorf("%v health check call failed: %v", serviceName, err)
 		return false
 	}
 
@@ -72,7 +72,8 @@ func checkResponse(resp *http.Response, statusCode int) bool {
 
 func startApplication(stop chan bool) {
 	os.Setenv("PORT", "9080")
-	app := application.New()
+	log := logging.NewLogger()
+	app := application.New(log)
 	go app.Start()
 
 	<-stop
