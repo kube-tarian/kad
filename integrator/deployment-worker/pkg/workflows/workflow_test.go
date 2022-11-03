@@ -28,11 +28,11 @@ func (s *UnitTestSuite) Test_Workflow() {
 	})
 	var a *activities.Activities
 
-	env.OnActivity(a.DeploymentActivity, mock.Anything, model.RequestPayload{SubAction: "file1"}).Return(model.ResponsePayload{Status: "file2"}, nil)
+	env.OnActivity(a.DeploymentActivity, mock.Anything, model.RequestPayload{Action: "file1"}).Return(model.ResponsePayload{Status: "file2"}, nil)
 
 	env.RegisterActivity(a)
 
-	env.ExecuteWorkflow(Workflow, model.RequestPayload{SubAction: "file1"})
+	env.ExecuteWorkflow(Workflow, model.RequestPayload{Action: "file1"})
 
 	s.True(env.IsWorkflowCompleted())
 	s.NoError(env.GetWorkflowError())
