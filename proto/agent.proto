@@ -1,0 +1,20 @@
+
+syntax = "proto3";
+
+option go_package = "/agentpb";
+
+package agentpb;
+
+// The greeting service definition.
+service Agent {
+  rpc SubmitJob (JobRequest) returns (JobResponse) {}
+}
+
+message JobRequest {
+  string operation = 1;
+  string payload   = 3;
+}
+
+message JobResponse {
+  string jobId = 1;
+}

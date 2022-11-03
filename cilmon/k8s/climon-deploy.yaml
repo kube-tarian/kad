@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: climon
+  labels:
+    app: climon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: climon
+  template:
+    metadata:
+      labels:
+        app: climon
+    spec:
+      serviceAccountName: climon
+      containers:
+      - name: climon
+        image: srikrishnabh/climon:1.2
+
