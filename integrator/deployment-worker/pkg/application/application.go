@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -12,11 +11,13 @@ import (
 	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/activities"
 	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/handler"
 	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/workflows"
+	"github.com/kube-tarian/kad/integrator/pkg/logging"
 	workerframework "github.com/kube-tarian/kad/integrator/pkg/worker-framework"
 )
 
 const (
-	WorkflowName = "Deployment"
+	WorkflowTaskQueueName = "Deployment"
+	HelmPluginName        = "helm"
 )
 
 type Configuration struct {
@@ -28,23 +29,24 @@ type Application struct {
 	apiServer  *handler.APIHandler
 	httpServer *http.Server
 	worker     *workerframework.Worker
+	logger     logging.Logger
 }
 
-func New() *Application {
+func New(logger logging.Logger) *Application {
 	cfg := &Configuration{}
 	if err := envconfig.Process("", cfg); err != nil {
-		log.Fatalf("Could not parse env Config: %v\n", err)
+		logger.Fatalf("Could not parse env Config: %v\n", err)
 	}
 
 	// TODO: Create Worker instance and store in Handler
-	worker, err := workerframework.NewWorker(WorkflowName, workflows.Workflow, &activities.Activities{})
+	worker, err := workerframework.NewWorker(WorkflowTaskQueueName, workflows.Workflow, &activities.Activities{}, logger)
 	if err != nil {
-		log.Fatalf("Worker initialization failed, Reason: %v\n", err)
+		logger.Fatalf("Worker initialization failed, Reason: %v\n", err)
 	}
 
 	apiServer, err := handler.NewAPIHandler(worker)
 	if err != nil {
-		log.Fatalf("API Handler initialisation failed: %v\n", err)
+		logger.Fatalf("API Handler initialisation failed: %v\n", err)
 	}
 
 	mux := chi.NewMux()
@@ -60,32 +62,33 @@ func New() *Application {
 		apiServer:  apiServer,
 		httpServer: httpServer,
 		worker:     worker,
+		logger:     logger,
 	}
 }
 
 func (app *Application) Start() {
-	log.Printf("Starting worker\n")
+	app.logger.Infof("Starting worker\n")
 	go func() {
 		err := app.worker.Run()
 		if err != nil {
+			app.logger.Errorf("Worker stopped listening on temporal, exiting. Readon: %v\n", err)
 			app.Close()
-			log.Fatalf("Worker stopped listening on temporal, exiting. Readon: %v\n", err)
 		}
 	}()
 
-	log.Printf("Starting server at %v\n", app.httpServer.Addr)
+	app.logger.Infof("Starting server at %v", app.httpServer.Addr)
 	var err error
 	if err = app.httpServer.ListenAndServe(); err != nil && errors.Is(err, http.ErrServerClosed) {
-		log.Fatalf("Unexpected server close: %v", err)
+		app.logger.Fatalf("Unexpected server close: %v", err)
 	}
-	log.Fatalf("Server closed")
+	app.logger.Fatalf("Server closed")
 }
 
 func (app *Application) Close() {
-	log.Printf("Closing the service gracefully\n")
+	app.logger.Infof("Closing the service gracefully")
 	app.worker.Close()
 
 	if err := app.httpServer.Shutdown(context.Background()); err != nil {
-		log.Printf("Could not close the service gracefully: %v\n", err)
+		app.logger.Errorf("Could not close the service gracefully: %v", err)
 	}
 }

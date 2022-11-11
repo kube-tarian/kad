@@ -1,0 +1,15 @@
+{
+  "operation": "deployment",
+  "payload": {
+    "plugin_name": "argocd",
+    "sub_action": "delete",
+    "data": {
+      "repo_name": "argocd-example",
+      "repo_url": "https://gitlab.privatecloud.sk/vladoportos/argo-cd-example.git",
+      "chart_name": "hello-world",
+      "namespace": "default",
+      "release_name": "hello-world",
+      "timeout": 5
+    }
+  }
+}

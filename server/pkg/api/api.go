@@ -8,9 +8,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"intelops.io/server/pkg/client"
-	"intelops.io/server/pkg/pb/agentpb"
-	"intelops.io/server/pkg/pb/climonpb"
+	"github.com/kube-tarian/kad/server/pkg/client"
+	"github.com/kube-tarian/kad/server/pkg/model"
+	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/server/pkg/pb/climonpb"
+	"github.com/kube-tarian/kad/server/pkg/server"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 type DeployPayload struct {
@@ -22,23 +25,24 @@ type DeployResponse struct {
 	Message string `json:"message"`
 }
 
-func Setup(ginEngine *gin.Engine) {
-	ginEngine.POST("/deploy", deploy)
+func Setup(ginEngine *gin.Engine, s *server.Server) {
+	ginEngine.POST("/deploy", s.Deploy)
 }
 
 func deploy(c *gin.Context) {
 	//TODO get address from database based on CustomerInfo
-	agent, err := client.NewAgent("localhost:50012")
+	log.Println("deploy api invocation started")
+
+	agent, err := client.NewAgent()
 	if err != nil {
 		log.Println("failed to connect agent internal error", err)
-		c.IndentedJSON(http.StatusInternalServerError, &DeployResponse{
+		c.IndentedJSON(http.StatusInternalServerError, &model.DeployResponse{
 			Status:  "FAILED",
 			Message: "Failed to connect to agent"})
 	}
-
 	defer agent.Close()
-	agentClient := agent.GetClient()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	var deployPayload DeployPayload
@@ -57,12 +61,13 @@ func deploy(c *gin.Context) {
 		ReferenceID: "",
 	}
 
+	reqJSON := climonRequest.String()
 	jobRequest := &agentpb.JobRequest{
 		Operation: "DEPLOY",
-		Payload:   climonRequest.String(),
+		Payload:   &anypb.Any{Value: []byte(reqJSON)},
 	}
 
-	response, err := agentClient.SubmitJob(ctx, jobRequest)
+	response, err := agent.SubmitJob(ctx, jobRequest)
 	if err != nil {
 		log.Println("failed to submit job", err)
 		c.IndentedJSON(http.StatusInternalServerError, &DeployResponse{
@@ -76,5 +81,5 @@ func deploy(c *gin.Context) {
 		Message: "submitted Job"})
 
 	log.Println("response received", response)
-	log.Println("called deploy")
+	log.Println("deploy api invocation finished")
 }
