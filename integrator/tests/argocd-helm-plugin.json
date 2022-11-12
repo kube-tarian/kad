@@ -2,7 +2,7 @@
   "operation": "deployment",
   "payload": {
     "plugin_name": "helm",
-    "sub_action": "install",
+    "action": "install",
     "data": {
       "repo_name": "argo",
       "repo_url": "https://argoproj.github.io/argo-helm",
