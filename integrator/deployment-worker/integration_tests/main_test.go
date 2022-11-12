@@ -148,7 +148,7 @@ func sendDeploymentEvent(t *testing.T, pluginName string, dataJSON json.RawMessa
 		TaskQueue: application.WorkflowTaskQueueName,
 	}
 
-	p := model.RequestPayload{PluginName: pluginName, Action: action, Data: dataJSON}
+	p := []model.RequestPayload{{PluginName: pluginName, Action: action, Data: dataJSON}}
 	payload, _ := json.Marshal(p)
 	we, err := c.ExecuteWorkflow(context.Background(), workflowOptions, workflows.Workflow, payload)
 	if err != nil {

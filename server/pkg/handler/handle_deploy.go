@@ -1,4 +1,4 @@
-package server
+package handler
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (s *Server) Deploy(c *gin.Context) {
+func (s *APIHanlder) PostDeploy(c *gin.Context) {
 	//TODO get address from database based on CustomerInfo
 	s.log.Infof("deploy api invocation started")
 
