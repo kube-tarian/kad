@@ -23,7 +23,7 @@ oapi-gen-deployment-worker:
 start-docker-compose-test:
 	docker compose -f ./docker-compose-cass-es.yml up -d --no-recreate
 	sleep 20
-	go test -timeout 120s -run ^TestIntegration* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v
+	go test -coverprofile=cover.out -timeout 120s -run ^TestIntegration* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v
 
 stop-docker-compose-test:
 	docker compose -f ./docker-compose-cass-es.yml down -v
@@ -47,13 +47,16 @@ stop-kind:
 	kind delete cluster
 
 kind-integration-argocd-test:
-	go test -timeout 120s -run ^TestIntegrationArgocdDepl* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v
+	go test -coverpkg=./... -coverprofile=cover-argocd.out -timeout 120s -run ^TestIntegrationArgocdDepl* ./... -v
 
 kind-integration-argocd-delete-test:
-	go test -timeout 120s -run ^TestIntegrationArgocdDelete* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v
+	go test -coverpkg=./... -coverprofile=cover-argocd-delete.out -timeout 120s -run ^TestIntegrationArgocdDelete* ./... -v
 
 kind-integration-helm-test:
-	go test -timeout 120s -run ^TestIntegrationHelmDepl* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v
+	go test -coverpkg=./... -coverprofile=cover-helm.out -timeout 120s -run ^TestIntegrationHelmDepl* ./... -v
 
 kind-integration-helm-delete-test:
-	go test -timeout 120s -run ^TestIntegrationHelmDelete* github.com/kube-tarian/kad/integrator/deployment-worker/integration_tests -v
+	go test -coverpkg=./... -coverprofile=cover-helm-delete.out -timeout 120s -run ^TestIntegrationHelmDelete* ./... -v
+
+merge_coverage:
+	
