@@ -7,7 +7,7 @@ import (
 
 type RequestPayload struct {
 	PluginName string          `json:"plugin_name"`
-	Action     string          `json:"sub_action"`
+	Action     string          `json:"action"`
 	Data       json.RawMessage `json:"data,omitempty"` // TODO: This will be enhanced along with plugin implementation
 }
 

@@ -22,7 +22,7 @@ kubectl port-forward service/temporal-web 9082:8080
 
 ```
 # make kind-integration-helm-test
-curl -X POST http://127.0.0.1:9092/deploy -d @argocd-helm-plugin.json 
+curl -X POST http://127.0.0.1:9092/deploy -H "content-type: application/json" -d @tests/argocd-helm-plugin.json 
 
 # Open temporal web UI and check the workflow activity of this action
 ```
@@ -45,7 +45,7 @@ export PASSWORD=$(kubectl -n default get secret argocd-initial-admin-secret -o j
 ```
 # make kind-integration-argocd-test
 
-curl -X POST http://127.0.0.1:9092/deploy -d @hello-world-argocd-plugin.json 
+curl -X POST http://127.0.0.1:9092/deploy -H "content-type: application/json" -d @tests/hello-world-argocd-plugin.json 
 
 # Open temporal web UI and check the workflow activity of this action
 ```
@@ -55,7 +55,7 @@ curl -X POST http://127.0.0.1:9092/deploy -d @hello-world-argocd-plugin.json
 ```
 # make kind-integration-argocd-delete-test
 
-curl -X POST http://127.0.0.1:9092/deploy -d @hello-world-argocd-plugin-delete.json
+curl -X POST http://127.0.0.1:9092/deploy -H "content-type: application/json" -d @tests/hello-world-argocd-plugin-delete.json
 
 # Open temporal web UI and check the workflow activity of this action
 ```
@@ -65,7 +65,7 @@ curl -X POST http://127.0.0.1:9092/deploy -d @hello-world-argocd-plugin-delete.j
 ```
 # make kind-integration-helm-delete-test
 
-curl -X POST http://127.0.0.1:9092/deploy -d @argocd-helm-plugin-delete.json 
+curl -X POST http://127.0.0.1:9092/deploy -H "content-type: application/json" -d @tests/argocd-helm-plugin-delete.json 
 
 # Open temporal web UI and check the workflow activity of this action
 ```

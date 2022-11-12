@@ -1,0 +1,81 @@
+openapi: "3.0.3"
+
+info:
+  title: SaaS server Open REST API Specification
+  description: SaaS server Open REST API specification
+  version: 1.0.0
+
+servers:
+  - url: /
+
+paths:
+  /status:
+    get:
+      tags:
+        - private
+      summary: Kubernetes readiness and liveness probe endpoint
+      responses:
+        '200':
+          description: successful operation
+
+  /api-docs:
+    get:
+      tags:
+        - public
+      summary: List of APIs provided by the service
+      responses:
+        '200':
+          description: OK
+
+  /deploy:
+    post:
+      tags:
+        - public
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeployPayload'
+            encoding:
+              payload:
+                contentType: application/json
+
+      responses:
+        '200':
+          description: OK
+
+components:
+  schemas:
+    DeployPayload:
+      title: Deploy payload
+      type: object
+      properties:
+        operation:
+          type: string
+          description: Operation
+        payload:
+          type: object
+          schema:
+              $ref: '#/components/schemas/DeployRequestPayload'
+      required:
+        - operation
+        - payload
+
+    DeployRequestPayload:
+      title: Deploy operation request payload
+      type: object
+      properties:
+        plugin_name:
+          type: string
+          description: Plugin name for the operation
+        action:
+          type: string
+          description: Action to be performed
+        data:
+          type: octetstring
+          description: Data for the action
+      required:
+        - plugin_name
+        - action
+        - data
