@@ -7,7 +7,7 @@ import (
 
 type DeployRequestPayload struct {
 	PluginName string          `json:"plugin_name" required:"true"`
-	Action     string          `json:"sub_action" required:"true"`
+	Action     string          `json:"action" required:"true"`
 	Data       json.RawMessage `json:"data" required:"true"`
 }
 
