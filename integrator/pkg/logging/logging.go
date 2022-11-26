@@ -21,6 +21,7 @@ type Logger interface {
 	Error(format string, args ...interface{})
 	Fatal(format string, args ...interface{})
 
+	Print(args ...interface{})
 	Audit(auditType, operation, status, user, format string, args ...interface{})
 }
 
@@ -106,6 +107,15 @@ func (l *Logging) Fatal(format string, args ...interface{}) {
 			"caller": fileDetails,
 		},
 	).Fatal(format, args)
+}
+
+func (l *Logging) Print(args ...interface{}) {
+	fileDetails := l.getFileDetails()
+	logrus.WithFields(
+		logrus.Fields{
+			"caller": fileDetails,
+		},
+	).Info(args)
 }
 
 func (l *Logging) Audit(auditType, operation, status, user, format string, args ...interface{}) {
