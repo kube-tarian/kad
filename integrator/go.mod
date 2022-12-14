@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	go.temporal.io/api v1.11.1-0.20220907050538-6de5285cf463
 	go.temporal.io/sdk v1.17.0
-	helm.sh/helm/v3 v3.10.1
+	helm.sh/helm/v3 v3.10.3
 )
 
 require (
