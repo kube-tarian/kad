@@ -14,30 +14,30 @@ import (
 type Activities struct {
 }
 
-func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPayload) (model.ResponsePayload, error) {
+func (a *Activities) ConfigurationActivity(ctx context.Context, req model.RequestPayload) (model.ResponsePayload, error) {
 	logger := logging.NewLogger()
-	logger.Infof("Activity, name: %+v", req.ToString())
+	logger.Infof("Activity, name: %+v", req)
 	// e := activity.GetInfo(ctx)
 	// logger.Infof("activity info: %+v", e)
 
 	plugin, err := plugins.GetPlugin(req.PluginName, logger)
 	if err != nil {
-		logger.Errorf("Get plugin  failed: %v", err)
 		return model.ResponsePayload{
 			Status:  "Failed",
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
 		}, err
 	}
-	deployerPlugin, ok := plugin.(workerframework.DeploymentWorker)
+
+	configPlugin, ok := plugin.(workerframework.ConfigurationWorker)
 	if !ok {
 		return model.ResponsePayload{
 			Status:  "Failed",
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
-		}, fmt.Errorf("plugin not supports deployment activities")
+		}, fmt.Errorf("plugin not supports Configuration activities")
 	}
-	msg, err := deployerPlugin.DeployActivities(req)
+
+	msg, err := configPlugin.ConfigurationActivities(req)
 	if err != nil {
-		logger.Errorf("Deploy activities failed %s: %v", req.Action, err)
 		return model.ResponsePayload{
 			Status:  "Failed",
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),

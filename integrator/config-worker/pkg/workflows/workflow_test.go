@@ -3,7 +3,7 @@ package workflows
 import (
 	"testing"
 
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/activities"
+	"github.com/kube-tarian/kad/integrator/config-worker/pkg/activities"
 	"github.com/kube-tarian/kad/integrator/model"
 	"go.temporal.io/sdk/worker"
 
@@ -28,7 +28,7 @@ func (s *UnitTestSuite) Test_Workflow() {
 	})
 	var a *activities.Activities
 
-	env.OnActivity(a.DeploymentActivity, mock.Anything, model.RequestPayload{Action: "file1"}).Return(model.ResponsePayload{Status: "file2"}, nil)
+	env.OnActivity(a.ConfigurationActivity, mock.Anything, model.RequestPayload{Action: "file1"}).Return(model.ResponsePayload{Status: "file2"}, nil)
 
 	env.RegisterActivity(a)
 

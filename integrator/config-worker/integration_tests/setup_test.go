@@ -9,7 +9,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/application"
+	"github.com/kube-tarian/kad/integrator/config-worker/pkg/application"
 )
 
 type TestContextData struct {
@@ -44,7 +44,7 @@ func startMain() chan bool {
 		select {
 		// wait till 1min, after that exit 1
 		case <-time.After(1 * time.Minute):
-			logger.Fatalf("Deployment worker application not healthy")
+			logger.Fatalf("Configuration worker application not healthy")
 		case <-time.After(2 * time.Second):
 			// Check Agent health
 			isApplicationHealthy = getHealth(http.MethodGet, "http://localhost:9080", "status", "agent")

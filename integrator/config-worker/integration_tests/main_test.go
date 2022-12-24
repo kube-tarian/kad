@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/application"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/workflows"
+	"github.com/kube-tarian/kad/integrator/config-worker/pkg/application"
+	"github.com/kube-tarian/kad/integrator/config-worker/pkg/workflows"
 	"github.com/kube-tarian/kad/integrator/model"
 	"go.temporal.io/sdk/client"
 )
@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
-func TestIntegrationArgocdDeploymentEvent(t *testing.T) {
+func TestIntegrationArgocdConfigEvent(t *testing.T) {
 	testData := setup()
 
 	stop := startMain()
@@ -38,7 +38,7 @@ func TestIntegrationArgocdDeploymentEvent(t *testing.T) {
 		t.Errorf("Data marshalling failed, %v", err)
 	}
 
-	sendDeploymentEvent(t, "argocd", dataJSON, "install")
+	sendConfigEvent(t, "argocd", dataJSON, "install")
 	logger.Info("Sleeping now for 5 seconds")
 	time.Sleep(5 * time.Second)
 
@@ -65,7 +65,7 @@ func TestIntegrationArgocdDeleteEvent(t *testing.T) {
 		t.Errorf("Data marshalling failed, %v", err)
 	}
 
-	sendDeploymentEvent(t, "argocd", dataJSON, "delete")
+	sendConfigEvent(t, "argocd", dataJSON, "delete")
 	logger.Info("Sleeping now for 5 seconds")
 	time.Sleep(5 * time.Second)
 
@@ -74,7 +74,7 @@ func TestIntegrationArgocdDeleteEvent(t *testing.T) {
 	stop <- true
 }
 
-func TestIntegrationHelmDeploymentEvent(t *testing.T) {
+func TestIntegrationHelmConfigEvent(t *testing.T) {
 	testData := setup()
 
 	stop := startMain()
@@ -92,7 +92,7 @@ func TestIntegrationHelmDeploymentEvent(t *testing.T) {
 		t.Errorf("Data marshalling failed, %v", err)
 	}
 
-	sendDeploymentEvent(t, "helm", dataJSON, "install")
+	sendConfigEvent(t, "helm", dataJSON, "install")
 	logger.Info("Sleeping now for 5 seconds")
 	time.Sleep(5 * time.Second)
 
@@ -119,7 +119,7 @@ func TestIntegrationHelmDeleteEvent(t *testing.T) {
 		t.Errorf("Data marshalling failed, %v", err)
 	}
 
-	sendDeploymentEvent(t, "helm", dataJSON, "delete")
+	sendConfigEvent(t, "helm", dataJSON, "delete")
 	logger.Info("Sleeping now for 5 seconds")
 	time.Sleep(5 * time.Second)
 
@@ -128,7 +128,7 @@ func TestIntegrationHelmDeleteEvent(t *testing.T) {
 	stop <- true
 }
 
-func sendDeploymentEvent(t *testing.T, pluginName string, dataJSON json.RawMessage, action string) {
+func sendConfigEvent(t *testing.T, pluginName string, dataJSON json.RawMessage, action string) {
 	// The client is a heavyweight object that should be created once per process.
 	temporalAddress := os.Getenv("TEMPORAL_SERVICE_URL")
 	if len(temporalAddress) == 0 {
@@ -144,7 +144,7 @@ func sendDeploymentEvent(t *testing.T, pluginName string, dataJSON json.RawMessa
 	defer c.Close()
 
 	workflowOptions := client.StartWorkflowOptions{
-		ID:        "deployment_worker_workflow",
+		ID:        "config_worker_workflow",
 		TaskQueue: application.WorkflowTaskQueueName,
 	}
 
