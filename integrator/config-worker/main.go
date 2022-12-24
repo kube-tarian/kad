@@ -6,12 +6,12 @@ import (
 	"syscall"
 
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/application"
+	"github.com/kube-tarian/kad/integrator/config-worker/pkg/application"
 )
 
 func main() {
 	logger := logging.NewLogger()
-	logger.Infof("Started deployment worker\n")
+	logger.Infof("Started config worker\n")
 	app := application.New(logger)
 	go app.Start()
 
@@ -20,5 +20,5 @@ func main() {
 	<-signals
 
 	app.Close()
-	logger.Infof("Exiting deployment worker\n")
+	logger.Infof("Exiting config worker\n")
 }

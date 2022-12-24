@@ -1,0 +1,28 @@
+openapi: "3.0.1"
+
+info:
+  title: Configuration Worker Open REST API Specification
+  description: Configuration Worker Open REST API specification
+  version: 1.0.0
+
+servers:
+  - url: /
+
+paths:
+  /status:
+    get:
+      tags:
+        - private
+      summary: Kubernetes readiness and liveness probe endpoint
+      responses:
+        '200':
+          description: successful operation
+
+  /api-docs:
+    get:
+      tags:
+        - public
+      summary: List of APIs provided by the service
+      responses:
+        '200':
+          description: OK
