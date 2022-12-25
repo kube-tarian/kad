@@ -1,0 +1,1 @@
+DROP TABLE Agents_by_agent_id;
