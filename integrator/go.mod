@@ -3,7 +3,6 @@ module github.com/kube-tarian/kad/integrator
 go 1.19
 
 require (
-	github.com/dhui/dktest v0.3.13
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/gocql/gocql v1.3.1
@@ -16,7 +15,7 @@ require (
 	go.temporal.io/api v1.11.1-0.20220907050538-6de5285cf463
 	go.temporal.io/sdk v1.17.0
 	go.uber.org/atomic v1.9.0
-	helm.sh/helm/v3 v3.10.1
+	helm.sh/helm/v3 v3.10.3
 )
 
 require (
@@ -27,7 +26,6 @@ require (
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/Masterminds/squirrel v1.5.3 // indirect
-	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
