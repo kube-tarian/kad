@@ -3,9 +3,9 @@ package argocd
 import (
 	"context"
 
-	"github.com/argoproj/argo-cd/util/io"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	sessionpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/session"
+	"github.com/argoproj/argo-cd/v2/util/io"
 )
 
 const TokenPath = "api/v1/session"

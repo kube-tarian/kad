@@ -3,7 +3,6 @@ module github.com/kube-tarian/kad/integrator
 go 1.19
 
 require (
-	github.com/argoproj/argo-cd v1.8.7
 	github.com/argoproj/argo-cd/v2 v2.5.5
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/go-chi/chi/v5 v5.0.7
