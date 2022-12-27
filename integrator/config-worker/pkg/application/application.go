@@ -10,13 +10,13 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/activities"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/handler"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/workflows"
+	"github.com/kube-tarian/kad/integrator/config-worker/pkg/activities"
+	"github.com/kube-tarian/kad/integrator/config-worker/pkg/handler"
+	"github.com/kube-tarian/kad/integrator/config-worker/pkg/workflows"
 )
 
 const (
-	WorkflowTaskQueueName = "Deployment"
+	WorkflowTaskQueueName = "Configuration"
 	HelmPluginName        = "helm"
 )
 
