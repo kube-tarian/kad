@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/argoproj/argo-cd/util/io"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/util/io"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/kube-tarian/kad/integrator/model"

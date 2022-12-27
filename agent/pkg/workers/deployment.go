@@ -48,14 +48,17 @@ func (d *Deployment) SendEvent(ctx context.Context, deployPayload json.RawMessag
 	d.log.Infof("Started workflow, ID: %v, WorkflowName: %v RunID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
 
 	// Asynchronously wait for the workflow completion.
-	go func() {
-		var result model.ResponsePayload
-		err = run.Get(ctx, &result)
-		if err != nil {
-			d.log.Errorf("Unable get workflow result, %v", err)
-		}
-		d.log.Infof("Result for workflow ID: %v, workflowName: %v, runID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
-	}()
+	// TODO: To be fixed context deadline/failed
+	// go func() {
+	var result model.ResponsePayload
+	err = run.Get(ctx, &result)
+	if err != nil {
+		d.log.Errorf("Result for workflow ID: %v, workflowName: %v, runID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
+		d.log.Errorf("Workflow result failed, %v", err)
+		return run, err
+	}
+	d.log.Infof("Result for workflow ID: %v, workflowName: %v, runID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
+	// }()
 
 	return run, nil
 }
