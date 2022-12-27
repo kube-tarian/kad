@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/api"
+	"github.com/kube-tarian/kad/integrator/config-worker/api"
 )
 
 type APIHandler struct {

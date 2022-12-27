@@ -5,17 +5,17 @@ import (
 	"time"
 
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/activities"
+	"github.com/kube-tarian/kad/integrator/config-worker/pkg/activities"
 	"github.com/kube-tarian/kad/integrator/model"
 	"go.temporal.io/sdk/workflow"
 )
 
-// Workflow is a deployment workflow definition.
+// Workflow is a config workflow definition.
 func Workflow(ctx workflow.Context, payload json.RawMessage) (model.ResponsePayload, error) {
 	var result model.ResponsePayload
 	logger := logging.NewLogger()
 
-	logger.Infof("Deployment workflow started, req: %+v", string(payload))
+	logger.Infof("Configuration workflow started, req: %+v", string(payload))
 	req := []model.RequestPayload{}
 	err := json.Unmarshal(payload, &req)
 	if err != nil {
@@ -24,7 +24,7 @@ func Workflow(ctx workflow.Context, payload json.RawMessage) (model.ResponsePayl
 	}
 
 	ao := workflow.ActivityOptions{
-		ScheduleToCloseTimeout: 600 * time.Second,
+		ScheduleToCloseTimeout: 60 * time.Second,
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
@@ -32,12 +32,13 @@ func Workflow(ctx workflow.Context, payload json.RawMessage) (model.ResponsePayl
 	logger.Infof("execution: %+v\n", execution)
 
 	var a *activities.Activities
-	err = workflow.ExecuteActivity(ctx, a.DeploymentActivity, req[0]).Get(ctx, &result)
+	err = workflow.ExecuteActivity(ctx, a.ConfigurationActivity, req[0]).Get(ctx, &result)
 	if err != nil {
 		logger.Errorf("Activity failed, Error: %v", err)
 		return result, err
 	}
 
-	logger.Infof("Deployment workflow completed., result: %s", (&result).ToString())
+	logger.Infof("Configuration workflow completed., result: %s", (&result).ToString())
+
 	return result, nil
 }
