@@ -18,7 +18,7 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 	//TODO get address from database based on CustomerInfo
 	s.log.Infof("deploy api invocation started")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var req model.DeployPayload

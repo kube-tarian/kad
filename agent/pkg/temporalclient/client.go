@@ -15,7 +15,7 @@ type Configuration struct {
 
 type Client struct {
 	conf           *Configuration
-	temporalClient client.Client
+	TemporalClient client.Client
 	log            logging.Logger
 }
 
@@ -39,7 +39,7 @@ func NewClient(log logging.Logger) (*Client, error) {
 }
 
 func (c *Client) dial() (err error) {
-	c.temporalClient, err = client.Dial(client.Options{
+	c.TemporalClient, err = client.Dial(client.Options{
 		HostPort: c.conf.TemporalServiceAddress,
 		Logger:   c.log,
 	})
@@ -51,7 +51,7 @@ func (c *Client) dial() (err error) {
 }
 
 func (c *Client) Close() {
-	c.temporalClient.Close()
+	c.TemporalClient.Close()
 }
 
 func (c *Client) ExecuteWorkflow(
@@ -60,7 +60,7 @@ func (c *Client) ExecuteWorkflow(
 	workflowName string,
 	args ...interface{},
 ) (client.WorkflowRun, error) {
-	return c.temporalClient.ExecuteWorkflow(ctx, options, workflowName, args)
+	return c.TemporalClient.ExecuteWorkflow(ctx, options, workflowName, args)
 }
 
 func fetchConfiguration() (*Configuration, error) {
