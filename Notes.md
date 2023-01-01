@@ -1,8 +1,18 @@
 # Overview
 
-This component will have below components:
+## Integrator components
 
 - Integrator
-- CLI
-- gRPC Agent
-- SaaS Server
+    - deployment-worker
+    - config-worker
+- Agent (gRPC)
+
+## IntelOps SaaS components
+
+- Server
+
+## IntelOps Market Place
+
+- Climon
+- Temporal
+- Cassandra

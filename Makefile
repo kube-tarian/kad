@@ -1,4 +1,11 @@
-all:
+PREFIX := integrator
+SERVER_APP_NAME := server
+AGENT_APP_NAME := agent
+DEPLOYMENT_WORKER_APP_NAME := deployment-worker
+CONFIG_WORKER_APP_NAME := config-worker
+BUILD := 0.1.1
+
+gen-protoc:
 	cd proto && protoc --go_out=../agent/pkg/agentpb/ --go_opt=paths=source_relative \
     		--go-grpc_out=../agent/pkg/agentpb/ --go-grpc_opt=paths=source_relative \
     		./agent.proto
@@ -14,3 +21,9 @@ all:
 	cd proto && protoc --go_out=../climon/pkg/pb/climonpb --go_opt=paths=source_relative \
                 --go-grpc_out=../climon/pkg/pb/climonpb --go-grpc_opt=paths=source_relative \
                 ./climon.proto
+
+docker-build:
+	docker build -f dockerfiles/server/Dockerfile -t ${PREFIX}-${SERVER_APP_NAME}:${BUILD} .
+	docker build -f dockerfiles/agent/Dockerfile -t ${PREFIX}-${AGENT_APP_NAME}:${BUILD} .
+	docker build -f dockerfiles/deployment-worker/Dockerfile -t ${PREFIX}-${DEPLOYMENT_WORKER_APP_NAME}:${BUILD} .
+	docker build -f dockerfiles/config-worker/Dockerfile -t ${PREFIX}-${CONFIG_WORKER_APP_NAME}:${BUILD} .
