@@ -9,6 +9,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
+	"github.com/kube-tarian/kad/integrator/common-pkg/temporalclient"
 
 	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/client"
@@ -51,7 +52,7 @@ type Configuration struct {
 
 type Worker struct {
 	conf           *Configuration
-	temporalClient client.Client
+	temporalClient *temporalclient.Client
 	temporalWorker worker.Worker
 	plugins        map[string]Plugin
 	logger         logging.Logger
@@ -79,10 +80,7 @@ func NewWorker(taskQueueName string, wf, activity interface{}, logger logging.Lo
 
 func (w *Worker) RegisterToTemporal(taskQueueName string, wf, activity interface{}) (err error) {
 	// The client and worker are heavyweight objects that should be created once per process.
-	w.temporalClient, err = client.Dial(client.Options{
-		HostPort: w.conf.TemporalServiceAddress,
-		Logger:   w.logger,
-	})
+	w.temporalClient, err = temporalclient.NewClient(w.logger)
 	if err != nil {
 		return fmt.Errorf("unable to create client, %v", err)
 	}
@@ -115,7 +113,7 @@ func (w *Worker) RegisterToTemporal(taskQueueName string, wf, activity interface
 	}
 	w.logger.Infof("default namespace registered and verified")
 
-	w.temporalWorker = worker.New(w.temporalClient, taskQueueName, worker.Options{})
+	w.temporalWorker = worker.New(w.temporalClient.TemporalClient, taskQueueName, worker.Options{})
 	w.temporalWorker.RegisterWorkflow(wf)
 	w.temporalWorker.RegisterActivity(activity)
 
