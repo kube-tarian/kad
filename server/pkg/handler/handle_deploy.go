@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -23,13 +22,13 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 
 	var req model.DeployPayload
 	if err := c.BindJSON(&req); err != nil {
-		sendResponse(c, "Failed to parse deploy payload", err)
+		s.sendResponse(c, "Failed to parse deploy payload", err)
 		return
 	}
 
 	payload, err := json.Marshal(req.Payload)
 	if err != nil {
-		sendResponse(c, "Deploy request prepration failed", err)
+		s.sendResponse(c, "Deploy request prepration failed", err)
 		return
 	}
 
@@ -41,7 +40,7 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 		},
 	)
 	if err != nil {
-		sendResponse(c, "failed to submit job", err)
+		s.sendResponse(c, "failed to submit job", err)
 		return
 	}
 
@@ -53,8 +52,8 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 	s.log.Infof("deploy api invocation finished")
 }
 
-func sendResponse(c *gin.Context, msg string, err error) {
-	log.Println("failed to submit job", err)
+func (s *APIHanlder) sendResponse(c *gin.Context, msg string, err error) {
+	s.log.Errorf("failed to submit job", err)
 	c.IndentedJSON(http.StatusInternalServerError, &model.DeployResponse{
 		Status:  "FAILED",
 		Message: fmt.Sprintf("%s, %v", msg, err),
