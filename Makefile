@@ -22,8 +22,10 @@ gen-protoc:
                 --go-grpc_out=../climon/pkg/pb/climonpb --go-grpc_opt=paths=source_relative \
                 ./climon.proto
 
-docker-build:
+docker-build-server:
 	docker build -f dockerfiles/server/Dockerfile -t ${PREFIX}-${SERVER_APP_NAME}:${BUILD} .
+docker-build-kad:
 	docker build -f dockerfiles/agent/Dockerfile -t ${PREFIX}-${AGENT_APP_NAME}:${BUILD} .
 	docker build -f dockerfiles/deployment-worker/Dockerfile -t ${PREFIX}-${DEPLOYMENT_WORKER_APP_NAME}:${BUILD} .
 	docker build -f dockerfiles/config-worker/Dockerfile -t ${PREFIX}-${CONFIG_WORKER_APP_NAME}:${BUILD} .
+docker-build: docker-build-kad docker-build-server

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/kube-tarian/kad/integrator/common-pkg/plugins"
@@ -25,14 +26,14 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 		logger.Errorf("Get plugin  failed: %v", err)
 		return model.ResponsePayload{
 			Status:  "Failed",
-			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
+			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", strings.ReplaceAll(err.Error(), "\"", "\\\""))),
 		}, err
 	}
 	deployerPlugin, ok := plugin.(workerframework.DeploymentWorker)
 	if !ok {
 		return model.ResponsePayload{
 			Status:  "Failed",
-			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
+			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", strings.ReplaceAll(err.Error(), "\"", "\\\""))),
 		}, fmt.Errorf("plugin not supports deployment activities")
 	}
 	msg, err := deployerPlugin.DeployActivities(req)
@@ -40,7 +41,7 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 		logger.Errorf("Deploy activities failed %s: %v", req.Action, err)
 		return model.ResponsePayload{
 			Status:  "Failed",
-			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
+			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", strings.ReplaceAll(err.Error(), "\"", "\\\""))),
 		}, err
 	}
 
