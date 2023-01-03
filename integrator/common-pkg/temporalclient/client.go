@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/agent/pkg/logging"
+	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 
 	"go.temporal.io/sdk/client"
 )
