@@ -6,14 +6,14 @@ import (
 
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/kube-tarian/kad/integrator/common-pkg/plugins/argocd"
-	"github.com/kube-tarian/kad/integrator/common-pkg/plugins/helmplugin"
+	"github.com/kube-tarian/kad/integrator/common-pkg/plugins/helm"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
 )
 
 func GetPlugin(plugin string, logger logging.Logger) (workerframework.Plugin, error) {
 	switch strings.ToLower(plugin) {
 	case "helm":
-		return helmplugin.NewClient(logger)
+		return helm.NewClient(logger)
 	case "argocd":
 		return argocd.NewClient(logger)
 	default:

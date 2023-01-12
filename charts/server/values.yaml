@@ -82,5 +82,5 @@ tolerations: []
 affinity: {}
 
 agent:
-  address: "integrator-kad-agent.default.svc.cluster.local"
+  address: "kad-agent.default.svc.cluster.local"
   port: 8080
