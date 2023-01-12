@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: integrator-server
+  repository: kad-server
   pullPolicy: IfNotPresent
   tag: "0.1.1"
 

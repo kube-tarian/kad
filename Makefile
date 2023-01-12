@@ -1,4 +1,4 @@
-PREFIX := integrator
+PREFIX := kad
 SERVER_APP_NAME := server
 AGENT_APP_NAME := agent
 DEPLOYMENT_WORKER_APP_NAME := deployment-worker
@@ -23,6 +23,7 @@ gen-protoc:
                 ./climon.proto
 
 docker-build-server:
+	# The prefix for server to changed either as server or intelops-kad-server
 	docker build -f dockerfiles/server/Dockerfile -t ${PREFIX}-${SERVER_APP_NAME}:${BUILD} .
 
 docker-build-kad: docker-build-agent docker-build-deployment docker-build-config
