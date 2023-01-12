@@ -8,11 +8,11 @@ image:
   pullPolicy: IfNotPresent
   tag: "0.1.1"
 agent:
-  repository: integrator-agent
+  repository: kad-agent
 deployment_worker:
-  repository: integrator-deployment-worker
+  repository: kad-deployment-worker
 config_worker:
-  repository: integrator-config-worker
+  repository: kad-config-worker
 
 imagePullSecrets: []
 nameOverride: ""
@@ -89,6 +89,10 @@ affinity: {}
 temporal:
   external: true
   temporalServiceURL: temporal-frontend.default.svc.cluster.local:7233
+
+argocd:
+  serviceURL: argocd-server.default.svc.cluster.local
+  password: to-be-replaced
 
 # TODO: attributes to be added
 cassandra:
