@@ -35,9 +35,6 @@ build:
 clean:
 	rm -rf build
 
-docker-build:
-	docker build -f dockerfiles/deployment-worker/Dockerfile -t ${DEPLOYMENT_WORKER_APP_NAME}:${BUILD} .
-
 start-kind:
 	kind create cluster --config=tests/kind-config.yaml
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
@@ -57,6 +54,3 @@ kind-integration-helm-test:
 
 kind-integration-helm-delete-test:
 	go test -coverpkg=./... -coverprofile=cover-helm-delete.out -timeout 120s -run ^TestIntegrationHelmDelete* ./... -v
-
-merge_coverage:
-	

@@ -33,4 +33,6 @@ type Request struct {
 	ReleaseName string `json:"release_name" required:"true"`
 	Timeout     int    `json:"timeout" default:"5"`
 	Version     string `json:"version"`
+
+	KubeConfig string `json:"kube_config" required:"true"`
 }

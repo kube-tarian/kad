@@ -15,7 +15,7 @@ type APIHanlder struct {
 }
 
 func NewAPIHandler(log logging.Logger) (*APIHanlder, error) {
-	client, err := client.NewAgent()
+	client, err := client.NewAgent(log)
 	if err != nil {
 		log.Errorf("failed to connect agent internal error", err)
 		return nil, err

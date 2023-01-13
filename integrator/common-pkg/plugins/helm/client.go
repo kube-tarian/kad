@@ -1,4 +1,4 @@
-package helmplugin
+package helm
 
 import (
 	"encoding/json"

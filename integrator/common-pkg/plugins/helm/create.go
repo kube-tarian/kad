@@ -1,4 +1,4 @@
-package helmplugin
+package helm
 
 import (
 	"context"
@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	jsoniter "github.com/json-iterator/go"
+	helmclient "github.com/kube-tarian/kad/integrator/common-pkg/plugins/helm/go-helm-client"
 	"github.com/kube-tarian/kad/integrator/model"
-	helmclient "github.com/mittwald/go-helm-client"
+	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/repo"
 )
 
@@ -21,16 +23,7 @@ func (h *HelmCLient) Create(payload model.RequestPayload) (json.RawMessage, erro
 		return nil, err
 	}
 
-	opt := &helmclient.Options{
-		Namespace:        req.Namespace, // Change this to the namespace you wish the client to operate in.
-		RepositoryCache:  "/tmp/.helmcache",
-		RepositoryConfig: "/tmp/.helmrepo",
-		Debug:            true,
-		Linting:          true,
-		DebugLog:         h.logger.Debugf,
-	}
-
-	helmClient, err := helmclient.New(opt)
+	helmClient, err := h.getHelmClient(req)
 	if err != nil {
 		h.logger.Errorf("helm client initialization failed, %v", err)
 		return nil, err
@@ -56,7 +49,8 @@ func (h *HelmCLient) Create(payload model.RequestPayload) (json.RawMessage, erro
 		context.Background(),
 		&chartSpec,
 		&helmclient.GenericHelmOptions{
-			RollBack: helmClient,
+			RollBack:              helmClient,
+			InsecureSkipTLSverify: true,
 		})
 	if err != nil {
 		h.logger.Errorf("helm install or update for request %+v failed, %v", req, err)
@@ -68,11 +62,53 @@ func (h *HelmCLient) Create(payload model.RequestPayload) (json.RawMessage, erro
 	return json.RawMessage(fmt.Sprintf("{\"status\": \"Application %s install successful\"}", rel.Name)), nil
 }
 
+func (h *HelmCLient) getHelmClient(req *model.Request) (helmclient.Client, error) {
+	// Change this to the namespace you wish the client to operate in.
+	// helmClient, err := helmclient.New(opt)
+
+	opt := &helmclient.Options{
+		Namespace:        req.Namespace,
+		RepositoryCache:  "/tmp/.helmcache",
+		RepositoryConfig: "/tmp/.helmrepo",
+		Debug:            true,
+		Linting:          true,
+		DebugLog:         h.logger.Debugf,
+	}
+
+	var yamlKubeConfig interface{}
+	var jsonKubeConfig []byte
+	// err := yaml.Unmarshal([]byte(in_built_cluster), &yamlKubeConfig)
+	err := yaml.Unmarshal([]byte(req.KubeConfig), &yamlKubeConfig)
+	if err == nil {
+		jsonKubeConfig, err = jsoniter.Marshal(yamlKubeConfig)
+		if err != nil {
+			h.logger.Errorf("json Marhsal of kubeconfig failed, err: json Mashal: %v", err)
+			return nil, err
+		}
+	} else {
+		err1 := json.Unmarshal([]byte(req.KubeConfig), yamlKubeConfig)
+		if err1 != nil {
+			h.logger.Errorf("kubeconfig not understanable format not in yaml or json. unmarshal failed, error: %v", err)
+			return nil, err
+		}
+		jsonKubeConfig = []byte(req.KubeConfig)
+	}
+
+	return helmclient.NewClientFromKubeConf(
+		&helmclient.KubeConfClientOptions{
+			Options:     opt,
+			KubeContext: "cluster-1",
+			KubeConfig:  jsonKubeConfig,
+		},
+	)
+}
+
 func (h *HelmCLient) addOrUpdate(client helmclient.Client, req *model.Request) error {
 	// Define a public chart repository.
 	chartRepo := repo.Entry{
-		Name: req.RepoName,
-		URL:  req.RepoURL,
+		Name:                  req.RepoName,
+		URL:                   req.RepoURL,
+		InsecureSkipTLSverify: true,
 	}
 
 	// Add a chart-repository to the client.
