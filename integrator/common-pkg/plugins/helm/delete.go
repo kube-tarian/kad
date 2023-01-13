@@ -1,11 +1,11 @@
-package helmplugin
+package helm
 
 import (
 	"encoding/json"
 	"fmt"
 
+	helmclient "github.com/kube-tarian/kad/integrator/common-pkg/plugins/helm/go-helm-client"
 	"github.com/kube-tarian/kad/integrator/model"
-	helmclient "github.com/mittwald/go-helm-client"
 )
 
 func (h *HelmCLient) Delete(payload model.RequestPayload) (json.RawMessage, error) {
@@ -18,16 +18,7 @@ func (h *HelmCLient) Delete(payload model.RequestPayload) (json.RawMessage, erro
 		return nil, err
 	}
 
-	opt := &helmclient.Options{
-		Namespace:        req.Namespace, // Change this to the namespace you wish the client to operate in.
-		RepositoryCache:  "/tmp/.helmcache",
-		RepositoryConfig: "/tmp/.helmrepo",
-		Debug:            true,
-		Linting:          true,
-		DebugLog:         h.logger.Debugf,
-	}
-
-	helmClient, err := helmclient.New(opt)
+	helmClient, err := h.getHelmClient(req)
 	if err != nil {
 		h.logger.Errorf("helm client initialization failed, %v", err)
 		return nil, err

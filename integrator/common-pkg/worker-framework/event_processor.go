@@ -36,7 +36,7 @@ type DeploymentWorker interface {
 }
 
 type ConfigurationWorker interface {
-	// ConfigurationActivities(payload interface{}) (json.RawMessage, error)
+	ConfigurationActivities(payload interface{}) (json.RawMessage, error)
 	// ConfgiureTarget(payload interface{}) (json.RawMessage, error)
 	// SetTarget(payload interface{}) (json.RawMessage, error)
 	// SetDefaultTarget(payload interface{}) (json.RawMessage, error)
@@ -89,7 +89,7 @@ func (w *Worker) RegisterToTemporal(taskQueueName string, wf, activity interface
 	// Reference: https://docs.temporal.io/application-development/features?lang=go#namespaces
 	// Equivalent cli command: tctl --ns default namespace register -rd 3
 	// Reference: https://docs.temporal.io/tctl-v1/namespace#register
-	client, err := client.NewNamespaceClient(client.Options{HostPort: "127.0.0.1:7233"})
+	client, err := client.NewNamespaceClient(client.Options{HostPort: w.conf.TemporalServiceAddress})
 	if err != nil {
 		return fmt.Errorf("unable to create namespace client, %v", err)
 	}

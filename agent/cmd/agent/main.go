@@ -37,7 +37,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	agentpb.RegisterAgentServer(grpcServer, s)
-	log.Infof("Server listening at ", listener.Addr())
+	log.Infof("Server listening at %v", listener.Addr())
 
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
