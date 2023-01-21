@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	WorkflowTaskQueueName = "Configuration"
+	WorkflowTaskQueueName = "Configure"
 	HelmPluginName        = "helm"
 )
 
