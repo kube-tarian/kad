@@ -31,6 +31,8 @@ func (s *APIHanlder) PostConfig(c *gin.Context) {
 		return
 	}
 
+	// TODO: currently climon payload is submitted to temporal via agent.
+	// This flow has to modified as per the understanding.
 	response, err := s.client.SubmitJob(
 		ctx,
 		&agentpb.JobRequest{
