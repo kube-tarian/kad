@@ -8,6 +8,7 @@ import (
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/agent/pkg/workers"
+	"go.temporal.io/sdk/client"
 )
 
 type Agent struct {
@@ -37,11 +38,7 @@ func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*ag
 	}
 
 	run, err := worker.SendEvent(ctx, request.Payload.GetValue())
-	if err != nil {
-		return &agentpb.JobResponse{}, err
-	}
-
-	return &agentpb.JobResponse{Id: run.GetID(), RunID: run.GetRunID(), WorkflowName: worker.GetWorkflowName()}, err
+	return prepareJobResponse(run, worker.GetWorkflowName()), err
 }
 
 func (a *Agent) getWorker(operatoin string) (workers.Worker, error) {
@@ -50,7 +47,16 @@ func (a *Agent) getWorker(operatoin string) (workers.Worker, error) {
 		return workers.NewClimon(a.client), nil
 	case "deployment":
 		return workers.NewDeployment(a.client, a.log), nil
+	case "config":
+		return workers.NewConfig(a.client, a.log), nil
 	default:
 		return nil, fmt.Errorf("unsupported operation %s", operatoin)
 	}
+}
+
+func prepareJobResponse(run client.WorkflowRun, name string) *agentpb.JobResponse {
+	if run != nil {
+		return &agentpb.JobResponse{Id: run.GetID(), RunID: run.GetRunID(), WorkflowName: name}
+	}
+	return &agentpb.JobResponse{}
 }
