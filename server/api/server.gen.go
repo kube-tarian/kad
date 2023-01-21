@@ -69,6 +69,9 @@ type Response struct {
 	Status  string `json:"status"`
 }
 
+// PostClimonJSONRequestBody defines body for PostClimon for application/json ContentType.
+type PostClimonJSONRequestBody = DeployRequestPayload
+
 // PostConfigJSONRequestBody defines body for PostConfig for application/json ContentType.
 type PostConfigJSONRequestBody = ConfigRequestPayload
 
@@ -86,6 +89,9 @@ type ServerInterface interface {
 	// List of APIs provided by the service
 	// (GET /api-docs)
 	GetApiDocs(c *gin.Context)
+	// deploy the application
+	// (POST /climon)
+	PostClimon(c *gin.Context)
 	// deploy the application
 	// (POST /config)
 	PostConfig(c *gin.Context)
@@ -123,6 +129,16 @@ func (siw *ServerInterfaceWrapper) GetApiDocs(c *gin.Context) {
 	}
 
 	siw.Handler.GetApiDocs(c)
+}
+
+// PostClimon operation middleware
+func (siw *ServerInterfaceWrapper) PostClimon(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostClimon(c)
 }
 
 // PostConfig operation middleware
@@ -216,6 +232,8 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.GET(options.BaseURL+"/api-docs", wrapper.GetApiDocs)
 
+	router.POST(options.BaseURL+"/climon", wrapper.PostClimon)
+
 	router.POST(options.BaseURL+"/config", wrapper.PostConfig)
 
 	router.POST(options.BaseURL+"/deploy", wrapper.PostDeploy)
@@ -234,17 +252,18 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9RVW2sbPRD9K2K+73HrdZu3fUuTUkIKMXbfgimyNOso7EqKRmswxv+9SNqLL2uHQkvp",
-	"m3ZnNOfMmYt2IExtjUbtCYodkHjBmsfjndGlWs/xrUHyM76tDJfhv3XGovMKo1c4c6+MDh9+axEKIO+U",
-	"XsM+Aztc41X1VELxvIP/HZZQwH/5AJ23uHmHs89OgRySaZzAcJZIwimbYGHeWpg3bIVMRN6NQwnZKaN9",
-	"Bg7fGhWMxfMQc7lfntqGxIY0lhl45asQ8a5DYZ2xBzOrVxQ+pH+PtjLbvyXhr6aU2LLei7lE/FqGF5Pi",
-	"osvouFi38X9bKouuNK4eq1QGknt+fv+ee85K45h/QdaCjPCyVbNW+ofm9UjDzKKRBWMf6lCb601zGDqD",
-	"nkKkuxyhMkeyRtMIj66HjtV2nX92ImmNRHyNo11CnvuGRkwn5Fu/rA92zjhcUbo053wXnC8YodugY08W",
-	"NZt/WXxnt7MHRhaFKpXoFWxb6vKNxcmNDTpKKB8n08k05GQsam4VFHAzmU5uYtP6l5hkzq36II2IH2v0",
-	"R2P0IKGAr+hvrboPLkGBJGl0/zSdnqf29BiloqauudtCAd8UeWbKwJWYdWajJEq22sZmCRkpESrk+Zpi",
-	"UzSrSgmII5enDRRnwtAIt5khn2oPqTpI/rOR2+ApjPao4yVubdUKlL9SGqY05OF0bQWMru79PjXDuRS/",
-	"BbNv8wjzjroyrZo4wwPiJT2T93U90/L6Q3qO7vF/V89hWVwanUW3Jt6fHGqEQKKyqQ526DG7x2aFTqNH",
-	"Yg65VBqJGNeSVWqD8cM6s0KGWlqjtD/k7dSG+/BAx5Bxk1B8AhtXQQF5eOZ+BgAA///XWfLfxQgAAA==",
+	"H4sIAAAAAAAC/+xW3WobPRB9FaHvu9x63eZu79KklJBCjN27YIoszToKu5KimTWY4HcvkvbHP2unhZZS",
+	"6J12ZzTnzNHR7L5yaWtnDRhCXrxylE9Qi7i8sabU6zm8NIA0E9vKChXeO28deNIQs8JakLYmPNDWAS84",
+	"ktdmzXcZd8M2UVUPJS8eX/n/Hkpe8P/yATpvcfMOZ5cdA3lA23gJYa0ApdcuwfJ5G2Fk2QqYjLwbD4pn",
+	"x4x2Gffw0ugQLB6Hmsvd8jg2NDa0scw4aapCxZsOhXXBHsyunkFSaP8WXGW3f0rCn20psWV9FvOJ+KUO",
+	"zzYlZNfR4WFdx/ftUTnwpfX12EllXAkSp/tvBQlWWs/oCVgLMsLLVc1am29G1COGmcUgC8G+1L42l02z",
+	"XzrjPYVIdzlCZQ7orMERHp2HDtX2XX52JGkNiGINoy5BEtTgSOiIfJuX9cVOGYct2pT2lO9CiAVD8Bvw",
+	"7MGBYfNPi6/senbH0IHUpZa9gq2lzu9YHO3YgMeE8n4ynUxDT9aBEU7zgl9NppOraFp6ik3mwul3ysr4",
+	"sAY6uEZ3ihf8M9C107chJSiQJI3pH6bT09Ye7qNU2NS18Fte8C8aidkycEXmvN1oBYqtttEsoSMtwwmR",
+	"WGM0RbOqtOTxyuWy0nXyvrM4wm1mkW5STjodQPpo1TZkSmsITNwknKtagfJnTAXTJQ+rSyNgdO7sdskM",
+	"p1L8Esze5hHmDXVVGjXxDg+IZ/WM9+QNPVPO79Fz9FP49+qZsi/rmSz0z58/oucwfM+NokU3dt+eRNhI",
+	"CYhlU+19kw7Z3Tcr8AYIkHkQShtAZMIoVukNxAfn7QoYGOWsNrTP2+uNoPDDE0vGyYzxl6LxFS94Hn4b",
+	"vgcAAP//OUaMWxUKAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

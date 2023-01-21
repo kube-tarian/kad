@@ -27,6 +27,24 @@ paths:
         '200':
           description: OK
 
+  /climon:
+    post:
+      tags:
+        - public
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeployRequestPayload'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
   /deploy:
     post:
       tags:
@@ -37,7 +55,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/DeployRequestPayload'
-
       responses:
         '200':
           description: OK
