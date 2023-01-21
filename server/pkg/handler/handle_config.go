@@ -19,7 +19,7 @@ func (s *APIHanlder) PostConfig(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	var req api.DeployRequestPayload
+	var req api.ConfigRequestPayload
 	if err := c.BindJSON(&req); err != nil {
 		s.sendResponse(c, "Failed to parse config payload", err)
 		return
