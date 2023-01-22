@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: kad-server
+  repository: ghcr.io/kube-tarian/kad/server
   pullPolicy: IfNotPresent
   tag: "0.1.1"
 
