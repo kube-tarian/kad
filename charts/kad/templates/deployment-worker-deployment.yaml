@@ -50,7 +50,7 @@ spec:
             - name: PORT
               value: "{{ .Values.service.port }}"
             - name: ARGOCD_SERVICE_URL
-              value: "{{ .Values.argocd.serviceURL }}.{{ .Release.Namespace }}.svc.cluster.local"
+              value: "{{ .Values.argocd.serviceURL }}"
             - name: ARGOCD_PASSWORD
               valueFrom:
                 secretKeyRef:
