@@ -50,9 +50,12 @@ spec:
             - name: PORT
               value: "{{ .Values.service.port }}"
             - name: ARGOCD_SERVICE_URL
-              value: {{ .Values.argocd.serviceURL }}
+              value: "{{ .Values.argocd.serviceURL }}"
             - name: ARGOCD_PASSWORD
-              value: {{ .Values.argocd.password }}
+              valueFrom:
+                secretKeyRef:
+                  name: "argocd-initial-admin-secret"
+                  key: "password"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
