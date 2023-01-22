@@ -46,7 +46,7 @@ spec:
           #     port: http
           env:
             - name: TEMPORAL_SERVICE_URL
-              value: {{ .Values.temporal.temporalServiceURL }}
+              value: "{{ .Values.temporal.temporalServiceURL }}.{{ .Release.Namespace }}.svc.cluster.local:7233"
             - name: PORT
               value: "{{ .Values.service.port }}"
           resources:

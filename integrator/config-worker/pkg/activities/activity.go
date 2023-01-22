@@ -14,7 +14,7 @@ import (
 type Activities struct {
 }
 
-func (a *Activities) ConfigurationActivity(ctx context.Context, req model.RequestPayload) (model.ResponsePayload, error) {
+func (a *Activities) ConfigurationActivity(ctx context.Context, req model.ConfigPayload) (model.ResponsePayload, error) {
 	logger := logging.NewLogger()
 	logger.Infof("Activity, name: %+v", req)
 	// e := activity.GetInfo(ctx)

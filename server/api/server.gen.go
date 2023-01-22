@@ -22,15 +22,32 @@ type AgentRequest struct {
 	Endpoint   string `json:"endpoint"`
 }
 
-// DeployPayload defines model for DeployPayload.
-type DeployPayload struct {
-	// Operation Operation
-	Operation string               `json:"operation"`
-	Payload   DeployRequestPayload `json:"payload"`
+// ConfigRequestPayload defines model for ConfigRequestPayload.
+type ConfigRequestPayload struct {
+	Operation string `json:"operation"`
+	Payload   struct {
+		// Action Action to be performed
+		Action string `json:"action"`
+
+		// Data Data for the action
+		Data map[string]interface{} `json:"data"`
+
+		// PluginName Plugin name for the operation
+		PluginName string `json:"plugin_name"`
+
+		// Resource Resource to be configured
+		Resource string `json:"resource"`
+	} `json:"payload"`
 }
 
 // DeployRequestPayload defines model for DeployRequestPayload.
 type DeployRequestPayload struct {
+	Operation string  `json:"operation"`
+	Payload   Payload `json:"payload"`
+}
+
+// Payload defines model for Payload.
+type Payload struct {
 	// Action Action to be performed
 	Action string `json:"action"`
 
@@ -41,8 +58,20 @@ type DeployRequestPayload struct {
 	PluginName string `json:"plugin_name"`
 }
 
+// Response Configuration request response
+type Response struct {
+	Message string `json:"message"`
+	Status  string `json:"status"`
+}
+
+// PostClimonJSONRequestBody defines body for PostClimon for application/json ContentType.
+type PostClimonJSONRequestBody = DeployRequestPayload
+
+// PostConfigJSONRequestBody defines body for PostConfig for application/json ContentType.
+type PostConfigJSONRequestBody = ConfigRequestPayload
+
 // PostDeployJSONRequestBody defines body for PostDeploy for application/json ContentType.
-type PostDeployJSONRequestBody = DeployPayload
+type PostDeployJSONRequestBody = DeployRequestPayload
 
 // PostRegisterAgentJSONRequestBody defines body for PostRegisterAgent for application/json ContentType.
 type PostRegisterAgentJSONRequestBody = AgentRequest
@@ -55,6 +84,12 @@ type ServerInterface interface {
 	// List of APIs provided by the service
 	// (GET /api-docs)
 	GetApiDocs(c *gin.Context)
+	// deploy the application
+	// (POST /climon)
+	PostClimon(c *gin.Context)
+	// deploy the application
+	// (POST /config)
+	PostConfig(c *gin.Context)
 	// deploy the application
 	// (POST /deploy)
 	PostDeploy(c *gin.Context)
@@ -89,6 +124,26 @@ func (siw *ServerInterfaceWrapper) GetApiDocs(c *gin.Context) {
 	}
 
 	siw.Handler.GetApiDocs(c)
+}
+
+// PostClimon operation middleware
+func (siw *ServerInterfaceWrapper) PostClimon(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostClimon(c)
+}
+
+// PostConfig operation middleware
+func (siw *ServerInterfaceWrapper) PostConfig(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostConfig(c)
 }
 
 // PostDeploy operation middleware
@@ -172,6 +227,10 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.GET(options.BaseURL+"/api-docs", wrapper.GetApiDocs)
 
+	router.POST(options.BaseURL+"/climon", wrapper.PostClimon)
+
+	router.POST(options.BaseURL+"/config", wrapper.PostConfig)
+
 	router.POST(options.BaseURL+"/deploy", wrapper.PostDeploy)
 
 	router.GET(options.BaseURL+"/register/agent", wrapper.GetRegisterAgent)
@@ -188,18 +247,20 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xWTW/jOAz9KwJ3j9k4u735lkUHg6IDNGh6GxSFIjGpCltSRTpAEOS/DyQ5n7bbdI5z",
-	"s0qRfO/xUc0WlKu9s2iZoNwCqVesZfqcrtDyI743SBzPPjiPgQ2mqGqIXY3hxeh45I1HKIE4GLuC3QjQ",
-	"au+M5Z7gbgQB3xsTUEP586zSSd7zCNhwFRMTEmHs0oVasnEWRvuabvGGimPDW/SV28zkpnJSd/HG75xb",
-	"bkEjqWB8PsLDITTq8vDHgn8HXEIJfxVHyYpWryJ3b9Xag7hk6k4a7eue0Mw1xD4yyPGiS4eqVP08p+nv",
-	"gp1YoPAYopyo+0hrybKbfytZiqULgl9RtE16QPqqWRn7YmWN3RqzFBQxeCjlhvW/EPC09AgOEBLcrpCH",
-	"uiJkxYaljY2iv7qA51LOBWFYYxAPHq14/DZ/EtPZnSCPyiyNOkBvuw9nzC8y1hgod/l3PBlPonjOo5Xe",
-	"QAk348n4JhmFX9NYC+nNP9qpdFghn7n6TkMJ35Gn3tzGK1E38s5StsR/k0mP7++TwNTUtQwbKOGHIRZu",
-	"GbGS8MGtjUYtFps0pcjIqKg7yxWlaTSLyih4jkUKnTRPZnTUg23miPNcIM8Uif93OmUoZxnzUyG9r1qB",
-	"ijfKLkarnI52iMWPpm+znvIkO4mJWtrO63b3uLTZdV9WLyuQl+MIZkivgCtDjKGQq5b60Egf25vpFRwY",
-	"7CcKHnUwjDV9JsjZy787LIsMQW7yrnwixR6ykC3mjgSjD2zSJfwVt1w383OKvzvyq3g2fTSbP4plNDSx",
-	"5ObDt2meb1yDgRqlkGjZVCf/Hc5R3TcLDBYZSQSU2lgkEtJqUZk1poMPboHi8IPiBHcwa8kYgceS6amO",
-	"gS00oYISCtg9734FAAD//wAGPtsaCQAA",
+	"H4sIAAAAAAAC/+xXTW/jNhD9KwTbo2q5zU03NymKIAVi2L0FRkBTI4WBRDKckQEj8H8vSEryh2Q7xWax",
+	"2MXexHA4897j43jyzqWprdGgCXn2zlG+QC3C56wETQt4awDJr60zFhwpCLuyQTI1uGeV+yVtLfCMIzml",
+	"S75LOOjcGqVpZHOXcAdvjXKQ8+zpKNPBuVXCSVHlDwYkTOnCuFqQMponXU6zfgVJvuCt0YUqW7xzsa2M",
+	"yIew/XdMMQba7o+JqnosePb0zn91UPCM/5LulUpbmdKuzi45LeQATeMk+O8cUDplY1m+aHcYGbYGJgPu",
+	"xouRXFGqz7narU739sT2NA4kvO2qsG5zRMI7sJXZfisJ/y+liJb1UcxF4JcYniUlZMfo+LJm4e/tVVlw",
+	"3oJjN5XwXJAYnr8TJFhhHKMXYG2REVy2akqln7WoRwwzD5vMb/apDrW5bJrD1AnvIQS4qxEoC0BrNI7g",
+	"6Dx0rLbr4pMTSWtAFCWMugRJUIPXe0Mbl/TJhoj9Ed8ahniXQiwZgtuAY48WNFv8tfyXzeb3DC1IVSjZ",
+	"K9ha6vyJ5cmJDTiMVX6fTCdTz8lY0MIqnvGbyXRyE0xLL4FkKqz6LTcyLEqgo2d0n/OM/w00s+rOh3gF",
+	"oqQh/I/pdEjt8SFIhU1dC7flGf9HITFTeKzIrDMblUPO1ttgFs9ISX9DJEoMpmjWlZI8PLlUVqqO3rcG",
+	"R7DNDdJtjIm3A0h/mnwbfgaMJohdXlhbtQKlrxgTxkfuvy61gNG+s9tFMwyl+JSavc1DmSvq5rHVhDe8",
+	"r3hWz/BOrugZY76OnqM/hd+vnjH6sp7RQj/9+RE9HZQKCVwqyhbmuZa0aCPDAMa/kK0iqPEa7aOhc9c3",
+	"e+Gc2H5Iig4yEy3mgQTJBRsNCX++m44pnnXRZ/Bsxmg2PxRLb+j9NHHOyMtujriOARspAbFoqoMh6xjV",
+	"Q7MGp4EAmQORKw2ITOicVWoDYWGdWQPr/5c5wO3URpCf4EPKMGpgmJEbV/GMp34O/i8AAP//TjCFq5UN",
+	"AAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

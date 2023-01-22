@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -13,25 +12,27 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (s *APIHanlder) PostDeploy(c *gin.Context) {
+func (s *APIHanlder) PostConfig(c *gin.Context) {
 	//TODO get address from database based on CustomerInfo
-	s.log.Infof("deploy api invocation started")
+	s.log.Infof("config api invocation started")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	var req api.DeployRequestPayload
+	var req api.ConfigRequestPayload
 	if err := c.BindJSON(&req); err != nil {
-		s.sendResponse(c, "Failed to parse deploy payload", err)
+		s.sendResponse(c, "Failed to parse config payload", err)
 		return
 	}
 
 	payload, err := json.Marshal(req.Payload)
 	if err != nil {
-		s.sendResponse(c, "Deploy request prepration failed", err)
+		s.sendResponse(c, "Config request prepration failed", err)
 		return
 	}
 
+	// TODO: currently climon payload is submitted to temporal via agent.
+	// This flow has to modified as per the understanding.
 	response, err := s.client.SubmitJob(
 		ctx,
 		&agentpb.JobRequest{
@@ -46,20 +47,8 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 
 	c.IndentedJSON(http.StatusOK, &api.Response{
 		Status:  "SUCCESS",
-		Message: toString(response)})
+		Message: "submitted Job"})
 
 	s.log.Infof("response received", response)
-	s.log.Infof("deploy api invocation finished")
-}
-
-func (s *APIHanlder) sendResponse(c *gin.Context, msg string, err error) {
-	s.log.Errorf("failed to submit job", err)
-	c.IndentedJSON(http.StatusInternalServerError, &api.Response{
-		Status:  "FAILED",
-		Message: fmt.Sprintf("%s, %v", msg, err),
-	})
-}
-
-func toString(resp *agentpb.JobResponse) string {
-	return fmt.Sprintf("Workflow details, ID: %v, RUN-ID: %v, NAME: %v", resp.Id, resp.RunID, resp.WorkflowName)
+	s.log.Infof("config api invocation finished")
 }

@@ -16,7 +16,7 @@ func Workflow(ctx workflow.Context, payload json.RawMessage) (model.ResponsePayl
 	logger := logging.NewLogger()
 
 	logger.Infof("Configuration workflow started, req: %+v", string(payload))
-	req := []model.RequestPayload{}
+	req := []model.ConfigPayload{}
 	err := json.Unmarshal(payload, &req)
 	if err != nil {
 		logger.Errorf("Deployer worker payload unmarshall failed, Error: %v", err)
