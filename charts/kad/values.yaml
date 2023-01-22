@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-  pullPolicy: IfNotPresent
-  tag: "0.1.1"
+  pullPolicy: Always
+  tag: "latest"
 agent:
   repository: ghcr.io/kube-tarian/kad/agent
 deployment_worker:
