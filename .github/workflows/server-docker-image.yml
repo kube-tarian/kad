@@ -1,0 +1,38 @@
+name: Client Docker Image CI
+
+on:
+  push:
+    paths-ignore:
+      - 'charts/**'
+      - '**.md'
+    branches: [ main ]
+  pull_request:
+    paths-ignore:
+      - 'helm/**'
+      - '**.md'
+    branches: [ main ]
+
+env:
+  # Use docker.io for Docker Hub if empty
+  REGISTRY: ghcr.io
+  # github.repository as <account>/<repo>
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: docker build . --file dockerfiles/server/Dockerfile --tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:latest
+    - name: Docker push
+      run: |
+        docker login ${{ env.REGISTRY }} -u jebinjeb -p ${{ secrets.GITHUB_TOKEN }}
+        docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/server:latest
+      if: github.event_name == 'push'
+
+
+  
