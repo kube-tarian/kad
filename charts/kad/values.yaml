@@ -44,6 +44,10 @@ service:
   type: ClusterIP
   port: 8080
 
+ingressroute:
+  enabled: true
+  host: "captenagent.dev.optimizor.app"
+
 ingress:
   enabled: false
   className: ""
