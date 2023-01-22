@@ -3,6 +3,16 @@ entries:
   kad:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2023-01-22T14:42:15.74215261Z"
+    description: A Helm chart for Kubernetes
+    digest: a6b3eb28be63a041fb20a4ddd94756db19a25167b049398acdaa45f092a1d60b
+    name: kad
+    type: application
+    urls:
+    - https://github.com/kube-tarian/kad/releases/download/kad-0.1.2/kad-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2023-01-22T11:30:01.728756939Z"
     description: A Helm chart for Kubernetes
     digest: 709656fedcd2762bb71cb8e388a2585682e97a4623f4301d5c446d788b8f9f46
@@ -22,6 +32,16 @@ entries:
     - https://github.com/kube-tarian/kad/releases/download/kad-0.1.0/kad-0.1.0.tgz
     version: 0.1.0
   server:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2023-01-22T14:42:15.906096978Z"
+    description: A Helm chart for Kubernetes
+    digest: d2653a77496ebc26c00558cefcee6e93ba9c7164da6614e74ad2a7eadd6661d0
+    name: server
+    type: application
+    urls:
+    - https://github.com/kube-tarian/kad/releases/download/server-0.1.2/server-0.1.2.tgz
+    version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
     created: "2023-01-22T11:30:02.017857039Z"
