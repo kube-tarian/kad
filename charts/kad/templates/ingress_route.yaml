@@ -1,0 +1,17 @@
+{{- if .Values.ingressroute.enabled -}}
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "kad.fullname" . }}-agent
+spec:
+  entryPoints:
+  - web
+  - websecure
+  routes:
+  - kind: Rule
+    match: Host(`{{ .Values.ingressroute.host }}`)
+    services:
+    - name: kad-agent
+      port: {{ .Values.service.port }}
+      scheme: h2c
+{{- end }}
