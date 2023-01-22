@@ -40,13 +40,63 @@ paths:
             encoding:
               payload:
                 contentType: application/json
-
       responses:
         '200':
           description: OK
 
+  /register/agent:
+    post:
+      tags:
+        - public
+      summary: Register agent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+      responses:
+        '200':
+          description: OK
+    put:
+      tags:
+        - public
+      summary: Register agent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+      responses:
+        '200':
+          description: OK
+    get:
+      tags:
+        - public
+      summary: Register agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentRequest'
+
 components:
   schemas:
+    AgentRequest:
+      title: Agent information
+      type: object
+      properties:
+        customer_id:
+          type: string
+        endpoint:
+          type: string
+      required:
+        - customer_id
+        - endpoint
+
     DeployPayload:
       title: Deploy payload
       type: object
