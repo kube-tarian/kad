@@ -1,5 +1,5 @@
 OPEN_API_CODEGEN := github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest
-
+GOBIN := ${HOME}/go/bin
 ${OPEN_API_CODEGEN}:
 	$(eval TOOL=$(@:%=%))
 	@echo Installing ${TOOL}...
@@ -16,3 +16,6 @@ oapi-gen-server:
 	@echo Generating server for ${APP_NAME}
 	@mkdir -p ${OPEN_API_DIR}
 	${GOBIN}/oapi-codegen -config ./cfg.yaml ./openapi.yaml
+
+build:
+	CGO_ENABLED=0 go build -o ./build/server cmd/server/main.go

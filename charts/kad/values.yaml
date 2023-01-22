@@ -88,10 +88,10 @@ affinity: {}
 # TODO: attributes to be added
 temporal:
   external: true
-  temporalServiceURL: temporal-frontend.default.svc.cluster.local:7233
+  temporalServiceURL: temporal-frontend
 
 argocd:
-  serviceURL: argocd-server.default.svc.cluster.local
+  serviceURL: argocd-server
   password: to-be-replaced
 
 # TODO: attributes to be added
