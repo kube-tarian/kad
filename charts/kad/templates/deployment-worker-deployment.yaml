@@ -46,13 +46,16 @@ spec:
               port: http
           env:
             - name: TEMPORAL_SERVICE_URL
-              value: {{ .Values.temporal.temporalServiceURL }}
+              value: "{{ .Values.temporal.temporalServiceURL }}.{{ .Release.Namespace }}.svc.cluster.local:7233"
             - name: PORT
               value: "{{ .Values.service.port }}"
             - name: ARGOCD_SERVICE_URL
-              value: {{ .Values.argocd.serviceURL }}
+              value: "{{ .Values.argocd.serviceURL }}.{{ .Release.Namespace }}.svc.cluster.local"
             - name: ARGOCD_PASSWORD
-              value: {{ .Values.argocd.password }}
+              valueFrom:
+                secretKeyRef:
+                  name: "argocd-initial-admin-secret"
+                  key: "password"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
