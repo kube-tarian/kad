@@ -8,11 +8,11 @@ image:
   pullPolicy: IfNotPresent
   tag: "0.1.1"
 agent:
-  repository: kad-agent
+  repository: ghcr.io/kube-tarian/kad/agent
 deployment_worker:
-  repository: kad-deployment-worker
+  repository: ghcr.io/kube-tarian/kad/deployment-worker
 config_worker:
-  repository: kad-config-worker
+  repository: ghcr.io/kube-tarian/kad/config-worker
 
 imagePullSecrets: []
 nameOverride: ""
