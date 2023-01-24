@@ -4,6 +4,7 @@ metadata:
   name: {{ include "kad.fullname" . }}-agent
   labels:
     {{- include "kad.labels" . | nindent 4 }}
+    app.kubernetes.io/component: agent
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -13,3 +14,4 @@ spec:
       name: http
   selector:
     {{- include "kad.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: agent
