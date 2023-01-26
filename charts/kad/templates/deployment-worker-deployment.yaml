@@ -23,6 +23,7 @@ spec:
         {{- include "kad.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: deployment-worker
     spec:
+      serviceAccountName: {{ include "kad.serviceAccountName" . }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -52,13 +53,20 @@ spec:
               value: "{{ .Values.temporal.temporalServiceURL }}.{{ .Release.Namespace }}.svc.cluster.local:7233"
             - name: PORT
               value: "{{ .Values.service.port }}"
-            - name: ARGOCD_SERVICE_URL
-              value: "{{ .Values.argocd.serviceURL }}"
-            - name: ARGOCD_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: "argocd-initial-admin-secret"
-                  key: "password"
+            - name: CASSANDRA_SERVICE_URL
+              value: "{{ .Values.cassandra.serviceURL }}"
+            - name: CASSANDRA_KEYSPACE_NAME
+              value: "{{ .Values.cassandra.keyspaceName }}"
+            - name: CASSANDRA_TABLE_NAME
+              value: "{{ .Values.cassandra.name }}"
+            - name: CASSANDRA_USERNAME
+              value: "{{ .Values.cassandra.username }}"
+            - name: CASSANDRA_PASSWORD
+              value: "{{ .Values.cassandra.password }}"
+              # valueFrom:
+              #   secretKeyRef:
+              #     name: "{{ .Values.cassandra.secretName }}"
+              #     key: "password"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
