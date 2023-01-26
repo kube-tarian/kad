@@ -3,6 +3,16 @@ entries:
   kad:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2023-01-26T05:45:33.277022282Z"
+    description: A Helm chart for Kubernetes
+    digest: 01d5c2b404620d91877b381a570156e7e1fdae8f4ad6958e5f7bc9bb9ca508de
+    name: kad
+    type: application
+    urls:
+    - https://github.com/kube-tarian/kad/releases/download/kad-0.1.6/kad-0.1.6.tgz
+    version: 0.1.6
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2023-01-22T17:44:50.154827005Z"
     description: A Helm chart for Kubernetes
     digest: c5fb31ec818cd2e0483f657022dceb68c996c7b7f61cdc62f65bea580fbb246b
