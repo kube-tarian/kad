@@ -11,6 +11,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/io"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
+	"github.com/kube-tarian/kad/integrator/common-pkg/plugins/fetcher"
 	"github.com/kube-tarian/kad/integrator/model"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -22,7 +23,7 @@ type ArgoCDCLient struct {
 }
 
 func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
-	cfg, err := fetchConfiguration()
+	cfg, err := fetchConfiguration(logger)
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +101,32 @@ func (a *ArgoCDCLient) HandleRepo(req interface{}) (json.RawMessage, error) {
 	return nil, nil
 }
 
-func fetchConfiguration() (*Configuration, error) {
+func fetchConfiguration(log logging.Logger) (*Configuration, error) {
+	// If ARGOCD_PASSWORD env variable is configured then it will use local default configuration
+	// Else it uses fetched to get the plugin details and prepares the configuration
 	cfg := &Configuration{}
 	err := envconfig.Process("", cfg)
+	if err != nil {
+		fetcherClient, err := fetcher.NewCredentialFetcher(log)
+		if err != nil {
+			log.Errorf("fetcher client initialization failed: %v", err)
+			return nil, err
+		}
+
+		response, err := fetcherClient.FetchPluginDetails(&fetcher.PluginRequest{
+			PluginName: "argocd",
+		})
+		if err != nil {
+			log.Errorf("Failed to get the plugin details: %v", err)
+			return nil, err
+		}
+		cfg = &Configuration{
+			ServiceURL:   response.ServiceURL,
+			IsSSLEnabled: response.IsSSLEnabled,
+			Username:     response.Username,
+			Password:     response.Password,
+		}
+	}
 	return cfg, err
 }
 

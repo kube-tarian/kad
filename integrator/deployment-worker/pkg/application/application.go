@@ -38,7 +38,6 @@ func New(logger logging.Logger) *Application {
 		logger.Fatalf("Could not parse env Config: %v\n", err)
 	}
 
-	// TODO: Create Worker instance and store in Handler
 	worker, err := workerframework.NewWorker(WorkflowTaskQueueName, workflows.Workflow, &activities.Activities{}, logger)
 	if err != nil {
 		logger.Fatalf("Worker initialization failed, Reason: %v\n", err)
