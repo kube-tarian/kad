@@ -4,6 +4,7 @@ metadata:
   name: {{ include "kad.fullname" . }}-agent
   labels:
     {{- include "kad.labels" . | nindent 4 }}
+    app.kubernetes.io/component: agent
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -11,6 +12,7 @@ spec:
   selector:
     matchLabels:
       {{- include "kad.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: agent
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -19,6 +21,7 @@ spec:
       {{- end }}
       labels:
         {{- include "kad.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: agent
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
