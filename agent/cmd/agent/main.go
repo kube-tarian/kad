@@ -13,6 +13,7 @@ import (
 	"github.com/kube-tarian/kad/agent/pkg/config"
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/agent/pkg/server"
+	"google.golang.org/grpc/reflection"
 )
 
 var log = logging.NewLogger()
@@ -38,6 +39,8 @@ func main() {
 	grpcServer := grpc.NewServer()
 	agentpb.RegisterAgentServer(grpcServer, s)
 	log.Infof("Server listening at %v", listener.Addr())
+	// Register reflection service on gRPC server.
+	reflection.Register(grpcServer)
 
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
