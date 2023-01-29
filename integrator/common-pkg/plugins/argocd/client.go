@@ -106,26 +106,28 @@ func fetchConfiguration(log logging.Logger) (*Configuration, error) {
 	// Else it uses fetched to get the plugin details and prepares the configuration
 	cfg := &Configuration{}
 	err := envconfig.Process("", cfg)
-	if err != nil {
-		fetcherClient, err := fetcher.NewCredentialFetcher(log)
-		if err != nil {
-			log.Errorf("fetcher client initialization failed: %v", err)
-			return nil, err
-		}
+	if err == nil {
+		return cfg, err
+	}
 
-		response, err := fetcherClient.FetchPluginDetails(&fetcher.PluginRequest{
-			PluginName: "argocd",
-		})
-		if err != nil {
-			log.Errorf("Failed to get the plugin details: %v", err)
-			return nil, err
-		}
-		cfg = &Configuration{
-			ServiceURL:   response.ServiceURL,
-			IsSSLEnabled: response.IsSSLEnabled,
-			Username:     response.Username,
-			Password:     response.Password,
-		}
+	fetcherClient, err := fetcher.NewCredentialFetcher(log)
+	if err != nil {
+		log.Errorf("fetcher client initialization failed: %v", err)
+		return nil, err
+	}
+
+	response, err := fetcherClient.FetchPluginDetails(&fetcher.PluginRequest{
+		PluginName: "argocd",
+	})
+	if err != nil {
+		log.Errorf("Failed to get the plugin details: %v", err)
+		return nil, err
+	}
+	cfg = &Configuration{
+		ServiceURL:   response.ServiceURL,
+		IsSSLEnabled: response.IsSSLEnabled,
+		Username:     response.Username,
+		Password:     response.Password,
 	}
 	return cfg, err
 }
