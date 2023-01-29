@@ -65,9 +65,9 @@ func NewClientFromKubeConf(options *KubeConfClientOptions, restClientOpts ...RES
 		settings.KubeAPIServer = "https://kubernetes.default.svc.cluster.local"
 	}
 
-	if options.KubeContext != "" {
-		settings.KubeContext = options.KubeContext
-	}
+	//if options.KubeContext != "" {
+	//	settings.KubeContext = options.KubeContext
+	//}
 
 	return newClient(options.Options, settings.RESTClientGetter(), settings)
 }
