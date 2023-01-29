@@ -18,14 +18,14 @@ type Agent struct {
 }
 
 func NewAgent(log logging.Logger) (*Agent, error) {
-	//clnt, err := temporalclient.NewClient(log)
-	//if err != nil {
-	//	log.Errorf("Agent creation failed, %v", err)
-	//	return nil, err
-	//}
+	clnt, err := temporalclient.NewClient(log)
+	if err != nil {
+		log.Errorf("Agent creation failed, %v", err)
+		return nil, err
+	}
 
 	return &Agent{
-		client: nil,
+		client: clnt,
 		log:    log,
 	}, nil
 }
@@ -41,7 +41,7 @@ func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*ag
 	if err != nil {
 		return &agentpb.JobResponse{}, err
 	}
-	
+
 	return prepareJobResponse(run, worker.GetWorkflowName()), err
 }
 
