@@ -48,7 +48,7 @@ func GetK8SConfig(log logging.Logger) (*rest.Config, error) {
 		return nil, err
 	}
 	var k8sConfig *rest.Config
-	if conf.KubeconfigPath != "" {
+	if conf.KubeconfigPath == "" {
 		// creates the in-cluster config
 		k8sConfig, err = rest.InClusterConfig()
 		if err != nil {
