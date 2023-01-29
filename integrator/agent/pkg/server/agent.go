@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kube-tarian/kad/agent/pkg/agentpb"
-	"github.com/kube-tarian/kad/agent/pkg/logging"
-	"github.com/kube-tarian/kad/agent/pkg/temporalclient"
-	"github.com/kube-tarian/kad/agent/pkg/workers"
+	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
+	"github.com/kube-tarian/kad/integrator/agent/pkg/workers"
+	"github.com/kube-tarian/kad/integrator/capten-sdk/agentpb"
+	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"go.temporal.io/sdk/client"
 )
 

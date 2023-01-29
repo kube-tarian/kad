@@ -8,46 +8,46 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kube-tarian/kad/agent/pkg/logging"
-	"github.com/kube-tarian/kad/agent/pkg/model"
-	"github.com/kube-tarian/kad/agent/pkg/temporalclient"
+	"github.com/kube-tarian/kad/integrator/agent/pkg/model"
+	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
+	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"go.temporal.io/sdk/client"
 )
 
 const (
-	ConfigWorkerWorkflowName = "Workflow"
-	ConfigWorkerTaskQueue    = "Configure"
+	DeploymentWorkerWorkflowName = "Workflow"
+	DeploymentWorkerTaskQueue    = "Deployment"
 )
 
-type Config struct {
+type Deployment struct {
 	client *temporalclient.Client
 	log    logging.Logger
 }
 
-func NewConfig(client *temporalclient.Client, log logging.Logger) *Config {
-	return &Config{
+func NewDeployment(client *temporalclient.Client, log logging.Logger) *Deployment {
+	return &Deployment{
 		client: client,
 		log:    log,
 	}
 }
 
-func (d *Config) GetWorkflowName() string {
-	return ConfigWorkerWorkflowName
+func (d *Deployment) GetWorkflowName() string {
+	return DeploymentWorkerWorkflowName
 }
 
-func (d *Config) SendEvent(ctx context.Context, deployPayload json.RawMessage) (client.WorkflowRun, error) {
+func (d *Deployment) SendEvent(ctx context.Context, deployPayload json.RawMessage) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
-		TaskQueue: ConfigWorkerTaskQueue,
+		TaskQueue: DeploymentWorkerTaskQueue,
 	}
 
 	log.Printf("Event sent to temporal: %v", string(deployPayload))
-	run, err := d.client.ExecuteWorkflow(ctx, options, ConfigWorkerWorkflowName, deployPayload)
+	run, err := d.client.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, deployPayload)
 	if err != nil {
 		return nil, err
 	}
 
-	d.log.Infof("Started workflow, ID: %v, WorkflowName: %v RunID: %v", run.GetID(), ConfigWorkerWorkflowName, run.GetRunID())
+	d.log.Infof("Started workflow, ID: %v, WorkflowName: %v RunID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
 
 	// Wait for 5mins till workflow finishes
 	// Timeout with 5mins
@@ -55,7 +55,7 @@ func (d *Config) SendEvent(ctx context.Context, deployPayload json.RawMessage) (
 	var result model.ResponsePayload
 	err = run.Get(ctx, &result)
 	if err != nil {
-		d.log.Errorf("Result for workflow ID: %v, workflowName: %v, runID: %v", run.GetID(), ConfigWorkerWorkflowName, run.GetRunID())
+		d.log.Errorf("Result for workflow ID: %v, workflowName: %v, runID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
 		d.log.Errorf("Workflow result failed, %v", err)
 		return run, err
 	}
@@ -63,7 +63,7 @@ func (d *Config) SendEvent(ctx context.Context, deployPayload json.RawMessage) (
 	return run, nil
 }
 
-func (d *Config) getWorkflowStatusByLatestWorkflow(run client.WorkflowRun) error {
+func (d *Deployment) getWorkflowStatusByLatestWorkflow(run client.WorkflowRun) error {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	for {
 		select {
@@ -81,7 +81,7 @@ func (d *Config) getWorkflowStatusByLatestWorkflow(run client.WorkflowRun) error
 	}
 }
 
-func (d *Config) getWorkflowInformation(run client.WorkflowRun) error {
+func (d *Deployment) getWorkflowInformation(run client.WorkflowRun) error {
 	latestRun := d.client.TemporalClient.GetWorkflow(context.Background(), run.GetID(), "")
 
 	var result model.ResponsePayload

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/kube-tarian/kad/agent/pkg/temporalclient"
+	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
 	"go.temporal.io/sdk/client"
 )
 
