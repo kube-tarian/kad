@@ -32,6 +32,11 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 		return
 	}
 
+	if err := s.ConnectClient(); err != nil {
+		s.sendResponse(c, "agent connection failed", err)
+		return
+	}
+
 	response, err := s.client.SubmitJob(
 		ctx,
 		&agentpb.JobRequest{

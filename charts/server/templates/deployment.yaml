@@ -46,12 +46,16 @@ spec:
               path: /status
               port: http
           env:
-            - name: AGENT_ADDRESS
-              value: "{{ .Values.agent.address }}"
             - name: AGENT_PORT
               value: "{{ .Values.agent.port }}"
             - name: PORT
               value: "{{ .Values.service.port }}"
+            - name: CASSANDRA_HOST
+              value: "{{ .Values.cassandra.host }}"
+            - name: CASSANDRA_USERNAME
+              value: "{{ .Values.cassandra.username }}"
+            - name: CASSANDRA_PASSWORD
+              value: "{{ .Values.cassandra.password }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

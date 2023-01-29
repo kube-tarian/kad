@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"fmt"
+	"github.com/kube-tarian/kad/server/pkg/db"
+	"github.com/sirupsen/logrus"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/agent/pkg/logging"
@@ -61,5 +63,19 @@ func (a *Agent) Close() {
 func fetchConfiguration() (*Configuration, error) {
 	cfg := &Configuration{}
 	err := envconfig.Process("", cfg)
+	session, err := db.New()
+	if err != nil {
+		logrus.Error("failed to get db session", err)
+		return nil, err
+	}
+
+	//todo make customerID dynamic : Ganesh
+	endpoint, err := session.GetEndpoint("1")
+	if err != nil {
+		logrus.Error("failed to get db session", err)
+		return nil, err
+	}
+
+	cfg.AgentAddress = endpoint
 	return cfg, err
 }
