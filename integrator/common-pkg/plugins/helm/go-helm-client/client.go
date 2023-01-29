@@ -19,7 +19,7 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/registry"
+	//"helm.sh/helm/v3/pkg/registry"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/repo"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -56,13 +56,29 @@ func NewClientFromKubeConf(options *KubeConfClientOptions, restClientOpts ...RES
 		return nil, fmt.Errorf("kubeconfig missing")
 	}
 
-	clientGetter := NewRESTClientGetter(options.Namespace, options.KubeConfig, nil, restClientOpts...)
+	//clientGetter := NewRESTClientGetter(options.Namespace, options.KubeConfig, nil, restClientOpts...)
+	if os.Getenv("KUBECONFIG") != "" {
+		settings.KubeConfig = os.Getenv("KUBECONFIG")
+	} else {
+		settings.KubeToken = GetToken()
+		settings.KubeCaFile = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+		settings.KubeAPIServer = "https://kubernetes.default.svc.cluster.local"
+	}
 
 	if options.KubeContext != "" {
 		settings.KubeContext = options.KubeContext
 	}
 
-	return newClient(options.Options, clientGetter, settings)
+	return newClient(options.Options, settings.RESTClientGetter(), settings)
+}
+
+func GetToken() string {
+	token, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+	if err != nil {
+		fmt.Println("failed to read the tokenfile")
+	}
+
+	return string(token)
 }
 
 // NewClientFromRestConf returns a new Helm client constructed with the provided REST config options.
@@ -104,14 +120,14 @@ func newClient(options *Options, clientGetter genericclioptions.RESTClientGetter
 		return nil, err
 	}
 
-	registryClient, err := registry.NewClient(
-		registry.ClientOptDebug(settings.Debug),
-		registry.ClientOptCredentialsFile(settings.RegistryConfig),
-	)
+	//registryClient, err := registry.NewClient(
+	//	registry.ClientOptCredentialsFile(settings.RegistryConfig),
+	//	registry.ClientOptDebug(settings.Debug),
+	//)
 	if err != nil {
 		return nil, err
 	}
-	actionConfig.RegistryClient = registryClient
+	//actionConfig.RegistryClient = settings.RESTClientGetter()
 
 	return &HelmClient{
 		Settings:     settings,

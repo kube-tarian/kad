@@ -9,6 +9,10 @@ image:
   pullPolicy: Always
   tag: "latest"
 
+cassandra:
+  host: cassandra.cassandra.svc.cluster.local
+  username: admin
+  password: admin
 
 imagePullSecrets: []
 nameOverride: ""

@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/kube-tarian/kad/integrator/common-pkg/plugins"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
+	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/integrator/model"
 )
 
@@ -36,6 +39,7 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", strings.ReplaceAll(err.Error(), "\"", "\\\""))),
 		}, fmt.Errorf("plugin not supports deployment activities")
 	}
+
 	msg, err := deployerPlugin.DeployActivities(req)
 	if err != nil {
 		logger.Errorf("Deploy activities failed %s: %v", req.Action, err)
@@ -45,8 +49,70 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 		}, err
 	}
 
+	if req.Action == "install" || req.Action == "update" {
+		if err := InsertToDb(logger, req.Data); err != nil {
+			return model.ResponsePayload{
+				Status:  "Failed",
+				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
+			}, err
+		}
+	} else if req.Action == "delete" {
+		if err := InsertToDb(logger, req.Data); err != nil {
+			return model.ResponsePayload{
+				Status:  "Failed",
+				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
+			}, err
+		}
+	}
+
 	return model.ResponsePayload{
 		Status:  "Success",
 		Message: msg,
 	}, nil
+}
+
+func InsertToDb(logger logging.Logger, reqData json.RawMessage) error {
+	var data *model.Request
+	if err := json.Unmarshal(reqData, data); err != nil {
+		return errors.Wrap(err, "failed to store data in database")
+	}
+
+	dbConf, err := cassandra.GetDbConfig()
+	if err != nil {
+		return errors.Wrap(err, "failed to store data in database")
+	}
+
+	db, err := cassandra.NewCassandraStore(logger, dbConf.DbAddresses, dbConf.DbAdminUsername, dbConf.DbAdminPassword)
+	if err != nil {
+		return errors.Wrap(err, "failed to store data in database")
+	}
+
+	if err := db.InsertToolsDb(data); err != nil {
+		return errors.Wrap(err, "failed to store data in database")
+	}
+
+	return nil
+}
+
+func DeleteDbEntry(logger logging.Logger, reqData json.RawMessage) error {
+	var data *model.Request
+	if err := json.Unmarshal(reqData, data); err != nil {
+		return errors.Wrap(err, "failed to delete data in database")
+	}
+
+	dbConf, err := cassandra.GetDbConfig()
+	if err != nil {
+		return errors.Wrap(err, "failed to delete data in database")
+	}
+
+	db, err := cassandra.NewCassandraStore(logger, dbConf.DbAddresses, dbConf.DbAdminUsername, dbConf.DbAdminPassword)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete data in database")
+	}
+
+	if err := db.DeleteToolsDbEntry(data); err != nil {
+		return errors.Wrap(err, "failed to delete data in database")
+	}
+
+	return nil
 }
