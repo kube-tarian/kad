@@ -31,6 +31,8 @@ stop-docker-compose-test:
 build:
 	go mod download
 	CGO_ENABLED=0 go build -o build/deployment_worker deployment-worker/main.go
+	CGO_ENABLED=0 go build -o build/config_worker config-worker/main.go
+	CGO_ENABLED=0 go build -o build/agent agent/cmd/agent/main.go
 
 clean:
 	rm -rf build
