@@ -41,9 +41,9 @@ func NewStore(log logging.Logger) (*Store, error) {
 		Username: cfg.Username,
 		Password: cfg.Password,
 	}
-	cluster.SslOpts = &gocql.SslOptions{
-		EnableHostVerification: false,
-	}
+	// cluster.SslOpts = &gocql.SslOptions{
+	// 	EnableHostVerification: false,
+	// }
 
 	session, err := cluster.CreateSession()
 	if err != nil {
