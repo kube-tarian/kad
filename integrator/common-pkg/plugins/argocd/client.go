@@ -11,6 +11,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/io"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
+	"github.com/kube-tarian/kad/integrator/common-pkg/plugins/fetcher"
 	"github.com/kube-tarian/kad/integrator/model"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -22,7 +23,7 @@ type ArgoCDCLient struct {
 }
 
 func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
-	cfg, err := fetchConfiguration()
+	cfg, err := fetchConfiguration(logger)
 	if err != nil {
 		return nil, err
 	}
@@ -58,9 +59,76 @@ func (a *ArgoCDCLient) DeployActivities(req interface{}) (json.RawMessage, error
 	}
 }
 
-func fetchConfiguration() (*Configuration, error) {
+func (a *ArgoCDCLient) ConfigurationActivities(req interface{}) (json.RawMessage, error) {
+	payload, _ := req.(model.ConfigPayload)
+	switch payload.Resource {
+	case "cluster":
+		return a.HandleCluster(req)
+	case "repo":
+		return a.HandleRepo(payload)
+	default:
+		return nil, fmt.Errorf("unsupported action for argocd plugin: %v", payload.Action)
+	}
+}
+
+func (a *ArgoCDCLient) HandleCluster(req interface{}) (json.RawMessage, error) {
+	payload, _ := req.(model.ConfigPayload)
+	switch payload.Action {
+	case "add":
+		// return a.ClusterAdd(payload)
+	case "delete":
+		// return a.ClusterDelete(payload)
+	case "list":
+		// return a.ClusterList(payload)
+	default:
+		return nil, fmt.Errorf("unsupported action for argocd plugin: %v", payload.Action)
+	}
+	return nil, nil
+}
+
+func (a *ArgoCDCLient) HandleRepo(req interface{}) (json.RawMessage, error) {
+	payload, _ := req.(model.ConfigPayload)
+	switch payload.Action {
+	case "add":
+		// return a.RepoAdd(payload)
+	case "delete":
+		// return a.RepoDelete(payload)
+	case "list":
+		// return a.RepoList(payload)
+	default:
+		return nil, fmt.Errorf("unsupported action for argocd plugin: %v", payload.Action)
+	}
+	return nil, nil
+}
+
+func fetchConfiguration(log logging.Logger) (*Configuration, error) {
+	// If ARGOCD_PASSWORD env variable is configured then it will use local default configuration
+	// Else it uses fetched to get the plugin details and prepares the configuration
 	cfg := &Configuration{}
 	err := envconfig.Process("", cfg)
+	if err == nil {
+		return cfg, err
+	}
+
+	fetcherClient, err := fetcher.NewCredentialFetcher(log)
+	if err != nil {
+		log.Errorf("fetcher client initialization failed: %v", err)
+		return nil, err
+	}
+
+	response, err := fetcherClient.FetchPluginDetails(&fetcher.PluginRequest{
+		PluginName: "argocd",
+	})
+	if err != nil {
+		log.Errorf("Failed to get the plugin details: %v", err)
+		return nil, err
+	}
+	cfg = &Configuration{
+		ServiceURL:   response.ServiceURL,
+		IsSSLEnabled: response.IsSSLEnabled,
+		Username:     response.Username,
+		Password:     response.Password,
+	}
 	return cfg, err
 }
 

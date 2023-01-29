@@ -5,27 +5,18 @@
 replicaCount: 1
 
 image:
-  pullPolicy: IfNotPresent
-  tag: "0.1.1"
+  pullPolicy: Always
+  tag: "latest"
 agent:
-  repository: kad-agent
+  repository: ghcr.io/kube-tarian/kad/agent
 deployment_worker:
-  repository: kad-deployment-worker
+  repository: ghcr.io/kube-tarian/kad/deployment-worker
 config_worker:
-  repository: kad-config-worker
+  repository: ghcr.io/kube-tarian/kad/config-worker
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: false
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
 
 podAnnotations: {}
 
@@ -43,6 +34,10 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 8080
+
+ingressroute:
+  enabled: true
+  host: "captenagent.dev.optimizor.app"
 
 ingress:
   enabled: false
@@ -88,11 +83,15 @@ affinity: {}
 # TODO: attributes to be added
 temporal:
   external: true
-  temporalServiceURL: temporal-frontend.default.svc.cluster.local:7233
+  temporalServiceURL: temporal-frontend
 
 argocd:
   serviceURL: argocd-server.default.svc.cluster.local
-  password: to-be-replaced
 
-# TODO: attributes to be added
+# Attributes to be added
 cassandra:
+  username: user
+  secretName: "temporal-default-store"
+  serviceURL: "temporal-cassandra.default.svc.cluster"
+  keyspaceName: "capten"
+  tableName: "tools"

@@ -27,6 +27,24 @@ paths:
         '200':
           description: OK
 
+  /climon:
+    post:
+      tags:
+        - public
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeployRequestPayload'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
   /deploy:
     post:
       tags:
@@ -36,13 +54,32 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeployPayload'
-            encoding:
-              payload:
-                contentType: application/json
+              $ref: '#/components/schemas/DeployRequestPayload'
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /config:
+    post:
+      tags:
+        - public
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigRequestPayload'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
 
   /register/agent:
     post:
@@ -97,21 +134,19 @@ components:
         - customer_id
         - endpoint
 
-    DeployPayload:
-      title: Deploy payload
+    Response:
       type: object
+      description: Configuration request response
       properties:
-        operation:
+        status:
           type: string
-          description: Operation
-        payload:
-          $ref: '#/components/schemas/DeployRequestPayload'
+        message:
+          type: string
       required:
-        - operation
-        - payload
+        - status
+        - message
 
-    DeployRequestPayload:
-      title: Deploy operation request payload
+    Payload:
       type: object
       properties:
         plugin_name:
@@ -127,3 +162,35 @@ components:
         - plugin_name
         - action
         - data
+
+    DeployRequestPayload:
+      title: Deploy operation request payload
+      type: object
+      properties:
+        operation:
+          type: string
+        payload:
+          allOf:
+            - $ref: '#/components/schemas/Payload'
+      required:
+        - operation
+        - payload
+
+    ConfigRequestPayload:
+      title: Configure payload
+      type: object
+      properties:
+        operation:
+          type: string
+        payload:
+          allOf:
+            - $ref: '#/components/schemas/Payload'
+            - properties:
+                resource:
+                  type: string
+                  description: Resource to be configured
+              required:
+                - resource
+      required:
+        - operation
+        - payload

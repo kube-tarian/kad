@@ -38,10 +38,7 @@ func (s *APIHanlder) PostRegisterAgent(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusOK, &model.DeployResponse{
-		Status:  "SUCCESS",
-		Message: ""})
-
+	c.Writer.WriteHeader(http.StatusOK)
 	s.log.Infof("Register agent api invocation finished")
 }
 
@@ -66,9 +63,6 @@ func (s *APIHanlder) PutRegisterAgent(c *gin.Context) {
 
 	//TODO Update in DB and internal cache
 
-	c.IndentedJSON(http.StatusOK, &model.DeployResponse{
-		Status:  "SUCCESS",
-		Message: ""})
-
+	c.Writer.WriteHeader(http.StatusOK)
 	s.log.Infof("Update register agent api invocation finished")
 }
