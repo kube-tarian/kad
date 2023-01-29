@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/kube-tarian/kad/server/pkg/db"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,6 +32,11 @@ func main() {
 	s, err := handler.NewAPIHandler(log)
 	if err != nil {
 		log.Fatalf("APIHandler initialization failed, %v", err)
+	}
+
+	_, err = db.New()
+	if err != nil {
+		log.Fatalf("Failed to connect to cassandra database", err)
 	}
 
 	r := gin.Default()

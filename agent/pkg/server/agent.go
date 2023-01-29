@@ -17,31 +17,32 @@ type Agent struct {
 }
 
 func NewAgent(log logging.Logger) (*Agent, error) {
-	clnt, err := temporalclient.NewClient(log)
-	if err != nil {
-		log.Errorf("Agent creation failed, %v", err)
-		return nil, err
-	}
+	//clnt, err := temporalclient.NewClient(log)
+	//if err != nil {
+	//	log.Errorf("Agent creation failed, %v", err)
+	//	return nil, err
+	//}
 
 	return &Agent{
-		client: clnt,
+		client: nil,
 		log:    log,
 	}, nil
 }
 
 func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*agentpb.JobResponse, error) {
 	a.log.Infof("Recieved event %+v", request)
-	worker, err := a.getWorker(request.Operation)
-	if err != nil {
-		return &agentpb.JobResponse{}, err
-	}
+	//worker, err := a.getWorker(request.Operation)
+	//if err != nil {
+	//	return &agentpb.JobResponse{}, err
+	//}
+	//
+	//run, err := worker.SendEvent(ctx, request.Payload.GetValue())
+	//if err != nil {
+	//	return &agentpb.JobResponse{}, err
+	//}
 
-	run, err := worker.SendEvent(ctx, request.Payload.GetValue())
-	if err != nil {
-		return &agentpb.JobResponse{}, err
-	}
-
-	return &agentpb.JobResponse{Id: run.GetID(), RunID: run.GetRunID(), WorkflowName: worker.GetWorkflowName()}, err
+	//return &agentpb.JobResponse{Id: run.GetID(), RunID: run.GetRunID(), WorkflowName: worker.GetWorkflowName()}, err
+	return &agentpb.JobResponse{Id: "testid", RunID: "test", WorkflowName: "test"}, nil
 }
 
 func (a *Agent) getWorker(operatoin string) (workers.Worker, error) {

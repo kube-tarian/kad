@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kube-tarian/kad/server/api"
@@ -14,17 +15,27 @@ type APIHanlder struct {
 	client *client.Agent
 }
 
-func NewAPIHandler(log logging.Logger) (*APIHanlder, error) {
-	client, err := client.NewAgent(log)
-	if err != nil {
-		log.Errorf("failed to connect agent internal error", err)
-		return nil, err
-	}
+var (
+	apiOnce sync.Once
+)
 
+func NewAPIHandler(log logging.Logger) (*APIHanlder, error) {
 	return &APIHanlder{
 		log:    log,
-		client: client,
+		client: nil,
 	}, nil
+}
+
+func (s *APIHanlder) ConnectClient() error {
+	var err error
+	apiOnce.Do(func() {
+		s.client, err = client.NewAgent(s.log)
+		if err != nil {
+			s.log.Errorf("failed to connect agent internal error", err)
+		}
+	})
+
+	return err
 }
 
 func (s *APIHanlder) Close(c *gin.Context) {

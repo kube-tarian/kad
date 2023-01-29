@@ -1,0 +1,2 @@
+# enable password authentication!
+authenticator: PasswordAuthenticator
