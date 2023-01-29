@@ -51,7 +51,7 @@ func (c *CredentialFetcher) FetchPluginDetails(req *PluginRequest) (*PluginRespo
 	case "argocd":
 		return c.FetchArgoCDDetails(
 			pluginDetails.Namespace,
-			pluginDetails.ReleaseName,
+			pluginDetails.ReleaseName+"-server",
 		)
 	}
 
