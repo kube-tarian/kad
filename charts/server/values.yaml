@@ -5,10 +5,14 @@
 replicaCount: 1
 
 image:
-  repository: kad-server
+  repository: srikrishnabh/intelops-server
   pullPolicy: IfNotPresent
-  tag: "0.1.1"
+  tag: "1.2"
 
+cassandra:
+  host: cassandra.cassandra.svc.cluster.local
+  username: admin
+  password: admin
 
 imagePullSecrets: []
 nameOverride: ""

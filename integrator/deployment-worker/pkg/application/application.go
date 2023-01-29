@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/go-chi/chi/v5"
+	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/db/cassandra"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
@@ -30,9 +31,10 @@ type Application struct {
 	httpServer *http.Server
 	worker     *workerframework.Worker
 	logger     logging.Logger
+	Db         cassandra.Store
 }
 
-func New(logger logging.Logger) *Application {
+func New(logger logging.Logger, db cassandra.Store) *Application {
 	cfg := &Configuration{}
 	if err := envconfig.Process("", cfg); err != nil {
 		logger.Fatalf("Could not parse env Config: %v\n", err)
@@ -63,6 +65,7 @@ func New(logger logging.Logger) *Application {
 		httpServer: httpServer,
 		worker:     worker,
 		logger:     logger,
+		Db:         db,
 	}
 }
 
