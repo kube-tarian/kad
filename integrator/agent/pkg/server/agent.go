@@ -32,17 +32,16 @@ func NewAgent(log logging.Logger) (*Agent, error) {
 
 func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*agentpb.JobResponse, error) {
 	a.log.Infof("Recieved event %+v", request)
-	//worker, err := a.getWorker(request.Operation)
-	//if err != nil {
-	//	return &agentpb.JobResponse{}, err
-	//}
-	//
-	//run, err := worker.SendEvent(ctx, request.Payload.GetValue())
-	//if err != nil {
-	//	return &agentpb.JobResponse{}, err
-	//}
+	worker, err := a.getWorker(request.Operation)
+	if err != nil {
+		return &agentpb.JobResponse{}, err
+	}
 
 	run, err := worker.SendEvent(ctx, request.Payload.GetValue())
+	if err != nil {
+		return &agentpb.JobResponse{}, err
+	}
+	
 	return prepareJobResponse(run, worker.GetWorkflowName()), err
 }
 
