@@ -3,10 +3,17 @@ kind: ClusterRole
 metadata:
   name: {{ include "kad.fullname" . }}
 rules:
-- apiGroups: [""]
+- apiGroups: ["*"]
   #
   # at the HTTP level, the name of the resource for accessing Secret
   # objects is "secrets"
-  resources: ["secrets", "services", "configmaps"]
-  verbs: ["get", "list"]
+  resources: ["*"]
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
 
