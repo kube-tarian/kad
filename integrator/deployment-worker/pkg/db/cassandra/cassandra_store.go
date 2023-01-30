@@ -24,7 +24,7 @@ const (
 	grantSchemaChangeLockModifyPermission = "GRANT MODIFY ON TABLE schema_change.lock TO %s ;"
 	createToolsTableCQL                   = "CREATE TABLE IF NOT EXISTS %s.tools ( name text, repo_name text, repo_url text, chart_name text, namespace text, release_name text, version text, PRIMARY KEY (name))"
 	captenKeyspace                        = "capten"
-	insertToolsCQL                        = `INSERT INTO tools (name, repo_name, repo_url, chart_name, namespace, release_name, version) VALUES (?, ?, ?, ?, ?, ?, ?)`
+	insertToolsCQL                        = `INSERT INTO capten.tools (name, repo_name, repo_url, chart_name, namespace, release_name, version) VALUES (?, ?, ?, ?, ?, ?, ?)`
 	deleteToolsCQL                        = "DELETE FROM capten.tools where name='%s' if exists"
 )
 
