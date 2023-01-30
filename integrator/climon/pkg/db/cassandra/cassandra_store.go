@@ -4,10 +4,11 @@ package cassandra
 import (
 	"errors"
 	"fmt"
-	"github.com/kube-tarian/kad/integrator/model"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/kube-tarian/kad/integrator/model"
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"

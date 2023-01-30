@@ -8,8 +8,9 @@ import (
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/application"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/application"
 )
 
 type TestContextData struct {
@@ -73,7 +74,12 @@ func checkResponse(resp *http.Response, statusCode int) bool {
 func startApplication(stop chan bool) {
 	os.Setenv("PORT", "9080")
 	log := logging.NewLogger()
-	app := application.New(log)
+	db, err := cassandra.Create(logger)
+	if err != nil {
+		logger.Fatalf("failed to create db connection", err)
+	}
+
+	app := application.New(log, db)
 	go app.Start()
 
 	<-stop

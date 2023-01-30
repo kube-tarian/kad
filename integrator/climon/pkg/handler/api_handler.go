@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/kube-tarian/kad/integrator/climon/api"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/api"
 )
 
 type APIHandler struct {

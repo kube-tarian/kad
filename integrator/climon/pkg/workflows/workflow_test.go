@@ -3,7 +3,7 @@ package workflows
 import (
 	"testing"
 
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/activities"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/activities"
 	"github.com/kube-tarian/kad/integrator/model"
 	"go.temporal.io/sdk/worker"
 

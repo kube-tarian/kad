@@ -51,13 +51,15 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 
 	if req.Action == "install" || req.Action == "update" {
 		if err := InsertToDb(logger, req.Data); err != nil {
+			logger.Errorf("insert db failed, %v", err)
 			return model.ResponsePayload{
 				Status:  "Failed",
 				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
 			}, err
 		}
 	} else if req.Action == "delete" {
-		if err := InsertToDb(logger, req.Data); err != nil {
+		if err := DeleteDbEntry(logger, req.Data); err != nil {
+			logger.Errorf("delete plugin failed, %v", err)
 			return model.ResponsePayload{
 				Status:  "Failed",
 				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
@@ -72,7 +74,7 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 }
 
 func InsertToDb(logger logging.Logger, reqData json.RawMessage) error {
-	var data *model.Request
+	data := &model.Request{}
 	if err := json.Unmarshal(reqData, data); err != nil {
 		return errors.Wrap(err, "failed to store data in database")
 	}
@@ -95,7 +97,7 @@ func InsertToDb(logger logging.Logger, reqData json.RawMessage) error {
 }
 
 func DeleteDbEntry(logger logging.Logger, reqData json.RawMessage) error {
-	var data *model.Request
+	data := &model.Request{}
 	if err := json.Unmarshal(reqData, data); err != nil {
 		return errors.Wrap(err, "failed to delete data in database")
 	}

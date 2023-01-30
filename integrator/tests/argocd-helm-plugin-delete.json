@@ -1,5 +1,5 @@
 {
-  "operation": "deployment",
+  "operation": "climon",
   "payload": {
     "plugin_name": "helm",
     "action": "delete",

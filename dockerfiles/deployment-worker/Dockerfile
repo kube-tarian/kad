@@ -4,10 +4,9 @@ COPY ./integrator ./
 RUN rm -rf vendor
 
 RUN go mod download
-RUN go build -o ./build/deployment-worker deployment-worker/main.go
+RUN CGO_ENABLED=0 go build -o ./build/deployment-worker deployment-worker/main.go
 
-FROM alpine:3.16
-RUN apk add --no-cache libc6-compat
+FROM scratch
 COPY --from=builder ./build/deployment-worker deployment-worker
 
 USER 65532:65532

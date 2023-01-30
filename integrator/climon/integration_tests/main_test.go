@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kube-tarian/kad/integrator/climon/pkg/application"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/workflows"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/application"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/workflows"
 	"github.com/kube-tarian/kad/integrator/model"
 	"go.temporal.io/sdk/client"
 )
