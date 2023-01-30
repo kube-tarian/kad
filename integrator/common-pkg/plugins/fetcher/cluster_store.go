@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	FetchClusterQuery = `select name, kubeconfig from ? where name = ?;`
+	FetchClusterQuery = `select name, kubeconfig from clusters where name = ?;`
 )
 
 type ClusterStoreConfiguration struct {
@@ -32,7 +32,7 @@ func FetchClusterDetails(log logging.Logger, clusterName string) (*ClusterDetail
 
 	pd := &ClusterDetails{}
 	// name, kubeconfig
-	query := store.GetSession().Query(FetchClusterQuery, cfg.TableName, clusterName)
+	query := store.GetSession().Query(FetchClusterQuery, clusterName)
 	err = query.Scan(
 		&pd.Name,
 		&pd.Kubeconfig,
