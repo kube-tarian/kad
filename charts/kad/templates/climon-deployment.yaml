@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kad.fullname" . }}-config-worker
+  name: {{ include "kad.fullname" . }}-climon
   labels:
     {{- include "kad.labels" . | nindent 4 }}
-    app.kubernetes.io/component: config-worker
+    app.kubernetes.io/component: climon
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -12,7 +12,7 @@ spec:
   selector:
     matchLabels:
       {{- include "kad.selectorLabels" . | nindent 6 }}
-      app.kubernetes.io/component: config-worker
+      app.kubernetes.io/component: climon
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -21,7 +21,7 @@ spec:
       {{- end }}
       labels:
         {{- include "kad.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: config-worker
+        app.kubernetes.io/component: climon
     spec:
       serviceAccountName: {{ include "kad.serviceAccountName" . }}
       {{- with .Values.imagePullSecrets }}
@@ -31,7 +31,7 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}-config-worker
+        - name: {{ .Chart.Name }}-climon
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.climon.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
