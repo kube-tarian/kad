@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"github.com/google/uuid"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
 	"go.temporal.io/sdk/client"
 )
@@ -25,7 +26,7 @@ func (c *climon) GetWorkflowName() string {
 
 func (c *climon) SendEvent(ctx context.Context, deployPayload json.RawMessage) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
-		ID:        "helm-deploy-workflow",
+		ID:        "helm-deploy-workflow" + uuid.NewString(),
 		TaskQueue: ClimonHelmTaskQueue,
 	}
 
