@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	FetchPluginQuery = `select name, repo_name, repo_url, chart_name, namespace, release_name, version from ? where name = ?;`
+	FetchPluginQuery = `select name, repo_name, repo_url, chart_name, namespace, release_name, version from tools where name = ?;`
 )
 
 type PluginConfiguration struct {
@@ -32,8 +32,7 @@ func FetchPluginDetails(log logging.Logger, pluginName string) (*PluginDetails, 
 
 	pd := &PluginDetails{}
 	// name, repo_name, repo_url, chart_name, namespace, release_name, version
-	query := store.GetSession().Query(FetchPluginQuery, cfg.TableName, pluginName)
-	err = query.Scan(
+	err = store.GetSession().Query(FetchPluginQuery, pluginName).Scan(
 		&pd.Name,
 		&pd.RepoName,
 		&pd.RepoURL,
