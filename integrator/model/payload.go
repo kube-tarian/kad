@@ -34,5 +34,5 @@ type Request struct {
 	Timeout     int    `json:"timeout" default:"5"`
 	Version     string `json:"version"`
 
-	KubeConfig string `json:"kube_config" required:"true"`
+	ClusterName string `json:"cluster_name" required:"false"`
 }

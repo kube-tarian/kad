@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/kube-tarian/kad/server/pkg/db"
-	"github.com/sirupsen/logrus"
 	"net/http"
+
+	"github.com/kube-tarian/kad/server/pkg/db"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kube-tarian/kad/server/api"
@@ -22,19 +22,19 @@ func (s *APIHanlder) PostRegisterAgent(c *gin.Context) {
 	//TODO Save in DB and internal cache
 	session, err := db.New()
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, &model.DeployResponse{
+		c.IndentedJSON(http.StatusInternalServerError, &api.Response{
 			Status:  "FAILED",
 			Message: "failed to get db session"})
-		logrus.Error("failed to get db session", err)
+		s.log.Error("failed to get db session", err)
 		return
 	}
 
 	err = session.RegisterEndpoint(req.CustomerId, req.Endpoint)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, &model.DeployResponse{
+		c.IndentedJSON(http.StatusInternalServerError, &api.Response{
 			Status:  "FAILED",
 			Message: "failed to store data"})
-		logrus.Error("failed to get db session", err)
+		s.log.Error("failed to get db session", err)
 		return
 	}
 

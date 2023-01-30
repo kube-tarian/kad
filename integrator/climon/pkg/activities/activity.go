@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
+
+	"github.com/kube-tarian/kad/integrator/climon/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/kube-tarian/kad/integrator/common-pkg/plugins"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
@@ -36,6 +39,7 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", strings.ReplaceAll(err.Error(), "\"", "\\\""))),
 		}, fmt.Errorf("plugin not supports deployment activities")
 	}
+
 	msg, err := deployerPlugin.DeployActivities(req)
 	if err != nil {
 		logger.Errorf("Deploy activities failed %s: %v", req.Action, err)
@@ -47,14 +51,13 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 
 	if req.Action == "install" || req.Action == "update" {
 		if err := InsertToDb(logger, req.Data); err != nil {
-			logger.Errorf("insert db failed", err)
 			return model.ResponsePayload{
 				Status:  "Failed",
 				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
 			}, err
 		}
 	} else if req.Action == "delete" {
-		if err := DeleteDbEntry(logger, req.Data); err != nil {
+		if err := InsertToDb(logger, req.Data); err != nil {
 			return model.ResponsePayload{
 				Status:  "Failed",
 				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
@@ -69,9 +72,8 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 }
 
 func InsertToDb(logger logging.Logger, reqData json.RawMessage) error {
-	var data model.Request
-	fmt.Println("requestData", string(reqData))
-	if err := json.Unmarshal(reqData, &data); err != nil {
+	var data *model.Request
+	if err := json.Unmarshal(reqData, data); err != nil {
 		return errors.Wrap(err, "failed to store data in database")
 	}
 
@@ -85,7 +87,7 @@ func InsertToDb(logger logging.Logger, reqData json.RawMessage) error {
 		return errors.Wrap(err, "failed to store data in database")
 	}
 
-	if err := db.InsertToolsDb(&data); err != nil {
+	if err := db.InsertToolsDb(data); err != nil {
 		return errors.Wrap(err, "failed to store data in database")
 	}
 
@@ -93,9 +95,8 @@ func InsertToDb(logger logging.Logger, reqData json.RawMessage) error {
 }
 
 func DeleteDbEntry(logger logging.Logger, reqData json.RawMessage) error {
-	var data model.Request
-	fmt.Println("requestData", string(reqData))
-	if err := json.Unmarshal(reqData, &data); err != nil {
+	var data *model.Request
+	if err := json.Unmarshal(reqData, data); err != nil {
 		return errors.Wrap(err, "failed to delete data in database")
 	}
 
@@ -109,7 +110,7 @@ func DeleteDbEntry(logger logging.Logger, reqData json.RawMessage) error {
 		return errors.Wrap(err, "failed to delete data in database")
 	}
 
-	if err := db.DeleteToolsDbEntry(&data); err != nil {
+	if err := db.DeleteToolsDbEntry(data); err != nil {
 		return errors.Wrap(err, "failed to delete data in database")
 	}
 

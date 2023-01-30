@@ -20,3 +20,8 @@ type PluginDetails struct {
 	ReleaseName string
 	Version     string
 }
+
+type ClusterDetails struct {
+	Name       string
+	Kubeconfig string
+}
