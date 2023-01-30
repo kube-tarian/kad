@@ -3,4 +3,4 @@ generate:
   chi-server: true
   models: true
   embedded-spec: true
-output: deployment-worker/api/deployment_worker.gen.go
+output: climon/api/climon.gen.go

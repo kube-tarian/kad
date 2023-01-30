@@ -45,73 +45,8 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 		}, err
 	}
 
-	if req.Action == "install" || req.Action == "update" {
-		if err := InsertToDb(logger, req.Data); err != nil {
-			logger.Errorf("insert db failed", err)
-			return model.ResponsePayload{
-				Status:  "Failed",
-				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
-			}, err
-		}
-	} else if req.Action == "delete" {
-		if err := DeleteDbEntry(logger, req.Data); err != nil {
-			return model.ResponsePayload{
-				Status:  "Failed",
-				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
-			}, err
-		}
-	}
-
 	return model.ResponsePayload{
 		Status:  "Success",
 		Message: msg,
 	}, nil
-}
-
-func InsertToDb(logger logging.Logger, reqData json.RawMessage) error {
-	var data model.Request
-	fmt.Println("requestData", string(reqData))
-	if err := json.Unmarshal(reqData, &data); err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	dbConf, err := cassandra.GetDbConfig()
-	if err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	db, err := cassandra.NewCassandraStore(logger, dbConf.DbAddresses, dbConf.DbAdminUsername, dbConf.DbAdminPassword)
-	if err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	if err := db.InsertToolsDb(&data); err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	return nil
-}
-
-func DeleteDbEntry(logger logging.Logger, reqData json.RawMessage) error {
-	var data model.Request
-	fmt.Println("requestData", string(reqData))
-	if err := json.Unmarshal(reqData, &data); err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	dbConf, err := cassandra.GetDbConfig()
-	if err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	db, err := cassandra.NewCassandraStore(logger, dbConf.DbAddresses, dbConf.DbAdminUsername, dbConf.DbAdminPassword)
-	if err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	if err := db.DeleteToolsDbEntry(&data); err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	return nil
 }

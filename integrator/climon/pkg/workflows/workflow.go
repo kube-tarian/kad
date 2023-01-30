@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/kube-tarian/kad/integrator/climon/pkg/activities"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/activities"
 	"github.com/kube-tarian/kad/integrator/model"
 	"go.temporal.io/sdk/workflow"
 )

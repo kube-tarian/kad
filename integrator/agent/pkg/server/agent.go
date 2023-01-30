@@ -48,7 +48,7 @@ func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*ag
 func (a *Agent) getWorker(operatoin string) (workers.Worker, error) {
 	switch operatoin {
 	case "climon":
-		return workers.NewClimon(a.client), nil
+		return workers.NewClimon(a.client, a.log), nil
 	case "deployment":
 		return workers.NewDeployment(a.client, a.log), nil
 	case "config":

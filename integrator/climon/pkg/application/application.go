@@ -9,12 +9,12 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/activities"
 	"github.com/kube-tarian/kad/integrator/climon/pkg/db/cassandra"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/handler"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/workflows"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/activities"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/handler"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/workflows"
 )
 
 const (
