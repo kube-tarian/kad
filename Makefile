@@ -7,21 +7,25 @@ CLIMON_APP_NAME := climon
 BUILD := 0.1.1
 
 gen-protoc:
-	cd proto && protoc --go_out=../agent/pkg/agentpb/ --go_opt=paths=source_relative \
-    		--go-grpc_out=../agent/pkg/agentpb/ --go-grpc_opt=paths=source_relative \
+	mkdir -p integrator/agent/pkg/agentpb
+	mkdir -p server/pkg/pb/agentpb
+	mkdir -p server/pkg/pb/climonpb
+
+	cd proto && protoc --go_out=../integrator/agent/pkg/agentpb/ --go_opt=paths=source_relative \
+    		--go-grpc_out=../integrator/agent/pkg/agentpb/ --go-grpc_opt=paths=source_relative \
     		./agent.proto
 
 	cd proto && protoc --go_out=../server/pkg/pb/agentpb --go_opt=paths=source_relative \
     		--go-grpc_out=../server/pkg/pb/agentpb --go-grpc_opt=paths=source_relative \
     		./agent.proto
 	
+	cd proto && protoc --go_out=../integrator/capten-sdk/agentpb/ --go_opt=paths=source_relative \
+    		--go-grpc_out=../integrator/capten-sdk/agentpb/ --go-grpc_opt=paths=source_relative \
+    		./agent.proto
+
 	cd proto && protoc --go_out=../server/pkg/pb/climonpb --go_opt=paths=source_relative \
     		--go-grpc_out=../server/pkg/pb/climonpb --go-grpc_opt=paths=source_relative \
     		./climon.proto
-
-	cd proto && protoc --go_out=../climon/pkg/pb/climonpb --go_opt=paths=source_relative \
-                --go-grpc_out=../climon/pkg/pb/climonpb --go-grpc_opt=paths=source_relative \
-                ./climon.proto
 
 docker-build-server:
 	# The prefix for server to changed either as server or intelops-kad-server
