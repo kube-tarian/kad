@@ -22,20 +22,3 @@ message JobResponse {
   string runID = 2;
   string workflowName = 3;
 }
-
-message RequestPayload {
-	string plugin_name = 1;
-	string action = 2;
-	ApplicationRequest data = 3;
-}
-
-message ApplicationRequest {
-  string repo_name = 1;
-	string repo_url = 2;
-	string chart_name = 3;
-
-	string namespace = 4;
-	string release_name = 5;
-	uint32 timeout = 6;
-	string version = 7;
-}
