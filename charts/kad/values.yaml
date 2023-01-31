@@ -13,6 +13,8 @@ deployment_worker:
   repository: ghcr.io/kube-tarian/kad/deployment-worker
 config_worker:
   repository: ghcr.io/kube-tarian/kad/config-worker
+climon:
+  repository: ghcr.io/kube-tarian/kad/climon
 
 imagePullSecrets: []
 nameOverride: ""
@@ -92,6 +94,6 @@ argocd:
 cassandra:
   username: user
   secretName: "temporal-default-store"
-  serviceURL: "temporal-cassandra.default.svc.cluster"
+  serviceURL: "temporal-cassandra"
   keyspaceName: "capten"
   tableName: "tools"

@@ -4,6 +4,7 @@ package cassandra
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -55,6 +56,41 @@ func (c *CassandraStore) Connect(dbAddrs []string, dbAdminUsername string, dbAdm
 func (c *CassandraStore) Close() {
 	c.session.Close()
 }
+func (c *CassandraStore) CreateDbUser(serviceUsername string, servicePassword string) (err error) {
+	// Create database user for service usage
+	err = c.session.Query(fmt.Sprintf(createUser, serviceUsername, servicePassword)).Exec()
+	if err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			return c.updateDbUser(serviceUsername, servicePassword)
+		} else {
+			c.logg.Error("Unable to create service user", err)
+			return
+		}
+	}
+	return
+}
+
+func (c *CassandraStore) GrantPermission(serviceUsername string, dbName string) (err error) {
+	err = c.session.Query(fmt.Sprintf(grantSchemaChangeLockSelectPermission, serviceUsername)).Exec()
+	if err != nil {
+		c.logg.Error("Unable to grant select permission to service user on schema_change.lock table", err)
+		return
+	}
+
+	err = c.session.Query(fmt.Sprintf(grantSchemaChangeLockModifyPermission, serviceUsername)).Exec()
+	if err != nil {
+		c.logg.Error("Unable to grant modify permission to service user on schema_change.lock table", err)
+		return
+	}
+
+	err = c.session.Query(fmt.Sprintf(grantPermission, dbName, serviceUsername)).Exec()
+	if err != nil {
+		c.logg.Error("Unable to grant permission to service user", err)
+		return
+	}
+
+	return
+}
 
 func (c *CassandraStore) CreateDb(dbName string, replicationFactor string) (err error) {
 	// Create keyspace only if it does not already exist
@@ -91,7 +127,7 @@ func (c *CassandraStore) CreateLockSchemaDb(replicationFactor string) (err error
 	return
 }
 
-func configureClusterConfig(addrs []string, adminUsername string, adminPassword string) (cluster *gocql.ClusterConfig, err error) {
+var configureClusterConfig = func(addrs []string, adminUsername string, adminPassword string) (cluster *gocql.ClusterConfig, err error) {
 	if len(addrs) == 0 {
 		err = errors.New("you must specify a Cassandra address to connect to")
 		return
@@ -112,7 +148,7 @@ func configureClusterConfig(addrs []string, adminUsername string, adminPassword 
 	return
 }
 
-func createDbSession(cluster *gocql.ClusterConfig) (session *gocql.Session, err error) {
+var createDbSession = func(cluster *gocql.ClusterConfig) (session *gocql.Session, err error) {
 	session, err = cluster.CreateSession()
 	if err != nil {
 		return nil, err

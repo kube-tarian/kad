@@ -7,16 +7,18 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/activities"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/db/cassandra"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/handler"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/workflows"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/activities"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/handler"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/workflows"
 )
 
 const (
-	WorkflowTaskQueueName = "Deployment"
+	WorkflowTaskQueueName = "CLIMON_HELM_TASK_QUEUE"
 	HelmPluginName        = "helm"
 )
 
@@ -30,9 +32,10 @@ type Application struct {
 	httpServer *http.Server
 	worker     *workerframework.Worker
 	logger     logging.Logger
+	Db         cassandra.Store
 }
 
-func New(logger logging.Logger) *Application {
+func New(logger logging.Logger, db cassandra.Store) *Application {
 	cfg := &Configuration{}
 	if err := envconfig.Process("", cfg); err != nil {
 		logger.Fatalf("Could not parse env Config: %v\n", err)
@@ -62,6 +65,7 @@ func New(logger logging.Logger) *Application {
 		httpServer: httpServer,
 		worker:     worker,
 		logger:     logger,
+		Db:         db,
 	}
 }
 

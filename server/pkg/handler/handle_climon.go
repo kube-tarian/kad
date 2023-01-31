@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kube-tarian/kad/server/api"
+	"github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -31,7 +32,15 @@ func (s *APIHanlder) PostClimon(c *gin.Context) {
 		return
 	}
 
-	response, err := s.client.SubmitJob(
+	agentClient, err := client.NewAgent(s.log)
+	if err != nil {
+		s.log.Errorf("failed to connect agent internal error", err)
+		s.sendResponse(c, "agent connection failed", err)
+		return
+	}
+	defer agentClient.Close()
+
+	response, err := agentClient.SubmitJob(
 		ctx,
 		&agentpb.JobRequest{
 			Operation: req.Operation,
