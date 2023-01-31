@@ -12,6 +12,21 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
+type DeploymentRequestPayload struct {
+	PluginName string                `json:"plugin_name" required:"true"`
+	Action     string                `json:"action" required:"true"`
+	Data       DeploymentRequestData `json:"data" required:"true"`
+}
+
+type DeploymentRequestData struct {
+	RepoName    string `json:"repo_name" required:"true"`
+	RepoURL     string `json:"repo_url" required:"true"`
+	ChartName   string `json:"chart_name" required:"true"`
+	Namespace   string `json:"namespace" required:"true"`
+	ReleaseName string `json:"release_name" required:"true"`
+	Timeout     int    `json:"timeout" default:"5"`
+}
+
 type ApplicationClient struct {
 	log  logging.Logger
 	conf *CaptenAgentConfiguration
@@ -22,7 +37,7 @@ func (c *Client) NewApplicationClient(opts *TransportSSLOptions) (*ApplicationCl
 	return &ApplicationClient{log: c.log, conf: c.conf, opts: opts}, nil
 }
 
-func (a *ApplicationClient) Create(req *agentpb.DeploymentRequestPayload) (*agentpb.JobResponse, error) {
+func (a *ApplicationClient) Create(req *DeploymentRequestPayload) (*agentpb.JobResponse, error) {
 	payload, err := json.Marshal(req)
 	if err != nil {
 		a.log.Errorf("Deploy request prepration failed", err)
@@ -73,7 +88,7 @@ func (a *ApplicationClient) createAgentConnection() (agentpb.AgentClient, *grpc.
 
 // Delete... TODO: For delete all parameters not required.
 // It has to be enhanced with separate delete payload request
-func (a *ApplicationClient) Delete(req *agentpb.DeploymentRequestPayload) (*agentpb.JobResponse, error) {
+func (a *ApplicationClient) Delete(req *DeploymentRequestPayload) (*agentpb.JobResponse, error) {
 	payload, err := json.Marshal(req)
 	if err != nil {
 		a.log.Errorf("Deploy request prepration failed", err)
@@ -92,6 +107,6 @@ func (a *ApplicationClient) Delete(req *agentpb.DeploymentRequestPayload) (*agen
 	return a.send(payload, agentConn)
 }
 
-func (a *ApplicationClient) Update(req *agentpb.DeploymentRequestPayload) (*agentpb.JobResponse, error) {
+func (a *ApplicationClient) Update(req *DeploymentRequestPayload) (*agentpb.JobResponse, error) {
 	return a.Create(req)
 }
