@@ -1,4 +1,4 @@
-name: Client Docker Image CI
+name: Climon Docker Image CI
 
 on:
   push:
