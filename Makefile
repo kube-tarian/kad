@@ -3,6 +3,7 @@ SERVER_APP_NAME := server
 AGENT_APP_NAME := agent
 DEPLOYMENT_WORKER_APP_NAME := deployment-worker
 CONFIG_WORKER_APP_NAME := config-worker
+CLIMON_APP_NAME := climon
 BUILD := 0.1.1
 
 gen-protoc:
@@ -37,4 +38,7 @@ docker-build-deployment:
 docker-build-config:
 	docker build -f dockerfiles/config-worker/Dockerfile -t ${PREFIX}-${CONFIG_WORKER_APP_NAME}:${BUILD} .
 
-docker-build: docker-build-kad docker-build-server
+docker-build-climon:
+	docker build -f dockerfiles/climon/Dockerfile -t ${PREFIX}-${CLIMON_APP_NAME}:${BUILD} .
+
+docker-build: docker-build-kad docker-build-server docker-build-climon

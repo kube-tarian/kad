@@ -1,4 +1,4 @@
-name: Client Docker Image CI
+name: Server Docker Image CI
 
 on:
   push:

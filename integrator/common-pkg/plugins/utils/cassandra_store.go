@@ -1,13 +1,9 @@
-package fetcher
+package utils
 
 import (
 	"github.com/gocql/gocql"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
-)
-
-const (
-	FetchPluginQuery = `select name, repo_name, repo_url, chart_name, namespace, release_name, version from tools where name = ?;`
 )
 
 type Configuration struct {
@@ -58,27 +54,10 @@ func NewStore(log logging.Logger) (*Store, error) {
 	}, nil
 }
 
-func (s *Store) Close() {
-	s.session.Close()
+func (s *Store) GetSession() *gocql.Session {
+	return s.session
 }
 
-func (s *Store) FetchPluginDetails(pluginName string) (*PluginDetails, error) {
-	pd := &PluginDetails{}
-	// name, repo_name, repo_url, chart_name, namespace, release_name, version
-	query := s.session.Query(FetchPluginQuery, pluginName)
-	err := query.Scan(
-		&pd.Name,
-		&pd.RepoName,
-		&pd.RepoURL,
-		&pd.ChartName,
-		&pd.Namespace,
-		&pd.ReleaseName,
-		&pd.Version,
-	)
-
-	if err != nil {
-		s.log.Errorf("Fetch plugin details failed, %v", err)
-		return nil, err
-	}
-	return pd, nil
+func (s *Store) Close() {
+	s.session.Close()
 }

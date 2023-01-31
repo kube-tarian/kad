@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/kube-tarian/kad/server/pkg/db"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,6 +11,7 @@ import (
 	middleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/config"
+	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/handler"
 	"github.com/kube-tarian/kad/server/pkg/logging"
 )

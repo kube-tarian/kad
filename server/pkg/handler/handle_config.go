@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kube-tarian/kad/server/api"
+	"github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"google.golang.org/protobuf/types/known/anypb"
 )
@@ -33,7 +34,15 @@ func (s *APIHanlder) PostConfig(c *gin.Context) {
 
 	// TODO: currently climon payload is submitted to temporal via agent.
 	// This flow has to modified as per the understanding.
-	response, err := s.client.SubmitJob(
+	agentClient, err := client.NewAgent(s.log)
+	if err != nil {
+		s.log.Errorf("failed to connect agent internal error", err)
+		s.sendResponse(c, "agent connection failed", err)
+		return
+	}
+	defer agentClient.Close()
+
+	response, err := agentClient.SubmitJob(
 		ctx,
 		&agentpb.JobRequest{
 			Operation: req.Operation,

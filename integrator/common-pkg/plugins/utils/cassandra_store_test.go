@@ -1,4 +1,4 @@
-package fetcher
+package utils
 
 import (
 	"os"
@@ -22,13 +22,14 @@ func TestFetchArgoCDPluginDetails(t *testing.T) {
 	if err != nil {
 		return
 	}
+	assert.NotNilf(t, store, "store session should get initialized")
 
-	pd, err := store.FetchPluginDetails("argocd")
-	assert.Nilf(t, err, "argocd plugin details should be able fetch")
-	assert.NotNilf(t, pd, "argocd plugin details failed to fetch")
-	if err != nil {
-		return
-	}
+	// pd, err := store.FetchPluginDetails("argocd")
+	// assert.Nilf(t, err, "argocd plugin details should be able fetch")
+	// assert.NotNilf(t, pd, "argocd plugin details failed to fetch")
+	// if err != nil {
+	// 	return
+	// }
 
-	t.Logf("argocd plugin details: %+v", pd)
+	// t.Logf("argocd plugin details: %+v", pd)
 }
