@@ -8,9 +8,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/kube-tarian/kad/integrator/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/model"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
+	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/workflows"
 	"go.temporal.io/sdk/client"
 )
 
@@ -35,14 +37,53 @@ func (d *Deployment) GetWorkflowName() string {
 	return DeploymentWorkerWorkflowName
 }
 
-func (d *Deployment) SendEvent(ctx context.Context, deployPayload json.RawMessage) (client.WorkflowRun, error) {
+func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload *agentpb.ApplicationInstallRequest) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: DeploymentWorkerTaskQueue,
 	}
 
-	log.Printf("Event sent to temporal: %v", string(deployPayload))
-	run, err := d.client.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, deployPayload)
+	deployPayloadJSON, err := json.Marshal(deployPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Event sent to temporal: %+v", deployPayload)
+	run, err := d.client.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, json.RawMessage(deployPayloadJSON))
+	if err != nil {
+		return nil, err
+	}
+
+	d.log.Infof("Started workflow, ID: %v, WorkflowName: %v RunID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
+
+	// Wait for 5mins till workflow finishes
+	// Timeout with 5mins
+	// return run, d.getWorkflowStatusByLatestWorkflow(run)
+	var result model.ResponsePayload
+	err = run.Get(ctx, &result)
+	if err != nil {
+		d.log.Errorf("Result for workflow ID: %v, workflowName: %v, runID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
+		d.log.Errorf("Workflow result failed, %v", err)
+		return run, err
+	}
+	d.log.Infof("workflow finished success, %+v", result.ToString())
+	return run, nil
+}
+
+func (d *Deployment) SendDeleteEvent(ctx context.Context, action string, deployPayload *agentpb.ApplicationDeleteRequest) (client.WorkflowRun, error) {
+	options := client.StartWorkflowOptions{
+		ID:        uuid.NewString(),
+		TaskQueue: DeploymentWorkerTaskQueue,
+	}
+
+	payloadJSON, err := json.Marshal(deployPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Event sent to temporal: %+v", deployPayload)
+	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, deployPayload)
+	run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, workflows.Workflow, action, payloadJSON)
 	if err != nil {
 		return nil, err
 	}

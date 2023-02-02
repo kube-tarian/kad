@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/kube-tarian/kad/integrator/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/model"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
@@ -29,27 +30,55 @@ func (c *Climon) GetWorkflowName() string {
 	return DeployWorkflowName
 }
 
-func (c *Climon) SendEvent(ctx context.Context, deployPayload json.RawMessage) (client.WorkflowRun, error) {
+func (c *Climon) SendEvent(ctx context.Context, action string, payload *agentpb.ClimonInstallRequest) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        "helm-deploy-workflow",
 		TaskQueue: ClimonHelmTaskQueue,
 	}
 
-	/*
-		deployInfo := helm.DeployInfo{
-			Version:     "1.0",
-			RepoUrl:     "https://charts.bitnami.com/bitnami",
-			RepoName:    "bitnami",
-			Namespace:   "web",
-			ChartName:   "bitnami/wordpress",
-			ReleaseName: "intelops",
-			ReferenceID: uuid.New().String(),
-		}
-	*/
-
-	we, err := c.client.ExecuteWorkflow(context.Background(), options, DeployWorkflowName, deployPayload)
+	payloadJSON, err := json.Marshal(payload)
 	if err != nil {
-		log.Println("error starting TransferMoney workflow", err)
+		return nil, err
+	}
+
+	log.Printf("payload climon: %v", string(payloadJSON))
+	we, err := c.client.TemporalClient.ExecuteWorkflow(context.Background(), options, DeployWorkflowName, action, json.RawMessage(payloadJSON))
+	if err != nil {
+		log.Println("error starting climon workflow", err)
+		return nil, err
+	}
+	//printResults(deployInfo, we.GetID(), we.GetRunID())
+
+	c.log.Infof("Started workflow, ID: %v, WorkflowName: %v RunID: %v", we.GetID(), DeploymentWorkerWorkflowName, we.GetRunID())
+
+	// Wait for 5mins till workflow finishes
+	// Timeout with 5mins
+	var result model.ResponsePayload
+	err = we.Get(ctx, &result)
+	if err != nil {
+		c.log.Errorf("Result for workflow ID: %v, workflowName: %v, runID: %v", we.GetID(), DeploymentWorkerWorkflowName, we.GetRunID())
+		c.log.Errorf("Workflow result failed, %v", err)
+		return we, err
+	}
+	c.log.Infof("workflow finished success, %+v", result.ToString())
+
+	return we, nil
+}
+
+func (c *Climon) SendDeleteEvent(ctx context.Context, action string, payload *agentpb.ClimonDeleteRequest) (client.WorkflowRun, error) {
+	options := client.StartWorkflowOptions{
+		ID:        "helm-deploy-workflow",
+		TaskQueue: ClimonHelmTaskQueue,
+	}
+
+	payloadJSON, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	we, err := c.client.TemporalClient.ExecuteWorkflow(context.Background(), options, DeployWorkflowName, action, payloadJSON)
+	if err != nil {
+		log.Println("error starting climon workflow", err)
 		return nil, err
 	}
 	//printResults(deployInfo, we.GetID(), we.GetRunID())

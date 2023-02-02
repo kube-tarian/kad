@@ -6,17 +6,9 @@ import (
 	"github.com/kube-tarian/kad/integrator/model"
 )
 
-func (h *HelmCLient) List(payload model.RequestPayload) (json.RawMessage, error) {
+func (h *HelmCLient) List(req *model.ListRequestPayload) (json.RawMessage, error) {
 	h.logger.Infof("Helm client List invoke started")
-
-	req := &model.Request{}
-	err := json.Unmarshal(payload.Data, req)
-	if err != nil {
-		h.logger.Errorf("payload unmarshal failed, %v", err)
-		return nil, err
-	}
-
-	helmClient, err := h.getHelmClient(req)
+	helmClient, err := h.getHelmClient(req.Namespace)
 	if err != nil {
 		h.logger.Errorf("helm client initialization failed, %v", err)
 		return nil, err

@@ -10,6 +10,87 @@ package agentpb;
 // The greeting service definition.
 service Agent {
   rpc SubmitJob (JobRequest) returns (JobResponse) {}
+
+  rpc ClimonAppInstall (ClimonInstallRequest) returns (JobResponse) {}
+  rpc ClimonAppDelete (ClimonDeleteRequest) returns (JobResponse) {}
+
+  rpc DeployerAppInstall (ApplicationInstallRequest) returns (JobResponse) {}
+  rpc DeployerAppDelete (ApplicationDeleteRequest) returns (JobResponse) {}
+
+  rpc ClusterAdd (ClusterRequest) returns (JobResponse) {}
+  rpc ClusterDelete (ClusterRequest) returns (JobResponse) {}
+
+  rpc RepositoryAdd (RepositoryAddRequest) returns (JobResponse) {}
+  rpc RepositoryDelete (RepositoryDeleteRequest) returns (JobResponse) {}
+
+  rpc ProjectAdd (ProjectAddRequest) returns (JobResponse) {}
+  rpc ProjectDelete (ProjectDeleteRequest) returns (JobResponse) {}
+}
+
+message ClimonInstallRequest {
+  string plugin_name = 1;
+  string repo_name = 2;
+  string repo_url = 3;
+  string chart_name = 4;
+  string namespace = 5;
+  string release_name = 6;
+  uint32 timeout = 7;
+  string version = 8;
+  string cluster_name = 9;
+}
+
+message ClimonDeleteRequest {
+  string plugin_name = 1;
+  string namespace = 2;
+  string release_name = 3;
+  uint32 timeout = 4;
+  string cluster_name = 5;
+}
+
+message ApplicationInstallRequest {
+  string plugin_name = 1;
+  string repo_name = 2;
+  string repo_url = 3;
+  string chart_name = 4;
+  string namespace = 5;
+  string release_name = 6;
+  uint32 timeout = 7;
+  string version = 8;
+  string cluster_name = 9;
+}
+
+message ApplicationDeleteRequest {
+  string plugin_name = 1;
+  string namespace = 2;
+  string release_name = 3;
+  uint32 timeout = 4;
+  string cluster_name = 5;
+}
+
+message ClusterRequest {
+  string plugin_name = 1;
+  string cluster_name = 2;
+}
+
+message RepositoryAddRequest {
+  string plugin_name = 1;
+  string repo_name = 2;
+  string repo_url = 3;
+}
+
+message RepositoryDeleteRequest {
+  string plugin_name = 1;
+  string repo_name = 2;
+}
+
+message ProjectAddRequest {
+  string plugin_name = 1;
+  string project_name = 2;
+}
+
+message ProjectDeleteRequest {
+  string plugin_name = 1;
+  string project_name = 2;
 }
 
 message JobRequest {

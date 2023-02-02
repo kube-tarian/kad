@@ -7,15 +7,16 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/kube-tarian/kad/integrator/common-pkg/temporalclient"
+	"github.com/kube-tarian/kad/integrator/model"
 
 	"go.temporal.io/sdk/worker"
 )
 
 type Plugin interface {
-	DeployActivities(payload interface{}) (json.RawMessage, error)
-	// Create(payload interface{}) (json.RawMessage, error)
-	// Delete(payload interface{}) (json.RawMessage, error)
-	// List(payload interface{}) (json.RawMessage, error)
+	// DeployActivities(payload interface{}) (json.RawMessage, error)
+	Create(payload *model.CreteRequestPayload) (json.RawMessage, error)
+	Delete(payload *model.DeleteRequestPayload) (json.RawMessage, error)
+	List(payload *model.ListRequestPayload) (json.RawMessage, error)
 
 	// ConfigurationActivities(payload interface{}) (json.RawMessage, error)
 	// ConfgiureTarget(payload interface{}) (json.RawMessage, error)
@@ -23,15 +24,30 @@ type Plugin interface {
 	// SetDefaultTarget(payload interface{}) (json.RawMessage, error)
 }
 
+type ClimonWorker interface {
+	Create(payload *model.CreteRequestPayload) (json.RawMessage, error)
+	Delete(payload *model.DeleteRequestPayload) (json.RawMessage, error)
+	List(payload *model.ListRequestPayload) (json.RawMessage, error)
+}
+
 type DeploymentWorker interface {
-	DeployActivities(payload interface{}) (json.RawMessage, error)
-	// Create(payload interface{}) (json.RawMessage, error)
-	// Delete(payload interface{}) (json.RawMessage, error)
-	// List(payload interface{}) (json.RawMessage, error)
+	Create(payload *model.CreteRequestPayload) (json.RawMessage, error)
+	Delete(payload *model.DeleteRequestPayload) (json.RawMessage, error)
+	List(payload *model.ListRequestPayload) (json.RawMessage, error)
 }
 
 type ConfigurationWorker interface {
-	ConfigurationActivities(payload interface{}) (json.RawMessage, error)
+	// ConfigurationActivities(payload interface{}) (json.RawMessage, error)
+
+	ClusterAdd(payload interface{}) (json.RawMessage, error)
+	ClusterDelete(payload interface{}) (json.RawMessage, error)
+
+	RepositoryAdd(payload interface{}) (json.RawMessage, error)
+	RepositoryDelete(payload interface{}) (json.RawMessage, error)
+
+	ProjectAdd(payload interface{}) (json.RawMessage, error)
+	ProjectDelete(payload interface{}) (json.RawMessage, error)
+
 	// ConfgiureTarget(payload interface{}) (json.RawMessage, error)
 	// SetTarget(payload interface{}) (json.RawMessage, error)
 	// SetDefaultTarget(payload interface{}) (json.RawMessage, error)

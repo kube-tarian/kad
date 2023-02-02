@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -11,25 +10,17 @@ import (
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
-	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (s *APIHanlder) PostDeploy(c *gin.Context) {
-	//TODO get address from database based on CustomerInfo
-	s.log.Infof("deploy api invocation started")
+func (s *APIHanlder) PostDeployer(c *gin.Context) {
+	s.log.Debugf("Install Deploy applicaiton api invocation started")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	var req api.DeployRequestPayload
+	var req api.DeployerPostRequest
 	if err := c.BindJSON(&req); err != nil {
 		s.sendResponse(c, "Failed to parse deploy payload", err)
-		return
-	}
-
-	payload, err := json.Marshal(req.Payload)
-	if err != nil {
-		s.sendResponse(c, "Deploy request prepration failed", err)
 		return
 	}
 
@@ -41,11 +32,16 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 	}
 	defer agentClient.Close()
 
-	response, err := agentClient.SubmitJob(
+	response, err := agentClient.GetClient().DeployerAppInstall(
 		ctx,
-		&agentpb.JobRequest{
-			Operation: req.Operation,
-			Payload:   &anypb.Any{Value: payload},
+		&agentpb.ApplicationInstallRequest{
+			PluginName:  req.PluginName,
+			RepoName:    req.RepoName,
+			RepoUrl:     req.RepoUrl,
+			ChartName:   req.ChartName,
+			Namespace:   req.Namespace,
+			ReleaseName: req.ReleaseName,
+			Timeout:     uint32(req.Timeout),
 		},
 	)
 	if err != nil {
@@ -58,7 +54,55 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 		Message: toString(response)})
 
 	s.log.Infof("response received", response)
-	s.log.Infof("deploy api invocation finished")
+	s.log.Debugf("Install Deploy application api invocation finished")
+}
+
+func (s *APIHanlder) PutDeployer(c *gin.Context) {
+	s.log.Debugf("Update Deploy application api invocation started")
+	s.PostDeployer(c)
+	s.log.Debugf("Update Deploy application api invocation finished")
+}
+
+func (s *APIHanlder) DeleteDeployer(c *gin.Context) {
+	s.log.Debugf("Delete climon application api invocation started")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+
+	var req api.DeployerDeleteRequest
+	if err := c.BindJSON(&req); err != nil {
+		s.sendResponse(c, "Failed to parse deploy payload", err)
+		return
+	}
+
+	agentClient, err := client.NewAgent(s.log)
+	if err != nil {
+		s.log.Errorf("failed to connect agent internal error", err)
+		s.sendResponse(c, "agent connection failed", err)
+		return
+	}
+	defer agentClient.Close()
+
+	response, err := agentClient.GetClient().DeployerAppDelete(
+		ctx,
+		&agentpb.ApplicationDeleteRequest{
+			PluginName:  req.PluginName,
+			Namespace:   req.Namespace,
+			ReleaseName: req.ReleaseName,
+			Timeout:     uint32(req.Timeout),
+		},
+	)
+	if err != nil {
+		s.sendResponse(c, "failed to submit job", err)
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, &api.Response{
+		Status:  "SUCCESS",
+		Message: toString(response)})
+
+	s.log.Infof("response received", response)
+	s.log.Debugf("Delete climon application api invocation finished")
 }
 
 func (s *APIHanlder) sendResponse(c *gin.Context, msg string, err error) {
