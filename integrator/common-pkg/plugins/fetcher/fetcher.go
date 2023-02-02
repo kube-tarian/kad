@@ -20,7 +20,8 @@ func NewCredentialFetcher(log logging.Logger) (*CredentialFetcher, error) {
 	// Initialize kubernetes client
 	k8sClient, err := k8s.NewK8SClient(log)
 	if err != nil {
-		log.Fatalf("K8S client initialization failed: %v", err)
+		log.Errorf("K8S client initialization failed: %v", err)
+		return nil, fmt.Errorf("k8 client initialization failed, %v", err)
 	}
 
 	// TODO: Initialze Cassandra client

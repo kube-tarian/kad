@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -23,10 +22,10 @@ type Configuration struct {
 }
 
 type Agent struct {
-	cfg        *Configuration
-	connection *grpc.ClientConn
-	client     agentpb.AgentClient
-	log        logging.Logger
+	cfg         *Configuration
+	connection  *grpc.ClientConn
+	AgentClient agentpb.AgentClient
+	log         logging.Logger
 }
 
 // NewAgent returns agent object creates grpc connection for given address
@@ -58,18 +57,14 @@ func NewAgent(log logging.Logger) (*Agent, error) {
 
 	agentClient := agentpb.NewAgentClient(conn)
 	return &Agent{
-		cfg:        cfg,
-		connection: conn,
-		client:     agentClient,
+		cfg:         cfg,
+		connection:  conn,
+		AgentClient: agentClient,
 	}, nil
 }
 
 func (a *Agent) GetClient() agentpb.AgentClient {
-	return a.client
-}
-
-func (a *Agent) SubmitJob(ctx context.Context, req *agentpb.JobRequest) (*agentpb.JobResponse, error) {
-	return a.client.SubmitJob(ctx, req)
+	return a.AgentClient
 }
 
 func (a *Agent) Close() {

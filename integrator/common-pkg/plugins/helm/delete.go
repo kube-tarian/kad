@@ -8,32 +8,18 @@ import (
 	"github.com/kube-tarian/kad/integrator/model"
 )
 
-func (h *HelmCLient) Delete(payload model.RequestPayload) (json.RawMessage, error) {
+func (h *HelmCLient) Delete(req *model.DeleteRequestPayload) (json.RawMessage, error) {
 	h.logger.Infof("Helm client Install invoke started")
 
-	req := &model.Request{}
-	err := json.Unmarshal(payload.Data, req)
-	if err != nil {
-		h.logger.Errorf("payload unmarshal failed, %v", err)
-		return nil, err
-	}
-
-	helmClient, err := h.getHelmClient(req)
+	helmClient, err := h.getHelmClient(req.Namespace)
 	if err != nil {
 		h.logger.Errorf("helm client initialization failed, %v", err)
-		return nil, err
-	}
-
-	err = h.addOrUpdate(helmClient, req)
-	if err != nil {
-		h.logger.Errorf("helm repo add failed, %v", err)
 		return nil, err
 	}
 
 	// Define the released chart to be uninstalled.
 	chartSpec := helmclient.ChartSpec{
 		ReleaseName: req.ReleaseName,
-		ChartName:   fmt.Sprintf("%s/%s", req.RepoName, req.ChartName),
 		Namespace:   req.Namespace,
 		Wait:        true,
 	}

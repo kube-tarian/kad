@@ -9,9 +9,9 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/kube-tarian/kad/integrator/agent/pkg/agent"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/config"
-	"github.com/kube-tarian/kad/integrator/agent/pkg/server"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"google.golang.org/grpc/reflection"
 )
@@ -26,7 +26,7 @@ func main() {
 		log.Fatalf("Fetching application configuration failed, %v", err)
 	}
 
-	s, err := server.NewAgent(log)
+	s, err := agent.NewAgent(log)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 	}

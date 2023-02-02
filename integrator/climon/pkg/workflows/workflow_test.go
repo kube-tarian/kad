@@ -28,7 +28,7 @@ func (s *UnitTestSuite) Test_Workflow() {
 	})
 	var a *activities.Activities
 
-	env.OnActivity(a.DeploymentActivity, mock.Anything, model.RequestPayload{Action: "file1"}).Return(model.ResponsePayload{Status: "file2"}, nil)
+	env.OnActivity(a.ClimonInstallActivity, mock.Anything, model.RequestPayload{Action: "file1"}).Return(model.ResponsePayload{Status: "file2"}, nil)
 
 	env.RegisterActivity(a)
 

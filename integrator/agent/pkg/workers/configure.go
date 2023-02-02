@@ -2,15 +2,14 @@ package workers
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kube-tarian/kad/integrator/agent/pkg/model"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
+	"github.com/kube-tarian/kad/integrator/model"
 	"go.temporal.io/sdk/client"
 )
 
@@ -35,14 +34,14 @@ func (d *Config) GetWorkflowName() string {
 	return ConfigWorkerWorkflowName
 }
 
-func (d *Config) SendEvent(ctx context.Context, deployPayload json.RawMessage) (client.WorkflowRun, error) {
+func (d *Config) SendEvent(ctx context.Context, confParams *model.ConfigureParameters, deployPayload interface{}) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: ConfigWorkerTaskQueue,
 	}
 
-	log.Printf("Event sent to temporal: %v", string(deployPayload))
-	run, err := d.client.ExecuteWorkflow(ctx, options, ConfigWorkerWorkflowName, deployPayload)
+	log.Printf("Event sent to temporal: %+v", deployPayload)
+	run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, ConfigWorkerWorkflowName, deployPayload)
 	if err != nil {
 		return nil, err
 	}

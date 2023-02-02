@@ -4,19 +4,19 @@ package cassandra
 import "github.com/kube-tarian/kad/integrator/model"
 
 type DBConfig struct {
-	DbAddresses         []string `envconfig:"CASSANDRA_SERVICE_URL" required:"true"`
-	DbAdminUsername     string   `envconfig:"CASSANDRA_USERNAME" required:"true"`
+	DbAddresses         []string `envconfig:"CASSANDRA_SERVICE_URL" default:"localhost:9042"`
+	DbAdminUsername     string   `envconfig:"CASSANDRA_USERNAME" default:"user"`
 	DbServiceUsername   string   `envconfig:"DB_SERVICE_USERNAME" default:"user"`
-	DbName              string   `envconfig:"CASSANDRA_KEYSPACE_NAME" required:"true"`
+	DbName              string   `envconfig:"CASSANDRA_KEYSPACE_NAME" default:"capten"`
 	DbReplicationFactor string   `envconfig:"DB_REPLICATION_FACTOR" default:"1"`
-	DbAdminPassword     string   `envconfig:"CASSANDRA_PASSWORD" required:"true"`
+	DbAdminPassword     string   `envconfig:"CASSANDRA_PASSWORD" default:"password"`
 	DbServicePassword   string   `envconfig:"DB_SERVICE_PASSWD" default:"password"`
 }
 
 type Store interface {
 	Close()
-	InsertToolsDb(data *model.Request) error
-	DeleteToolsDbEntry(data *model.Request) error
+	InsertToolsDb(data *model.ClimonPostRequest) error
+	DeleteToolsDbEntry(data *model.ClimonDeleteRequest) error
 	CreateDbUser(serviceUsername string, servicePassword string) (err error)
 	GrantPermission(serviceUsername string, dbName string) (err error)
 	CreateDb(keyspace, dbName string, replicationFactor string) (err error)

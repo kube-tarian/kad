@@ -46,8 +46,6 @@ spec:
               path: /status
               port: http
           env:
-            - name: AGENT_PORT
-              value: "{{ .Values.agent.port }}"
             - name: PORT
               value: "{{ .Values.service.port }}"
             - name: CASSANDRA_HOST
