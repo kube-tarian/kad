@@ -1,16 +1,7 @@
 {
-  "operation": "climon",
-  "payload": {
-    "plugin_name": "helm",
-    "action": "delete",
-    "data": {
-      "repo_name": "argo",
-      "repo_url": "https://argoproj.github.io/argo-helm",
-      "chart_name": "argo-cd",
-      "namespace": "default",
-      "release_name": "argocd",
-      "timeout": 5,
-      "version": ""
-    }
-  }
+  "plugin_name": "helm",
+  "namespace": "default",
+  "release_name": "argocd",
+  "timeout": 5,
+  "version": ""
 }

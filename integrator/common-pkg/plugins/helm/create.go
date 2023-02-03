@@ -14,17 +14,10 @@ import (
 	"helm.sh/helm/v3/pkg/repo"
 )
 
-func (h *HelmCLient) Create(payload model.RequestPayload) (json.RawMessage, error) {
+func (h *HelmCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, error) {
 	h.logger.Infof("Helm client Install invoke started")
 
-	req := &model.Request{}
-	err := json.Unmarshal(payload.Data, req)
-	if err != nil {
-		h.logger.Errorf("payload unmarshal failed, %v", err)
-		return nil, err
-	}
-
-	helmClient, err := h.getHelmClient(req)
+	helmClient, err := h.getHelmClient(req.Namespace)
 	if err != nil {
 		h.logger.Errorf("helm client initialization failed, %v", err)
 		return nil, err
@@ -63,9 +56,9 @@ func (h *HelmCLient) Create(payload model.RequestPayload) (json.RawMessage, erro
 	return json.RawMessage(fmt.Sprintf("{\"status\": \"Application %s install successful\"}", rel.Name)), nil
 }
 
-func (h *HelmCLient) getHelmClient(req *model.Request) (helmclient.Client, error) {
+func (h *HelmCLient) getHelmClient(namespace string) (helmclient.Client, error) {
 	opt := &helmclient.Options{
-		Namespace:        req.Namespace,
+		Namespace:        namespace,
 		RepositoryCache:  "/tmp/.helmcache",
 		RepositoryConfig: "/tmp/.helmrepo",
 		Debug:            true,
@@ -74,12 +67,12 @@ func (h *HelmCLient) getHelmClient(req *model.Request) (helmclient.Client, error
 	}
 
 	// If kubeconfig is empty (default) or inbuilt then use in-built(local) cluster
-	if req.ClusterName == "" || req.ClusterName == "inbuilt" {
-		return helmclient.New(opt)
-	}
+	// if req.ClusterName == "" || req.ClusterName == "inbuilt" {
+	return helmclient.New(opt)
+	// }
 
 	// External cluster
-	return h.getHelmClientForExternalCluster(req, opt)
+	// return h.getHelmClientForExternalCluster(req, opt)
 }
 
 func (h *HelmCLient) getHelmClientForExternalCluster(req *model.Request, opt *helmclient.Options) (helmclient.Client, error) {
@@ -119,7 +112,7 @@ func (h *HelmCLient) getHelmClientForExternalCluster(req *model.Request, opt *he
 	)
 }
 
-func (h *HelmCLient) addOrUpdate(client helmclient.Client, req *model.Request) error {
+func (h *HelmCLient) addOrUpdate(client helmclient.Client, req *model.CreteRequestPayload) error {
 	// Define a public chart repository.
 	chartRepo := repo.Entry{
 		Name:                  req.RepoName,
