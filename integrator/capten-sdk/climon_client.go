@@ -10,13 +10,13 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type DeploymentRequestPayload struct {
-	PluginName string                `json:"plugin_name" required:"true"`
-	Action     string                `json:"action" required:"true"`
-	Data       DeploymentRequestData `json:"data" required:"true"`
+type ClimonRequestPayload struct {
+	PluginName string            `json:"plugin_name" required:"true"`
+	Action     string            `json:"action" required:"true"`
+	Data       ClimonRequestData `json:"data" required:"true"`
 }
 
-type DeploymentRequestData struct {
+type ClimonRequestData struct {
 	RepoName    string `json:"repo_name" required:"true"`
 	RepoURL     string `json:"repo_url" required:"true"`
 	ChartName   string `json:"chart_name" required:"true"`
@@ -25,17 +25,17 @@ type DeploymentRequestData struct {
 	Timeout     int    `json:"timeout" default:"5"`
 }
 
-type ApplicationClient struct {
+type ClimonClient struct {
 	log  logging.Logger
 	conf *CaptenAgentConfiguration
 	opts *TransportSSLOptions
 }
 
-func (c *Client) NewApplicationClient(opts *TransportSSLOptions) (*ApplicationClient, error) {
-	return &ApplicationClient{log: c.log, conf: c.conf, opts: opts}, nil
+func (c *Client) NewClimonClient(opts *TransportSSLOptions) (*ClimonClient, error) {
+	return &ClimonClient{log: c.log, conf: c.conf, opts: opts}, nil
 }
 
-func (a *ApplicationClient) createAgentConnection() (agentpb.AgentClient, *grpc.ClientConn, error) {
+func (a *ClimonClient) createAgentConnection() (agentpb.AgentClient, *grpc.ClientConn, error) {
 	var conn *grpc.ClientConn
 	var err error
 	if a.opts.IsSSLEnabled {
@@ -57,7 +57,7 @@ func (a *ApplicationClient) createAgentConnection() (agentpb.AgentClient, *grpc.
 	return agentpb.NewAgentClient(conn), conn, nil
 }
 
-func (a *ApplicationClient) Create(req *agentpb.ApplicationInstallRequest) (*agentpb.JobResponse, error) {
+func (a *ClimonClient) Create(req *agentpb.ClimonInstallRequest) (*agentpb.JobResponse, error) {
 	agentConn, conn, err := a.createAgentConnection()
 	if err != nil {
 		a.log.Errorf("agent client connection creation failed, %v", err)
@@ -67,16 +67,16 @@ func (a *ApplicationClient) Create(req *agentpb.ApplicationInstallRequest) (*age
 		_ = conn.Close()
 	}()
 
-	return agentConn.DeployerAppInstall(context.Background(), req)
+	return agentConn.ClimonAppInstall(context.Background(), req)
 }
 
-func (a *ApplicationClient) Update(req *agentpb.ApplicationInstallRequest) (*agentpb.JobResponse, error) {
+func (a *ClimonClient) Update(req *agentpb.ClimonInstallRequest) (*agentpb.JobResponse, error) {
 	return a.Create(req)
 }
 
 // Delete... TODO: For delete all parameters not required.
 // It has to be enhanced with separate delete payload request
-func (a *ApplicationClient) Delete(req *agentpb.ApplicationDeleteRequest) (*agentpb.JobResponse, error) {
+func (a *ClimonClient) Delete(req *agentpb.ClimonDeleteRequest) (*agentpb.JobResponse, error) {
 	agentConn, conn, err := a.createAgentConnection()
 	if err != nil {
 		a.log.Errorf("agent client connection creation failed, %v", err)
@@ -86,5 +86,5 @@ func (a *ApplicationClient) Delete(req *agentpb.ApplicationDeleteRequest) (*agen
 		_ = conn.Close()
 	}()
 
-	return agentConn.DeployerAppDelete(context.Background(), req)
+	return agentConn.ClimonAppDelete(context.Background(), req)
 }

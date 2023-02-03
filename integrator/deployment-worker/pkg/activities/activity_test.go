@@ -14,7 +14,7 @@ func Test_Activity(t *testing.T) {
 	env := testSuite.NewTestActivityEnvironment()
 	env.RegisterActivity(a)
 
-	_, err := env.ExecuteActivity(a.DeploymentActivity, model.RequestPayload{Action: "World"})
+	_, err := env.ExecuteActivity(a.DeploymentInstallActivity, model.RequestPayload{Action: "World"})
 	require.Error(t, err)
 
 	// var res model.ResponsePayload

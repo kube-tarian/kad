@@ -30,13 +30,13 @@ paths:
   /climon:
     post:
       tags:
-        - public
+        - climon
       summary: deploy the application
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeployRequestPayload'
+              $ref: '#/components/schemas/ClimonPostRequest'
       responses:
         '200':
           description: OK
@@ -45,16 +45,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /deploy:
-    post:
+    put:
       tags:
-        - public
+        - climon
       summary: deploy the application
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/DeployRequestPayload'
+              $ref: '#/components/schemas/ClimonPostRequest'
       responses:
         '200':
           description: OK
@@ -63,16 +62,206 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /config:
-    post:
+    delete:
       tags:
-        - public
+        - climon
       summary: deploy the application
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ConfigRequestPayload'
+              $ref: '#/components/schemas/ClimonDeleteRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /deployer:
+    post:
+      tags:
+        - deployer
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeployerPostRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+    put:
+      tags:
+        - deployer
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeployerPostRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+    delete:
+      tags:
+        - deployer
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeployerDeleteRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /configator/repository:
+    post:
+      tags:
+        - repository
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepositoryPostRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+    put:
+      tags:
+        - repository
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepositoryPostRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+    delete:
+      tags:
+        - repository
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepositoryDeleteRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /configator/project:
+    post:
+      tags:
+        - project
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectPostRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+    put:
+      tags:
+        - project
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectPostRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+    delete:
+      tags:
+        - project
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectDeleteRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /configator/cluster:
+    post:
+      tags:
+        - cluster
+      summary: deploy the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClusterRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+    delete:
+      tags:
+        - cluster
+      summary: Delete the application
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClusterRequest'
       responses:
         '200':
           description: OK
@@ -84,7 +273,7 @@ paths:
   /register/agent:
     post:
       tags:
-        - public
+        - agent-registration
       summary: Register agent
       requestBody:
         content:
@@ -96,7 +285,7 @@ paths:
           description: OK
     put:
       tags:
-        - public
+        - agent-registration
       summary: Register agent
       requestBody:
         content:
@@ -108,7 +297,7 @@ paths:
           description: OK
     get:
       tags:
-        - public
+        - agent-registration
       summary: Register agent
       responses:
         '200':
@@ -146,51 +335,206 @@ components:
         - status
         - message
 
-    Payload:
+    ClimonPostRequest:
+      title: Deploy operation request payload
       type: object
       properties:
         plugin_name:
           type: string
-          description: Plugin name for the operation
-        action:
+          description: Plugin name
+        repo_name:
           type: string
-          description: Action to be performed
-        data:
-          type: object
-          description: Data for the action
+          description: Repository name
+        repo_url:
+          type: string
+          description: Repository URL
+        chart_name:
+          type: string
+          description: Chart name in Repository
+        namespace:
+          type: string
+          description: Namespace chart to be installed
+        release_name:
+          type: string
+          description: Release name to be used for install
+        timeout:
+          type: integer
+          description: Timeout for the application installation
+        version:
+          type: string
+          description: Version of the chart
+        cluster_name:
+          type: string
+          description: Cluster in which to be installed, default in-build cluster
       required:
         - plugin_name
-        - action
-        - data
+        - repo_name
+        - repo_url
+        - chart_name
+        - namespace
+        - release_name
+        - timeout
 
-    DeployRequestPayload:
+    ClimonDeleteRequest:
       title: Deploy operation request payload
       type: object
       properties:
-        operation:
+        plugin_name:
           type: string
-        payload:
-          allOf:
-            - $ref: '#/components/schemas/Payload'
+          description: Plugin name
+        namespace:
+          type: string
+          description: Namespace chart to be installed
+        release_name:
+          type: string
+          description: Release name to be used for install
+        timeout:
+          type: integer
+          description: Timeout for the application installation
+        cluster_name:
+          type: string
+          description: Cluster in which to be deleted, default in-build cluster
       required:
-        - operation
-        - payload
+        - plugin_name
+        - namespace
+        - release_name
+        - timeout
 
-    ConfigRequestPayload:
+    DeployerPostRequest:
+      title: Deploy operation request payload
+      type: object
+      properties:
+        plugin_name:
+          type: string
+          description: Plugin name
+        repo_name:
+          type: string
+          description: Repository name
+        repo_url:
+          type: string
+          description: Repository URL
+        chart_name:
+          type: string
+          description: Chart name in Repository
+        namespace:
+          type: string
+          description: Namespace chart to be installed
+        release_name:
+          type: string
+          description: Release name to be used for install
+        timeout:
+          type: integer
+          description: Timeout for the application installation
+        version:
+          type: string
+          description: Version of the chart
+        cluster_name:
+          type: string
+          description: Cluster in which to be installed, default in-build cluster
+      required:
+        - plugin_name
+        - repo_name
+        - repo_url
+        - chart_name
+        - namespace
+        - release_name
+        - timeout
+
+    DeployerDeleteRequest:
+      title: Deploy operation request payload
+      type: object
+      properties:
+        plugin_name:
+          type: string
+          description: Plugin name
+        namespace:
+          type: string
+          description: Namespace chart to be installed
+        release_name:
+          type: string
+          description: Release name to be used for install
+        timeout:
+          type: integer
+          description: Timeout for the application installation
+        cluster_name:
+          type: string
+          description: Cluster in which to be deleted, default in-build cluster
+      required:
+        - plugin_name
+        - namespace
+        - release_name
+        - timeout
+
+    ClusterRequest:
       title: Configure payload
       type: object
       properties:
-        operation:
+        plugin_name:
           type: string
-        payload:
-          allOf:
-            - $ref: '#/components/schemas/Payload'
-            - properties:
-                resource:
-                  type: string
-                  description: Resource to be configured
-              required:
-                - resource
+        cluster_name:
+          type: string
       required:
-        - operation
-        - payload
+        - plugin_name
+        - cluster_name
+
+    RepositoryPostRequest:
+      title: Configure payload
+      type: object
+      properties:
+        plugin_name:
+          type: string
+          description: Plugin name
+        repo_name:
+          type: string
+          description: Repository to added to plugin
+        repo_url:
+          type: string
+          description: Repository URL
+      required:
+        - plugin_name
+        - repo_name
+        - repo_url
+
+    RepositoryDeleteRequest:
+      title: Configure payload
+      type: object
+      properties:
+        plugin_name:
+          type: string
+          description: Plugin name
+        repo_name:
+          type: string
+          description: Repository to added to plugin
+      required:
+        - plugin_name
+        - repo_name
+
+    ProjectPostRequest:
+      title: Configure payload
+      type: object
+      properties:
+        plugin_name:
+          type: string
+          description: Plugin name
+        project_name:
+          type: string
+          description: Project name to be created in plugin
+        # Project parameters to be added
+      required:
+        - plugin_name
+        - project_name
+
+    ProjectDeleteRequest:
+      title: Configure payload
+      type: object
+      properties:
+        plugin_name:
+          type: string
+          description: Plugin name
+        project_name:
+          type: string
+          description: Project name to be created in plugin
+        # Project parameters to be added
+      required:
+        - plugin_name
+        - project_name

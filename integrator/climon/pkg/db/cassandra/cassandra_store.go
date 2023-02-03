@@ -190,17 +190,17 @@ func retry(attempts int, sleep time.Duration, f func() error) (err error) {
 	return
 }
 
-func (c *cassandraStore) InsertToolsDb(data *model.Request) error {
+func (c *cassandraStore) InsertToolsDb(data *model.ClimonPostRequest) error {
 	return c.session.Query(insertToolsCQL,
 		data.ReleaseName,
 		data.RepoName,
-		data.RepoURL,
+		data.RepoUrl,
 		data.ChartName,
 		data.Namespace,
 		data.ReleaseName,
 		data.Version).Exec()
 }
 
-func (c *cassandraStore) DeleteToolsDbEntry(data *model.Request) error {
+func (c *cassandraStore) DeleteToolsDbEntry(data *model.ClimonDeleteRequest) error {
 	return c.session.Query(fmt.Sprintf(deleteToolsCQL, data.ReleaseName)).Exec()
 }

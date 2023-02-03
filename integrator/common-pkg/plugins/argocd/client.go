@@ -45,20 +45,6 @@ func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
 	}, nil
 }
 
-func (a *ArgoCDCLient) DeployActivities(req interface{}) (json.RawMessage, error) {
-	payload, _ := req.(model.RequestPayload)
-	switch payload.Action {
-	case "install":
-		return a.Create(payload)
-	case "delete":
-		return a.Delete(payload)
-	case "list":
-		return a.List(payload)
-	default:
-		return nil, fmt.Errorf("unsupported action for argocd plugin: %v", payload.Action)
-	}
-}
-
 func (a *ArgoCDCLient) ConfigurationActivities(req interface{}) (json.RawMessage, error) {
 	payload, _ := req.(model.ConfigPayload)
 	switch payload.Resource {
@@ -132,13 +118,7 @@ func fetchConfiguration(log logging.Logger) (*Configuration, error) {
 	return cfg, err
 }
 
-func (a *ArgoCDCLient) Create(payload model.RequestPayload) (json.RawMessage, error) {
-	req := &model.Request{}
-	err := json.Unmarshal(payload.Data, req)
-	if err != nil {
-		a.logger.Errorf("payload unmarshal failed, %v", err)
-		return nil, err
-	}
+func (a *ArgoCDCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, error) {
 	conn, appClient, err := a.client.NewApplicationClient()
 	if err != nil {
 		a.logger.Errorf("Application client intilialization failed: %v", err)
@@ -186,14 +166,7 @@ func (a *ArgoCDCLient) Create(payload model.RequestPayload) (json.RawMessage, er
 	return respMsg, nil
 }
 
-func (a *ArgoCDCLient) Delete(payload model.RequestPayload) (json.RawMessage, error) {
-	req := &model.Request{}
-	err := json.Unmarshal(payload.Data, req)
-	if err != nil {
-		a.logger.Errorf("payload unmarshal failed, %v", err)
-		return nil, err
-	}
-
+func (a *ArgoCDCLient) Delete(req *model.DeleteRequestPayload) (json.RawMessage, error) {
 	conn, appClient, err := a.client.NewApplicationClient()
 	if err != nil {
 		return nil, err
@@ -218,7 +191,7 @@ func (a *ArgoCDCLient) Delete(payload model.RequestPayload) (json.RawMessage, er
 	return respMsg, nil
 }
 
-func (a *ArgoCDCLient) List(req model.RequestPayload) (json.RawMessage, error) {
+func (a *ArgoCDCLient) List(req *model.ListRequestPayload) (json.RawMessage, error) {
 	conn, appClient, err := a.client.NewApplicationClient()
 	if err != nil {
 		return nil, err
