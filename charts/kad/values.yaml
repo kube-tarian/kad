@@ -39,6 +39,10 @@ service:
 
 ingressroute:
   enabled: true
+  mtls:
+    enabled: false
+    rootSecretNames: cert-chain
+    serverSecretNames: capten-agent
   host: "captenagent.dev.optimizor.app"
 
 ingress:
