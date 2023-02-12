@@ -18,6 +18,6 @@ spec:
   tls:
     options:
       name: {{ include "kad.fullname" . }}-mtls-auth
-    secretName: {{ .Values.ingressroute.mtls.serverSecretNames }}
+    secretName: {{ include "kad.fullname" . }}-server-cert
 {{- end }}
 {{- end }}

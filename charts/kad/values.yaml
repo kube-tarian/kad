@@ -41,8 +41,9 @@ ingressroute:
   enabled: true
   mtls:
     enabled: false
-    rootSecretNames: cert-chain
-    serverSecretNames: capten-agent
+    caCrt: ""
+    tlsCrt: ""
+    tlsKey: ""
   host: "captenagent.dev.optimizor.app"
 
 ingress:
