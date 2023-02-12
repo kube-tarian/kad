@@ -39,6 +39,11 @@ service:
 
 ingressroute:
   enabled: true
+  mtls:
+    enabled: false
+    caCrt: ""
+    tlsCrt: ""
+    tlsKey: ""
   host: "captenagent.dev.optimizor.app"
 
 ingress:
