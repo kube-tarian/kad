@@ -29,7 +29,7 @@ func main() {
 		log.Fatalf("Fetching application configuration failed, %v", err)
 	}
 
-	s, err := handler.NewAPIHandler(log)
+	server, err := handler.NewAPIHandler(log)
 	if err != nil {
 		log.Fatalf("APIHandler initialization failed, %v", err)
 	}
@@ -41,7 +41,7 @@ func main() {
 
 	r := gin.Default()
 	r.Use(middleware.OapiRequestValidator(swagger))
-	r = api.RegisterHandlers(r, s)
+	r = api.RegisterHandlers(r, server)
 
 	go func() {
 		if err := r.Run(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)); err != nil {
@@ -52,6 +52,6 @@ func main() {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	<-signals
-
+	server.CloseAll()
 	log.Infof("Interrupt received, exiting")
 }

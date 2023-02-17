@@ -1,68 +1,81 @@
 package handler
 
 import (
-	"github.com/kube-tarian/kad/server/pkg/db"
-	"github.com/sirupsen/logrus"
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/kube-tarian/kad/server/api"
+	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/model"
+	"github.com/kube-tarian/kad/server/pkg/types"
 )
 
-func (s *APIHanlder) PostRegisterAgent(c *gin.Context) {
-	s.log.Infof("Register agent api invocation started")
+func (a *APIHandler) PostRegisterAgent(c *gin.Context) {
+	a.log.Infof("Register agent api invocation started")
 
-	var req api.AgentRequest
-	if err := c.BindJSON(&req); err != nil {
-		s.sendResponse(c, "Failed to parse deploy payload", err)
+	//var req api.AgentRequest
+	customerId := c.GetHeader("customer_id")
+	if customerId == "" {
+		a.setFailedResponse(c, "missing customer id header", errors.New(""))
 		return
 	}
 
-	//TODO Save in DB and internal cache
+	endpoint := c.GetHeader("endpoint")
+	if endpoint == "" {
+		a.setFailedResponse(c, "missing endpoint in header", errors.New(""))
+		return
+	}
+
+	fileContentsMap, err := a.getFileContent(c, map[string]string{
+		"ca_crt":     types.ClientCertChainFileName,
+		"client_crt": types.ClientCertFileName,
+		"client_key": types.ClientKeyFileName})
+	if err != nil {
+		a.setFailedResponse(c, "failed to register agent", err)
+		return
+	}
+
 	session, err := db.New()
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, &model.DeployResponse{
-			Status:  "FAILED",
-			Message: "failed to get db session"})
-		logrus.Error("failed to get db session", err)
+		a.setFailedResponse(c, "failed to get db session", nil)
+		a.log.Error("failed to get db session", err)
 		return
 	}
 
-	err = session.RegisterEndpoint(req.CustomerId, req.Endpoint)
+	err = session.RegisterEndpoint(customerId, endpoint, fileContentsMap)
 	if err != nil {
-		c.IndentedJSON(http.StatusInternalServerError, &model.DeployResponse{
-			Status:  "FAILED",
-			Message: "failed to store data"})
-		logrus.Error("failed to get db session", err)
+		a.setFailedResponse(c, "failed to store data", nil)
+		a.log.Error("failed to get db session", err)
 		return
 	}
 
 	c.Writer.WriteHeader(http.StatusOK)
-	s.log.Infof("Register agent api invocation finished")
+	a.log.Infof("Register agent api invocation finished")
 }
 
-func (s *APIHanlder) GetRegisterAgent(c *gin.Context) {
-	s.log.Infof("Get all registered agents api invocation started")
+func (a *APIHandler) GetRegisterAgent(c *gin.Context) {
+	a.log.Infof("Get all registered agents api invocation started")
 
 	//TODO Get all agents from DB
 
 	c.IndentedJSON(http.StatusOK, &model.AgentsResponse{})
 
-	s.log.Infof("Get all registered agents api invocation finished")
+	a.log.Infof("Get all registered agents api invocation finished")
 }
 
-func (s *APIHanlder) PutRegisterAgent(c *gin.Context) {
-	s.log.Infof("Update register agent api invocation started")
+func (a *APIHandler) PutRegisterAgent(c *gin.Context) {
+	a.log.Infof("Update register agent api invocation started")
 
 	var req api.AgentRequest
 	if err := c.BindJSON(&req); err != nil {
-		s.sendResponse(c, "Failed to parse deploy payload", err)
+		a.setFailedResponse(c, "Failed to parse deploy payload", err)
 		return
 	}
 
 	//TODO Update in DB and internal cache
 
 	c.Writer.WriteHeader(http.StatusOK)
-	s.log.Infof("Update register agent api invocation finished")
+	a.log.Infof("Update register agent api invocation finished")
 }

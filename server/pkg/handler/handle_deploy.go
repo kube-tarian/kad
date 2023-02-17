@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -13,31 +14,35 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (s *APIHanlder) PostDeploy(c *gin.Context) {
-	//TODO get address from database based on CustomerInfo
-	s.log.Infof("deploy api invocation started")
+func (a *APIHandler) PostDeploy(c *gin.Context) {
 
+	a.log.Infof("deploy api invocation started")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var req api.DeployRequestPayload
 	if err := c.BindJSON(&req); err != nil {
-		s.sendResponse(c, "Failed to parse deploy payload", err)
+		a.setFailedResponse(c, "Failed to parse deploy payload", err)
 		return
 	}
 
 	payload, err := json.Marshal(req.Payload)
 	if err != nil {
-		s.sendResponse(c, "Deploy request prepration failed", err)
+		a.setFailedResponse(c, "Deploy request preparation failed", err)
 		return
 	}
 
-	if err := s.ConnectClient(); err != nil {
-		s.sendResponse(c, "agent connection failed", err)
+	if err := a.ConnectClient(req.CustomerId); err != nil {
+		a.setFailedResponse(c, "agent connection failed", err)
 		return
 	}
 
-	response, err := s.client.SubmitJob(
+	agent := a.GetClient(req.CustomerId)
+	if agent == nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", req.CustomerId), errors.New(""))
+	}
+
+	response, err := agent.SubmitJob(
 		ctx,
 		&agentpb.JobRequest{
 			Operation: req.Operation,
@@ -45,7 +50,7 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 		},
 	)
 	if err != nil {
-		s.sendResponse(c, "failed to submit job", err)
+		a.setFailedResponse(c, "failed to submit job", err)
 		return
 	}
 
@@ -53,16 +58,8 @@ func (s *APIHanlder) PostDeploy(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: toString(response)})
 
-	s.log.Infof("response received", response)
-	s.log.Infof("deploy api invocation finished")
-}
-
-func (s *APIHanlder) sendResponse(c *gin.Context, msg string, err error) {
-	s.log.Errorf("failed to submit job", err)
-	c.IndentedJSON(http.StatusInternalServerError, &api.Response{
-		Status:  "FAILED",
-		Message: fmt.Sprintf("%s, %v", msg, err),
-	})
+	a.log.Infof("response received", response)
+	a.log.Infof("deploy api invocation finished")
 }
 
 func toString(resp *agentpb.JobResponse) string {

@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -12,28 +14,33 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 )
 
-func (s *APIHanlder) PostConfig(c *gin.Context) {
+func (a *APIHandler) PostConfig(c *gin.Context) {
 	//TODO get address from database based on CustomerInfo
-	s.log.Infof("config api invocation started")
+	a.log.Infof("config api invocation started")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var req api.ConfigRequestPayload
 	if err := c.BindJSON(&req); err != nil {
-		s.sendResponse(c, "Failed to parse config payload", err)
+		a.setFailedResponse(c, "failed to parse config payload", err)
 		return
 	}
 
 	payload, err := json.Marshal(req.Payload)
 	if err != nil {
-		s.sendResponse(c, "Config request prepration failed", err)
+		a.setFailedResponse(c, "Config request preparation failed", err)
 		return
+	}
+
+	agent := a.GetClient(req.CustomerId)
+	if agent == nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", req.CustomerId), errors.New(""))
 	}
 
 	// TODO: currently climon payload is submitted to temporal via agent.
 	// This flow has to modified as per the understanding.
-	response, err := s.client.SubmitJob(
+	response, err := agent.SubmitJob(
 		ctx,
 		&agentpb.JobRequest{
 			Operation: req.Operation,
@@ -41,7 +48,7 @@ func (s *APIHanlder) PostConfig(c *gin.Context) {
 		},
 	)
 	if err != nil {
-		s.sendResponse(c, "failed to submit job", err)
+		a.setFailedResponse(c, "failed to submit job", err)
 		return
 	}
 
@@ -49,6 +56,6 @@ func (s *APIHanlder) PostConfig(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
 
-	s.log.Infof("response received", response)
-	s.log.Infof("config api invocation finished")
+	a.log.Infof("response received", response)
+	a.log.Infof("config api invocation finished")
 }

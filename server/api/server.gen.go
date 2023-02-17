@@ -12,20 +12,29 @@ import (
 	"path"
 	"strings"
 
+	openapi_types "github.com/deepmap/oapi-codegen/pkg/types"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
 )
 
 // AgentRequest defines model for AgentRequest.
 type AgentRequest struct {
+	CaCrt     []openapi_types.File `json:"ca_crt"`
+	ClientCrt []openapi_types.File `json:"client_crt"`
+	ClientKey []openapi_types.File `json:"client_key"`
+}
+
+// AgentResponse defines model for AgentResponse.
+type AgentResponse struct {
 	CustomerId string `json:"customer_id"`
 	Endpoint   string `json:"endpoint"`
 }
 
 // ConfigRequestPayload defines model for ConfigRequestPayload.
 type ConfigRequestPayload struct {
-	Operation string `json:"operation"`
-	Payload   struct {
+	CustomerId string `json:"customer_id"`
+	Operation  string `json:"operation"`
+	Payload    struct {
 		// Action Action to be performed
 		Action string `json:"action"`
 
@@ -42,8 +51,9 @@ type ConfigRequestPayload struct {
 
 // DeployRequestPayload defines model for DeployRequestPayload.
 type DeployRequestPayload struct {
-	Operation string  `json:"operation"`
-	Payload   Payload `json:"payload"`
+	CustomerId string  `json:"customer_id"`
+	Operation  string  `json:"operation"`
+	Payload    Payload `json:"payload"`
 }
 
 // Payload defines model for Payload.
@@ -73,8 +83,8 @@ type PostConfigJSONRequestBody = ConfigRequestPayload
 // PostDeployJSONRequestBody defines body for PostDeploy for application/json ContentType.
 type PostDeployJSONRequestBody = DeployRequestPayload
 
-// PostRegisterAgentJSONRequestBody defines body for PostRegisterAgent for application/json ContentType.
-type PostRegisterAgentJSONRequestBody = AgentRequest
+// PostRegisterAgentMultipartRequestBody defines body for PostRegisterAgent for multipart/form-data ContentType.
+type PostRegisterAgentMultipartRequestBody = AgentRequest
 
 // PutRegisterAgentJSONRequestBody defines body for PutRegisterAgent for application/json ContentType.
 type PutRegisterAgentJSONRequestBody = AgentRequest
@@ -247,20 +257,21 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xXTW/jNhD9KwTbo2q5zU03NymKIAVi2L0FRkBTI4WBRDKckQEj8H8vSEryh2Q7xWax",
-	"2MXexHA4897j43jyzqWprdGgCXn2zlG+QC3C56wETQt4awDJr60zFhwpCLuyQTI1uGeV+yVtLfCMIzml",
-	"S75LOOjcGqVpZHOXcAdvjXKQ8+zpKNPBuVXCSVHlDwYkTOnCuFqQMponXU6zfgVJvuCt0YUqW7xzsa2M",
-	"yIew/XdMMQba7o+JqnosePb0zn91UPCM/5LulUpbmdKuzi45LeQATeMk+O8cUDplY1m+aHcYGbYGJgPu",
-	"xouRXFGqz7narU739sT2NA4kvO2qsG5zRMI7sJXZfisJ/y+liJb1UcxF4JcYniUlZMfo+LJm4e/tVVlw",
-	"3oJjN5XwXJAYnr8TJFhhHKMXYG2REVy2akqln7WoRwwzD5vMb/apDrW5bJrD1AnvIQS4qxEoC0BrNI7g",
-	"6Dx0rLbr4pMTSWtAFCWMugRJUIPXe0Mbl/TJhoj9Ed8ahniXQiwZgtuAY48WNFv8tfyXzeb3DC1IVSjZ",
-	"K9ha6vyJ5cmJDTiMVX6fTCdTz8lY0MIqnvGbyXRyE0xLL4FkKqz6LTcyLEqgo2d0n/OM/w00s+rOh3gF",
-	"oqQh/I/pdEjt8SFIhU1dC7flGf9HITFTeKzIrDMblUPO1ttgFs9ISX9DJEoMpmjWlZI8PLlUVqqO3rcG",
-	"R7DNDdJtjIm3A0h/mnwbfgaMJohdXlhbtQKlrxgTxkfuvy61gNG+s9tFMwyl+JSavc1DmSvq5rHVhDe8",
-	"r3hWz/BOrugZY76OnqM/hd+vnjH6sp7RQj/9+RE9HZQKCVwqyhbmuZa0aCPDAMa/kK0iqPEa7aOhc9c3",
-	"e+Gc2H5Iig4yEy3mgQTJBRsNCX++m44pnnXRZ/Bsxmg2PxRLb+j9NHHOyMtujriOARspAbFoqoMh6xjV",
-	"Q7MGp4EAmQORKw2ITOicVWoDYWGdWQPr/5c5wO3URpCf4EPKMGpgmJEbV/GMp34O/i8AAP//TjCFq5UN",
-	"AAA=",
+	"H4sIAAAAAAAC/+xX34/jJhD+VxDtoy9Oe29+S3er6nSVNkr6dopWBI+9XG3gGIgUrfK/V4B/xk6y291W",
+	"rXRvBoaZbz4+hvEz5arWSoK0SLNnivwJahY+VyVIu4FvDtD6sTZKg7ECwipnj9yEeWGhDlOFMjWzNKN7",
+	"IZk50oTaowaaUbRGyJKeuglmDDv6Ma8ESPuOnv6E49s8nRJq4JsTBnKafWnTHCEdBdsl1ApbeQ+BMCJk",
+	"jCmU7KOp/Vfg1kdrWEWtJMIMrQ6tqsE8itwPJ2BB5loJaWcWz5EPPA32TfCaFssM2DslC1E2GlizY6VY",
+	"/nrM3jbyMbeqe7esqh4Kmn15pj8aKGhGf0h7daaNNNMWxyk5B2IAlTM80JoDciN0DEs3zQqxiuyB8JCX",
+	"80wlN2jsfO5Ou/O1PrE+jWREx4DtuzYm6U0nhN+DrtTxv0r42wiIuZFuDzExzWt8XKSA8Ta/8UGvwnxz",
+	"zBqMv4tzp5zQnFk23X/PLCOFMsQ+AWmCzODSlSuFfJSsnhHbOiwSv9i5GjJ1XXBD1wntIAS4uxkow1oy",
+	"xtEqbsz24L6PKa0BkZUwqxm0zDq8XXQau6RzNkXst/gaOcW7ZWxLEMwBDHnQIMnm1+0fZLX+RFADF4Xg",
+	"HYONpC7v2J7tOIDBGOWnxXKxbG6JZFrQjH5cLBcfg4TtU0gyZVp8yBUPgxJCte1O8FNOM/ob2JUW997E",
+	"MxApDeY/L5fT1B4+B6rQ1bV/hTL6u0BLVOGxItFGHUQOOdkfg1h8RoKHisxKDKJw+0pwGi5gyitRR+1r",
+	"hTPY1grtXbSJpwNof1F5eBi5khbi88G0rhqC0q8YHcYr77+uFYTZKnU6RTFMqXiXmJ3MQ5gb7Oax1IQ7",
+	"3Ee8yGe4Jzf4jDb/DJ+zz+z/l89ofZ3PKKHv+nwJnwZKgRZMysoG5qWStGksQ2dH35ht10NfS3vczk67",
+	"6dtctJgJa0BPOEiu6Gia8SU51a6yQjNjU98TfGif/5ed7uhf6LKS3iNVN5epe0Wif1/D/1aWXtR9R3FJ",
+	"zNu2l7iNAR3ngFi4atBojVF9dnswEiwgMcByIQGRMJmTShwgDLRReyDdj9IAtxEHZv0fQHAZ2g0MXbMz",
+	"Fc1o6jvjvwIAAP//nGsBmUkPAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

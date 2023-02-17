@@ -5,44 +5,77 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/client"
+	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/logging"
+	"github.com/kube-tarian/kad/server/pkg/types"
 )
 
-type APIHanlder struct {
+type APIHandler struct {
 	log    logging.Logger
-	client *client.Agent
+	agents map[string]*client.Agent
 }
 
 var (
-	apiOnce sync.Once
+	agentMutex sync.RWMutex
 )
 
-func NewAPIHandler(log logging.Logger) (*APIHanlder, error) {
-	return &APIHanlder{
+func NewAPIHandler(log logging.Logger) (*APIHandler, error) {
+	return &APIHandler{
 		log:    log,
-		client: nil,
+		agents: make(map[string]*client.Agent),
 	}, nil
 }
 
-func (s *APIHanlder) ConnectClient() error {
-	var err error
-	apiOnce.Do(func() {
-		s.client, err = client.NewAgent(s.log)
-		if err != nil {
-			s.log.Errorf("failed to connect agent internal error", err)
-		}
-	})
+func (a *APIHandler) ConnectClient(customerId string) error {
+	agentCfg, err := fetchConfiguration(customerId)
+	if err != nil {
+		return err
+	}
 
+	agent, err := client.NewAgent(a.log, agentCfg)
+	if err != nil {
+		a.log.Errorf("failed to connect agent internal error", err)
+	}
+
+	agentMutex.Lock()
+	a.agents[customerId] = agent
+	agentMutex.Unlock()
 	return err
 }
 
-func (s *APIHanlder) Close(c *gin.Context) {
-	s.client.Close()
+func (a *APIHandler) GetClient(customerId string) *client.Agent {
+	agentMutex.RLock()
+	if agent, ok := a.agents[customerId]; ok && agent != nil {
+		return agent
+	}
+	agentMutex.RUnlock()
+
+	return nil
 }
 
-func (ah *APIHanlder) GetApiDocs(c *gin.Context) {
+func (a *APIHandler) Close(customerId string) {
+	agent := a.GetClient(customerId)
+	if agent == nil {
+		return
+	}
+
+	agentMutex.Lock()
+	a.agents[customerId].Close()
+	delete(a.agents, customerId)
+	agentMutex.Unlock()
+}
+
+func (a *APIHandler) CloseAll() {
+	for customerId, _ := range a.agents {
+		a.Close(customerId)
+	}
+}
+
+func (a *APIHandler) GetApiDocs(c *gin.Context) {
 	swagger, err := api.GetSwagger()
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
@@ -51,6 +84,27 @@ func (ah *APIHanlder) GetApiDocs(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, swagger)
 }
 
-func (ah *APIHanlder) GetStatus(c *gin.Context) {
+func (a *APIHandler) GetStatus(c *gin.Context) {
 	c.String(http.StatusOK, "")
+}
+
+func fetchConfiguration(customerID string) (*types.AgentConfiguration, error) {
+	cfg := &types.AgentConfiguration{}
+	session, err := db.New()
+	if err != nil {
+		logrus.Error("failed to get db session", err)
+		return nil, err
+	}
+
+	agentInfo, err := session.GetAgentInfo(customerID)
+	if err != nil {
+		logrus.Error("failed to get db session", err)
+		return nil, err
+	}
+
+	cfg.Address = agentInfo.Endpoint
+	cfg.CaCert = agentInfo.CaPem
+	cfg.Cert = agentInfo.Cert
+	cfg.Key = agentInfo.Key
+	return cfg, err
 }
