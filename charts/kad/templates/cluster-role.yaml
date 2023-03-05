@@ -1,19 +1,19 @@
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: {{ include "kad.fullname" . }}
-rules:
-- apiGroups: ["*"]
-  #
-  # at the HTTP level, the name of the resource for accessing Secret
-  # objects is "secrets"
-  resources: ["*"]
-  verbs:
-  - get
-  - list
-  - watch
-  - create
-  - update
-  - patch
-  - delete
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   name: {{ include "kad.fullname" . }}
+# rules:
+# - apiGroups: ["*"]
+#   #
+#   # at the HTTP level, the name of the resource for accessing Secret
+#   # objects is "secrets"
+#   resources: ["*"]
+#   verbs:
+#   - get
+#   - list
+#   - watch
+#   - create
+#   - update
+#   - patch
+#   - delete
 

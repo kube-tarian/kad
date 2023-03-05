@@ -71,7 +71,7 @@ func (c *Client) ExecuteWorkflow(
 	workflowName string,
 	args ...interface{},
 ) (client.WorkflowRun, error) {
-	return c.TemporalClient.ExecuteWorkflow(ctx, options, workflowName, args)
+	return c.TemporalClient.ExecuteWorkflow(ctx, options, workflowName, args...)
 }
 
 func fetchConfiguration() (*Configuration, error) {

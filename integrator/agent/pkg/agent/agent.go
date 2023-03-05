@@ -1,12 +1,12 @@
-package server
+package agent
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/kube-tarian/kad/integrator/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/workers"
-	"github.com/kube-tarian/kad/integrator/capten-sdk/agentpb"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"go.temporal.io/sdk/client"
 )
@@ -47,12 +47,6 @@ func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*ag
 
 func (a *Agent) getWorker(operatoin string) (workers.Worker, error) {
 	switch operatoin {
-	case "climon":
-		return workers.NewClimon(a.client), nil
-	case "deployment":
-		return workers.NewDeployment(a.client, a.log), nil
-	case "config":
-		return workers.NewConfig(a.client, a.log), nil
 	default:
 		return nil, fmt.Errorf("unsupported operation %s", operatoin)
 	}

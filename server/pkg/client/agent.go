@@ -1,13 +1,14 @@
 package client
 
 import (
-	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/types"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -44,10 +45,6 @@ func NewAgent(log logging.Logger, cfg *types.AgentConfiguration) (*Agent, error)
 
 func (a *Agent) GetClient() agentpb.AgentClient {
 	return a.client
-}
-
-func (a *Agent) SubmitJob(ctx context.Context, req *agentpb.JobRequest) (*agentpb.JobResponse, error) {
-	return a.client.SubmitJob(ctx, req)
 }
 
 func (a *Agent) Close() {

@@ -30,42 +30,147 @@ type AgentResponse struct {
 	Endpoint   string `json:"endpoint"`
 }
 
-// ConfigRequestPayload defines model for ConfigRequestPayload.
-type ConfigRequestPayload struct {
-	CustomerId string `json:"customer_id"`
-	Operation  string `json:"operation"`
-	Payload    struct {
-		// Action Action to be performed
-		Action string `json:"action"`
+// ClimonDeleteRequest defines model for ClimonDeleteRequest.
+type ClimonDeleteRequest struct {
+	// ClusterName Cluster in which to be deleted, default in-build cluster
+	ClusterName *string `json:"cluster_name,omitempty"`
+	CustomerId  string  `json:"customer_id"`
 
-		// Data Data for the action
-		Data map[string]interface{} `json:"data"`
+	// Namespace Namespace chart to be installed
+	Namespace string `json:"namespace"`
 
-		// PluginName Plugin name for the operation
-		PluginName string `json:"plugin_name"`
-
-		// Resource Resource to be configured
-		Resource string `json:"resource"`
-	} `json:"payload"`
-}
-
-// DeployRequestPayload defines model for DeployRequestPayload.
-type DeployRequestPayload struct {
-	CustomerId string  `json:"customer_id"`
-	Operation  string  `json:"operation"`
-	Payload    Payload `json:"payload"`
-}
-
-// Payload defines model for Payload.
-type Payload struct {
-	// Action Action to be performed
-	Action string `json:"action"`
-
-	// Data Data for the action
-	Data map[string]interface{} `json:"data"`
-
-	// PluginName Plugin name for the operation
+	// PluginName Plugin name
 	PluginName string `json:"plugin_name"`
+
+	// ReleaseName Release name to be used for install
+	ReleaseName string `json:"release_name"`
+
+	// Timeout Timeout for the application installation
+	Timeout int `json:"timeout"`
+}
+
+// ClimonPostRequest defines model for ClimonPostRequest.
+type ClimonPostRequest struct {
+	// ChartName Chart name in Repository
+	ChartName string `json:"chart_name"`
+
+	// ClusterName Cluster in which to be installed, default in-build cluster
+	ClusterName *string `json:"cluster_name,omitempty"`
+
+	// Namespace Namespace chart to be installed
+	Namespace string `json:"namespace"`
+
+	// PluginName Plugin name
+	PluginName string `json:"plugin_name"`
+
+	// ReleaseName Release name to be used for install
+	ReleaseName string `json:"release_name"`
+
+	// RepoName Repository name
+	RepoName string `json:"repo_name"`
+
+	// RepoUrl Repository URL
+	RepoUrl string `json:"repo_url"`
+
+	// Timeout Timeout for the application installation
+	Timeout int `json:"timeout"`
+
+	// Version Version of the chart
+	Version *string `json:"version,omitempty"`
+}
+
+// ClusterRequest defines model for ClusterRequest.
+type ClusterRequest struct {
+	ClusterName string `json:"cluster_name"`
+	CustomerId  string `json:"customer_id"`
+	PluginName  string `json:"plugin_name"`
+}
+
+// DeployerDeleteRequest defines model for DeployerDeleteRequest.
+type DeployerDeleteRequest struct {
+	// ClusterName Cluster in which to be deleted, default in-build cluster
+	ClusterName *string `json:"cluster_name,omitempty"`
+
+	// Namespace Namespace chart to be installed
+	Namespace string `json:"namespace"`
+
+	// PluginName Plugin name
+	PluginName string `json:"plugin_name"`
+
+	// ReleaseName Release name to be used for install
+	ReleaseName string `json:"release_name"`
+
+	// Timeout Timeout for the application installation
+	Timeout int `json:"timeout"`
+}
+
+// DeployerPostRequest defines model for DeployerPostRequest.
+type DeployerPostRequest struct {
+	// ChartName Chart name in Repository
+	ChartName string `json:"chart_name"`
+
+	// ClusterName Cluster in which to be installed, default in-build cluster
+	ClusterName *string `json:"cluster_name,omitempty"`
+
+	// Namespace Namespace chart to be installed
+	Namespace string `json:"namespace"`
+
+	// PluginName Plugin name
+	PluginName string `json:"plugin_name"`
+
+	// ReleaseName Release name to be used for install
+	ReleaseName string `json:"release_name"`
+
+	// RepoName Repository name
+	RepoName string `json:"repo_name"`
+
+	// RepoUrl Repository URL
+	RepoUrl string `json:"repo_url"`
+
+	// Timeout Timeout for the application installation
+	Timeout int `json:"timeout"`
+
+	// Version Version of the chart
+	Version *string `json:"version,omitempty"`
+}
+
+// ProjectDeleteRequest defines model for ProjectDeleteRequest.
+type ProjectDeleteRequest struct {
+	// PluginName Plugin name
+	PluginName string `json:"plugin_name"`
+
+	// ProjectName Project name to be created in plugin
+	ProjectName string `json:"project_name"`
+}
+
+// ProjectPostRequest defines model for ProjectPostRequest.
+type ProjectPostRequest struct {
+	// PluginName Plugin name
+	PluginName string `json:"plugin_name"`
+
+	// ProjectName Project name to be created in plugin
+	ProjectName string `json:"project_name"`
+}
+
+// RepositoryDeleteRequest defines model for RepositoryDeleteRequest.
+type RepositoryDeleteRequest struct {
+	// PluginName Plugin name
+	PluginName string `json:"plugin_name"`
+
+	// RepoName Repository to added to plugin
+	RepoName string `json:"repo_name"`
+}
+
+// RepositoryPostRequest defines model for RepositoryPostRequest.
+type RepositoryPostRequest struct {
+	// PluginName Plugin name
+	PluginName string `json:"plugin_name"`
+
+	// RepoName Repository to added to plugin
+	RepoName string `json:"repo_name"`
+
+	// RepoUrl Repository URL
+	RepoUrl string `json:"repo_url"`
 }
 
 // Response Configuration request response
@@ -74,14 +179,47 @@ type Response struct {
 	Status  string `json:"status"`
 }
 
+// DeleteClimonJSONRequestBody defines body for DeleteClimon for application/json ContentType.
+type DeleteClimonJSONRequestBody = ClimonDeleteRequest
+
 // PostClimonJSONRequestBody defines body for PostClimon for application/json ContentType.
-type PostClimonJSONRequestBody = DeployRequestPayload
+type PostClimonJSONRequestBody = ClimonPostRequest
 
-// PostConfigJSONRequestBody defines body for PostConfig for application/json ContentType.
-type PostConfigJSONRequestBody = ConfigRequestPayload
+// PutClimonJSONRequestBody defines body for PutClimon for application/json ContentType.
+type PutClimonJSONRequestBody = ClimonPostRequest
 
-// PostDeployJSONRequestBody defines body for PostDeploy for application/json ContentType.
-type PostDeployJSONRequestBody = DeployRequestPayload
+// DeleteConfigatorClusterJSONRequestBody defines body for DeleteConfigatorCluster for application/json ContentType.
+type DeleteConfigatorClusterJSONRequestBody = ClusterRequest
+
+// PostConfigatorClusterJSONRequestBody defines body for PostConfigatorCluster for application/json ContentType.
+type PostConfigatorClusterJSONRequestBody = ClusterRequest
+
+// DeleteConfigatorProjectJSONRequestBody defines body for DeleteConfigatorProject for application/json ContentType.
+type DeleteConfigatorProjectJSONRequestBody = ProjectDeleteRequest
+
+// PostConfigatorProjectJSONRequestBody defines body for PostConfigatorProject for application/json ContentType.
+type PostConfigatorProjectJSONRequestBody = ProjectPostRequest
+
+// PutConfigatorProjectJSONRequestBody defines body for PutConfigatorProject for application/json ContentType.
+type PutConfigatorProjectJSONRequestBody = ProjectPostRequest
+
+// DeleteConfigatorRepositoryJSONRequestBody defines body for DeleteConfigatorRepository for application/json ContentType.
+type DeleteConfigatorRepositoryJSONRequestBody = RepositoryDeleteRequest
+
+// PostConfigatorRepositoryJSONRequestBody defines body for PostConfigatorRepository for application/json ContentType.
+type PostConfigatorRepositoryJSONRequestBody = RepositoryPostRequest
+
+// PutConfigatorRepositoryJSONRequestBody defines body for PutConfigatorRepository for application/json ContentType.
+type PutConfigatorRepositoryJSONRequestBody = RepositoryPostRequest
+
+// DeleteDeployerJSONRequestBody defines body for DeleteDeployer for application/json ContentType.
+type DeleteDeployerJSONRequestBody = DeployerDeleteRequest
+
+// PostDeployerJSONRequestBody defines body for PostDeployer for application/json ContentType.
+type PostDeployerJSONRequestBody = DeployerPostRequest
+
+// PutDeployerJSONRequestBody defines body for PutDeployer for application/json ContentType.
+type PutDeployerJSONRequestBody = DeployerPostRequest
 
 // PostRegisterAgentMultipartRequestBody defines body for PostRegisterAgent for multipart/form-data ContentType.
 type PostRegisterAgentMultipartRequestBody = AgentRequest
@@ -95,14 +233,47 @@ type ServerInterface interface {
 	// (GET /api-docs)
 	GetApiDocs(c *gin.Context)
 	// deploy the application
+	// (DELETE /climon)
+	DeleteClimon(c *gin.Context)
+	// deploy the application
 	// (POST /climon)
 	PostClimon(c *gin.Context)
 	// deploy the application
-	// (POST /config)
-	PostConfig(c *gin.Context)
+	// (PUT /climon)
+	PutClimon(c *gin.Context)
+	// Delete the application
+	// (DELETE /configator/cluster)
+	DeleteConfigatorCluster(c *gin.Context)
 	// deploy the application
-	// (POST /deploy)
-	PostDeploy(c *gin.Context)
+	// (POST /configator/cluster)
+	PostConfigatorCluster(c *gin.Context)
+	// deploy the application
+	// (DELETE /configator/project)
+	DeleteConfigatorProject(c *gin.Context)
+	// deploy the application
+	// (POST /configator/project)
+	PostConfigatorProject(c *gin.Context)
+	// deploy the application
+	// (PUT /configator/project)
+	PutConfigatorProject(c *gin.Context)
+	// deploy the application
+	// (DELETE /configator/repository)
+	DeleteConfigatorRepository(c *gin.Context)
+	// deploy the application
+	// (POST /configator/repository)
+	PostConfigatorRepository(c *gin.Context)
+	// deploy the application
+	// (PUT /configator/repository)
+	PutConfigatorRepository(c *gin.Context)
+	// deploy the application
+	// (DELETE /deployer)
+	DeleteDeployer(c *gin.Context)
+	// deploy the application
+	// (POST /deployer)
+	PostDeployer(c *gin.Context)
+	// deploy the application
+	// (PUT /deployer)
+	PutDeployer(c *gin.Context)
 	// Register agent
 	// (GET /register/agent)
 	GetRegisterAgent(c *gin.Context)
@@ -136,6 +307,16 @@ func (siw *ServerInterfaceWrapper) GetApiDocs(c *gin.Context) {
 	siw.Handler.GetApiDocs(c)
 }
 
+// DeleteClimon operation middleware
+func (siw *ServerInterfaceWrapper) DeleteClimon(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteClimon(c)
+}
+
 // PostClimon operation middleware
 func (siw *ServerInterfaceWrapper) PostClimon(c *gin.Context) {
 
@@ -146,24 +327,124 @@ func (siw *ServerInterfaceWrapper) PostClimon(c *gin.Context) {
 	siw.Handler.PostClimon(c)
 }
 
-// PostConfig operation middleware
-func (siw *ServerInterfaceWrapper) PostConfig(c *gin.Context) {
+// PutClimon operation middleware
+func (siw *ServerInterfaceWrapper) PutClimon(c *gin.Context) {
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
 
-	siw.Handler.PostConfig(c)
+	siw.Handler.PutClimon(c)
 }
 
-// PostDeploy operation middleware
-func (siw *ServerInterfaceWrapper) PostDeploy(c *gin.Context) {
+// DeleteConfigatorCluster operation middleware
+func (siw *ServerInterfaceWrapper) DeleteConfigatorCluster(c *gin.Context) {
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
 
-	siw.Handler.PostDeploy(c)
+	siw.Handler.DeleteConfigatorCluster(c)
+}
+
+// PostConfigatorCluster operation middleware
+func (siw *ServerInterfaceWrapper) PostConfigatorCluster(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostConfigatorCluster(c)
+}
+
+// DeleteConfigatorProject operation middleware
+func (siw *ServerInterfaceWrapper) DeleteConfigatorProject(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteConfigatorProject(c)
+}
+
+// PostConfigatorProject operation middleware
+func (siw *ServerInterfaceWrapper) PostConfigatorProject(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostConfigatorProject(c)
+}
+
+// PutConfigatorProject operation middleware
+func (siw *ServerInterfaceWrapper) PutConfigatorProject(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PutConfigatorProject(c)
+}
+
+// DeleteConfigatorRepository operation middleware
+func (siw *ServerInterfaceWrapper) DeleteConfigatorRepository(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteConfigatorRepository(c)
+}
+
+// PostConfigatorRepository operation middleware
+func (siw *ServerInterfaceWrapper) PostConfigatorRepository(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostConfigatorRepository(c)
+}
+
+// PutConfigatorRepository operation middleware
+func (siw *ServerInterfaceWrapper) PutConfigatorRepository(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PutConfigatorRepository(c)
+}
+
+// DeleteDeployer operation middleware
+func (siw *ServerInterfaceWrapper) DeleteDeployer(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteDeployer(c)
+}
+
+// PostDeployer operation middleware
+func (siw *ServerInterfaceWrapper) PostDeployer(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostDeployer(c)
+}
+
+// PutDeployer operation middleware
+func (siw *ServerInterfaceWrapper) PutDeployer(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PutDeployer(c)
 }
 
 // GetRegisterAgent operation middleware
@@ -237,11 +518,33 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.GET(options.BaseURL+"/api-docs", wrapper.GetApiDocs)
 
+	router.DELETE(options.BaseURL+"/climon", wrapper.DeleteClimon)
+
 	router.POST(options.BaseURL+"/climon", wrapper.PostClimon)
 
-	router.POST(options.BaseURL+"/config", wrapper.PostConfig)
+	router.PUT(options.BaseURL+"/climon", wrapper.PutClimon)
 
-	router.POST(options.BaseURL+"/deploy", wrapper.PostDeploy)
+	router.DELETE(options.BaseURL+"/configator/cluster", wrapper.DeleteConfigatorCluster)
+
+	router.POST(options.BaseURL+"/configator/cluster", wrapper.PostConfigatorCluster)
+
+	router.DELETE(options.BaseURL+"/configator/project", wrapper.DeleteConfigatorProject)
+
+	router.POST(options.BaseURL+"/configator/project", wrapper.PostConfigatorProject)
+
+	router.PUT(options.BaseURL+"/configator/project", wrapper.PutConfigatorProject)
+
+	router.DELETE(options.BaseURL+"/configator/repository", wrapper.DeleteConfigatorRepository)
+
+	router.POST(options.BaseURL+"/configator/repository", wrapper.PostConfigatorRepository)
+
+	router.PUT(options.BaseURL+"/configator/repository", wrapper.PutConfigatorRepository)
+
+	router.DELETE(options.BaseURL+"/deployer", wrapper.DeleteDeployer)
+
+	router.POST(options.BaseURL+"/deployer", wrapper.PostDeployer)
+
+	router.PUT(options.BaseURL+"/deployer", wrapper.PutDeployer)
 
 	router.GET(options.BaseURL+"/register/agent", wrapper.GetRegisterAgent)
 
@@ -257,21 +560,28 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+xX34/jJhD+VxDtoy9Oe29+S3er6nSVNkr6dopWBI+9XG3gGIgUrfK/V4B/xk6y291W",
-	"rXRvBoaZbz4+hvEz5arWSoK0SLNnivwJahY+VyVIu4FvDtD6sTZKg7ECwipnj9yEeWGhDlOFMjWzNKN7",
-	"IZk50oTaowaaUbRGyJKeuglmDDv6Ma8ESPuOnv6E49s8nRJq4JsTBnKafWnTHCEdBdsl1ApbeQ+BMCJk",
-	"jCmU7KOp/Vfg1kdrWEWtJMIMrQ6tqsE8itwPJ2BB5loJaWcWz5EPPA32TfCaFssM2DslC1E2GlizY6VY",
-	"/nrM3jbyMbeqe7esqh4Kmn15pj8aKGhGf0h7daaNNNMWxyk5B2IAlTM80JoDciN0DEs3zQqxiuyB8JCX",
-	"80wlN2jsfO5Ou/O1PrE+jWREx4DtuzYm6U0nhN+DrtTxv0r42wiIuZFuDzExzWt8XKSA8Ta/8UGvwnxz",
-	"zBqMv4tzp5zQnFk23X/PLCOFMsQ+AWmCzODSlSuFfJSsnhHbOiwSv9i5GjJ1XXBD1wntIAS4uxkow1oy",
-	"xtEqbsz24L6PKa0BkZUwqxm0zDq8XXQau6RzNkXst/gaOcW7ZWxLEMwBDHnQIMnm1+0fZLX+RFADF4Xg",
-	"HYONpC7v2J7tOIDBGOWnxXKxbG6JZFrQjH5cLBcfg4TtU0gyZVp8yBUPgxJCte1O8FNOM/ob2JUW997E",
-	"MxApDeY/L5fT1B4+B6rQ1bV/hTL6u0BLVOGxItFGHUQOOdkfg1h8RoKHisxKDKJw+0pwGi5gyitRR+1r",
-	"hTPY1grtXbSJpwNof1F5eBi5khbi88G0rhqC0q8YHcYr77+uFYTZKnU6RTFMqXiXmJ3MQ5gb7Oax1IQ7",
-	"3Ee8yGe4Jzf4jDb/DJ+zz+z/l89ofZ3PKKHv+nwJnwZKgRZMysoG5qWStGksQ2dH35ht10NfS3vczk67",
-	"6dtctJgJa0BPOEiu6Gia8SU51a6yQjNjU98TfGif/5ed7uhf6LKS3iNVN5epe0Wif1/D/1aWXtR9R3FJ",
-	"zNu2l7iNAR3ngFi4atBojVF9dnswEiwgMcByIQGRMJmTShwgDLRReyDdj9IAtxEHZv0fQHAZ2g0MXbMz",
-	"Fc1o6jvjvwIAAP//nGsBmUkPAAA=",
+	"H4sIAAAAAAAC/+yaTW/jNhPHvwrB5zk6cdq9+ZYmRRHsohs4216KIKDFkcytRHL5ksII/N0Lknp/sawk",
+	"dtetb5YpDmd++nNGGukFRyKTggM3Gi9esI7WkBH/8zoBbpbwzYI27lgqIUEZBn40Ik+R8v8zA5n/KxYq",
+	"IwYv8IpxojZ4hs1GAl5gbRTjCd6WfxClyMYdRykDbt7R0p+weZul7Qwr+GaZAooXfxRhNjxtLPY4w4aZ",
+	"1FnwwBDjYU0meLWaWH2FyLjVcqpaCq6hB6vVRmSgnhh1hx1ngVMpGDc9g23Pa5Zq8zr+qsKXHmdvUpYJ",
+	"fgspGBhWQmq1AfXESeYDoqAjxaQHsMA3YRQxjv5as2iNjEArQNTbpDNEISY2ddguVpalFOXm+q7UGBzn",
+	"gZYk6nHj12IIRWuiTO4F49qQNAXat5pMbcL4QFj3fhD5wZ65ClIgGgYmL8Oon517YjVQFAtVuNQrVJaB",
+	"sKZr70sY8PPNGhCRMmWRl2Bhr6VHxg0koEZEUydQp9uKr/KsJq5bkKnYICeU4IgK+kGSbFJB6LDc7oXe",
+	"kXbc1RuSmr+yHirjaAlSaGZE/6Z/lWhLuUyT7b9clgqkGLRYXIMdLknxZFW6c/Jvy0/H2hAz/AxKezNt",
+	"q7+HASRib9Rfsa5brR3V3EMVq1rks7qqj7PPvFb3zuiTE3FLo1MKVZNXw5Na1DeCxyyxCnaFGdCA+m7q",
+	"17k+vbU+HbsiFRI616RzTTrXpEPutHsl3M+RXP0WocmwwtDkMFoXWqSAGKBux4V1J4JtLDi1eOX+7Ew8",
+	"/x0a1b47oED2SxpGIEIpUPfjVSCqZV5P4WCyeD8Gb0mj0/PVdJRVB6ZVZ/PpzcxV65I0YWegNUn6b5O1",
+	"Icbq8Tvg/LxZaeyx47Gbwngsuv4+EPKANKhnUOizBI6WPz98Qdf3d0hLiFic1xhcARqe8dCaUZYd/MPl",
+	"1eWVi0lI4EQyvMAfLq8uPzgexKx9kHMi2QUVkT9IwCuzrAF3FC/wL2CuJbt1pzgCAak//cerq25onz96",
+	"VNpmGVEbvMCfmDau1F3f32kklXhmToSrja99LiLmK5Qhifa6sauURfjRGZlHvrkQFnEppOtdSC2hCYHD",
+	"FQJtfhLUtxQjwQ2ExlutdM+/6mA0NE7dr/8riPEC/29edVbneVt13tdQ226DHro03mXJUul+mRHANFTu",
+	"1v1JDWlO8dFVEKF7LrHLTEdAWE+AJwvQ9vGzZ3z74PNb2qdqYoSaF48649u7nHNTPh0dhnOjx/I9QQ4g",
+	"dkIOZEZ2+ZnkHnItSLb0mt8NT9Frfk9+IMq9z18nxbpAuq9qj8LzZBNtg+ZQoTqznMiylQVU1Q+ckAga",
+	"XcRD8B562j4p6DW2+2aEI4I9WS23sY6mhjPUiVBdjqD5e4fxtFC8oTgQ3P53aCcFt2S5Ow0cCeTJarSJ",
+	"cWDbnyHuDdFtcwUJc88Hc5Lkjg61zZb5mf6bLfzGeMuv43YF3vxQrfud3DiNwmdEcqcLCv74IgQfwhzZ",
+	"m93oh7SV2dQwSZSZx0JlF5QYsv+1bnzxOKyr9w57YC/tH/Tr1f1PROyEX3XGhwT/UPTEx/3RNopA69im",
+	"1SvHlocf7QoUBwMaKSCUcdAaEU5Ryp7BH0glVoDKzyTrN+/smRhwjjuTvm3uBl6wf7WB53j7uP07AAD/",
+	"/1wenlZHKwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

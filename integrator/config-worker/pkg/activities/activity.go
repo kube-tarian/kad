@@ -6,46 +6,31 @@ import (
 	"fmt"
 
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
-	"github.com/kube-tarian/kad/integrator/common-pkg/plugins"
-	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
 	"github.com/kube-tarian/kad/integrator/model"
 )
 
 type Activities struct {
 }
 
-func (a *Activities) ConfigurationActivity(ctx context.Context, req model.ConfigPayload) (model.ResponsePayload, error) {
-	logger := logging.NewLogger()
-	logger.Infof("Activity, name: %+v", req)
+var logger = logging.NewLogger()
+
+func (a *Activities) ConfigurationActivity(ctx context.Context, params model.ConfigureParameters, payload interface{}) (model.ResponsePayload, error) {
+	logger.Infof("Activity, name: %+v", payload)
 	// e := activity.GetInfo(ctx)
 	// logger.Infof("activity info: %+v", e)
 
-	plugin, err := plugins.GetPlugin(req.PluginName, logger)
-	if err != nil {
+	switch params.Resource {
+	case "cluster":
+		return handleCluster(ctx, params, payload)
+	case "repository":
+		return handleRepository(ctx, params, payload)
+	case "project":
+		return handleProject(ctx, params, payload)
+	default:
+		logger.Errorf("unknown resource type in configuration")
 		return model.ResponsePayload{
 			Status:  "Failed",
-			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
-		}, err
+			Message: json.RawMessage("{\"error\": \"unknown resource type in configuration\"}"),
+		}, fmt.Errorf("unknown resource type in configuration")
 	}
-
-	configPlugin, ok := plugin.(workerframework.ConfigurationWorker)
-	if !ok {
-		return model.ResponsePayload{
-			Status:  "Failed",
-			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
-		}, fmt.Errorf("plugin not supports Configuration activities")
-	}
-
-	msg, err := configPlugin.ConfigurationActivities(req)
-	if err != nil {
-		return model.ResponsePayload{
-			Status:  "Failed",
-			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
-		}, err
-	}
-
-	return model.ResponsePayload{
-		Status:  "Success",
-		Message: msg,
-	}, nil
 }

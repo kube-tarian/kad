@@ -7,23 +7,17 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/kube-tarian/kad/integrator/common-pkg/plugins/fetcher"
 	helmclient "github.com/kube-tarian/kad/integrator/common-pkg/plugins/helm/go-helm-client"
 	"github.com/kube-tarian/kad/integrator/model"
 	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/repo"
 )
 
-func (h *HelmCLient) Create(payload model.RequestPayload) (json.RawMessage, error) {
+func (h *HelmCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, error) {
 	h.logger.Infof("Helm client Install invoke started")
 
-	req := &model.Request{}
-	err := json.Unmarshal(payload.Data, req)
-	if err != nil {
-		h.logger.Errorf("payload unmarshal failed, %v", err)
-		return nil, err
-	}
-
-	helmClient, err := h.getHelmClient(req)
+	helmClient, err := h.getHelmClient(req.Namespace)
 	if err != nil {
 		h.logger.Errorf("helm client initialization failed, %v", err)
 		return nil, err
@@ -62,12 +56,9 @@ func (h *HelmCLient) Create(payload model.RequestPayload) (json.RawMessage, erro
 	return json.RawMessage(fmt.Sprintf("{\"status\": \"Application %s install successful\"}", rel.Name)), nil
 }
 
-func (h *HelmCLient) getHelmClient(req *model.Request) (helmclient.Client, error) {
-	// Change this to the namespace you wish the client to operate in.
-	// helmClient, err := helmclient.New(opt)
-
+func (h *HelmCLient) getHelmClient(namespace string) (helmclient.Client, error) {
 	opt := &helmclient.Options{
-		Namespace:        req.Namespace,
+		Namespace:        namespace,
 		RepositoryCache:  "/tmp/.helmcache",
 		RepositoryConfig: "/tmp/.helmrepo",
 		Debug:            true,
@@ -75,10 +66,28 @@ func (h *HelmCLient) getHelmClient(req *model.Request) (helmclient.Client, error
 		DebugLog:         h.logger.Debugf,
 	}
 
+	// If kubeconfig is empty (default) or inbuilt then use in-built(local) cluster
+	// if req.ClusterName == "" || req.ClusterName == "inbuilt" {
+	return helmclient.New(opt)
+	// }
+
+	// External cluster
+	// return h.getHelmClientForExternalCluster(req, opt)
+}
+
+func (h *HelmCLient) getHelmClientForExternalCluster(req *model.Request, opt *helmclient.Options) (helmclient.Client, error) {
+	// Fetch external cluster kubeconfig from cassandra
+	clusterDetails, err := fetcher.FetchClusterDetails(h.logger, req.ClusterName)
+	if err != nil {
+		h.logger.Errorf("Failed to fetch the cluster details from cluster store, %v", err)
+	}
+
+	// Unmarshall kubeconfig in yaml format if failed try with json format
+	// If not both yaml and json return error
 	var yamlKubeConfig interface{}
 	var jsonKubeConfig []byte
-	// err := yaml.Unmarshal([]byte(in_built_cluster), &yamlKubeConfig)
-	err := yaml.Unmarshal([]byte(req.KubeConfig), &yamlKubeConfig)
+
+	err = yaml.Unmarshal([]byte(clusterDetails.Kubeconfig), &yamlKubeConfig)
 	if err == nil {
 		jsonKubeConfig, err = jsoniter.Marshal(yamlKubeConfig)
 		if err != nil {
@@ -86,24 +95,24 @@ func (h *HelmCLient) getHelmClient(req *model.Request) (helmclient.Client, error
 			return nil, err
 		}
 	} else {
-		err1 := json.Unmarshal([]byte(req.KubeConfig), yamlKubeConfig)
+		err1 := json.Unmarshal([]byte(clusterDetails.Kubeconfig), yamlKubeConfig)
 		if err1 != nil {
 			h.logger.Errorf("kubeconfig not understanable format not in yaml or json. unmarshal failed, error: %v", err)
 			return nil, err
 		}
-		jsonKubeConfig = []byte(req.KubeConfig)
+		jsonKubeConfig = []byte(clusterDetails.Kubeconfig)
 	}
 
 	return helmclient.NewClientFromKubeConf(
 		&helmclient.KubeConfClientOptions{
 			Options:     opt,
-			KubeContext: "cluster-1",
+			KubeContext: req.ClusterName,
 			KubeConfig:  jsonKubeConfig,
 		},
 	)
 }
 
-func (h *HelmCLient) addOrUpdate(client helmclient.Client, req *model.Request) error {
+func (h *HelmCLient) addOrUpdate(client helmclient.Client, req *model.CreteRequestPayload) error {
 	// Define a public chart repository.
 	chartRepo := repo.Entry{
 		Name:                  req.RepoName,

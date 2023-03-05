@@ -34,6 +34,10 @@ func NewAPIHandler(log logging.Logger) (*APIHandler, error) {
 }
 
 func (a *APIHandler) ConnectClient(customerId string) error {
+	if _, ok := a.agents[customerId]; ok {
+		return nil
+	}
+
 	agentCfg, err := fetchConfiguration(customerId)
 	if err != nil {
 		return err
@@ -42,6 +46,7 @@ func (a *APIHandler) ConnectClient(customerId string) error {
 	agent, err := client.NewAgent(a.log, agentCfg)
 	if err != nil {
 		a.log.Errorf("failed to connect agent internal error", err)
+		return err
 	}
 
 	agentMutex.Lock()
@@ -56,7 +61,6 @@ func (a *APIHandler) GetClient(customerId string) *client.Agent {
 		return agent
 	}
 	agentMutex.RUnlock()
-
 	return nil
 }
 

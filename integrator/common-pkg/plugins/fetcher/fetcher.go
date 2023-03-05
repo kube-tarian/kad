@@ -20,7 +20,8 @@ func NewCredentialFetcher(log logging.Logger) (*CredentialFetcher, error) {
 	// Initialize kubernetes client
 	k8sClient, err := k8s.NewK8SClient(log)
 	if err != nil {
-		log.Fatalf("K8S client initialization failed: %v", err)
+		log.Errorf("K8S client initialization failed: %v", err)
+		return nil, fmt.Errorf("k8 client initialization failed, %v", err)
 	}
 
 	// TODO: Initialze Cassandra client
@@ -33,14 +34,7 @@ func NewCredentialFetcher(log logging.Logger) (*CredentialFetcher, error) {
 
 func (c *CredentialFetcher) FetchPluginDetails(req *PluginRequest) (*PluginResponse, error) {
 	// Fetch the plugin details from Cassandra
-	store, err := NewStore(c.log)
-	if err != nil {
-		c.log.Errorf("Store initialization failed, %v", err)
-		return nil, err
-	}
-	defer store.Close()
-
-	pluginDetails, err := store.FetchPluginDetails(req.PluginName)
+	pluginDetails, err := FetchPluginDetails(c.log, req.PluginName)
 	if err != nil {
 		c.log.Errorf("Failed to fetch plugin details from store, %v", err)
 		return nil, err

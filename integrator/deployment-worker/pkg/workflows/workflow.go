@@ -2,6 +2,7 @@ package workflows
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
@@ -11,17 +12,9 @@ import (
 )
 
 // Workflow is a deployment workflow definition.
-func Workflow(ctx workflow.Context, payload json.RawMessage) (model.ResponsePayload, error) {
+func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (model.ResponsePayload, error) {
 	var result model.ResponsePayload
 	logger := logging.NewLogger()
-
-	logger.Infof("Deployment workflow started, req: %+v", string(payload))
-	req := []model.RequestPayload{}
-	err := json.Unmarshal(payload, &req)
-	if err != nil {
-		logger.Errorf("Deployer worker payload unmarshall failed, Error: %v", err)
-		return result, err
-	}
 
 	ao := workflow.ActivityOptions{
 		ScheduleToCloseTimeout: 600 * time.Second,
@@ -32,9 +25,25 @@ func Workflow(ctx workflow.Context, payload json.RawMessage) (model.ResponsePayl
 	logger.Infof("execution: %+v\n", execution)
 
 	var a *activities.Activities
-	err = workflow.ExecuteActivity(ctx, a.DeploymentActivity, req[0]).Get(ctx, &result)
+	var err error
+	switch action {
+	case "install", "update":
+		req := &model.DeployerPostRequest{}
+		err = json.Unmarshal(payload, req)
+		if err == nil {
+			err = workflow.ExecuteActivity(ctx, a.DeploymentInstallActivity, payload).Get(ctx, &result)
+		}
+	case "delete":
+		req := &model.DeployerDeleteRequest{}
+		err = json.Unmarshal(payload, req)
+		if err == nil {
+			err = workflow.ExecuteActivity(ctx, a.DeploymentDeleteActivity, payload).Get(ctx, &result)
+		}
+	default:
+		err = fmt.Errorf("unknown action %v", action)
+	}
 	if err != nil {
-		logger.Errorf("Activity failed, Error: %v", err)
+		logger.Errorf("Activity failed: %v, Error: %v", string(payload), err)
 		return result, err
 	}
 

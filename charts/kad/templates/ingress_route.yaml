@@ -14,4 +14,10 @@ spec:
     - name: kad-agent
       port: {{ .Values.service.port }}
       scheme: h2c
+{{- if .Values.ingressroute.mtls.enabled }}
+  tls:
+    options:
+      name: {{ include "kad.fullname" . }}-mtls-auth
+    secretName: {{ include "kad.fullname" . }}-server-cert
+{{- end }}
 {{- end }}

@@ -1,4 +1,4 @@
-name: Client Docker Image CI
+name: Config worker Docker Image CI
 
 on:
   push:

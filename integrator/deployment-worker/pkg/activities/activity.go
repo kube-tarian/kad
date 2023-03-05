@@ -6,21 +6,68 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
-
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/kube-tarian/kad/integrator/common-pkg/plugins"
 	workerframework "github.com/kube-tarian/kad/integrator/common-pkg/worker-framework"
-	"github.com/kube-tarian/kad/integrator/deployment-worker/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/integrator/model"
 )
 
 type Activities struct {
 }
 
-func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPayload) (model.ResponsePayload, error) {
-	logger := logging.NewLogger()
-	logger.Infof("Activity, name: %+v", req.ToString())
+var logger = logging.NewLogger()
+
+func (a *Activities) DeploymentInstallActivity(ctx context.Context, req *model.DeployerPostRequest) (model.ResponsePayload, error) {
+	logger.Infof("Activity, name: %+v", req)
+	// e := activity.GetInfo(ctx)
+	// logger.Infof("activity info: %+v", e)
+
+	plugin, err := plugins.GetPlugin(req.PluginName, logger)
+	if err != nil {
+		logger.Errorf("Get plugin  failed: %v", err)
+		return model.ResponsePayload{
+			Status:  "Failed",
+			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", strings.ReplaceAll(err.Error(), "\"", "\\\""))),
+		}, err
+	}
+
+	deployerPlugin, ok := plugin.(workerframework.DeploymentWorker)
+	if !ok {
+		return model.ResponsePayload{
+			Status:  "Failed",
+			Message: json.RawMessage("{\"error\": \"not implemented deployer worker plugin\"}"),
+		}, fmt.Errorf("plugin not supports deployment activities")
+	}
+
+	emptyVersion := ""
+	if req.Version == nil {
+		req.Version = &emptyVersion
+	}
+	msg, err := deployerPlugin.Create(&model.CreteRequestPayload{
+		RepoName:    req.RepoName,
+		RepoURL:     req.RepoUrl,
+		ChartName:   req.ChartName,
+		Namespace:   req.Namespace,
+		ReleaseName: req.ReleaseName,
+		Timeout:     req.Timeout,
+		Version:     *req.Version,
+	})
+	if err != nil {
+		logger.Errorf("Deploy activities failed %v", err)
+		return model.ResponsePayload{
+			Status:  "Failed",
+			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", strings.ReplaceAll(err.Error(), "\"", "\\\""))),
+		}, err
+	}
+
+	return model.ResponsePayload{
+		Status:  "Success",
+		Message: msg,
+	}, nil
+}
+
+func (a *Activities) DeploymentDeleteActivity(ctx context.Context, req *model.DeployerDeleteRequest) (model.ResponsePayload, error) {
+	logger.Infof("Activity, name: %+v", req)
 	// e := activity.GetInfo(ctx)
 	// logger.Infof("activity info: %+v", e)
 
@@ -39,83 +86,22 @@ func (a *Activities) DeploymentActivity(ctx context.Context, req model.RequestPa
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", strings.ReplaceAll(err.Error(), "\"", "\\\""))),
 		}, fmt.Errorf("plugin not supports deployment activities")
 	}
-
-	msg, err := deployerPlugin.DeployActivities(req)
+	msg, err := deployerPlugin.Delete(&model.DeleteRequestPayload{
+		Namespace:   req.Namespace,
+		ReleaseName: req.ReleaseName,
+		Timeout:     req.Timeout,
+		ClusterName: *req.ClusterName,
+	})
 	if err != nil {
-		logger.Errorf("Deploy activities failed %s: %v", req.Action, err)
+		logger.Errorf("Deploy activities failed %v", err)
 		return model.ResponsePayload{
 			Status:  "Failed",
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", strings.ReplaceAll(err.Error(), "\"", "\\\""))),
 		}, err
 	}
 
-	if req.Action == "install" || req.Action == "update" {
-		if err := InsertToDb(logger, req.Data); err != nil {
-			logger.Errorf("insert db failed", err)
-			return model.ResponsePayload{
-				Status:  "Failed",
-				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
-			}, err
-		}
-	} else if req.Action == "delete" {
-		if err := DeleteDbEntry(logger, req.Data); err != nil {
-			return model.ResponsePayload{
-				Status:  "Failed",
-				Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
-			}, err
-		}
-	}
-
 	return model.ResponsePayload{
 		Status:  "Success",
 		Message: msg,
 	}, nil
-}
-
-func InsertToDb(logger logging.Logger, reqData json.RawMessage) error {
-	var data model.Request
-	fmt.Println("requestData", string(reqData))
-	if err := json.Unmarshal(reqData, &data); err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	dbConf, err := cassandra.GetDbConfig()
-	if err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	db, err := cassandra.NewCassandraStore(logger, dbConf.DbAddresses, dbConf.DbAdminUsername, dbConf.DbAdminPassword)
-	if err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	if err := db.InsertToolsDb(&data); err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	return nil
-}
-
-func DeleteDbEntry(logger logging.Logger, reqData json.RawMessage) error {
-	var data model.Request
-	fmt.Println("requestData", string(reqData))
-	if err := json.Unmarshal(reqData, &data); err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	dbConf, err := cassandra.GetDbConfig()
-	if err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	db, err := cassandra.NewCassandraStore(logger, dbConf.DbAddresses, dbConf.DbAdminUsername, dbConf.DbAdminPassword)
-	if err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	if err := db.DeleteToolsDbEntry(&data); err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	return nil
 }

@@ -12,6 +12,7 @@ type CaptenAgentConfiguration struct {
 
 type CaptenClient interface {
 	NewApplicationClient() (*ApplicationClient, error)
+	NewClimonClient(opts *TransportSSLOptions) (*ClimonClient, error)
 	NewClusterClient() (*ClusterClient, error)
 	NewRepoClient() (*RepoClient, error)
 	NewProjectClient() (*ProjectClient, error)
