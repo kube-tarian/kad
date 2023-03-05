@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"strconv"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -103,6 +106,10 @@ func fetchConfiguration(customerID string) (*types.AgentConfiguration, error) {
 	}
 
 	cfg.Address = agentInfo.Endpoint
+	cfg.Port, err = strconv.Atoi(os.Getenv("AGENT_PORT"))
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert agent port to int, port got: %v", os.Getenv("AGENT_PORT"))
+	}
 	cfg.CaCert = agentInfo.CaPem
 	cfg.Cert = agentInfo.Cert
 	cfg.Key = agentInfo.Key
