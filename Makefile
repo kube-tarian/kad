@@ -29,7 +29,7 @@ gen-protoc:
 
 docker-build-server:
 	# The prefix for server to changed either as server or intelops-kad-server
-	docker build -f dockerfiles/server/Dockerfile -t ${PREFIX}-${SERVER_APP_NAME}:${BUILD} .
+	docker build --platform=linux/amd64 -f dockerfiles/server/Dockerfile -t ${PREFIX}-${SERVER_APP_NAME}:${BUILD} .
 
 docker-build-kad: docker-build-agent docker-build-deployment docker-build-config
 

@@ -2,42 +2,45 @@ package handler
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kube-tarian/kad/server/api"
-	"github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
 
-func (s *APIHanlder) PostConfigatorRepository(c *gin.Context) {
-	s.log.Debugf("Add repository api invocation started")
+func (a *APIHandler) PostConfigatorRepository(c *gin.Context) {
+	a.log.Debugf("Add repository api invocation started")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var req api.RepositoryPostRequest
 	if err := c.BindJSON(&req); err != nil {
-		s.sendResponse(c, "Failed to parse config payload", err)
+		a.sendResponse(c, "Failed to parse config payload", err)
 		return
 	}
 
-	agentClient, err := client.NewAgent(s.log)
-	if err != nil {
-		s.log.Errorf("failed to connect agent internal error", err)
-		s.sendResponse(c, "agent connection failed", err)
+	if err := a.ConnectClient("1"); err != nil {
+		a.setFailedResponse(c, "agent connection failed", err)
 		return
 	}
-	defer agentClient.Close()
 
-	response, err := agentClient.GetClient().RepositoryAdd(ctx, &agentpb.RepositoryAddRequest{
+	agent := a.GetClient("1")
+	if agent == nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
+	}
+
+	response, err := agent.GetClient().RepositoryAdd(ctx, &agentpb.RepositoryAddRequest{
 		PluginName: req.PluginName,
 		RepoName:   req.RepoName,
 		RepoUrl:    req.RepoUrl,
 	})
 	if err != nil {
-		s.sendResponse(c, "failed to submit job", err)
+		a.sendResponse(c, "failed to submit job", err)
 		return
 	}
 
@@ -45,42 +48,44 @@ func (s *APIHanlder) PostConfigatorRepository(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
 
-	s.log.Infof("response received", response)
-	s.log.Debugf("Add repository api invocation finished")
+	a.log.Infof("response received", response)
+	a.log.Debugf("Add repository api invocation finished")
 }
-func (s *APIHanlder) PutConfigatorRepository(c *gin.Context) {
-	s.log.Debugf("Update repositoy from plugin api invocation started")
+func (a *APIHandler) PutConfigatorRepository(c *gin.Context) {
+	a.log.Debugf("Update repositoy from plugin api invocation started")
 
-	s.PostConfigatorRepository(c)
-	s.log.Debugf("Delete repositoy from plugin api invocation finished")
+	a.PostConfigatorRepository(c)
+	a.log.Debugf("Delete repositoy from plugin api invocation finished")
 }
 
-func (s *APIHanlder) DeleteConfigatorRepository(c *gin.Context) {
-	s.log.Debugf("Delete repository from plugin api invocation started")
+func (a *APIHandler) DeleteConfigatorRepository(c *gin.Context) {
+	a.log.Debugf("Delete repository from plugin api invocation started")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var req api.RepositoryPostRequest
 	if err := c.BindJSON(&req); err != nil {
-		s.sendResponse(c, "Failed to parse config payload", err)
+		a.sendResponse(c, "Failed to parse config payload", err)
 		return
 	}
 
-	agentClient, err := client.NewAgent(s.log)
-	if err != nil {
-		s.log.Errorf("failed to connect agent internal error", err)
-		s.sendResponse(c, "agent connection failed", err)
+	if err := a.ConnectClient("1"); err != nil {
+		a.setFailedResponse(c, "agent connection failed", err)
 		return
 	}
-	defer agentClient.Close()
 
-	response, err := agentClient.GetClient().RepositoryDelete(ctx, &agentpb.RepositoryDeleteRequest{
+	agent := a.GetClient("1")
+	if agent == nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
+	}
+
+	response, err := agent.GetClient().RepositoryDelete(ctx, &agentpb.RepositoryDeleteRequest{
 		PluginName: req.PluginName,
 		RepoName:   req.RepoName,
 	})
 	if err != nil {
-		s.sendResponse(c, "failed to submit job", err)
+		a.sendResponse(c, "failed to submit job", err)
 		return
 	}
 
@@ -88,6 +93,6 @@ func (s *APIHanlder) DeleteConfigatorRepository(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
 
-	s.log.Infof("response received", response)
-	s.log.Debugf("Delete repository from plugin api invocation finished")
+	a.log.Infof("response received", response)
+	a.log.Debugf("Delete repository from plugin api invocation finished")
 }
