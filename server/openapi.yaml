@@ -277,7 +277,7 @@ paths:
       summary: Register agent
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               $ref: '#/components/schemas/AgentRequest'
       responses:
@@ -307,12 +307,36 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AgentRequest'
+                  $ref: '#/components/schemas/AgentResponse'
 
 components:
   schemas:
     AgentRequest:
       title: Agent information
+      type: object
+      properties:
+        ca_crt:
+          type: array
+          items:
+            type: string
+            format: binary
+        client_crt:
+          type: array
+          items:
+            type: string
+            format: binary
+        client_key:
+          type: array
+          items:
+            type: string
+            format: binary
+      required:
+        - ca_crt
+        - client_crt
+        - client_key
+
+    AgentResponse:
+      title: Agent response
       type: object
       properties:
         customer_id:
@@ -379,6 +403,8 @@ components:
       title: Deploy operation request payload
       type: object
       properties:
+        customer_id:
+          type: string
         plugin_name:
           type: string
           description: Plugin name
@@ -395,11 +421,11 @@ components:
           type: string
           description: Cluster in which to be deleted, default in-build cluster
       required:
+        - customer_id
         - plugin_name
         - namespace
         - release_name
         - timeout
-
     DeployerPostRequest:
       title: Deploy operation request payload
       type: object
@@ -469,11 +495,14 @@ components:
       title: Configure payload
       type: object
       properties:
+        customer_id:
+          type: string
         plugin_name:
           type: string
         cluster_name:
           type: string
       required:
+        - customer_id
         - plugin_name
         - cluster_name
 

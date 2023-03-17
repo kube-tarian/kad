@@ -4,67 +4,47 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 
-	"github.com/kube-tarian/kad/server/pkg/db"
-
-	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/server/pkg/types"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
-type Configuration struct {
-	AgentAddress string `envconfig:"AGENT_ADDRESS" default:"localhost:9091"`
-	IsSSLEnabled bool   `envconfig:"IS_SSL_ENABLED" default:"false"`
-}
-
 type Agent struct {
-	cfg         *Configuration
-	connection  *grpc.ClientConn
-	AgentClient agentpb.AgentClient
-	log         logging.Logger
+	cfg        *types.AgentConfiguration
+	connection *grpc.ClientConn
+	client     agentpb.AgentClient
+	log        logging.Logger
 }
 
 // NewAgent returns agent object creates grpc connection for given address
-func NewAgent(log logging.Logger) (*Agent, error) {
-	cfg, err := fetchConfiguration(log)
+func NewAgent(log logging.Logger, cfg *types.AgentConfiguration) (*Agent, error) {
+	tlsCreds, err := loadTLSCredentials(cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	var conn *grpc.ClientConn
-	if cfg.IsSSLEnabled {
-		// TODO: loadTLSCredential to be implemented when mtls is introduced
-		return nil, fmt.Errorf("SSL is not supported currently to agent")
-
-		// tlsCredentials, lErr := loadTLSCredentials()
-		// if lErr != nil {
-		// 	log.Errorf("cannot load TLS credentials: ", lErr)
-		// 	return nil, lErr
-		// }
-		// conn, err = grpc.Dial(cfg.AgentAddress, grpc.WithTransportCredentials(tlsCredentials))
-	} else {
-		conn, err = grpc.Dial(cfg.AgentAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	}
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port),
+		grpc.WithTransportCredentials(tlsCreds))
 	if err != nil {
 		log.Errorf("failed to connect: %v", err)
 		return nil, err
 	}
-	log.Infof("gRPC connection started to %s", cfg.AgentAddress)
 
+	log.Infof("gRPC connection started to %s:%d", cfg.Address, cfg.Port)
 	agentClient := agentpb.NewAgentClient(conn)
 	return &Agent{
-		cfg:         cfg,
-		connection:  conn,
-		AgentClient: agentClient,
+		cfg:        cfg,
+		connection: conn,
+		client:     agentClient,
 	}, nil
 }
 
 func (a *Agent) GetClient() agentpb.AgentClient {
-	return a.AgentClient
+	return a.client
 }
 
 func (a *Agent) Close() {
@@ -72,52 +52,22 @@ func (a *Agent) Close() {
 	a.log.Info("gRPC connection closed")
 }
 
-func fetchConfiguration(log logging.Logger) (*Configuration, error) {
-	cfg := &Configuration{}
-	err := envconfig.Process("", cfg)
-	if err != nil {
-		log.Errorf("env configuration fetch failed, %v", err)
-		return nil, err
-	}
-
-	session, err := db.New()
-	if err != nil {
-		log.Error("failed to get db session", err)
-		return nil, err
-	}
-
-	//todo make customerID dynamic : Ganesh
-	endpoint, err := session.GetEndpoint("1")
-	if err != nil {
-		log.Error("failed to get db session", err)
-		return nil, err
-	}
-
-	cfg.AgentAddress = endpoint
-	return cfg, err
-}
-
-func loadTLSCredentials() (credentials.TransportCredentials, error) {
+func loadTLSCredentials(cfg *types.AgentConfiguration) (credentials.TransportCredentials, error) {
 	// Load certificate of the CA who signed server's certificate
-	certificate, err := tls.LoadX509KeyPair("certs/client.crt", "certs/client.key")
-	if err != nil {
-		panic("Load client certification failed: " + err.Error())
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM([]byte(cfg.CaCert)) {
+		return nil, fmt.Errorf("failed to add server CA's certificate")
 	}
 
-	pemServerCA, err := ioutil.ReadFile("certs/dev.optimizor.app.crt")
+	agentCert, err := tls.X509KeyPair([]byte(cfg.Cert), []byte(cfg.Key))
 	if err != nil {
 		return nil, err
-	}
-
-	certPool := x509.NewCertPool()
-	if !certPool.AppendCertsFromPEM(pemServerCA) {
-		return nil, fmt.Errorf("failed to add server CA's certificate")
 	}
 
 	// Create the credentials and return it
 	config := &tls.Config{
-		Certificates: []tls.Certificate{certificate},
 		RootCAs:      certPool,
+		Certificates: []tls.Certificate{agentCert},
 	}
 
 	return credentials.NewTLS(config), nil

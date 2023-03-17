@@ -12,12 +12,20 @@ import (
 	"path"
 	"strings"
 
+	openapi_types "github.com/deepmap/oapi-codegen/pkg/types"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
 )
 
 // AgentRequest defines model for AgentRequest.
 type AgentRequest struct {
+	CaCrt     []openapi_types.File `json:"ca_crt"`
+	ClientCrt []openapi_types.File `json:"client_crt"`
+	ClientKey []openapi_types.File `json:"client_key"`
+}
+
+// AgentResponse defines model for AgentResponse.
+type AgentResponse struct {
 	CustomerId string `json:"customer_id"`
 	Endpoint   string `json:"endpoint"`
 }
@@ -26,6 +34,7 @@ type AgentRequest struct {
 type ClimonDeleteRequest struct {
 	// ClusterName Cluster in which to be deleted, default in-build cluster
 	ClusterName *string `json:"cluster_name,omitempty"`
+	CustomerId  string  `json:"customer_id"`
 
 	// Namespace Namespace chart to be installed
 	Namespace string `json:"namespace"`
@@ -73,6 +82,7 @@ type ClimonPostRequest struct {
 // ClusterRequest defines model for ClusterRequest.
 type ClusterRequest struct {
 	ClusterName string `json:"cluster_name"`
+	CustomerId  string `json:"customer_id"`
 	PluginName  string `json:"plugin_name"`
 }
 
@@ -211,8 +221,8 @@ type PostDeployerJSONRequestBody = DeployerPostRequest
 // PutDeployerJSONRequestBody defines body for PutDeployer for application/json ContentType.
 type PutDeployerJSONRequestBody = DeployerPostRequest
 
-// PostRegisterAgentJSONRequestBody defines body for PostRegisterAgent for application/json ContentType.
-type PostRegisterAgentJSONRequestBody = AgentRequest
+// PostRegisterAgentMultipartRequestBody defines body for PostRegisterAgent for multipart/form-data ContentType.
+type PostRegisterAgentMultipartRequestBody = AgentRequest
 
 // PutRegisterAgentJSONRequestBody defines body for PutRegisterAgent for application/json ContentType.
 type PutRegisterAgentJSONRequestBody = AgentRequest
@@ -550,26 +560,28 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"/1wenlZHKwAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

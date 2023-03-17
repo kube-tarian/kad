@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"github.com/kube-tarian/kad/server/pkg/types"
 	"log"
 	"os"
 	"sync"
@@ -36,6 +37,10 @@ func New() (*cassandra, error) {
 }
 
 func connect() (*gocql.Session, error) {
+	if os.Getenv("CASSANDRA_HOST") == "" {
+		return nil, fmt.Errorf("CASSANDRA_HOST env empty")
+	}
+
 	cluster := gocql.NewCluster(os.Getenv("CASSANDRA_HOST"))
 	cluster.Keyspace = keyspace
 	cluster.Consistency = gocql.Quorum
@@ -52,22 +57,23 @@ func connect() (*gocql.Session, error) {
 	return session, nil
 }
 
-func (c *cassandra) GetEndpoint(customerID string) (string, error) {
-	var endpoint string
-	iter := c.session.Query(`SELECT endpoint FROM endpoints WHERE customer_id = ?`, customerID).Iter()
-	iter.Scan(&endpoint)
+func (c *cassandra) GetAgentInfo(customerID string) (*types.AgentInfo, error) {
+	agentInfo := types.AgentInfo{}
+	iter := c.session.Query(`SELECT endpoint, ca_pem, client_crt, client_key FROM endpoints WHERE customer_id = ?`, customerID).Iter()
+	iter.Scan(&agentInfo.Endpoint, &agentInfo.CaPem, &agentInfo.Cert, &agentInfo.Key)
 	if err := iter.Close(); err != nil {
-		return "", fmt.Errorf("failed to close the db iterator %v", err)
+		return nil, fmt.Errorf("failed to close the db iterator %v", err)
 	}
 
-	return endpoint, nil
+	return &agentInfo, nil
 }
 
-func (c *cassandra) RegisterEndpoint(customerID, endpoint string) error {
-	if err := c.session.Query(`INSERT INTO endpoints (customer_id, endpoint) VALUES (?, ?)`,
-		customerID, endpoint).Exec(); err != nil {
-		return err
-	}
-
-	return nil
+func (c *cassandra) RegisterEndpoint(customerID, endpoint string, fileContentMap map[string]string) error {
+	return c.session.Query(
+		`INSERT INTO endpoints (customer_id, endpoint, ca_pem, client_crt, client_key) VALUES (?, ?, ?, ?, ?)`,
+		customerID,
+		endpoint,
+		fileContentMap[types.ClientCertChainFileName],
+		fileContentMap[types.ClientCertFileName],
+		fileContentMap[types.ClientKeyFileName]).Exec()
 }
