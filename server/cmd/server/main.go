@@ -1,12 +1,15 @@
 package main
 
 import (
+	//
+	//"context"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/gin-gonic/gin"
+	//"github.com/kube-tarian/kad/server/pkg/handler"
 
 	middleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
 	"github.com/kube-tarian/kad/server/api"
@@ -36,6 +39,14 @@ func main() {
 	r := gin.Default()
 	r.Use(middleware.OapiRequestValidator(swagger))
 	r = api.RegisterHandlers(r, s)
+
+	//this part from 43-49 is used to invoke the /deploy endpoint to run and test the handle deploy locally
+	handler := &handler.APIHanlder{}
+	router := gin.Default()
+	router.POST("/deploy", func(c *gin.Context) {
+
+		handler.PostDeploy(c)
+	})
 
 	go func() {
 		if err := r.Run(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)); err != nil {

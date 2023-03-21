@@ -25,20 +25,16 @@ type AgentRequest struct {
 // DeployPayload defines model for DeployPayload.
 type DeployPayload struct {
 	// Operation Operation
-	Operation string               `json:"operation"`
-	Payload   DeployRequestPayload `json:"payload"`
-}
+	Operation string `json:"operation"`
 
-// DeployRequestPayload defines model for DeployRequestPayload.
-type DeployRequestPayload struct {
-	// Action Action to be performed
-	Action string `json:"action"`
+	// Payload payload
+	Payload string `json:"payload"`
 
-	// Data Data for the action
-	Data map[string]interface{} `json:"data"`
+	// Plugin plugin
+	Plugin string `json:"plugin"`
 
-	// PluginName Plugin name for the operation
-	PluginName string `json:"plugin_name"`
+	// Workertype workertype
+	Workertype string `json:"workertype"`
 }
 
 // PostDeployJSONRequestBody defines body for PostDeploy for application/json ContentType.
@@ -188,18 +184,17 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9xWTW/jOAz9KwJ3j9k4u735lkUHg6IDNGh6GxSFIjGpCltSRTpAEOS/DyQ5n7bbdI5z",
-	"s0qRfO/xUc0WlKu9s2iZoNwCqVesZfqcrtDyI743SBzPPjiPgQ2mqGqIXY3hxeh45I1HKIE4GLuC3QjQ",
-	"au+M5Z7gbgQB3xsTUEP586zSSd7zCNhwFRMTEmHs0oVasnEWRvuabvGGimPDW/SV28zkpnJSd/HG75xb",
-	"bkEjqWB8PsLDITTq8vDHgn8HXEIJfxVHyYpWryJ3b9Xag7hk6k4a7eue0Mw1xD4yyPGiS4eqVP08p+nv",
-	"gp1YoPAYopyo+0hrybKbfytZiqULgl9RtE16QPqqWRn7YmWN3RqzFBQxeCjlhvW/EPC09AgOEBLcrpCH",
-	"uiJkxYaljY2iv7qA51LOBWFYYxAPHq14/DZ/EtPZnSCPyiyNOkBvuw9nzC8y1hgod/l3PBlPonjOo5Xe",
-	"QAk348n4JhmFX9NYC+nNP9qpdFghn7n6TkMJ35Gn3tzGK1E38s5StsR/k0mP7++TwNTUtQwbKOGHIRZu",
-	"GbGS8MGtjUYtFps0pcjIqKg7yxWlaTSLyih4jkUKnTRPZnTUg23miPNcIM8Uif93OmUoZxnzUyG9r1qB",
-	"ijfKLkarnI52iMWPpm+znvIkO4mJWtrO63b3uLTZdV9WLyuQl+MIZkivgCtDjKGQq5b60Egf25vpFRwY",
-	"7CcKHnUwjDV9JsjZy787LIsMQW7yrnwixR6ykC3mjgSjD2zSJfwVt1w383OKvzvyq3g2fTSbP4plNDSx",
-	"5ObDt2meb1yDgRqlkGjZVCf/Hc5R3TcLDBYZSQSU2lgkEtJqUZk1poMPboHi8IPiBHcwa8kYgceS6amO",
-	"gS00oYISCtg9734FAAD//wAGPtsaCQAA",
+	"H4sIAAAAAAAC/9xVTW/bOBD9K8TsHrWWt7npliJFEaRAgji3IihocqwwlUiGQ7owDP33gqT8oUiOkx57",
+	"MzV8M++9GY63IExrjUbtCaotkHjClqeflzVqf48vAcnHs3XGovMKU1QE8qZF90PJePQbi1ABead0DV0B",
+	"qKU1SvuJYFeAw5egHEqovg8yHeEeC/DKNxGYmDClV8a13CujodjlNMtnFD4WvELbmM0d3zSGyzHf+Dtj",
+	"qy1IJOGUzUe43YeKsQ57SDhE7QJTmCbUaqJQ/30C8cu4n+jy59eoo1hxxkpzpGRfbIDfsT5yNxvHRnp2",
+	"1sYi0fsxswXnC0bo1ujYrUXN7r8sHtjl3TUji0KtlNjb2tc6jVi8QqzRUa7y/2w+m0eTjEXNrYIKLmbz",
+	"2UVS459Sd0tu1X/SiHSo0Q86fi2hgq/oL626ileiZ2SNpjwZn+bziZm4SeZSaFvuNlDBN0WemVXkSsw6",
+	"s1YSJVtumH/CpEiJ1B9eU+yEDctGCXiMSUqZHE4zaWiC250hn7sAuZ9I/rORCSGM9pifEbe26Q0qnylP",
+	"MmphZByFmPwwqj3qIXdyBEzS0kuPl/91uIIK/ikPq6Ds90A5fFVdlyfuw+5lB5JXR2RO+eWwVuTRlbzu",
+	"pZ9q6X1/M22IE4094+DBB+WxpXOGDLZit38s3Dm+yW/ljBU7yoz3nEcWFG+MyVjwR6blfT0fSvzTlr9L",
+	"Z5iSGf4qlXGgyXMf3txNi3zjPRwoCIFEq9Cww74fsroJS3QaPRJzyKXSSMS4lqxRa0wH68wS2f7P9oi3",
+	"U2vuMRKPKdOqjoEtBNdABSV0j93vAAAA//+ULCxkNggAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -1,7 +1,7 @@
 
 syntax = "proto3";
 
-//import "google/protobuf/any.proto";
+import "google/protobuf/any.proto";
 
 option go_package = "/agentpb";
 
@@ -17,12 +17,11 @@ message JobRequest {
   string operation = 1;
   string plugin = 2;
   string workerType = 3;
-  string payload = 4;
-  
+  google.protobuf.Any payload = 4;
 }
 // each worker can handle multiple plugins
 // plugins can be Helm, kustomise etc..
-// in future we should add new message for new pluginÂ 
+// in future we should add new message for new plugin 
 
 
 message HelmAppInstallRequest {
@@ -33,12 +32,8 @@ message HelmAppInstallRequest {
   string ChartName = 5;
   string ReleaseName = 6;
   string ReferenceID = 7;
-  string kube_config=8;
 }
-message HelmAppUpdateRequest {
-  string Version = 1;
-  string Name = 2;
-}
+
 
 message JobResponse {
   string id = 1;

@@ -114,11 +114,10 @@ components:
           type: string
           description: payload
         
-     
+        payload:
+          $ref: '#/components/schemas/DeployRequestPayload'
       required:
         - operation
-        - plugin
-        - workertype
         - payload
 
     DeployRequestPayload:

@@ -170,4 +170,14 @@ curl -X POST http://127.0.0.1:9091/deploy -H "content-type: application/json" -d
 curl -X POST http://127.0.0.1:9091/deploy -H "content-type: application/json" -d @tests/hello-world-argocd-plugin-delete.json 
 
 ```
+curl -X 'POST' \
+  'localhost:9092/register/agent' \
+  -H 'accept: */*' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "customer_id": "1",
+  "endpoint": "kad-agent.default.svc.cluster.local:8080"
+}'
 
+curl -X 'POST' \  'localhost:9092/register/agent' \  -H 'accept: */*' \  -H 'Content-Type: application/json' \  -d '{  "customer_id": "1",  "endpoint": "kad-agent.default.svc.cluster.local:8080"
+}'

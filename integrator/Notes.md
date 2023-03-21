@@ -101,3 +101,4 @@ cd /home/share2kanna/go/src/github.com/argoproj/argo-helm
 helm install argocd .
 kubectl port-forward services/argocd-server -n default 9081:443
 ```
+curl -X 'POST''localhost:9092/register/agent'-H 'accept: */*' -H 'Content-Type: application/json'{"customer_id": "1","endpoint":"kad-agent.default.svc.cluster.local:8080"}'

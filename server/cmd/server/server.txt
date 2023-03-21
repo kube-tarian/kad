@@ -1,0 +1,44 @@
+package main
+
+import (
+	"log"
+	"net"
+
+	//	"strings"
+
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+
+	pb "github.com/kube-tarian/kad/server/pkg/pb/agentpb"
+)
+
+const (
+	port = ":50051"
+)
+
+// server is used to implement customer.CustomerServer.
+type server struct {
+	savedCustomers []*pb.JobRequest
+	pb.UnimplementedAgentServer
+}
+
+// CreateCustomer creates a new Customer
+func (s *server) CreateJobRequest(ctx context.Context, in *pb.JobRequest) (*pb.JobResponse, error) {
+	s.savedCustomers = append(s.savedCustomers, in)
+	return &pb.JobResponse{
+		Id:           "1",
+		RunID:        "1",
+		WorkflowName: "--",
+	}, nil
+}
+
+func main() {
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	// Creates a new gRPC server
+	s := grpc.NewServer()
+	pb.RegisterAgentServer(s, &server{})
+	s.Serve(lis)
+}

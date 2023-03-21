@@ -1,0 +1,66 @@
+package main
+
+import (
+	"encoding/json"
+	//	"io"
+	"log"
+
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+
+	pb "github.com/kube-tarian/kad/server/pkg/pb/agentpb"
+)
+
+const (
+	address = "localhost:50051"
+)
+
+// createCustomer calls the RPC method CreateCustomer of CustomerServer
+func CreateJobRequest(client pb.AgentClient, customer *pb.JobRequest) {
+	resp, err := client.SubmitJob(context.Background(), customer)
+	if err != nil {
+		log.Fatalf("Could not create Customer: %v", err)
+	}
+	if resp.Id == "1" {
+		log.Printf("A new Customer has been added with id: %d", resp.Id)
+	}
+}
+
+func main() {
+	// Set up a connection to the gRPC server.
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+	// Creates a new CustomerClient
+	client := pb.NewAgentClient(conn)
+
+	resp := &pb.HelmAppInstallRequest{
+
+		RepoUrl:   "https://fluent.github.io/helm-charts",
+		RepoName:  "fluent",
+		Namespace: "default",
+		ChartName: "fluent-bit",
+		Version:   "0.24.0",
+	}
+	Bytes, err := json.Marshal(resp)
+	if err != nil {
+		log.Printf("Error while marshelling helminstall app")
+	}
+	payload := string(Bytes)
+
+	customer := &pb.JobRequest{
+		Operation:  "install",
+		Plugin:     "HelmInstall",
+		WorkerType: "Deployment",
+		Payload:    payload,
+	}
+
+	// Create a new customer
+	CreateJobRequest(client, customer)
+
+	// Create a new customer
+	//	createCustomer(client, customer)
+	// Filter with an empty Keyword
+}
