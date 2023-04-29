@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/kube-tarian/kad/server/api"
+	"github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/model"
 	"github.com/kube-tarian/kad/server/pkg/types"
@@ -44,10 +45,29 @@ func (a *APIHandler) PostRegisterAgent(c *gin.Context) {
 		return
 	}
 
-	err = session.RegisterEndpoint(customerId, endpoint, fileContentsMap)
+	err = session.RegisterEndpoint(customerId, endpoint, map[string]string{})
 	if err != nil {
 		a.setFailedResponse(c, "failed to store data", nil)
 		a.log.Error("failed to get db session", err)
+		return
+	}
+
+	vaultSession, err := client.NewVault()
+	if err != nil {
+		a.setFailedResponse(c, "failed to register", nil)
+		a.log.Error("failed to create vault session", err)
+		return
+	}
+
+	err = vaultSession.PutCert("secret",
+		fileContentsMap[types.ClientCertChainFileName],
+		fileContentsMap[types.ClientCertFileName],
+		fileContentsMap[types.ClientKeyFileName],
+		customerId)
+
+	if err != nil {
+		a.setFailedResponse(c, "failed to register", nil)
+		a.log.Error("failed to store cert in vault", err)
 		return
 	}
 

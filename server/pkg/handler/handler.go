@@ -114,8 +114,19 @@ func fetchConfiguration(customerID string) (*types.AgentConfiguration, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert agent port to int, port got: %v", os.Getenv("AGENT_PORT"))
 	}
-	cfg.CaCert = agentInfo.CaPem
-	cfg.Cert = agentInfo.Cert
-	cfg.Key = agentInfo.Key
+
+	vaultSession, err := client.NewVault()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault session: %w", err)
+	}
+
+	vaultMap, err := vaultSession.GetCert("secret", customerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get certs")
+	}
+
+	cfg.CaCert = vaultMap[types.ClientCertChainFileName]
+	cfg.Cert = vaultMap[types.ClientCertFileName]
+	cfg.Key = vaultMap[types.ClientKeyFileName]
 	return cfg, err
 }
