@@ -179,6 +179,14 @@ type Response struct {
 	Status  string `json:"status"`
 }
 
+// StoreCredRequest defines model for StoreCredRequest.
+type StoreCredRequest struct {
+	Credname   *string `json:"credname,omitempty"`
+	CustomerId *string `json:"customer_id,omitempty"`
+	Password   *string `json:"password,omitempty"`
+	Username   *string `json:"username,omitempty"`
+}
+
 // DeleteClimonJSONRequestBody defines body for DeleteClimon for application/json ContentType.
 type DeleteClimonJSONRequestBody = ClimonDeleteRequest
 
@@ -226,6 +234,9 @@ type PostRegisterAgentMultipartRequestBody = AgentRequest
 
 // PutRegisterAgentJSONRequestBody defines body for PutRegisterAgent for application/json ContentType.
 type PutRegisterAgentJSONRequestBody = AgentRequest
+
+// PostStoreCredJSONRequestBody defines body for PostStoreCred for application/json ContentType.
+type PostStoreCredJSONRequestBody = StoreCredRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -286,6 +297,9 @@ type ServerInterface interface {
 	// Kubernetes readiness and liveness probe endpoint
 	// (GET /status)
 	GetStatus(c *gin.Context)
+	// Delete the application
+	// (POST /store/cred)
+	PostStoreCred(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -487,6 +501,16 @@ func (siw *ServerInterfaceWrapper) GetStatus(c *gin.Context) {
 	siw.Handler.GetStatus(c)
 }
 
+// PostStoreCred operation middleware
+func (siw *ServerInterfaceWrapper) PostStoreCred(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostStoreCred(c)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -554,34 +578,37 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.GET(options.BaseURL+"/status", wrapper.GetStatus)
 
+	router.POST(options.BaseURL+"/store/cred", wrapper.PostStoreCred)
+
 	return router
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+yaTW/jNhPHvwrB5zk6cdq9+ZYmRRHsohs4216KIKDFkcytRHL5ksII/N0Lknp/sawk",
-	"dtetb5YpDmd++nNGGukFRyKTggM3Gi9esI7WkBH/8zoBbpbwzYI27lgqIUEZBn40Ik+R8v8zA5n/KxYq",
-	"IwYv8IpxojZ4hs1GAl5gbRTjCd6WfxClyMYdRykDbt7R0p+weZul7Qwr+GaZAooXfxRhNjxtLPY4w4aZ",
-	"1FnwwBDjYU0meLWaWH2FyLjVcqpaCq6hB6vVRmSgnhh1hx1ngVMpGDc9g23Pa5Zq8zr+qsKXHmdvUpYJ",
-	"fgspGBhWQmq1AfXESeYDoqAjxaQHsMA3YRQxjv5as2iNjEArQNTbpDNEISY2ddguVpalFOXm+q7UGBzn",
-	"gZYk6nHj12IIRWuiTO4F49qQNAXat5pMbcL4QFj3fhD5wZ65ClIgGgYmL8Oon517YjVQFAtVuNQrVJaB",
-	"sKZr70sY8PPNGhCRMmWRl2Bhr6VHxg0koEZEUydQp9uKr/KsJq5bkKnYICeU4IgK+kGSbFJB6LDc7oXe",
-	"kXbc1RuSmr+yHirjaAlSaGZE/6Z/lWhLuUyT7b9clgqkGLRYXIMdLknxZFW6c/Jvy0/H2hAz/AxKezNt",
-	"q7+HASRib9Rfsa5brR3V3EMVq1rks7qqj7PPvFb3zuiTE3FLo1MKVZNXw5Na1DeCxyyxCnaFGdCA+m7q",
-	"17k+vbU+HbsiFRI616RzTTrXpEPutHsl3M+RXP0WocmwwtDkMFoXWqSAGKBux4V1J4JtLDi1eOX+7Ew8",
-	"/x0a1b47oED2SxpGIEIpUPfjVSCqZV5P4WCyeD8Gb0mj0/PVdJRVB6ZVZ/PpzcxV65I0YWegNUn6b5O1",
-	"Icbq8Tvg/LxZaeyx47Gbwngsuv4+EPKANKhnUOizBI6WPz98Qdf3d0hLiFic1xhcARqe8dCaUZYd/MPl",
-	"1eWVi0lI4EQyvMAfLq8uPzgexKx9kHMi2QUVkT9IwCuzrAF3FC/wL2CuJbt1pzgCAak//cerq25onz96",
-	"VNpmGVEbvMCfmDau1F3f32kklXhmToSrja99LiLmK5Qhifa6sauURfjRGZlHvrkQFnEppOtdSC2hCYHD",
-	"FQJtfhLUtxQjwQ2ExlutdM+/6mA0NE7dr/8riPEC/29edVbneVt13tdQ226DHro03mXJUul+mRHANFTu",
-	"1v1JDWlO8dFVEKF7LrHLTEdAWE+AJwvQ9vGzZ3z74PNb2qdqYoSaF48649u7nHNTPh0dhnOjx/I9QQ4g",
-	"dkIOZEZ2+ZnkHnItSLb0mt8NT9Frfk9+IMq9z18nxbpAuq9qj8LzZBNtg+ZQoTqznMiylQVU1Q+ckAga",
-	"XcRD8B562j4p6DW2+2aEI4I9WS23sY6mhjPUiVBdjqD5e4fxtFC8oTgQ3P53aCcFt2S5Ow0cCeTJarSJ",
-	"cWDbnyHuDdFtcwUJc88Hc5Lkjg61zZb5mf6bLfzGeMuv43YF3vxQrfud3DiNwmdEcqcLCv74IgQfwhzZ",
-	"m93oh7SV2dQwSZSZx0JlF5QYsv+1bnzxOKyr9w57YC/tH/Tr1f1PROyEX3XGhwT/UPTEx/3RNopA69im",
-	"1SvHlocf7QoUBwMaKSCUcdAaEU5Ryp7BH0glVoDKzyTrN+/smRhwjjuTvm3uBl6wf7WB53j7uP07AAD/",
-	"/1wenlZHKwAA",
+	"H4sIAAAAAAAC/+yazW7jNhDHX4Vge3TitHvzLc0WRbCLbhBveymCgBbHNrcSyR1SWRiB370gqe8Py0pi",
+	"d936ZpkiOfPjnzPUSM80UolWEqQ1dPZMTbSGhPmf1yuQ9h6+pmCsu9aoNKAV4Fsj9hih/19YSPxfS4UJ",
+	"s3RGF0Iy3NAJtRsNdEaNRSFXdFv8wRDZxl1HsQBp33Ckv2HzupG2E4rwNRUInM7+yt2sWVqb7GFCrbCx",
+	"G8EDI0KGOYWS5Wxq8QUi62bLqBqtpIEOrKmxKgF8FNxdtowFybUS0nY0Ni2vjFTp17IXc1s6jL2JRaLk",
+	"e4jBQr8S4tRYwEfJEu8QBxOh0B7AjN6EViIk+bYW0ZpYRRZAuB+TTwiHJUtjh+1ikYqYk2y4rpUaguMs",
+	"MJpFHWb8njeRaM3QZlYIaSyLY+Bds+k4XQnZ49adbyS+saMvQgzMQE/n+9Dqe2eWpAY4WSrMTeoUqkhA",
+	"pbY93ufQ4PvbNRCmdSwiL8F8vIYehbSwAhwQTZVAlW7Dv9Kyirjeg47VhjihBEMw6IdotokV4/1yu1Nm",
+	"R9hxq9cnNb+yHqqQ5B60MsKq7k3/ItEWchkn2/+4LBG06h0xX4MdJmn1mGK8s/Mf9x+PtSEm9AnQ+GGa",
+	"o/4ZGoha+kH9irXNauyo+h4qWVU8n1RVfZx95rW6d0QfHYgbGh2TqOq8apZUvL5RcilWKcIuNwMawO8m",
+	"f53z02vz07EzUi6hc04656RzTjrkTrtD5X4OxOrXCE2HGfo6h9aq0CIEZoG7HRfmHQm2NuHY5JXZszPw",
+	"/H9olPvugALZL2hYRRjnwN2PF4Eop3k5hYPJ4u0YvCaMjo9X41GWFZhGns261yNXpUpSh52AMWzVfUw2",
+	"ltnUDJ+As/smxWAPHRbPrUK4QeD95xAE/vIjOzPmm8LuxtQA9h/mc/DGWUgMRAjWtKG7W4VcqjbyOWNz",
+	"YgCfAMknDZLc/zr/TK7vbonREIllliZpOVV/j3mjR5E56U+XV5dXzhulQTIt6Iy+u7y6fOeWlNm1Rzhl",
+	"WlxwFfmLFXjIRRq75XRGfwN7rcV7d4tbxKAKf/vPV1dt1z598IhMmiQMN3RGPwpjXba+vrs1RKN6Em4f",
+	"LTY+fTuPhE+ylq2Ml366iEVEH9wg08jXR8IkLgq2rQvRMdRRaBAZGPuL4r4qGilpIdQOK6eP6RcTBg21",
+	"X/frR4QlndEfpmVxeJpVhqddNcHtNki6TeNNpiw2q59mADAPh4/GEauCNKP44ESvTMcSu+B6BITVGH6y",
+	"ANMufukZ3z74/Jb22YZZhdP8aW14exd9booHvMNwrpWJvifIAcROyIHMwC4/k9xDrjnJhl6zA/0YvWaP",
+	"FQei3PkIeVKsc6T7qvYoPE820NZo9iWqM8uRLBtRAMuS5ohAUCuEHoJ3X8HgpKBX2O4bEY4I9mS13MQ6",
+	"GBrOUEdCdTGCZ69OhsNC/pLlQHC7XwOeFNyC5e4wcCSQJ6vROsaebX+GuDdEt80RVsI9H0zZKjO0r2x2",
+	"n93pPzujr/S3+MBvl+P1b+3an/oN08htJiwzOqfgry+C88HNgb3Z9r5PW0kaW6EZ2ulSYXLBmWX7r3Xt",
+	"o81+Xb212z17aX+nX67uf8NjJ/yyuN8n+Hle1h+2x6RRBMYs07h8a9qw8EO6AJRgwRAExoUEYwiTnMTi",
+	"CfyFRrUAUnzpWT28iydmoTBcIUwj/+7heYdiixcOB1q41guNkyoweYqOqOvmX0S4v5+pf99Fp3T7sP0n",
+	"AAD//64/C09cLQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
