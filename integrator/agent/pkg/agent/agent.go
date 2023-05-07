@@ -3,9 +3,11 @@ package agent
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/kube-tarian/kad/integrator/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
+	"github.com/kube-tarian/kad/integrator/agent/pkg/vaultservpb"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/workers"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"go.temporal.io/sdk/client"
@@ -18,14 +20,14 @@ type Agent struct {
 }
 
 func NewAgent(log logging.Logger) (*Agent, error) {
-	clnt, err := temporalclient.NewClient(log)
+	temporalClient, err := temporalclient.NewClient(log)
 	if err != nil {
 		log.Errorf("Agent creation failed, %v", err)
 		return nil, err
 	}
 
 	return &Agent{
-		client: clnt,
+		client: temporalClient,
 		log:    log,
 	}, nil
 }
@@ -57,4 +59,29 @@ func prepareJobResponse(run client.WorkflowRun, name string) *agentpb.JobRespons
 		return &agentpb.JobResponse{Id: run.GetID(), RunID: run.GetRunID(), WorkflowName: name}
 	}
 	return &agentpb.JobResponse{}
+}
+
+func (a *Agent) StoreCred(ctx context.Context, request *agentpb.StoreCredRequest) (*agentpb.StoreCredResponse, error) {
+	vaultServ, err := GetVaultServClient()
+	if err != nil {
+		log.Println("failed to connect vaultserv", err)
+		return &agentpb.StoreCredResponse{
+			Status: "FAILED",
+		}, err
+	}
+
+	response, err := vaultServ.StoreCred(ctx, &vaultservpb.StoreCredRequest{
+		Username: request.Username,
+		Password: request.Password,
+		Credname: request.Credname,
+	})
+
+	if err != nil {
+		log.Println("failed to store creds", err)
+		return nil, err
+	}
+
+	return &agentpb.StoreCredResponse{
+		Status: response.Status,
+	}, nil
 }
