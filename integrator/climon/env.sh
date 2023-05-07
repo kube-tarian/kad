@@ -1,6 +1,0 @@
-export DB_ADDRESSES="127.0.0.1"
-export DB_ADMIN_USERNAME=""
-export DB_REPLICATION_FACTOR="1"
-export CASSANDRA_DB_NAME="tools"
-export DB_ADMIN_PASSWD=""
-export DB_SERVICE_PASSWD=""

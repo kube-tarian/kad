@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	middleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
 	"github.com/gin-gonic/gin"
 
-	middleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/db"
