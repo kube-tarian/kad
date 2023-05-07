@@ -21,8 +21,6 @@ var logger = logging.NewLogger()
 
 func (a *Activities) ClimonInstallActivity(ctx context.Context, req *model.ClimonPostRequest) (model.ResponsePayload, error) {
 	logger.Infof("Activity, name: %+v", req)
-	// e := activity.GetInfo(ctx)
-	// logger.Infof("activity info: %+v", e)
 
 	plugin, err := plugins.GetPlugin(req.PluginName, logger)
 	if err != nil {
