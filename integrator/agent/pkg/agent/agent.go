@@ -85,3 +85,7 @@ func (a *Agent) StoreCred(ctx context.Context, request *agentpb.StoreCredRequest
 		Status: response.Status,
 	}, nil
 }
+
+func (a *Agent) GetAppInfo(ctx context.Context, request *agentpb.AppInfoRequest) (response *agentpb.AppInfoResponse) {
+
+}

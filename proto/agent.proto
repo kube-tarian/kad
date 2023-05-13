@@ -11,6 +11,7 @@ package agentpb;
 service Agent {
   rpc SubmitJob (JobRequest) returns (JobResponse) {}
   rpc StoreCred (StoreCredRequest) returns (StoreCredResponse) {}
+  rpc GetAppInfo(AppInfoRequest) returns (AppInfoResponse){}
 
   rpc ClimonAppInstall (ClimonInstallRequest) returns (JobResponse) {}
   rpc ClimonAppDelete (ClimonDeleteRequest) returns (JobResponse) {}
@@ -113,4 +114,17 @@ message JobResponse {
   string id = 1;
   string runID = 2;
   string workflowName = 3;
+}
+
+message AppInfoRequest {
+  string type = 1;
+}
+
+message AppInfoResponse {
+string releaseName = 1;
+string repoName = 2;
+string repoUrl = 3;
+string chartName = 4;
+string namespace = 5;
+string version = 7;
 }
