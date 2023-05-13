@@ -38,7 +38,7 @@ func (a *APIHandler) PostRegisterAgent(c *gin.Context) {
 		return
 	}
 
-	session, err := db.New()
+	session, err := caasandra.New()
 	if err != nil {
 		a.setFailedResponse(c, "failed to get db session", nil)
 		a.log.Error("failed to get db session", err)
@@ -95,7 +95,6 @@ func (a *APIHandler) PutRegisterAgent(c *gin.Context) {
 	}
 
 	//TODO Update in DB and internal cache
-
 	c.Writer.WriteHeader(http.StatusOK)
 	a.log.Infof("Update register agent api invocation finished")
 }
