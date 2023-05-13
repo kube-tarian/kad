@@ -8,7 +8,6 @@ import (
 
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/client"
-	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/model"
 	"github.com/kube-tarian/kad/server/pkg/types"
 )
@@ -38,7 +37,7 @@ func (a *APIHandler) PostRegisterAgent(c *gin.Context) {
 		return
 	}
 
-	session, err := db.New()
+	session, err := caasandra.New()
 	if err != nil {
 		a.setFailedResponse(c, "failed to get db session", nil)
 		a.log.Error("failed to get db session", err)
@@ -95,7 +94,6 @@ func (a *APIHandler) PutRegisterAgent(c *gin.Context) {
 	}
 
 	//TODO Update in DB and internal cache
-
 	c.Writer.WriteHeader(http.StatusOK)
 	a.log.Infof("Update register agent api invocation finished")
 }
