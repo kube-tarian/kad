@@ -8,6 +8,7 @@ import (
 
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/client"
+	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/model"
 	"github.com/kube-tarian/kad/server/pkg/types"
 )
