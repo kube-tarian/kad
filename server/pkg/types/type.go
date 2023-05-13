@@ -20,3 +20,8 @@ type AgentConfiguration struct {
 	Cert    string
 	Key     string
 }
+
+type DbCreds struct {
+	Host     string
+	Password string
+}

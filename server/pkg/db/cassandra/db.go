@@ -77,3 +77,8 @@ func (c *cassandra) RegisterEndpoint(customerID, endpoint string, fileContentMap
 		fileContentMap[types.ClientCertFileName],
 		fileContentMap[types.ClientKeyFileName]).Exec()
 }
+
+func (c *cassandra) FetchCreds(customerID, secretPlugin string) (*types.DbCreds, error) {
+	// created this func to comply with DB interface
+	return nil, nil
+}

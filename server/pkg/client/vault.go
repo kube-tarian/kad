@@ -84,3 +84,9 @@ func (v *Vault) GetCert(secretName, customerID string) (map[string]string, error
 
 	return certMap, nil
 }
+
+func (v *Vault) GetCreds(secretName, customerID string) (map[string]string, error) {
+	// dummy method until getCreds is avaialble
+	credsMap := make(map[string]string)
+	return credsMap, nil
+}

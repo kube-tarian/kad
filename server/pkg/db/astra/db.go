@@ -3,11 +3,10 @@ package astra
 import (
 	"crypto/tls"
 	"fmt"
-	"os"
 	"sync"
 
+	vaultClient "github.com/kube-tarian/kad/server/pkg/Client"
 	"github.com/kube-tarian/kad/server/pkg/types"
-
 	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/auth"
 	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/client"
 	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
@@ -23,7 +22,11 @@ var (
 	astraObj *astra
 )
 
-const keyspace = "capten"
+const (
+	keyspace      = "capten"
+	astraHost     = "DB_HOST"
+	astraPassword = "DB_PASSWORD"
+)
 
 type astra struct {
 	stargateClient *client.StargateClient
@@ -51,9 +54,17 @@ func connect() (*client.StargateClient, error) {
 	// Astra DB configuration
 	//const astraUri = "0d175de3-c592-43f7-adf5-1bdda2761385-us-east1.apps.astra.datastax.com:443"
 	//const bearerToken = "AstraCS:kYZPvIeLpthElpvKXQZUWHZF:32613fec5fe0be7f3cff755c2a09c5a411f0b0516d5521fc1fe8f3cbb3bf74ef"
-	host := os.Getenv("DB_HOST")
-	bearerToken := os.Getenv("DB_PASSWORD")
-
+	a, err := New()
+	if err != nil {
+		return nil, fmt.Errorf("error creating new astra object %w", err)
+	}
+	// TODO: pass customerId
+	creds, err := a.FetchCreds("1", "vault")
+	if err != nil {
+		return nil, fmt.Errorf("error fetchingcreds from secret server %w", err)
+	}
+	host := creds.Host
+	bearerToken := creds.Password
 	// Create connection with authentication
 	// For Astra DB:
 	config := &tls.Config{
@@ -106,4 +117,23 @@ func (a *astra) RegisterEndpoint(customerID, endpoint string, fileContentMap map
 			keyspace, customerID, endpoint),
 	})
 	return err
+}
+
+func (a *astra) FetchCreds(customerID, secretPlugin string) (*types.DbCreds, error) {
+	// TODO: based on secretPlugin fetch creds, currently vault is the secretPlugin
+	vaultSession, err := vaultClient.NewVault()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault session: %w", err)
+	}
+
+	// TODO: use exposed vault method when available
+	credsMap, err := vaultSession.GetCreds("secret", customerID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get certs")
+	}
+
+	return &types.DbCreds{
+		Host:     credsMap[astraHost],
+		Password: credsMap[astraPassword],
+	}, nil
 }

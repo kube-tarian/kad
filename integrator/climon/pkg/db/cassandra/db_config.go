@@ -1,7 +1,11 @@
 // Package cassandra contains ...
 package cassandra
 
-import "github.com/kube-tarian/kad/integrator/model"
+import (
+	"context"
+
+	"github.com/kube-tarian/kad/integrator/model"
+)
 
 type DBConfig struct {
 	DbAddresses         []string `envconfig:"CASSANDRA_SERVICE_URL" default:"localhost:9042"`
@@ -21,4 +25,5 @@ type Store interface {
 	GrantPermission(serviceUsername string, dbName string) (err error)
 	CreateDb(keyspace, dbName string, replicationFactor string) (err error)
 	CreateLockSchemaDb(replicationFactor string) (err error)
+	GetAppInfo(context context.Context, request *model.GetAppInfoRequest) (response []*model.GetAppInfoResponse, err error)
 }

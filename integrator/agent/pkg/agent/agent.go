@@ -9,7 +9,9 @@ import (
 	"github.com/kube-tarian/kad/integrator/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/vaultservpb"
 	"github.com/kube-tarian/kad/integrator/agent/pkg/workers"
+	"github.com/kube-tarian/kad/integrator/climon/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
+	"github.com/kube-tarian/kad/integrator/model"
 	"go.temporal.io/sdk/client"
 )
 
@@ -86,6 +88,32 @@ func (a *Agent) StoreCred(ctx context.Context, request *agentpb.StoreCredRequest
 	}, nil
 }
 
-func (a *Agent) GetAppInfo(ctx context.Context, request *agentpb.AppInfoRequest) (response *agentpb.AppInfoResponse) {
+func (a *Agent) GetAppInfo(ctx context.Context, request *agentpb.AppInfoRequest) ([]*agentpb.AppInfoResponse, error) {
+	dbConf, err := cassandra.GetDbConfig()
+	if err != nil {
+		return nil, fmt.Errorf("failed to store data in database: %w", err)
+	}
+	var logger logging.Logger
+	db, err := cassandra.NewCassandraStore(logger, dbConf.DbAddresses, dbConf.DbAdminUsername, dbConf.DbAdminPassword)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store data in database %w", err)
+	}
 
+	appsInfo, err := db.GetAppInfo(ctx, &model.GetAppInfoRequest{Type: request.Type})
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch all apps from database %w", err)
+	}
+
+	var apps []*agentpb.AppInfoResponse
+	for _, app := range appsInfo {
+		apps = append(apps, &agentpb.AppInfoResponse{
+			ReleaseName: app.ReleaseName,
+			RepoName:    app.RepoName,
+			RepoUrl:     app.RepoUrl,
+			ChartName:   app.ChartName,
+			Namespace:   app.Namespace,
+			Version:     app.Version,
+		})
+	}
+	return apps, nil
 }

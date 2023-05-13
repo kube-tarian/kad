@@ -11,6 +11,7 @@ import (
 type DB interface {
 	GetAgentInfo(customerID string) (*types.AgentInfo, error)
 	RegisterEndpoint(customerID, endpoint string, fileContentMap map[string]string) error
+	FetchCreds(customerID, secretPlugin string) (*types.DbCreds, error)
 }
 
 func New(db string) (DB, error) {

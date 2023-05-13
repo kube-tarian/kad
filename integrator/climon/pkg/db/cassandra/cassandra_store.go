@@ -2,16 +2,18 @@
 package cassandra
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/kube-tarian/kad/integrator/model"
+	"google.golang.org/appengine/log"
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
+	"github.com/kube-tarian/kad/integrator/model"
 )
 
 const (
@@ -27,6 +29,7 @@ const (
 	captenKeyspace                        = "capten"
 	insertToolsCQL                        = `INSERT INTO capten.tools (name, repo_name, repo_url, chart_name, namespace, release_name, version) VALUES (?, ?, ?, ?, ?, ?, ?)`
 	deleteToolsCQL                        = "DELETE FROM capten.tools where name='%s' if exists"
+	getApps                               = "SELECT * FROM capten.tools ALLOW FILTERING"
 )
 
 type cassandraStore struct {
@@ -203,4 +206,19 @@ func (c *cassandraStore) InsertToolsDb(data *model.ClimonPostRequest) error {
 
 func (c *cassandraStore) DeleteToolsDbEntry(data *model.ClimonDeleteRequest) error {
 	return c.session.Query(fmt.Sprintf(deleteToolsCQL, data.ReleaseName)).Exec()
+}
+
+func (c *cassandraStore) GetAppInfo(ctx context.Context, request *model.GetAppInfoRequest) ([]*model.GetAppInfoResponse, error) {
+	// TODO: when new app types are introduced update query with type included in request
+	iter := c.session.Query(getApps).Iter()
+	app := &model.GetAppInfoResponse{}
+	var apps []*model.GetAppInfoResponse
+	for iter.Scan(&app) {
+		apps = append(apps, app)
+	}
+	if err := iter.Close(); err != nil {
+		c.log.Error("error occurred while closing iterator", err)
+	}
+	log.Debugf(ctx, "apps: %v", apps)
+	return apps, nil
 }
