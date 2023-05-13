@@ -12,7 +12,6 @@ import (
 
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/client"
-	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/types"
 )
@@ -97,7 +96,7 @@ func (a *APIHandler) GetStatus(c *gin.Context) {
 
 func fetchConfiguration(customerID string) (*types.AgentConfiguration, error) {
 	cfg := &types.AgentConfiguration{}
-	session, err := db.New()
+	session, err := caasandra.New()
 	if err != nil {
 		logrus.Error("failed to get db session", err)
 		return nil, err

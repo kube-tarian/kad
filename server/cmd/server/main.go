@@ -11,7 +11,6 @@ import (
 
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/config"
-	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/handler"
 	"github.com/kube-tarian/kad/server/pkg/logging"
 )
@@ -34,7 +33,7 @@ func main() {
 		log.Fatalf("APIHandler initialization failed, %v", err)
 	}
 
-	_, err = db.New()
+	_, err = caasandra.New()
 	if err != nil {
 		log.Fatalf("Failed to connect to cassandra database", err)
 	}
