@@ -102,3 +102,20 @@ func (v *Vault) PostCredentials(secretName, username, password, astradbcreds str
 	log.Println("Secret written successfully.")
 	return nil
 }
+
+func (v *Vault) GetCredentials(secretName, astradbcreds string) (string, string, error) {
+	ctx := context.Background()
+
+	// Read the secret
+	secret, err := v.client.KVv2(secretName).Get(ctx, astradbcreds)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read secret: %w", err)
+	}
+
+	// Extract the credentials from the secret data
+	data := secret.Data["data"].(map[string]interface{})
+	username := data["username"].(string)
+	password := data["password"].(string)
+
+	return username, password, nil
+}
