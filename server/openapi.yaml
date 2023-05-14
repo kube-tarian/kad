@@ -326,14 +326,41 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+  /store/agent/cred:
+    post:
+      tags:
+        - store
+      summary: to store the credentials in agent vault
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreAgentCredRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
 components:
   schemas:
-    StoreCredRequest:
+    StoreAgentCredRequest:
       title: store secrets
       type: object
       properties:
         customer_id:
           type: string
+        credname:
+          type: string
+        username:
+          type: string
+        password:
+          type: string
+    StoreCredRequest:
+      title: store secrets
+      type: object
+      properties:
         credname:
           type: string
         username:

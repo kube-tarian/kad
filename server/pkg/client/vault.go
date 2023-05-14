@@ -3,10 +3,11 @@ package client
 import (
 	"context"
 	"fmt"
-	vault "github.com/hashicorp/vault/api"
-	"github.com/kube-tarian/kad/server/pkg/types"
 	"log"
 	"os"
+
+	vault "github.com/hashicorp/vault/api"
+	"github.com/kube-tarian/kad/server/pkg/types"
 )
 
 //var (
@@ -83,4 +84,21 @@ func (v *Vault) GetCert(secretName, customerID string) (map[string]string, error
 	certMap[types.ClientKeyFileName] = secret.Data[types.ClientKeyFileName].(string)
 
 	return certMap, nil
+}
+func (v *Vault) PostCredentials(secretName, username, password, astradbcreds string) error {
+	secretData := map[string]interface{}{
+		"username": username,
+		"password": password,
+	}
+
+	ctx := context.Background()
+
+	// Write the secret
+	_, err := v.client.KVv2(secretName).Put(ctx, astradbcreds, secretData)
+	if err != nil {
+		return fmt.Errorf("failed to write secret: %w", err)
+	}
+
+	log.Println("Secret written successfully.")
+	return nil
 }
