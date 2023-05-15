@@ -326,6 +326,19 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+    get:
+      tags:
+        - agent-registration
+      summary: Register agent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/StoreCredRequest'
+
   /store/agent/cred:
     post:
       tags:

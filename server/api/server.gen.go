@@ -310,6 +310,9 @@ type ServerInterface interface {
 	// to store the credentials in agent vault
 	// (POST /store/agent/cred)
 	PostStoreAgentCred(c *gin.Context)
+	// Register agent
+	// (GET /store/cred)
+	GetStoreCred(c *gin.Context)
 	// to store the credentials in agent vault
 	// (POST /store/cred)
 	PostStoreCred(c *gin.Context)
@@ -524,6 +527,16 @@ func (siw *ServerInterfaceWrapper) PostStoreAgentCred(c *gin.Context) {
 	siw.Handler.PostStoreAgentCred(c)
 }
 
+// GetStoreCred operation middleware
+func (siw *ServerInterfaceWrapper) GetStoreCred(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetStoreCred(c)
+}
+
 // PostStoreCred operation middleware
 func (siw *ServerInterfaceWrapper) PostStoreCred(c *gin.Context) {
 
@@ -603,6 +616,8 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.POST(options.BaseURL+"/store/agent/cred", wrapper.PostStoreAgentCred)
 
+	router.GET(options.BaseURL+"/store/cred", wrapper.GetStoreCred)
+
 	router.POST(options.BaseURL+"/store/cred", wrapper.PostStoreCred)
 
 	return router
@@ -633,7 +648,8 @@ var swaggerSpec = []string{
 	"wly494Mhm2eGtpXNxtmdvtZKX+lv8SHiLser3wRuf5LYTSO3mbDM6JyCv74Kzgc3O2Jz2/s2bSVpbIVm",
 	"aIczhckVZ5bt/6wrH5e26+qt3W6Jpf2dPlzd/4bHTvibQ4g2wU/y44due0waRWDMLI03p7s1Cz+mU0AJ",
 	"FgxBYFxIMIYwyUksluAvNKopkOKL1PLmXSyZhcJwhRDCdRj5k5KXHbqtHo8c6Rk2n8G8p7RoFQnHG/5r",
-	"AAQO0goWGyJkkAxZsjQuQ/e3V5DvCfvYnH9AxG4cfxjk/n6h/myUDun6af1PAAAA//+4yb8NiC8AAA==",
+	"AAQO0goWGyJkkAxZsjQuQ/e3V5DnsNv1kp3gnCQ5bp0XrU+bEKveHklTP6Cc3Dj+4Mv9/UL9OTAd0vXT",
+	"+p8AAAD//2qPeyd0MAAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
