@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	//	"path"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -61,8 +63,6 @@ func (a *APIHandler) PostStoreAgentCred(c *gin.Context) {
 }
 func (a *APIHandler) PostStoreCred(c *gin.Context) {
 	a.log.Debugf("Storing credentials started")
-	_, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
 
 	var req api.StoreCredRequest
 	if err := c.BindJSON(&req); err != nil {
@@ -73,12 +73,15 @@ func (a *APIHandler) PostStoreCred(c *gin.Context) {
 	secretName := *req.Credname
 	username := *req.Username
 	password := *req.Password
-	astradbcreds := secretName + "/astrabdcreds"
+	pathname := *req.Pathname
+	astradbcreds := secretName + pathname
 
 	// Store the credentials in Vault
+
 	client := client.Vault{}
 
 	if err := client.PostCredentials(secretName, username, password, astradbcreds); err != nil {
+
 		a.setFailedResponse(c, "Failed to store credentials in Vault", err)
 		return
 	}
@@ -96,7 +99,8 @@ func (a *APIHandler) GetStoreCred(c *gin.Context) {
 	defer cancel()
 
 	secretName := c.Query("secretName")
-	astradbcreds := secretName + "/astrabdcreds"
+	pathName := c.Query("astradbcreds")
+	astradbcreds := secretName + pathName
 
 	// Retrieve the credentials from Vault
 	client := client.Vault{}
@@ -111,40 +115,8 @@ func (a *APIHandler) GetStoreCred(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, &api.Response{
 		Status:  "SUCCESS",
 		Message: "Credentials retrieved successfully",
-		// Data: map[string]string{
-		// 	"username": username,
-		// 	"password": password,
-		// },
 	})
 	a.log.Infof("Username:%v,Password:%v", username, password)
 
 	a.log.Debugf("Credentials retrieved successfully from Vault")
 }
-
-// func (a *APIHandler) GetStoreCred(c *gin.Context) {
-// 	a.log.Debugf("Retrieving credentials started")
-// 	_, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-// 	defer cancel()
-// 	var req api.StoreCredRequest
-// 	if err := c.BindJSON(&req); err != nil {
-// 		a.setFailedResponse(c, "Failed to parse payload", err)
-// 		return
-// 	}
-
-// 	secretName := *req.Credname
-// 	astradbcreds := secretName + "/astrabdcreds"
-
-// 	// Retrieve the credentials from Vault
-// 	client := client.Vault{}
-// 	username, password, err := client.GetCredentials(secretName, astradbcreds)
-// 	if err != nil {
-// 		a.setFailedResponse(c, "Failed to retrieve credentials from Vault", err)
-// 		return
-// 	}
-// 	c.IndentedJSON(http.StatusOK, &api.Response{
-// 		Status:  "SUCCESS",
-// 		Message: "Credentials retrieved successfully",
-// 	})
-// 	a.log.Infof("Username:%v,Password:%v", username, password)
-// 	a.log.Debugf("Credentials retrieved successfully from Vault")
-// }

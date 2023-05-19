@@ -380,6 +380,8 @@ components:
           type: string
         password:
           type: string
+        pathname:
+          type: string
     AgentRequest:
       title: Agent information
       type: object

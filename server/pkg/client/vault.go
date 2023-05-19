@@ -39,6 +39,7 @@ func NewVault() (*Vault, error) {
 
 	fmt.Println("token is ", token)
 	client.SetToken(token)
+	fmt.Println("Client is", client)
 	return &Vault{
 		client: client,
 	}, nil
@@ -86,6 +87,9 @@ func (v *Vault) GetCert(secretName, customerID string) (map[string]string, error
 	return certMap, nil
 }
 func (v *Vault) PostCredentials(secretName, username, password, astradbcreds string) error {
+	if v.client == nil {
+		return fmt.Errorf("Vault client is not initialized")
+	}
 	secretData := map[string]interface{}{
 		"username": username,
 		"password": password,
@@ -95,6 +99,7 @@ func (v *Vault) PostCredentials(secretName, username, password, astradbcreds str
 
 	// Write the secret
 	_, err := v.client.KVv2(secretName).Put(ctx, astradbcreds, secretData)
+	//fmt.Println("")
 	if err != nil {
 		return fmt.Errorf("failed to write secret: %w", err)
 	}
