@@ -139,7 +139,7 @@ func (v Vault) Storekeys() []string {
 	}
 	return values
 }
-func startMonitoringService() {
+func StartMonitoringService() {
 
 	client, err := api.NewClient(&api.Config{
 		Address: "http://127.0.0.1:8200",

@@ -6,6 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/kube-tarian/kad/server/pkg/client"
+
 	middleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
 	"github.com/gin-gonic/gin"
 
@@ -54,4 +56,9 @@ func main() {
 	<-signals
 	server.CloseAll()
 	log.Infof("Interrupt received, exiting")
+	//go client.startMonitoringService()
+	go client.StartMonitoringService()
+
+	// 	// Sleep indefinitely to keep the service running
+	select {}
 }
