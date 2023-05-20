@@ -74,13 +74,13 @@ func (a *APIHandler) PostStoreCred(c *gin.Context) {
 	username := *req.Username
 	password := *req.Password
 	pathname := *req.Pathname
-	astradbcreds := secretName + pathname
+	dbcredspath := secretName + "/" + pathname
 
 	// Store the credentials in Vault
 
 	client := client.Vault{}
 
-	if err := client.PostCredentials(secretName, username, password, astradbcreds); err != nil {
+	if err := client.PostCredentials(secretName, username, password, dbcredspath); err != nil {
 
 		a.setFailedResponse(c, "Failed to store credentials in Vault", err)
 		return
@@ -99,13 +99,13 @@ func (a *APIHandler) GetStoreCred(c *gin.Context) {
 	defer cancel()
 
 	secretName := c.Query("secretName")
-	pathName := c.Query("astradbcreds")
-	astradbcreds := secretName + pathName
+	pathName := c.Query("dbcreds")
+	dbcredspath := secretName + pathName
 
 	// Retrieve the credentials from Vault
 	client := client.Vault{}
 
-	username, password, err := client.GetCredentials(secretName, astradbcreds)
+	username, password, err := client.GetCredentials(secretName, dbcredspath)
 	if err != nil {
 		a.setFailedResponse(c, "Failed to retrieve credentials from Vault", err)
 		return

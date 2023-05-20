@@ -7,6 +7,7 @@ import (
 	"os"
 
 	vault "github.com/hashicorp/vault/api"
+	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/types"
 )
 
@@ -17,6 +18,7 @@ import (
 
 type Vault struct {
 	client *vault.Client
+	log    logging.Logger
 }
 
 func NewVault() (*Vault, error) {
@@ -39,7 +41,7 @@ func NewVault() (*Vault, error) {
 
 	fmt.Println("token is ", token)
 	client.SetToken(token)
-	fmt.Println("Client is", client)
+
 	return &Vault{
 		client: client,
 	}, nil
@@ -86,7 +88,7 @@ func (v *Vault) GetCert(secretName, customerID string) (map[string]string, error
 
 	return certMap, nil
 }
-func (v *Vault) PostCredentials(secretName, username, password, astradbcreds string) error {
+func (v *Vault) PostCredentials(secretName, username, password, dbcreds string) error {
 	if v.client == nil {
 		return fmt.Errorf("Vault client is not initialized")
 	}
@@ -98,21 +100,21 @@ func (v *Vault) PostCredentials(secretName, username, password, astradbcreds str
 	ctx := context.Background()
 
 	// Write the secret
-	_, err := v.client.KVv2(secretName).Put(ctx, astradbcreds, secretData)
-	//fmt.Println("")
+	_, err := v.client.KVv2(secretName).Put(ctx, dbcreds, secretData)
+
 	if err != nil {
 		return fmt.Errorf("failed to write secret: %w", err)
 	}
 
-	log.Println("Secret written successfully.")
+	v.log.Debug("Secret written successfully")
 	return nil
 }
 
-func (v *Vault) GetCredentials(secretName, astradbcreds string) (string, string, error) {
+func (v *Vault) GetCredentials(secretName, dbcreds string) (string, string, error) {
 	ctx := context.Background()
 
 	// Read the secret
-	secret, err := v.client.KVv2(secretName).Get(ctx, astradbcreds)
+	secret, err := v.client.KVv2(secretName).Get(ctx, dbcreds)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to read secret: %w", err)
 	}
