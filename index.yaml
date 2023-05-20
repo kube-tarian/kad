@@ -252,4 +252,15 @@ entries:
     urls:
     - https://github.com/kube-tarian/kad/releases/download/server-0.1.0/server-0.1.0.tgz
     version: 0.1.0
+  vaultservice:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2023-05-20T10:52:58.074316798Z"
+    description: A Helm chart for vault service
+    digest: c4da1daca2d5e72635ded3fb1cc03fe6deb8b5e13b2112e6bbf04b9bd923fb3e
+    name: vaultservice
+    type: application
+    urls:
+    - https://github.com/kube-tarian/kad/releases/download/vaultservice-0.1.0/vaultservice-0.1.0.tgz
+    version: 0.1.0
 generated: "2023-01-22T10:06:45.337819246Z"
