@@ -60,13 +60,16 @@ spec:
             - name: CASSANDRA_TABLE_NAME
               value: "{{ .Values.cassandra.name }}"
             - name: CASSANDRA_USERNAME
-              value: "{{ .Values.cassandra.username }}"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.cassandra.secretName }}"
+                  key: "username"
             - name: CASSANDRA_PASSWORD
-              value: "{{ .Values.cassandra.password }}"
-              # valueFrom:
-              #   secretKeyRef:
-              #     name: "{{ .Values.cassandra.secretName }}"
-              #     key: "password"
+              #value: "{{ .Values.cassandra.password }}"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.cassandra.secretName }}"
+                  key: "password"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
