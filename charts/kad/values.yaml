@@ -97,8 +97,7 @@ argocd:
 
 # Attributes to be added
 cassandra:
-  username: user
-  secretName: "temporal-default-store"
-  serviceURL: "temporal-cassandra"
+  secretName: "temporal-superuser"
+  serviceURL: "temporal-temporal-service"
   keyspaceName: "capten"
   tableName: "tools"
