@@ -18,7 +18,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-func (v Vault) Config() *kubernetes.Clientset {
+func (v *Vault) Config() *kubernetes.Clientset {
 	var kubeconfig string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = filepath.Join(home, ".kube", "config")
@@ -35,7 +35,7 @@ func (v Vault) Config() *kubernetes.Clientset {
 	return clientset
 }
 
-func (v Vault) GenerateUnsealKeysFromVault() ([]string, string, error) {
+func (v *Vault) GenerateUnsealKeysFromVault() ([]string, string, error) {
 
 	res := &api.InitRequest{
 		SecretThreshold: 2,
@@ -56,7 +56,7 @@ func (v Vault) GenerateUnsealKeysFromVault() ([]string, string, error) {
 	v.log.Info("Unsealed keys are generated")
 	return unsealKeys, rootToken, err
 }
-func (v Vault) Unseal(keys []string) error {
+func (v *Vault) Unseal(keys []string) error {
 
 	for _, key := range keys {
 
@@ -71,7 +71,7 @@ func (v Vault) Unseal(keys []string) error {
 
 	return nil
 }
-func (v Vault) Storekeys(nameSpace string, SecretName string) []string {
+func (v *Vault) Storekeys(nameSpace string, SecretName string) []string {
 	clientset := v.Config()
 	var values []string
 	namespace := nameSpace   // Namespace where you want to create the Secret
@@ -100,26 +100,26 @@ func (v Vault) Storekeys(nameSpace string, SecretName string) []string {
 	return values
 }
 
-func (v Vault) RetrieveKeys(nameSpace string, SecretName string) []string {
+func (v *Vault) RetrieveKeys(nameSpace string, SecretName string) []string {
 
 	var values []string
 	clientset := v.Config()
 	namespace := nameSpace // Namespace where you want to create the Secret
 	secretName := SecretName
 
-	secret2, err := clientset.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+	secret, err := clientset.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil {
 		v.log.Error("Error while getting secret", err)
 	}
 
-	for key, value := range secret2.Data {
+	for key, value := range secret.Data {
 		// Use the secret value as needed
 		v.log.Infof("Retrieved value for key %s: %s\n", key, value)
 		keys := string(value)
 		values = append(values, keys)
 	}
 
-	v.log.Infof("Secret '%s' found in namespace '%s'\n", secret2.Name, secret2.Namespace)
+	v.log.Infof("Secret '%s' found in namespace '%s'\n", secret.Name, secret.Namespace)
 	// Use the secret as needed
 	return values
 }
