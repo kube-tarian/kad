@@ -82,6 +82,7 @@ message ApplicationDeleteRequest {
 message ClusterRequest {
   string plugin_name = 1;
   string cluster_name = 2;
+  string kube_config  = 3;
 }
 
 message RepositoryAddRequest {

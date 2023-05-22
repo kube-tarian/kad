@@ -6,6 +6,7 @@ type PluginRequest struct {
 
 type PluginResponse struct {
 	ServiceURL   string
+	ApiServerURL string
 	IsSSLEnabled bool
 	Username     string
 	Password     string
