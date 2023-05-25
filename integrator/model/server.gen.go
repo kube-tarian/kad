@@ -152,3 +152,18 @@ type Response struct {
 	Message string `json:"message"`
 	Status  string `json:"status"`
 }
+
+type GetAppInfoRequest struct {
+	Type string `json:"type"`
+}
+
+type GetAppInfoResponse struct {
+	State       string `json:"state"`
+	ReleaseName string `json:"releaseName"`
+	RepoName    string `json:"repoName"`
+	RepoUrl     string `json:"repoUrl"`
+	ChartName   string `json:"chartName"`
+	Namespace   string `json:"namespace"`
+	Version     string `json:"version"`
+	SizeCache   string `json:"sizeCache"`
+}
