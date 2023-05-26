@@ -1,24 +1,27 @@
-# Default values for kad.
+# Default values for vaultservice.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
 
 image:
+  repository: ghcr.io/kube-tarian/kad/vaultserv
   pullPolicy: Always
+  # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
-agent:
-  repository: ghcr.io/kube-tarian/kad/agent
-deployment_worker:
-  repository: ghcr.io/kube-tarian/kad/deployment-worker
-config_worker:
-  repository: ghcr.io/kube-tarian/kad/config-worker
-climon:
-  repository: ghcr.io/kube-tarian/kad/climon
 
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
 
 podAnnotations: {}
 
@@ -37,14 +40,8 @@ service:
   type: ClusterIP
   port: 8080
 
-ingressroute:
-  enabled: true
-  mtls:
-    enabled: false
-    caCrt: ""
-    tlsCrt: ""
-    tlsKey: ""
-  host: "captenagent.dev.optimizor.app"
+env:
+  vaultAddress: https://vault:8200
 
 ingress:
   enabled: false
@@ -86,18 +83,3 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
-# TODO: attributes to be added
-temporal:
-  external: true
-  temporalServiceURL: temporal-frontend
-
-argocd:
-  serviceURL: argocd-server.default.svc.cluster.local
-
-# Attributes to be added
-cassandra:
-  secretName: "temporal-superuser"
-  serviceURL: "temporal-temporal-service"
-  keyspaceName: "capten"
-  tableName: "tools"
