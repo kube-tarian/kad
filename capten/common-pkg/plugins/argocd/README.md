@@ -29,14 +29,14 @@ Content-Length: 340
 Origin: https://localhost:8080
 Connection: keep-alive
 Referer: https://localhost:8080/applications?new=%7B%22apiVersion%22%3A%22argoproj.io%2Fv1alpha1%22%2C%22kind%22%3A%22Application%22%2C%22metadata%22%3A%7B%22name%22%3A%22demo%22%7D%2C%22spec%22%3A%7B%22destination%22%3A%7B%22name%22%3A%22%22%2C%22namespace%22%3A%22default%22%2C%22server%22%3A%22https%3A%2F%2Fkubernetes.default.svc%22%7D%2C%22source%22%3A%7B%22path%22%3A%22.%2Fsimple-app%22%2C%22repoURL%22%3A%22https%3A%2F%2Fgithub.com%2FJasmine-Harit%2Fgitops-certification-examples.git%22%2C%22targetRevision%22%3A%22HEAD%22%7D%2C%22project%22%3A%22default%22%7D%7D
-Cookie: argocd.token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhcmdvY2QiLCJzdWIiOiJhZG1pbjpsb2dpbiIsImV4cCI6MTY2NzkyNTcyNywibmJmIjoxNjY3ODM5MzI3LCJpYXQiOjE2Njc4MzkzMjcsImp0aSI6Ijc0OWIxZjFkLTcwMmItNDQxOC1iOTI4LTA3ZmFiNTk2MzkxMiJ9.Cp8ZabyUYiuTeyKtMZkB5R9QVGUMWlW72jhxB9lUUlw
+Cookie: argocd.token=
 Sec-Fetch-Dest: empty
 Sec-Fetch-Mode: cors
 Sec-Fetch-Site: same-origin
 
 {
 	"Request Cookies": {
-		"argocd.token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhcmdvY2QiLCJzdWIiOiJhZG1pbjpsb2dpbiIsImV4cCI6MTY2NzkyNTcyNywibmJmIjoxNjY3ODM5MzI3LCJpYXQiOjE2Njc4MzkzMjcsImp0aSI6Ijc0OWIxZjFkLTcwMmItNDQxOC1iOTI4LTA3ZmFiNTk2MzkxMiJ9.Cp8ZabyUYiuTeyKtMZkB5R9QVGUMWlW72jhxB9lUUlw"
+		"argocd.token": ""
 	}
 }
 
