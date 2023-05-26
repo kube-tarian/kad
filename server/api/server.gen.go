@@ -17,6 +17,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// AgentAppsRequest defines model for AgentAppsRequest.
+type AgentAppsRequest struct {
+	Apps *[]struct {
+		ChartName   *string `json:"chartName,omitempty"`
+		Name        *string `json:"name,omitempty"`
+		Namespace   *string `json:"namespace,omitempty"`
+		Override    *string `json:"override,omitempty"`
+		ReleaseName *string `json:"releaseName,omitempty"`
+		RepoName    *string `json:"repoName,omitempty"`
+		RepoURL     *string `json:"repoURL,omitempty"`
+		Version     *string `json:"version,omitempty"`
+	} `json:"apps,omitempty"`
+}
+
 // AgentRequest defines model for AgentRequest.
 type AgentRequest struct {
 	CaCrt     []openapi_types.File `json:"ca_crt"`
@@ -187,119 +201,125 @@ type StoreCredRequest struct {
 	Username   *string `json:"username,omitempty"`
 }
 
-// DeleteClimonJSONRequestBody defines body for DeleteClimon for application/json ContentType.
-type DeleteClimonJSONRequestBody = ClimonDeleteRequest
+// PostAgentAppsJSONRequestBody defines body for PostAgentApps for application/json ContentType.
+type PostAgentAppsJSONRequestBody = AgentAppsRequest
 
-// PostClimonJSONRequestBody defines body for PostClimon for application/json ContentType.
-type PostClimonJSONRequestBody = ClimonPostRequest
+// DeleteAgentClimondeployJSONRequestBody defines body for DeleteAgentClimondeploy for application/json ContentType.
+type DeleteAgentClimondeployJSONRequestBody = ClimonDeleteRequest
 
-// PutClimonJSONRequestBody defines body for PutClimon for application/json ContentType.
-type PutClimonJSONRequestBody = ClimonPostRequest
+// PostAgentClimondeployJSONRequestBody defines body for PostAgentClimondeploy for application/json ContentType.
+type PostAgentClimondeployJSONRequestBody = ClimonPostRequest
 
-// DeleteConfigatorClusterJSONRequestBody defines body for DeleteConfigatorCluster for application/json ContentType.
-type DeleteConfigatorClusterJSONRequestBody = ClusterRequest
+// PutAgentClimondeployJSONRequestBody defines body for PutAgentClimondeploy for application/json ContentType.
+type PutAgentClimondeployJSONRequestBody = ClimonPostRequest
 
-// PostConfigatorClusterJSONRequestBody defines body for PostConfigatorCluster for application/json ContentType.
-type PostConfigatorClusterJSONRequestBody = ClusterRequest
+// DeleteAgentClusterJSONRequestBody defines body for DeleteAgentCluster for application/json ContentType.
+type DeleteAgentClusterJSONRequestBody = ClusterRequest
 
-// DeleteConfigatorProjectJSONRequestBody defines body for DeleteConfigatorProject for application/json ContentType.
-type DeleteConfigatorProjectJSONRequestBody = ProjectDeleteRequest
+// PostAgentClusterJSONRequestBody defines body for PostAgentCluster for application/json ContentType.
+type PostAgentClusterJSONRequestBody = ClusterRequest
 
-// PostConfigatorProjectJSONRequestBody defines body for PostConfigatorProject for application/json ContentType.
-type PostConfigatorProjectJSONRequestBody = ProjectPostRequest
+// DeleteAgentDeployJSONRequestBody defines body for DeleteAgentDeploy for application/json ContentType.
+type DeleteAgentDeployJSONRequestBody = DeployerDeleteRequest
 
-// PutConfigatorProjectJSONRequestBody defines body for PutConfigatorProject for application/json ContentType.
-type PutConfigatorProjectJSONRequestBody = ProjectPostRequest
+// PostAgentDeployJSONRequestBody defines body for PostAgentDeploy for application/json ContentType.
+type PostAgentDeployJSONRequestBody = DeployerPostRequest
 
-// DeleteConfigatorRepositoryJSONRequestBody defines body for DeleteConfigatorRepository for application/json ContentType.
-type DeleteConfigatorRepositoryJSONRequestBody = RepositoryDeleteRequest
+// PutAgentDeployJSONRequestBody defines body for PutAgentDeploy for application/json ContentType.
+type PutAgentDeployJSONRequestBody = DeployerPostRequest
 
-// PostConfigatorRepositoryJSONRequestBody defines body for PostConfigatorRepository for application/json ContentType.
-type PostConfigatorRepositoryJSONRequestBody = RepositoryPostRequest
+// PostAgentEndpointMultipartRequestBody defines body for PostAgentEndpoint for multipart/form-data ContentType.
+type PostAgentEndpointMultipartRequestBody = AgentRequest
 
-// PutConfigatorRepositoryJSONRequestBody defines body for PutConfigatorRepository for application/json ContentType.
-type PutConfigatorRepositoryJSONRequestBody = RepositoryPostRequest
+// PutAgentEndpointJSONRequestBody defines body for PutAgentEndpoint for application/json ContentType.
+type PutAgentEndpointJSONRequestBody = AgentRequest
 
-// DeleteDeployerJSONRequestBody defines body for DeleteDeployer for application/json ContentType.
-type DeleteDeployerJSONRequestBody = DeployerDeleteRequest
+// DeleteAgentProjectJSONRequestBody defines body for DeleteAgentProject for application/json ContentType.
+type DeleteAgentProjectJSONRequestBody = ProjectDeleteRequest
 
-// PostDeployerJSONRequestBody defines body for PostDeployer for application/json ContentType.
-type PostDeployerJSONRequestBody = DeployerPostRequest
+// PostAgentProjectJSONRequestBody defines body for PostAgentProject for application/json ContentType.
+type PostAgentProjectJSONRequestBody = ProjectPostRequest
 
-// PutDeployerJSONRequestBody defines body for PutDeployer for application/json ContentType.
-type PutDeployerJSONRequestBody = DeployerPostRequest
+// PutAgentProjectJSONRequestBody defines body for PutAgentProject for application/json ContentType.
+type PutAgentProjectJSONRequestBody = ProjectPostRequest
 
-// PostRegisterAgentMultipartRequestBody defines body for PostRegisterAgent for multipart/form-data ContentType.
-type PostRegisterAgentMultipartRequestBody = AgentRequest
+// DeleteAgentRepositoryJSONRequestBody defines body for DeleteAgentRepository for application/json ContentType.
+type DeleteAgentRepositoryJSONRequestBody = RepositoryDeleteRequest
 
-// PutRegisterAgentJSONRequestBody defines body for PutRegisterAgent for application/json ContentType.
-type PutRegisterAgentJSONRequestBody = AgentRequest
+// PostAgentRepositoryJSONRequestBody defines body for PostAgentRepository for application/json ContentType.
+type PostAgentRepositoryJSONRequestBody = RepositoryPostRequest
 
-// PostStoreCredJSONRequestBody defines body for PostStoreCred for application/json ContentType.
-type PostStoreCredJSONRequestBody = StoreCredRequest
+// PutAgentRepositoryJSONRequestBody defines body for PutAgentRepository for application/json ContentType.
+type PutAgentRepositoryJSONRequestBody = RepositoryPostRequest
+
+// PostAgentSecretJSONRequestBody defines body for PostAgentSecret for application/json ContentType.
+type PostAgentSecretJSONRequestBody = StoreCredRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// used to update the installed tools
+	// (POST /agent/apps)
+	PostAgentApps(c *gin.Context)
+	// deploy the application
+	// (DELETE /agent/climondeploy)
+	DeleteAgentClimondeploy(c *gin.Context)
+	// deploy the application
+	// (POST /agent/climondeploy)
+	PostAgentClimondeploy(c *gin.Context)
+	// deploy the application
+	// (PUT /agent/climondeploy)
+	PutAgentClimondeploy(c *gin.Context)
+	// Delete the application
+	// (DELETE /agent/cluster)
+	DeleteAgentCluster(c *gin.Context)
+	// deploy the application
+	// (POST /agent/cluster)
+	PostAgentCluster(c *gin.Context)
+	// deploy the application
+	// (DELETE /agent/deploy)
+	DeleteAgentDeploy(c *gin.Context)
+	// deploy the application
+	// (POST /agent/deploy)
+	PostAgentDeploy(c *gin.Context)
+	// deploy the application
+	// (PUT /agent/deploy)
+	PutAgentDeploy(c *gin.Context)
+	// Register agent
+	// (GET /agent/endpoint)
+	GetAgentEndpoint(c *gin.Context)
+	// Register agent
+	// (POST /agent/endpoint)
+	PostAgentEndpoint(c *gin.Context)
+	// Register agent
+	// (PUT /agent/endpoint)
+	PutAgentEndpoint(c *gin.Context)
+	// deploy the application
+	// (DELETE /agent/project)
+	DeleteAgentProject(c *gin.Context)
+	// deploy the application
+	// (POST /agent/project)
+	PostAgentProject(c *gin.Context)
+	// deploy the application
+	// (PUT /agent/project)
+	PutAgentProject(c *gin.Context)
+	// deploy the application
+	// (DELETE /agent/repository)
+	DeleteAgentRepository(c *gin.Context)
+	// deploy the application
+	// (POST /agent/repository)
+	PostAgentRepository(c *gin.Context)
+	// deploy the application
+	// (PUT /agent/repository)
+	PutAgentRepository(c *gin.Context)
+	// to store the credentials in agent vault
+	// (POST /agent/secret)
+	PostAgentSecret(c *gin.Context)
 	// List of APIs provided by the service
 	// (GET /api-docs)
 	GetApiDocs(c *gin.Context)
-	// deploy the application
-	// (DELETE /climon)
-	DeleteClimon(c *gin.Context)
-	// deploy the application
-	// (POST /climon)
-	PostClimon(c *gin.Context)
-	// deploy the application
-	// (PUT /climon)
-	PutClimon(c *gin.Context)
-	// Delete the application
-	// (DELETE /configator/cluster)
-	DeleteConfigatorCluster(c *gin.Context)
-	// deploy the application
-	// (POST /configator/cluster)
-	PostConfigatorCluster(c *gin.Context)
-	// deploy the application
-	// (DELETE /configator/project)
-	DeleteConfigatorProject(c *gin.Context)
-	// deploy the application
-	// (POST /configator/project)
-	PostConfigatorProject(c *gin.Context)
-	// deploy the application
-	// (PUT /configator/project)
-	PutConfigatorProject(c *gin.Context)
-	// deploy the application
-	// (DELETE /configator/repository)
-	DeleteConfigatorRepository(c *gin.Context)
-	// deploy the application
-	// (POST /configator/repository)
-	PostConfigatorRepository(c *gin.Context)
-	// deploy the application
-	// (PUT /configator/repository)
-	PutConfigatorRepository(c *gin.Context)
-	// deploy the application
-	// (DELETE /deployer)
-	DeleteDeployer(c *gin.Context)
-	// deploy the application
-	// (POST /deployer)
-	PostDeployer(c *gin.Context)
-	// deploy the application
-	// (PUT /deployer)
-	PutDeployer(c *gin.Context)
-	// Register agent
-	// (GET /register/agent)
-	GetRegisterAgent(c *gin.Context)
-	// Register agent
-	// (POST /register/agent)
-	PostRegisterAgent(c *gin.Context)
-	// Register agent
-	// (PUT /register/agent)
-	PutRegisterAgent(c *gin.Context)
 	// Kubernetes readiness and liveness probe endpoint
 	// (GET /status)
 	GetStatus(c *gin.Context)
-	// Delete the application
-	// (POST /store/cred)
-	PostStoreCred(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -311,6 +331,196 @@ type ServerInterfaceWrapper struct {
 
 type MiddlewareFunc func(c *gin.Context)
 
+// PostAgentApps operation middleware
+func (siw *ServerInterfaceWrapper) PostAgentApps(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostAgentApps(c)
+}
+
+// DeleteAgentClimondeploy operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAgentClimondeploy(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteAgentClimondeploy(c)
+}
+
+// PostAgentClimondeploy operation middleware
+func (siw *ServerInterfaceWrapper) PostAgentClimondeploy(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostAgentClimondeploy(c)
+}
+
+// PutAgentClimondeploy operation middleware
+func (siw *ServerInterfaceWrapper) PutAgentClimondeploy(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PutAgentClimondeploy(c)
+}
+
+// DeleteAgentCluster operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAgentCluster(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteAgentCluster(c)
+}
+
+// PostAgentCluster operation middleware
+func (siw *ServerInterfaceWrapper) PostAgentCluster(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostAgentCluster(c)
+}
+
+// DeleteAgentDeploy operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAgentDeploy(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteAgentDeploy(c)
+}
+
+// PostAgentDeploy operation middleware
+func (siw *ServerInterfaceWrapper) PostAgentDeploy(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostAgentDeploy(c)
+}
+
+// PutAgentDeploy operation middleware
+func (siw *ServerInterfaceWrapper) PutAgentDeploy(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PutAgentDeploy(c)
+}
+
+// GetAgentEndpoint operation middleware
+func (siw *ServerInterfaceWrapper) GetAgentEndpoint(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetAgentEndpoint(c)
+}
+
+// PostAgentEndpoint operation middleware
+func (siw *ServerInterfaceWrapper) PostAgentEndpoint(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostAgentEndpoint(c)
+}
+
+// PutAgentEndpoint operation middleware
+func (siw *ServerInterfaceWrapper) PutAgentEndpoint(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PutAgentEndpoint(c)
+}
+
+// DeleteAgentProject operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAgentProject(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteAgentProject(c)
+}
+
+// PostAgentProject operation middleware
+func (siw *ServerInterfaceWrapper) PostAgentProject(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostAgentProject(c)
+}
+
+// PutAgentProject operation middleware
+func (siw *ServerInterfaceWrapper) PutAgentProject(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PutAgentProject(c)
+}
+
+// DeleteAgentRepository operation middleware
+func (siw *ServerInterfaceWrapper) DeleteAgentRepository(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteAgentRepository(c)
+}
+
+// PostAgentRepository operation middleware
+func (siw *ServerInterfaceWrapper) PostAgentRepository(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostAgentRepository(c)
+}
+
+// PutAgentRepository operation middleware
+func (siw *ServerInterfaceWrapper) PutAgentRepository(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PutAgentRepository(c)
+}
+
+// PostAgentSecret operation middleware
+func (siw *ServerInterfaceWrapper) PostAgentSecret(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostAgentSecret(c)
+}
+
 // GetApiDocs operation middleware
 func (siw *ServerInterfaceWrapper) GetApiDocs(c *gin.Context) {
 
@@ -321,176 +531,6 @@ func (siw *ServerInterfaceWrapper) GetApiDocs(c *gin.Context) {
 	siw.Handler.GetApiDocs(c)
 }
 
-// DeleteClimon operation middleware
-func (siw *ServerInterfaceWrapper) DeleteClimon(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.DeleteClimon(c)
-}
-
-// PostClimon operation middleware
-func (siw *ServerInterfaceWrapper) PostClimon(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PostClimon(c)
-}
-
-// PutClimon operation middleware
-func (siw *ServerInterfaceWrapper) PutClimon(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PutClimon(c)
-}
-
-// DeleteConfigatorCluster operation middleware
-func (siw *ServerInterfaceWrapper) DeleteConfigatorCluster(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.DeleteConfigatorCluster(c)
-}
-
-// PostConfigatorCluster operation middleware
-func (siw *ServerInterfaceWrapper) PostConfigatorCluster(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PostConfigatorCluster(c)
-}
-
-// DeleteConfigatorProject operation middleware
-func (siw *ServerInterfaceWrapper) DeleteConfigatorProject(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.DeleteConfigatorProject(c)
-}
-
-// PostConfigatorProject operation middleware
-func (siw *ServerInterfaceWrapper) PostConfigatorProject(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PostConfigatorProject(c)
-}
-
-// PutConfigatorProject operation middleware
-func (siw *ServerInterfaceWrapper) PutConfigatorProject(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PutConfigatorProject(c)
-}
-
-// DeleteConfigatorRepository operation middleware
-func (siw *ServerInterfaceWrapper) DeleteConfigatorRepository(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.DeleteConfigatorRepository(c)
-}
-
-// PostConfigatorRepository operation middleware
-func (siw *ServerInterfaceWrapper) PostConfigatorRepository(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PostConfigatorRepository(c)
-}
-
-// PutConfigatorRepository operation middleware
-func (siw *ServerInterfaceWrapper) PutConfigatorRepository(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PutConfigatorRepository(c)
-}
-
-// DeleteDeployer operation middleware
-func (siw *ServerInterfaceWrapper) DeleteDeployer(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.DeleteDeployer(c)
-}
-
-// PostDeployer operation middleware
-func (siw *ServerInterfaceWrapper) PostDeployer(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PostDeployer(c)
-}
-
-// PutDeployer operation middleware
-func (siw *ServerInterfaceWrapper) PutDeployer(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PutDeployer(c)
-}
-
-// GetRegisterAgent operation middleware
-func (siw *ServerInterfaceWrapper) GetRegisterAgent(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.GetRegisterAgent(c)
-}
-
-// PostRegisterAgent operation middleware
-func (siw *ServerInterfaceWrapper) PostRegisterAgent(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PostRegisterAgent(c)
-}
-
-// PutRegisterAgent operation middleware
-func (siw *ServerInterfaceWrapper) PutRegisterAgent(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PutRegisterAgent(c)
-}
-
 // GetStatus operation middleware
 func (siw *ServerInterfaceWrapper) GetStatus(c *gin.Context) {
 
@@ -499,16 +539,6 @@ func (siw *ServerInterfaceWrapper) GetStatus(c *gin.Context) {
 	}
 
 	siw.Handler.GetStatus(c)
-}
-
-// PostStoreCred operation middleware
-func (siw *ServerInterfaceWrapper) PostStoreCred(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.PostStoreCred(c)
 }
 
 // GinServerOptions provides options for the Gin server.
@@ -540,45 +570,47 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 		ErrorHandler:       errorHandler,
 	}
 
+	router.POST(options.BaseURL+"/agent/apps", wrapper.PostAgentApps)
+
+	router.DELETE(options.BaseURL+"/agent/climondeploy", wrapper.DeleteAgentClimondeploy)
+
+	router.POST(options.BaseURL+"/agent/climondeploy", wrapper.PostAgentClimondeploy)
+
+	router.PUT(options.BaseURL+"/agent/climondeploy", wrapper.PutAgentClimondeploy)
+
+	router.DELETE(options.BaseURL+"/agent/cluster", wrapper.DeleteAgentCluster)
+
+	router.POST(options.BaseURL+"/agent/cluster", wrapper.PostAgentCluster)
+
+	router.DELETE(options.BaseURL+"/agent/deploy", wrapper.DeleteAgentDeploy)
+
+	router.POST(options.BaseURL+"/agent/deploy", wrapper.PostAgentDeploy)
+
+	router.PUT(options.BaseURL+"/agent/deploy", wrapper.PutAgentDeploy)
+
+	router.GET(options.BaseURL+"/agent/endpoint", wrapper.GetAgentEndpoint)
+
+	router.POST(options.BaseURL+"/agent/endpoint", wrapper.PostAgentEndpoint)
+
+	router.PUT(options.BaseURL+"/agent/endpoint", wrapper.PutAgentEndpoint)
+
+	router.DELETE(options.BaseURL+"/agent/project", wrapper.DeleteAgentProject)
+
+	router.POST(options.BaseURL+"/agent/project", wrapper.PostAgentProject)
+
+	router.PUT(options.BaseURL+"/agent/project", wrapper.PutAgentProject)
+
+	router.DELETE(options.BaseURL+"/agent/repository", wrapper.DeleteAgentRepository)
+
+	router.POST(options.BaseURL+"/agent/repository", wrapper.PostAgentRepository)
+
+	router.PUT(options.BaseURL+"/agent/repository", wrapper.PutAgentRepository)
+
+	router.POST(options.BaseURL+"/agent/secret", wrapper.PostAgentSecret)
+
 	router.GET(options.BaseURL+"/api-docs", wrapper.GetApiDocs)
 
-	router.DELETE(options.BaseURL+"/climon", wrapper.DeleteClimon)
-
-	router.POST(options.BaseURL+"/climon", wrapper.PostClimon)
-
-	router.PUT(options.BaseURL+"/climon", wrapper.PutClimon)
-
-	router.DELETE(options.BaseURL+"/configator/cluster", wrapper.DeleteConfigatorCluster)
-
-	router.POST(options.BaseURL+"/configator/cluster", wrapper.PostConfigatorCluster)
-
-	router.DELETE(options.BaseURL+"/configator/project", wrapper.DeleteConfigatorProject)
-
-	router.POST(options.BaseURL+"/configator/project", wrapper.PostConfigatorProject)
-
-	router.PUT(options.BaseURL+"/configator/project", wrapper.PutConfigatorProject)
-
-	router.DELETE(options.BaseURL+"/configator/repository", wrapper.DeleteConfigatorRepository)
-
-	router.POST(options.BaseURL+"/configator/repository", wrapper.PostConfigatorRepository)
-
-	router.PUT(options.BaseURL+"/configator/repository", wrapper.PutConfigatorRepository)
-
-	router.DELETE(options.BaseURL+"/deployer", wrapper.DeleteDeployer)
-
-	router.POST(options.BaseURL+"/deployer", wrapper.PostDeployer)
-
-	router.PUT(options.BaseURL+"/deployer", wrapper.PutDeployer)
-
-	router.GET(options.BaseURL+"/register/agent", wrapper.GetRegisterAgent)
-
-	router.POST(options.BaseURL+"/register/agent", wrapper.PostRegisterAgent)
-
-	router.PUT(options.BaseURL+"/register/agent", wrapper.PutRegisterAgent)
-
 	router.GET(options.BaseURL+"/status", wrapper.GetStatus)
-
-	router.POST(options.BaseURL+"/store/cred", wrapper.PostStoreCred)
 
 	return router
 }
@@ -586,29 +618,30 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+yazW7jNhDHX4Vge3TitHvzLc0WRbCLbhBveymCgBbHNrcSyR1SWRiB370gqe8Py0pi",
-	"d936ZpkiOfPjnzPUSM80UolWEqQ1dPZMTbSGhPmf1yuQ9h6+pmCsu9aoNKAV4Fsj9hih/19YSPxfS4UJ",
-	"s3RGF0Iy3NAJtRsNdEaNRSFXdFv8wRDZxl1HsQBp33Ckv2HzupG2E4rwNRUInM7+yt2sWVqb7GFCrbCx",
-	"G8EDI0KGOYWS5Wxq8QUi62bLqBqtpIEOrKmxKgF8FNxdtowFybUS0nY0Ni2vjFTp17IXc1s6jL2JRaLk",
-	"e4jBQr8S4tRYwEfJEu8QBxOh0B7AjN6EViIk+bYW0ZpYRRZAuB+TTwiHJUtjh+1ikYqYk2y4rpUaguMs",
-	"MJpFHWb8njeRaM3QZlYIaSyLY+Bds+k4XQnZ49adbyS+saMvQgzMQE/n+9Dqe2eWpAY4WSrMTeoUqkhA",
-	"pbY93ufQ4PvbNRCmdSwiL8F8vIYehbSwAhwQTZVAlW7Dv9Kyirjeg47VhjihBEMw6IdotokV4/1yu1Nm",
-	"R9hxq9cnNb+yHqqQ5B60MsKq7k3/ItEWchkn2/+4LBG06h0xX4MdJmn1mGK8s/Mf9x+PtSEm9AnQ+GGa",
-	"o/4ZGoha+kH9irXNauyo+h4qWVU8n1RVfZx95rW6d0QfHYgbGh2TqOq8apZUvL5RcilWKcIuNwMawO8m",
-	"f53z02vz07EzUi6hc04656RzTjrkTrtD5X4OxOrXCE2HGfo6h9aq0CIEZoG7HRfmHQm2NuHY5JXZszPw",
-	"/H9olPvugALZL2hYRRjnwN2PF4Eop3k5hYPJ4u0YvCaMjo9X41GWFZhGns261yNXpUpSh52AMWzVfUw2",
-	"ltnUDJ+As/smxWAPHRbPrUK4QeD95xAE/vIjOzPmm8LuxtQA9h/mc/DGWUgMRAjWtKG7W4VcqjbyOWNz",
-	"YgCfAMknDZLc/zr/TK7vbonREIllliZpOVV/j3mjR5E56U+XV5dXzhulQTIt6Iy+u7y6fOeWlNm1Rzhl",
-	"WlxwFfmLFXjIRRq75XRGfwN7rcV7d4tbxKAKf/vPV1dt1z598IhMmiQMN3RGPwpjXba+vrs1RKN6Em4f",
-	"LTY+fTuPhE+ylq2Ml366iEVEH9wg08jXR8IkLgq2rQvRMdRRaBAZGPuL4r4qGilpIdQOK6eP6RcTBg21",
-	"X/frR4QlndEfpmVxeJpVhqddNcHtNki6TeNNpiw2q59mADAPh4/GEauCNKP44ESvTMcSu+B6BITVGH6y",
-	"ANMufukZ3z74/Jb22YZZhdP8aW14exd9booHvMNwrpWJvifIAcROyIHMwC4/k9xDrjnJhl6zA/0YvWaP",
-	"FQei3PkIeVKsc6T7qvYoPE820NZo9iWqM8uRLBtRAMuS5ohAUCuEHoJ3X8HgpKBX2O4bEY4I9mS13MQ6",
-	"GBrOUEdCdTGCZ69OhsNC/pLlQHC7XwOeFNyC5e4wcCSQJ6vROsaebX+GuDdEt80RVsI9H0zZKjO0r2x2",
-	"n93pPzujr/S3+MBvl+P1b+3an/oN08htJiwzOqfgry+C88HNgb3Z9r5PW0kaW6EZ2ulSYXLBmWX7r3Xt",
-	"o81+Xb212z17aX+nX67uf8NjJ/yyuN8n+Hle1h+2x6RRBMYs07h8a9qw8EO6AJRgwRAExoUEYwiTnMTi",
-	"CfyFRrUAUnzpWT28iydmoTBcIUwj/+7heYdiixcOB1q41guNkyoweYqOqOvmX0S4v5+pf99Fp3T7sP0n",
-	"AAD//64/C09cLQAA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

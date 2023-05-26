@@ -11,6 +11,7 @@ package agentpb;
 service Agent {
   rpc SubmitJob (JobRequest) returns (JobResponse) {}
   rpc StoreCred (StoreCredRequest) returns (StoreCredResponse) {}
+  rpc Sync(SyncRequest) returns (SyncResponse) {}
 
   rpc ClimonAppInstall (ClimonInstallRequest) returns (JobResponse) {}
   rpc ClimonAppDelete (ClimonDeleteRequest) returns (JobResponse) {}
@@ -36,6 +37,16 @@ message StoreCredRequest {
 
 message StoreCredResponse {
   string status = 1;
+}
+
+message SyncRequest {
+  string type = 1;
+  string data = 2;
+}
+
+message SyncResponse {
+  string status = 1;
+  string message = 2;
 }
 
 message ClimonInstallRequest {

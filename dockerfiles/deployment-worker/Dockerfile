@@ -1,6 +1,6 @@
 FROM golang:1.19.4 AS builder
 WORKDIR /
-COPY ./integrator ./
+COPY ./capten ./
 RUN rm -rf vendor
 
 RUN go mod download

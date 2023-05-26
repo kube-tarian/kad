@@ -6,30 +6,32 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/kube-tarian/kad/server/api"
+	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"net/http"
 	"time"
 )
 
-func (a *APIHandler) PostStoreCred(c *gin.Context) {
-	a.log.Debugf("Install Deploy applicaiton api invocation started")
+func (a *APIHandler) PostAgentSecret(c *gin.Context) {
+	logger := log.GetLogger()
+	defer logger.Sync()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var req api.StoreCredRequest
 	if err := c.BindJSON(&req); err != nil {
-		a.setFailedResponse(c, "Failed to parse deploy payload", err)
+		a.setFailedResponse(c, "failed to parse store-cred payload", err)
 		return
 	}
 
 	if err := a.ConnectClient(*req.CustomerId); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
+		a.setFailedResponse(c, "failed to connect agent", err)
 		return
 	}
 
 	agent := a.GetClient(*req.CustomerId)
 	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", 1), errors.New(""))
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", *req.CustomerId), errors.New(""))
 	}
 
 	response, err := agent.GetClient().StoreCred(
@@ -54,6 +56,5 @@ func (a *APIHandler) PostStoreCred(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: "stored credentials"})
 
-	a.log.Infof("response received from agent", response)
-	a.log.Debugf("credentials is stored successfully")
+	logger.Debug("credentials is stored successfully")
 }

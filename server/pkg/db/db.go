@@ -10,14 +10,14 @@ import (
 
 type DB interface {
 	GetAgentInfo(customerID string) (*types.AgentInfo, error)
-	RegisterEndpoint(customerID, endpoint string, fileContentMap map[string]string) error
+	RegisterEndpoint(customerID, endpoint string) error
 }
 
 func New(db string) (DB, error) {
 	switch db {
-	case "CASSANDRA":
+	case "cassandra":
 		return cassandra.New()
-	case "ASTRA":
+	case "astra":
 		return astra.New()
 	}
 

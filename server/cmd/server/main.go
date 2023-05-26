@@ -8,34 +8,43 @@ import (
 
 	middleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/config"
+	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/handler"
-	"github.com/kube-tarian/kad/server/pkg/logging"
+	"github.com/kube-tarian/kad/server/pkg/log"
 )
 
-var log = logging.NewLogger()
-
 func main() {
+	cfg, err := config.New()
+	if err != nil {
+		fmt.Println("failed to load configuration", err)
+		return
+	}
+
+	if err := log.New(cfg.GetString("log.level")); err != nil {
+		fmt.Println("failed to configure logger", err)
+		return
+	}
+
+	logger := log.GetLogger()
+	defer logger.Sync()
+
 	swagger, err := api.GetSwagger()
 	if err != nil {
-		log.Fatalf("Failed to get the swagger, %v", err)
+		logger.Fatal("Failed to get the swagger", zap.Error(err))
 	}
 
-	cfg, err := config.FetchConfiguration()
+	server, err := handler.NewAPIHandler()
 	if err != nil {
-		log.Fatalf("Fetching application configuration failed, %v", err)
+		logger.Fatal("APIHandler initialization failed", zap.Error(err))
 	}
 
-	server, err := handler.NewAPIHandler(log)
+	_, err = db.New(cfg.GetString("server.db"))
 	if err != nil {
-		log.Fatalf("APIHandler initialization failed, %v", err)
-	}
-
-	_, err = caasandra.New()
-	if err != nil {
-		log.Fatalf("Failed to connect to cassandra database", err)
+		logger.Fatal("Failed to connect to cassandra database", zap.Error(err))
 	}
 
 	r := gin.Default()
@@ -43,8 +52,9 @@ func main() {
 	r = api.RegisterHandlers(r, server)
 
 	go func() {
-		if err := r.Run(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)); err != nil {
-			log.Fatalf("failed to start server : %s", err.Error())
+		serverAddress := fmt.Sprintf("%s:%d", cfg.GetString("server.host"), cfg.GetInt("server.port"))
+		if err := r.Run(serverAddress); err != nil {
+			logger.Fatal("failed to start server", zap.Error(err))
 		}
 	}()
 
@@ -52,5 +62,5 @@ func main() {
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	<-signals
 	server.CloseAll()
-	log.Infof("Interrupt received, exiting")
+	logger.Info("interrupt received, exiting")
 }

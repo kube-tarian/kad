@@ -8,18 +8,23 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/kube-tarian/kad/server/api"
+	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
 
-func (a *APIHandler) PostDeployer(c *gin.Context) {
-	a.log.Debugf("Install Deploy application api invocation started")
+func (a *APIHandler) PostAgentDeploy(c *gin.Context) {
+	logger := log.GetLogger()
+	defer logger.Sync()
+
+	logger.Debug("deploying application")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var req api.DeployerPostRequest
 	if err := c.BindJSON(&req); err != nil {
-		a.setFailedResponse(c, "Failed to parse deploy payload", err)
+		a.setFailedResponse(c, "failed to parse deploy payload", err)
 		return
 	}
 
@@ -54,25 +59,22 @@ func (a *APIHandler) PostDeployer(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: toString(response)})
 
-	a.log.Infof("response received", response)
-	a.log.Debugf("Install Deploy application api invocation finished")
+	logger.Debug("deployed application successfully")
 }
 
-func (a *APIHandler) PutDeployer(c *gin.Context) {
-	a.log.Debugf("Update Deploy application api invocation started")
-	a.PostDeployer(c)
-	a.log.Debugf("Update Deploy application api invocation finished")
+func (a *APIHandler) PutAgentDeploy(c *gin.Context) {
+	a.PostAgentDeploy(c)
 }
 
-func (a *APIHandler) DeleteDeployer(c *gin.Context) {
-	a.log.Debugf("Delete climon application api invocation started")
-
+func (a *APIHandler) DeleteAgentDeploy(c *gin.Context) {
+	logger := log.GetLogger()
+	logger.Debug("deleting application")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var req api.DeployerDeleteRequest
 	if err := c.BindJSON(&req); err != nil {
-		a.setFailedResponse(c, "Failed to parse deploy payload", err)
+		a.setFailedResponse(c, "failed to parse deploy payload", err)
 		return
 	}
 
@@ -104,12 +106,10 @@ func (a *APIHandler) DeleteDeployer(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: toString(response)})
 
-	a.log.Infof("response received", response)
-	a.log.Debugf("Delete climon application api invocation finished")
+	logger.Debug("application deleted successfully")
 }
 
 func (a *APIHandler) sendResponse(c *gin.Context, msg string, err error) {
-	a.log.Errorf("failed to submit job", err)
 	c.IndentedJSON(http.StatusInternalServerError, &api.Response{
 		Status:  "FAILED",
 		Message: fmt.Sprintf("%s, %v", msg, err),

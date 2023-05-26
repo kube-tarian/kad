@@ -3,21 +3,21 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
 	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/client"
-	"github.com/kube-tarian/kad/server/pkg/logging"
+	"github.com/kube-tarian/kad/server/pkg/config"
+	"github.com/kube-tarian/kad/server/pkg/db"
+	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/types"
 )
 
 type APIHandler struct {
-	log    logging.Logger
 	agents map[string]*client.Agent
 }
 
@@ -25,9 +25,8 @@ var (
 	agentMutex sync.RWMutex
 )
 
-func NewAPIHandler(log logging.Logger) (*APIHandler, error) {
+func NewAPIHandler() (*APIHandler, error) {
 	return &APIHandler{
-		log:    log,
 		agents: make(map[string]*client.Agent),
 	}, nil
 }
@@ -37,14 +36,16 @@ func (a *APIHandler) ConnectClient(customerId string) error {
 		return nil
 	}
 
-	agentCfg, err := fetchConfiguration(customerId)
+	agentCfg, err := getAgentConfig(customerId)
 	if err != nil {
 		return err
 	}
 
-	agent, err := client.NewAgent(a.log, agentCfg)
+	logger := log.GetLogger()
+	defer logger.Sync()
+	agent, err := client.NewAgent(agentCfg)
 	if err != nil {
-		a.log.Errorf("failed to connect agent internal error", err)
+		logger.Error("failed to connect agent internal error", zap.Error(err))
 		return err
 	}
 
@@ -94,9 +95,10 @@ func (a *APIHandler) GetStatus(c *gin.Context) {
 	c.String(http.StatusOK, "")
 }
 
-func fetchConfiguration(customerID string) (*types.AgentConfiguration, error) {
-	cfg := &types.AgentConfiguration{}
-	session, err := caasandra.New()
+func getAgentConfig(customerID string) (*types.AgentConfiguration, error) {
+	agentCfg := &types.AgentConfiguration{}
+	cfg := config.GetConfig()
+	session, err := db.New(cfg.GetString("server.db"))
 	if err != nil {
 		logrus.Error("failed to get db session", err)
 		return nil, err
@@ -108,24 +110,21 @@ func fetchConfiguration(customerID string) (*types.AgentConfiguration, error) {
 		return nil, err
 	}
 
-	cfg.Address = agentInfo.Endpoint
-	cfg.Port, err = strconv.Atoi(os.Getenv("AGENT_PORT"))
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert agent port to int, port got: %v", os.Getenv("AGENT_PORT"))
-	}
-
+	agentCfg.Address = agentInfo.Endpoint
+	agentCfg.Port = cfg.GetInt("agent.Port")
+	agentCfg.TlsEnabled = cfg.GetBool("agent.tlsEnabled")
 	vaultSession, err := client.NewVault()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get vault session: %w", err)
 	}
 
-	vaultMap, err := vaultSession.GetCert("secret", customerID)
+	certMap, err := vaultSession.GetCert("secret", customerID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get certs")
 	}
 
-	cfg.CaCert = vaultMap[types.ClientCertChainFileName]
-	cfg.Cert = vaultMap[types.ClientCertFileName]
-	cfg.Key = vaultMap[types.ClientKeyFileName]
-	return cfg, err
+	agentCfg.CaCert = certMap[types.ClientCertChainFileName]
+	agentCfg.Cert = certMap[types.ClientCertFileName]
+	agentCfg.Key = certMap[types.ClientKeyFileName]
+	return agentCfg, err
 }

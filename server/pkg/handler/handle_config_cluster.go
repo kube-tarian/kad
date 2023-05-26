@@ -12,8 +12,7 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
 
-func (a *APIHandler) PostConfigatorCluster(c *gin.Context) {
-	a.log.Debugf("Add cluster api invocation started")
+func (a *APIHandler) PostAgentCluster(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -33,7 +32,7 @@ func (a *APIHandler) PostConfigatorCluster(c *gin.Context) {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 	}
 
-	response, err := agent.GetClient().ClusterAdd(ctx, &agentpb.ClusterRequest{
+	_, err := agent.GetClient().ClusterAdd(ctx, &agentpb.ClusterRequest{
 		PluginName:  req.PluginName,
 		ClusterName: req.ClusterName,
 	})
@@ -46,13 +45,9 @@ func (a *APIHandler) PostConfigatorCluster(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
 
-	a.log.Infof("response received", response)
-	a.log.Debugf("Add cluster api invocation finished")
 }
 
-func (a *APIHandler) DeleteConfigatorCluster(c *gin.Context) {
-	a.log.Debugf("Delete cluster from plugin api invocation started")
-
+func (a *APIHandler) DeleteAgentCluster(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -72,7 +67,7 @@ func (a *APIHandler) DeleteConfigatorCluster(c *gin.Context) {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 	}
 
-	response, err := agent.GetClient().ClusterDelete(ctx, &agentpb.ClusterRequest{
+	_, err := agent.GetClient().ClusterDelete(ctx, &agentpb.ClusterRequest{
 		PluginName:  req.PluginName,
 		ClusterName: req.ClusterName,
 	})
@@ -85,6 +80,4 @@ func (a *APIHandler) DeleteConfigatorCluster(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
 
-	a.log.Infof("response received", response)
-	a.log.Debugf("Delete cluster from plugin api invocation finished")
 }

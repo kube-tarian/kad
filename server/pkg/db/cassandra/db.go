@@ -68,12 +68,9 @@ func (c *cassandra) GetAgentInfo(customerID string) (*types.AgentInfo, error) {
 	return &agentInfo, nil
 }
 
-func (c *cassandra) RegisterEndpoint(customerID, endpoint string, fileContentMap map[string]string) error {
+func (c *cassandra) RegisterEndpoint(customerID, endpoint string) error {
 	return c.session.Query(
-		`INSERT INTO endpoints (customer_id, endpoint, ca_pem, client_crt, client_key) VALUES (?, ?, ?, ?, ?)`,
+		`INSERT INTO endpoints (customer_id, endpoint) VALUES (?, ?)`,
 		customerID,
-		endpoint,
-		fileContentMap[types.ClientCertChainFileName],
-		fileContentMap[types.ClientCertFileName],
-		fileContentMap[types.ClientKeyFileName]).Exec()
+		endpoint).Exec()
 }
