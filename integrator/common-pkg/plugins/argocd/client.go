@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"regexp"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -16,9 +17,13 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	clusterpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
+	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	argoappv1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	"github.com/argoproj/argo-cd/v2/util/cli"
 	"github.com/argoproj/argo-cd/v2/util/clusterauth"
+	"github.com/argoproj/argo-cd/v2/util/errors"
+	"github.com/argoproj/argo-cd/v2/util/git"
 	"github.com/argoproj/argo-cd/v2/util/io"
 	"github.com/argoproj/argo-cd/v2/util/text/label"
 	"github.com/kelseyhightower/envconfig"
@@ -382,6 +387,175 @@ func (a *ArgoCDCLient) ClusterDelete(req model.ConfigPayload) (json.RawMessage, 
 		return nil, err
 	}
 	return cr, nil
+}
+
+func (a *ArgoCDCLient) RepositoryAdd(req model.ConfigPayload) (json.RawMessage, error) {
+	var repoOpts cmdutil.RepoOptions
+	ctx := context.Background()
+	ru, ok := req.Data["repoURL"]
+	if !ok {
+		return nil, fmt.Errorf("failed to get repoURL from config payload")
+	}
+	repoURL, ok := ru.(string)
+	if !ok {
+		return nil, fmt.Errorf("repoURL type is not string")
+	}
+	// Repository URL
+	repoOpts.Repo.Repo = repoURL
+
+	// Specifying ssh-private-key-path is only valid for SSH repositories
+	if repoOpts.SshPrivateKeyPath != "" {
+		if ok, _ := git.IsSSHURL(repoOpts.Repo.Repo); ok {
+			keyData, err := os.ReadFile(repoOpts.SshPrivateKeyPath)
+			if err != nil {
+				return nil, err
+			}
+			repoOpts.Repo.SSHPrivateKey = string(keyData)
+		} else {
+			err := fmt.Errorf("--ssh-private-key-path is only supported for SSH repositories.")
+			return nil, err
+		}
+	}
+
+	// tls-client-cert-path and tls-client-cert-key-key-path must always be
+	// specified together
+	if (repoOpts.TlsClientCertPath != "" && repoOpts.TlsClientCertKeyPath == "") || (repoOpts.TlsClientCertPath == "" && repoOpts.TlsClientCertKeyPath != "") {
+		err := fmt.Errorf("--tls-client-cert-path and --tls-client-cert-key-path must be specified together")
+		return nil, err
+	}
+
+	// Specifying tls-client-cert-path is only valid for HTTPS repositories
+	if repoOpts.TlsClientCertPath != "" {
+		if git.IsHTTPSURL(repoOpts.Repo.Repo) {
+			tlsCertData, err := os.ReadFile(repoOpts.TlsClientCertPath)
+			errors.CheckError(err)
+			tlsCertKey, err := os.ReadFile(repoOpts.TlsClientCertKeyPath)
+			errors.CheckError(err)
+			repoOpts.Repo.TLSClientCertData = string(tlsCertData)
+			repoOpts.Repo.TLSClientCertKey = string(tlsCertKey)
+		} else {
+			err := fmt.Errorf("--tls-client-cert-path is only supported for HTTPS repositories")
+			errors.CheckError(err)
+		}
+	}
+
+	// Specifying github-app-private-key-path is only valid for HTTPS repositories
+	if repoOpts.GithubAppPrivateKeyPath != "" {
+		if git.IsHTTPSURL(repoOpts.Repo.Repo) {
+			githubAppPrivateKey, err := os.ReadFile(repoOpts.GithubAppPrivateKeyPath)
+			return nil, err
+			repoOpts.Repo.GithubAppPrivateKey = string(githubAppPrivateKey)
+		} else {
+			err := fmt.Errorf("--github-app-private-key-path is only supported for HTTPS repositories")
+			return nil, err
+		}
+	}
+
+	// Set repository connection properties only when creating repository, not
+	// when creating repository credentials.
+	repoOpts.Repo.Insecure = repoOpts.InsecureSkipServerVerification
+	repoOpts.Repo.EnableLFS = repoOpts.EnableLfs
+	repoOpts.Repo.EnableOCI = repoOpts.EnableOci
+	repoOpts.Repo.GithubAppId = repoOpts.GithubAppId
+	repoOpts.Repo.GithubAppInstallationId = repoOpts.GithubAppInstallationId
+	repoOpts.Repo.GitHubAppEnterpriseBaseURL = repoOpts.GitHubAppEnterpriseBaseURL
+	repoOpts.Repo.Proxy = repoOpts.Proxy
+
+	if repoOpts.Repo.Type == "helm" && repoOpts.Repo.Name == "" {
+		err := fmt.Errorf("Must specify --name for repos of type 'helm'")
+		return nil, err
+	}
+
+	conn, repoClient, err := a.client.NewRepoClient()
+	if err != nil {
+		a.logger.Errorf("Application client intilialization failed: %v", err)
+		return nil, err
+	}
+
+	defer io.Close(conn)
+
+	// If the user set a username, but didn't supply password via --password,
+	// then we prompt for it
+	if repoOpts.Repo.Username != "" && repoOpts.Repo.Password == "" {
+		repoOpts.Repo.Password = cli.PromptPassword(repoOpts.Repo.Password)
+	}
+
+	// We let the server check access to the repository before adding it. If
+	// it is a private repo, but we cannot access with the credentials
+	// that were supplied, we bail out.
+	//
+	// Skip validation if we are just adding credentials template, chances
+	// are high that we do not have the given URL pointing to a valid Git
+	// repo anyway.
+	repoAccessReq := repositorypkg.RepoAccessQuery{
+		Repo:                       repoOpts.Repo.Repo,
+		Type:                       repoOpts.Repo.Type,
+		Name:                       repoOpts.Repo.Name,
+		Username:                   repoOpts.Repo.Username,
+		Password:                   repoOpts.Repo.Password,
+		SshPrivateKey:              repoOpts.Repo.SSHPrivateKey,
+		TlsClientCertData:          repoOpts.Repo.TLSClientCertData,
+		TlsClientCertKey:           repoOpts.Repo.TLSClientCertKey,
+		Insecure:                   repoOpts.Repo.IsInsecure(),
+		EnableOci:                  repoOpts.Repo.EnableOCI,
+		GithubAppPrivateKey:        repoOpts.Repo.GithubAppPrivateKey,
+		GithubAppID:                repoOpts.Repo.GithubAppId,
+		GithubAppInstallationID:    repoOpts.Repo.GithubAppInstallationId,
+		GithubAppEnterpriseBaseUrl: repoOpts.Repo.GitHubAppEnterpriseBaseURL,
+		Proxy:                      repoOpts.Proxy,
+		Project:                    repoOpts.Repo.Project,
+	}
+	_, err = repoClient.ValidateAccess(ctx, &repoAccessReq)
+	// credentials can be added later on, so we just log the error in case repo cannot be accessed
+	a.logger.Errorf("failed to access repo %w", err)
+
+	repoCreateReq := repositorypkg.RepoCreateRequest{
+		Repo:   &repoOpts.Repo,
+		Upsert: repoOpts.Upsert,
+	}
+
+	createdRepo, err := repoClient.CreateRepository(ctx, &repoCreateReq)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("Repository '%s' added\n", createdRepo.Repo)
+	cr, err := json.Marshal(createdRepo)
+	if err != nil {
+		a.logger.Errorf("failed to marshal newly added repo details  %w", err)
+		return nil, err
+	}
+	return cr, nil
+}
+
+func (a *ArgoCDCLient) RepositoryDelete(req model.ConfigPayload) (json.RawMessage, error) {
+	ctx := context.Background()
+	ru, ok := req.Data["repoURL"]
+	if !ok {
+		return nil, fmt.Errorf("failed to get repoURL from config payload")
+	}
+	repoURL, ok := ru.(string)
+	if !ok {
+		return nil, fmt.Errorf("repoURL type is not string")
+	}
+	conn, repoClient, err := a.client.NewRepoClient()
+	if err != nil {
+		a.logger.Errorf("Application client intilialization failed: %v", err)
+		return nil, err
+	}
+
+	defer io.Close(conn)
+
+	deletedRepo, err := repoClient.DeleteRepository(ctx, &repositorypkg.RepoQuery{Repo: repoURL})
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("Repository '%s' removed\n", repoURL)
+	dr, err := json.Marshal(deletedRepo)
+	if err != nil {
+		a.logger.Errorf("failed to marshal deleted repo details  %w", err)
+		return nil, err
+	}
+	return dr, nil
 }
 
 // Returns cluster query for getting cluster depending on the cluster selector

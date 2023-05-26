@@ -25,6 +25,9 @@ service Agent {
   rpc RepositoryAdd (RepositoryAddRequest) returns (JobResponse) {}
   rpc RepositoryDelete (RepositoryDeleteRequest) returns (JobResponse) {}
 
+  rpc RepoCredsAdd (RepositoryAddRequest) returns (JobResponse) {}
+  rpc RepoCredsDelete (RepositoryDeleteRequest) returns (JobResponse) {}
+
   rpc ProjectAdd (ProjectAddRequest) returns (JobResponse) {}
   rpc ProjectDelete (ProjectDeleteRequest) returns (JobResponse) {}
 }
