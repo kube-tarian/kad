@@ -14,9 +14,10 @@ type AgentInfo struct {
 }
 
 type AgentConfiguration struct {
-	Address string `envconfig:"AGENT_ADDRESS" default:"localhost"`
-	Port    int    `envconfig:"AGENT_PORT" default:"9091"`
-	CaCert  string
-	Cert    string
-	Key     string
+	Address    string `envconfig:"AGENT_ADDRESS" default:"localhost"`
+	Port       int    `envconfig:"AGENT_PORT" default:"9091"`
+	CaCert     string
+	Cert       string
+	Key        string
+	TlsEnabled bool
 }

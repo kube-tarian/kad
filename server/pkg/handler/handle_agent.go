@@ -1,20 +1,30 @@
 package handler
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/client"
+	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/db"
+	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/model"
 	"github.com/kube-tarian/kad/server/pkg/types"
 )
 
-func (a *APIHandler) PostRegisterAgent(c *gin.Context) {
-	a.log.Infof("Register agent api invocation started")
+func (a *APIHandler) PostAgentEndpoint(c *gin.Context) {
+	logger := log.GetLogger()
+	defer logger.Sync()
+
+	logger.Info("Register agent api invocation started")
 
 	//var req api.AgentRequest
 	customerId := c.GetHeader("customer_id")
@@ -38,24 +48,25 @@ func (a *APIHandler) PostRegisterAgent(c *gin.Context) {
 		return
 	}
 
-	session, err := db.New()
+	cfg := config.GetConfig()
+	session, err := db.New(cfg.GetString("server.db"))
 	if err != nil {
 		a.setFailedResponse(c, "failed to get db session", nil)
-		a.log.Error("failed to get db session", err)
+		logger.Error("failed to get db session", zap.Error(err))
 		return
 	}
 
-	err = session.RegisterEndpoint(customerId, endpoint, map[string]string{})
+	err = session.RegisterEndpoint(customerId, endpoint)
 	if err != nil {
 		a.setFailedResponse(c, "failed to store data", nil)
-		a.log.Error("failed to get db session", err)
+		logger.Error("failed to get db session", zap.Error(err))
 		return
 	}
 
 	vaultSession, err := client.NewVault()
 	if err != nil {
 		a.setFailedResponse(c, "failed to register", nil)
-		a.log.Error("failed to create vault session", err)
+		logger.Error("failed to create vault session", zap.Error(err))
 		return
 	}
 
@@ -67,27 +78,28 @@ func (a *APIHandler) PostRegisterAgent(c *gin.Context) {
 
 	if err != nil {
 		a.setFailedResponse(c, "failed to register", nil)
-		a.log.Error("failed to store cert in vault", err)
+		logger.Error("failed to store cert in vault", zap.Error(err))
 		return
 	}
 
 	c.Writer.WriteHeader(http.StatusOK)
-	a.log.Infof("Register agent api invocation finished")
+	logger.Info("registered new agent endpoint")
 }
 
-func (a *APIHandler) GetRegisterAgent(c *gin.Context) {
-	a.log.Infof("Get all registered agents api invocation started")
+func (a *APIHandler) GetAgentEndpoint(c *gin.Context) {
+	logger := log.GetLogger()
+	defer logger.Sync()
 
-	//TODO Get all agents from DB
-
+	logger.Debug("get all registered agents api")
 	c.IndentedJSON(http.StatusOK, &model.AgentsResponse{})
-
-	a.log.Infof("Get all registered agents api invocation finished")
+	logger.Debug("get all registered agents api")
 }
 
-func (a *APIHandler) PutRegisterAgent(c *gin.Context) {
-	a.log.Infof("Update register agent api invocation started")
+func (a *APIHandler) PutAgentEndpoint(c *gin.Context) {
+	logger := log.GetLogger()
+	defer logger.Sync()
 
+	logger.Debug("update register agent api invocation started")
 	var req api.AgentRequest
 	if err := c.BindJSON(&req); err != nil {
 		a.setFailedResponse(c, "Failed to parse deploy payload", err)
@@ -95,7 +107,51 @@ func (a *APIHandler) PutRegisterAgent(c *gin.Context) {
 	}
 
 	//TODO Update in DB and internal cache
-
 	c.Writer.WriteHeader(http.StatusOK)
-	a.log.Infof("Update register agent api invocation finished")
+	logger.Debug("update register agent api invocation finished")
+}
+
+func (a *APIHandler) PostAgentApps(c *gin.Context) {
+	//var req api.AgentAppsRequest
+	logger := log.GetLogger()
+	defer logger.Sync()
+
+	//if err := c.BindJSON(&req); err != nil {
+	//	a.setFailedResponse(c, "failed to parse apps payload", err)
+	//	return
+	//}
+
+	jsonData, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		a.setFailedResponse(c, "failed to read payload", err)
+		return
+	}
+
+	fmt.Println("body is", string(jsonData))
+	syncData := &agentpb.SyncRequest{
+		Type: "app-data",
+		Data: string(jsonData),
+	}
+
+	customerId := c.GetHeader("customer_id")
+	if customerId == "" {
+		a.setFailedResponse(c, "missing customer id header", errors.New(""))
+		return
+	}
+
+	if err := a.ConnectClient(customerId); err != nil {
+		a.setFailedResponse(c, "agent connection failed", err)
+		return
+	}
+
+	agent := a.GetClient(customerId)
+	if agent == nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
+	}
+
+	response, err := agent.GetClient().Sync(context.Background(), syncData)
+
+	logger.Debug("response ")
+	fmt.Printf("response %+v, err: %v\n", response, err)
+	//fmt.Printf("%+v\n", req.Tools)
 }

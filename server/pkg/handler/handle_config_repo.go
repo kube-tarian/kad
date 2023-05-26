@@ -12,9 +12,7 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
 
-func (a *APIHandler) PostConfigatorRepository(c *gin.Context) {
-	a.log.Debugf("Add repository api invocation started")
-
+func (a *APIHandler) PostAgentRepository(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -34,7 +32,7 @@ func (a *APIHandler) PostConfigatorRepository(c *gin.Context) {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 	}
 
-	response, err := agent.GetClient().RepositoryAdd(ctx, &agentpb.RepositoryAddRequest{
+	_, err := agent.GetClient().RepositoryAdd(ctx, &agentpb.RepositoryAddRequest{
 		PluginName: req.PluginName,
 		RepoName:   req.RepoName,
 		RepoUrl:    req.RepoUrl,
@@ -47,20 +45,12 @@ func (a *APIHandler) PostConfigatorRepository(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, &api.Response{
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
-
-	a.log.Infof("response received", response)
-	a.log.Debugf("Add repository api invocation finished")
 }
-func (a *APIHandler) PutConfigatorRepository(c *gin.Context) {
-	a.log.Debugf("Update repositoy from plugin api invocation started")
-
-	a.PostConfigatorRepository(c)
-	a.log.Debugf("Delete repositoy from plugin api invocation finished")
+func (a *APIHandler) PutAgentRepository(c *gin.Context) {
+	a.PostAgentRepository(c)
 }
 
-func (a *APIHandler) DeleteConfigatorRepository(c *gin.Context) {
-	a.log.Debugf("Delete repository from plugin api invocation started")
-
+func (a *APIHandler) DeleteAgentRepository(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -80,10 +70,11 @@ func (a *APIHandler) DeleteConfigatorRepository(c *gin.Context) {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 	}
 
-	response, err := agent.GetClient().RepositoryDelete(ctx, &agentpb.RepositoryDeleteRequest{
+	_, err := agent.GetClient().RepositoryDelete(ctx, &agentpb.RepositoryDeleteRequest{
 		PluginName: req.PluginName,
 		RepoName:   req.RepoName,
 	})
+
 	if err != nil {
 		a.sendResponse(c, "failed to submit job", err)
 		return
@@ -92,7 +83,4 @@ func (a *APIHandler) DeleteConfigatorRepository(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, &api.Response{
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
-
-	a.log.Infof("response received", response)
-	a.log.Debugf("Delete repository from plugin api invocation finished")
 }

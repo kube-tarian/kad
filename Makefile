@@ -8,26 +8,26 @@ VAULTSERV_APP_NAME := vaultserv
 BUILD := 0.1.1
 
 gen-protoc:
-	mkdir -p integrator/agent/pkg/agentpb
-	mkdir -p integrator/agent/pkg/vaultservpb
+	mkdir -p capten/agent/pkg/agentpb
+	mkdir -p capten/agent/pkg/vaultservpb
 	mkdir -p server/pkg/pb/agentpb
 	mkdir -p server/pkg/pb/climonpb
 	mkdir -p vaultserv/pkg/pb/vaultservpb
 
-	cd proto && protoc --go_out=../integrator/agent/pkg/agentpb/ --go_opt=paths=source_relative \
-    		--go-grpc_out=../integrator/agent/pkg/agentpb/ --go-grpc_opt=paths=source_relative \
+	cd proto && protoc --go_out=../capten/agent/pkg/agentpb/ --go_opt=paths=source_relative \
+    		--go-grpc_out=../capten/agent/pkg/agentpb/ --go-grpc_opt=paths=source_relative \
     		./agent.proto
 
-	cd proto && protoc --go_out=../integrator/agent/pkg/vaultservpb/ --go_opt=paths=source_relative \
-    		--go-grpc_out=../integrator/agent/pkg/vaultservpb/ --go-grpc_opt=paths=source_relative \
+	cd proto && protoc --go_out=../capten/agent/pkg/vaultservpb/ --go_opt=paths=source_relative \
+    		--go-grpc_out=../capten/agent/pkg/vaultservpb/ --go-grpc_opt=paths=source_relative \
     		./agent-vault.proto
 
 	cd proto && protoc --go_out=../server/pkg/pb/agentpb --go_opt=paths=source_relative \
     		--go-grpc_out=../server/pkg/pb/agentpb --go-grpc_opt=paths=source_relative \
     		./agent.proto
 	
-	cd proto && protoc --go_out=../integrator/capten-sdk/agentpb/ --go_opt=paths=source_relative \
-    		--go-grpc_out=../integrator/capten-sdk/agentpb/ --go-grpc_opt=paths=source_relative \
+	cd proto && protoc --go_out=../capten/capten-sdk/agentpb/ --go_opt=paths=source_relative \
+    		--go-grpc_out=../capten/capten-sdk/agentpb/ --go-grpc_opt=paths=source_relative \
     		./agent.proto
 
 	cd proto && protoc --go_out=../server/pkg/pb/climonpb --go_opt=paths=source_relative \

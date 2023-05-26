@@ -27,7 +27,7 @@ paths:
         '200':
           description: OK
 
-  /climon:
+  /agent/climondeploy:
     post:
       tags:
         - climon
@@ -79,7 +79,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /deployer:
+  /agent/deploy:
     post:
       tags:
         - deployer
@@ -131,7 +131,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /configator/repository:
+  /agent/repository:
     post:
       tags:
         - repository
@@ -183,7 +183,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /configator/project:
+  /agent/project:
     post:
       tags:
         - project
@@ -235,7 +235,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /configator/cluster:
+  /agent/cluster:
     post:
       tags:
         - cluster
@@ -270,7 +270,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /register/agent:
+  /agent/endpoint:
     post:
       tags:
         - agent-registration
@@ -309,7 +309,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/AgentResponse'
 
-  /store/cred:
+  /agent/secret:
     post:
       tags:
         - store
@@ -326,8 +326,112 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+  /agent/apps:
+    post:
+      tags:
+        - agent-apps
+      summary: used to update the installed tools
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentAppsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+#    get:
+#      tags:
+#        - agent-apps
+#      summary: provision details
+#      responses:
+#        '200':
+#          description: OK
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/Response'
+#  /apps:
+#    post:
+#      tags:
+#        - apps
+#      summary: used to update the installed tools
+#      requestBody:
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#/components/schemas/AppsRequest'
+#      responses:
+#        '200':
+#          description: OK
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/Response'
+#    get:
+#      tags:
+#        - apps
+#      summary: provision details
+#      responses:
+#        '200':
+#          description: OK
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/AppsResponse
+
 components:
   schemas:
+    AgentAppsRequest:
+      title: post provisions
+      type: object
+      properties:
+        apps:
+          type: array
+          items:
+            properties:
+              name:
+                type: string
+              chartName:
+                type: string
+              repoName:
+                type: string
+              namespace:
+                type: string
+              repoURL:
+                type: string
+              releaseName:
+                type: string
+              version:
+                type: string
+              override:
+                type: string
+#    AppsResponse:
+#      title: get provisions
+#      type: object
+#      properties:
+#        provisions:
+#          type: array
+#          items:
+#            properties:
+#              group:
+#                type: string
+#              tools:
+#                type: array
+#                properties:
+#                  name:
+#                    type: string
+#                  description:
+#                    type: string
+#                  installed:
+#                    type: boolean
+#                  lastupdate:
+#                    type: object
+#                  version:
+#                    type: string
     StoreCredRequest:
       title: store secrets
       type: object
@@ -340,6 +444,7 @@ components:
           type: string
         password:
           type: string
+
     AgentRequest:
       title: Agent information
       type: object

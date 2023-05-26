@@ -12,8 +12,7 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
 
-func (a *APIHandler) PostClimon(c *gin.Context) {
-	a.log.Debugf("Install climon application api invocation started")
+func (a *APIHandler) PostAgentClimondeploy(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -54,20 +53,13 @@ func (a *APIHandler) PostClimon(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: toString(response)})
 
-	a.log.Infof("response received", response)
-	a.log.Debugf("Install climon application api invocation finished")
 }
 
-func (a *APIHandler) PutClimon(c *gin.Context) {
-	a.log.Debugf("Update climon application api invocation started")
-
-	a.PostClimon(c)
-	a.log.Debugf("Update climon application api invocation finished")
+func (a *APIHandler) PutAgentClimondeploy(c *gin.Context) {
+	a.PostAgentClimondeploy(c)
 }
 
-func (a *APIHandler) DeleteClimon(c *gin.Context) {
-	a.log.Debugf("Delete climon application api invocation started")
-
+func (a *APIHandler) DeleteAgentClimondeploy(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -100,6 +92,4 @@ func (a *APIHandler) DeleteClimon(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: toString(response)})
 
-	a.log.Infof("response received", response)
-	a.log.Debugf("Delete climon application api invocation finished")
 }

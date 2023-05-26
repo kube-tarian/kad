@@ -4,11 +4,14 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/kube-tarian/kad/agent/pkg/logging"
+	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/types"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -21,26 +24,41 @@ type Agent struct {
 }
 
 // NewAgent returns agent object creates grpc connection for given address
-func NewAgent(log logging.Logger, cfg *types.AgentConfiguration) (*Agent, error) {
-	tlsCreds, err := loadTLSCredentials(cfg)
+func NewAgent(cfg *types.AgentConfiguration) (*Agent, error) {
+
+	logger := log.GetLogger()
+	defer logger.Sync()
+
+	conn, err := getConnection(cfg)
 	if err != nil {
+		logger.Error("failed to connect", zap.Error(err))
 		return nil, err
 	}
 
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port),
-		grpc.WithTransportCredentials(tlsCreds))
-	if err != nil {
-		log.Errorf("failed to connect: %v", err)
-		return nil, err
-	}
-
-	log.Infof("gRPC connection started to %s:%d", cfg.Address, cfg.Port)
+	logger.Info("gRPC connection started",
+		zap.String("address", cfg.Address),
+		zap.Int("port", cfg.Port))
 	agentClient := agentpb.NewAgentClient(conn)
 	return &Agent{
 		cfg:        cfg,
 		connection: conn,
 		client:     agentClient,
 	}, nil
+}
+
+func getConnection(cfg *types.AgentConfiguration) (*grpc.ClientConn, error) {
+	if !cfg.TlsEnabled {
+		return grpc.Dial(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+
+	tlsCreds, err := loadTLSCredentials(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return grpc.Dial(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port),
+		grpc.WithTransportCredentials(tlsCreds))
+
 }
 
 func (a *Agent) GetClient() agentpb.AgentClient {
