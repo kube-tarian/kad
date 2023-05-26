@@ -31,8 +31,10 @@ type AgentClient interface {
 	DeployerAppDelete(ctx context.Context, in *ApplicationDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	ClusterAdd(ctx context.Context, in *ClusterRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	ClusterDelete(ctx context.Context, in *ClusterRequest, opts ...grpc.CallOption) (*JobResponse, error)
-	RepositoryAdd(ctx context.Context, in *RepositoryAddRequest, opts ...grpc.CallOption) (*JobResponse, error)
-	RepositoryDelete(ctx context.Context, in *RepositoryDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error)
+	RepoAdd(ctx context.Context, in *RepositoryAddRequest, opts ...grpc.CallOption) (*JobResponse, error)
+	RepoDelete(ctx context.Context, in *RepositoryDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error)
+	RepoCredsAdd(ctx context.Context, in *RepositoryAddRequest, opts ...grpc.CallOption) (*JobResponse, error)
+	RepoCredsDelete(ctx context.Context, in *RepositoryDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	ProjectAdd(ctx context.Context, in *ProjectAddRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	ProjectDelete(ctx context.Context, in *ProjectDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error)
 }
@@ -126,18 +128,36 @@ func (c *agentClient) ClusterDelete(ctx context.Context, in *ClusterRequest, opt
 	return out, nil
 }
 
-func (c *agentClient) RepositoryAdd(ctx context.Context, in *RepositoryAddRequest, opts ...grpc.CallOption) (*JobResponse, error) {
+func (c *agentClient) RepoAdd(ctx context.Context, in *RepositoryAddRequest, opts ...grpc.CallOption) (*JobResponse, error) {
 	out := new(JobResponse)
-	err := c.cc.Invoke(ctx, "/agentpb.Agent/RepositoryAdd", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/agentpb.Agent/RepoAdd", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *agentClient) RepositoryDelete(ctx context.Context, in *RepositoryDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error) {
+func (c *agentClient) RepoDelete(ctx context.Context, in *RepositoryDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error) {
 	out := new(JobResponse)
-	err := c.cc.Invoke(ctx, "/agentpb.Agent/RepositoryDelete", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/agentpb.Agent/RepoDelete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) RepoCredsAdd(ctx context.Context, in *RepositoryAddRequest, opts ...grpc.CallOption) (*JobResponse, error) {
+	out := new(JobResponse)
+	err := c.cc.Invoke(ctx, "/agentpb.Agent/RepoCredsAdd", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) RepoCredsDelete(ctx context.Context, in *RepositoryDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error) {
+	out := new(JobResponse)
+	err := c.cc.Invoke(ctx, "/agentpb.Agent/RepoCredsDelete", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -175,8 +195,10 @@ type AgentServer interface {
 	DeployerAppDelete(context.Context, *ApplicationDeleteRequest) (*JobResponse, error)
 	ClusterAdd(context.Context, *ClusterRequest) (*JobResponse, error)
 	ClusterDelete(context.Context, *ClusterRequest) (*JobResponse, error)
-	RepositoryAdd(context.Context, *RepositoryAddRequest) (*JobResponse, error)
-	RepositoryDelete(context.Context, *RepositoryDeleteRequest) (*JobResponse, error)
+	RepoAdd(context.Context, *RepositoryAddRequest) (*JobResponse, error)
+	RepoDelete(context.Context, *RepositoryDeleteRequest) (*JobResponse, error)
+	RepoCredsAdd(context.Context, *RepositoryAddRequest) (*JobResponse, error)
+	RepoCredsDelete(context.Context, *RepositoryDeleteRequest) (*JobResponse, error)
 	ProjectAdd(context.Context, *ProjectAddRequest) (*JobResponse, error)
 	ProjectDelete(context.Context, *ProjectDeleteRequest) (*JobResponse, error)
 	mustEmbedUnimplementedAgentServer()
@@ -213,11 +235,17 @@ func (UnimplementedAgentServer) ClusterAdd(context.Context, *ClusterRequest) (*J
 func (UnimplementedAgentServer) ClusterDelete(context.Context, *ClusterRequest) (*JobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClusterDelete not implemented")
 }
-func (UnimplementedAgentServer) RepositoryAdd(context.Context, *RepositoryAddRequest) (*JobResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RepositoryAdd not implemented")
+func (UnimplementedAgentServer) RepoAdd(context.Context, *RepositoryAddRequest) (*JobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RepoAdd not implemented")
 }
-func (UnimplementedAgentServer) RepositoryDelete(context.Context, *RepositoryDeleteRequest) (*JobResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RepositoryDelete not implemented")
+func (UnimplementedAgentServer) RepoDelete(context.Context, *RepositoryDeleteRequest) (*JobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RepoDelete not implemented")
+}
+func (UnimplementedAgentServer) RepoCredsAdd(context.Context, *RepositoryAddRequest) (*JobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RepoCredsAdd not implemented")
+}
+func (UnimplementedAgentServer) RepoCredsDelete(context.Context, *RepositoryDeleteRequest) (*JobResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RepoCredsDelete not implemented")
 }
 func (UnimplementedAgentServer) ProjectAdd(context.Context, *ProjectAddRequest) (*JobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProjectAdd not implemented")
@@ -400,38 +428,74 @@ func _Agent_ClusterDelete_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Agent_RepositoryAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Agent_RepoAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RepositoryAddRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentServer).RepositoryAdd(ctx, in)
+		return srv.(AgentServer).RepoAdd(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/agentpb.Agent/RepositoryAdd",
+		FullMethod: "/agentpb.Agent/RepoAdd",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).RepositoryAdd(ctx, req.(*RepositoryAddRequest))
+		return srv.(AgentServer).RepoAdd(ctx, req.(*RepositoryAddRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Agent_RepositoryDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Agent_RepoDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RepositoryDeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentServer).RepositoryDelete(ctx, in)
+		return srv.(AgentServer).RepoDelete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/agentpb.Agent/RepositoryDelete",
+		FullMethod: "/agentpb.Agent/RepoDelete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).RepositoryDelete(ctx, req.(*RepositoryDeleteRequest))
+		return srv.(AgentServer).RepoDelete(ctx, req.(*RepositoryDeleteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_RepoCredsAdd_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepositoryAddRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).RepoCredsAdd(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agentpb.Agent/RepoCredsAdd",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).RepoCredsAdd(ctx, req.(*RepositoryAddRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_RepoCredsDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RepositoryDeleteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).RepoCredsDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agentpb.Agent/RepoCredsDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).RepoCredsDelete(ctx, req.(*RepositoryDeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -516,12 +580,20 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Agent_ClusterDelete_Handler,
 		},
 		{
-			MethodName: "RepositoryAdd",
-			Handler:    _Agent_RepositoryAdd_Handler,
+			MethodName: "RepoAdd",
+			Handler:    _Agent_RepoAdd_Handler,
 		},
 		{
-			MethodName: "RepositoryDelete",
-			Handler:    _Agent_RepositoryDelete_Handler,
+			MethodName: "RepoDelete",
+			Handler:    _Agent_RepoDelete_Handler,
+		},
+		{
+			MethodName: "RepoCredsAdd",
+			Handler:    _Agent_RepoCredsAdd_Handler,
+		},
+		{
+			MethodName: "RepoCredsDelete",
+			Handler:    _Agent_RepoCredsDelete_Handler,
 		},
 		{
 			MethodName: "ProjectAdd",
