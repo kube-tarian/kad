@@ -17,8 +17,10 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	clusterpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
+	repocredspkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repocreds"
 	repositorypkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
+	appsv1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	argoappv1 "github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/util/cli"
 	"github.com/argoproj/argo-cd/v2/util/clusterauth"
@@ -92,11 +94,26 @@ func (a *ArgoCDCLient) HandleRepo(req interface{}) (json.RawMessage, error) {
 	payload, _ := req.(model.ConfigPayload)
 	switch payload.Action {
 	case "add":
-		// return a.RepoAdd(payload)
+		return a.RepoAdd(payload)
 	case "delete":
-		// return a.RepoDelete(payload)
+		return a.RepoDelete(payload)
 	case "list":
 		// return a.RepoList(payload)
+	default:
+		return nil, fmt.Errorf("unsupported action for argocd plugin: %v", payload.Action)
+	}
+	return nil, nil
+}
+
+func (a *ArgoCDCLient) HandleRepoCreds(req interface{}) (json.RawMessage, error) {
+	payload, _ := req.(model.ConfigPayload)
+	switch payload.Action {
+	case "add":
+		return a.RepoCredsAdd(payload)
+	case "delete":
+		return a.RepoCredsDelete(payload)
+	case "list":
+		// return a.RepoCRedsList(payload)
 	default:
 		return nil, fmt.Errorf("unsupported action for argocd plugin: %v", payload.Action)
 	}
@@ -389,7 +406,7 @@ func (a *ArgoCDCLient) ClusterDelete(req model.ConfigPayload) (json.RawMessage, 
 	return cr, nil
 }
 
-func (a *ArgoCDCLient) RepositoryAdd(req model.ConfigPayload) (json.RawMessage, error) {
+func (a *ArgoCDCLient) RepoAdd(req model.ConfigPayload) (json.RawMessage, error) {
 	var repoOpts cmdutil.RepoOptions
 	ctx := context.Background()
 	ru, ok := req.Data["repoURL"]
@@ -527,7 +544,7 @@ func (a *ArgoCDCLient) RepositoryAdd(req model.ConfigPayload) (json.RawMessage, 
 	return cr, nil
 }
 
-func (a *ArgoCDCLient) RepositoryDelete(req model.ConfigPayload) (json.RawMessage, error) {
+func (a *ArgoCDCLient) RepoDelete(req model.ConfigPayload) (json.RawMessage, error) {
 	ctx := context.Background()
 	ru, ok := req.Data["repoURL"]
 	if !ok {
@@ -551,6 +568,139 @@ func (a *ArgoCDCLient) RepositoryDelete(req model.ConfigPayload) (json.RawMessag
 	}
 	fmt.Printf("Repository '%s' removed\n", repoURL)
 	dr, err := json.Marshal(deletedRepo)
+	if err != nil {
+		a.logger.Errorf("failed to marshal deleted repo details  %w", err)
+		return nil, err
+	}
+	return dr, nil
+}
+
+func (a *ArgoCDCLient) RepoCredsAdd(req model.ConfigPayload) (json.RawMessage, error) {
+	var (
+		repo                    appsv1.RepoCreds
+		upsert                  bool
+		sshPrivateKeyPath       string
+		tlsClientCertPath       string
+		tlsClientCertKeyPath    string
+		githubAppPrivateKeyPath string
+	)
+	ctx := context.Background()
+	ru, ok := req.Data["repoURL"]
+	if !ok {
+		return nil, fmt.Errorf("failed to get repoURL from config payload")
+	}
+	repoURL, ok := ru.(string)
+	if !ok {
+		return nil, fmt.Errorf("repoURL type is not string")
+	}
+	// Repository URL
+	repo.URL = repoURL
+	// Specifying ssh-private-key-path is only valid for SSH repositories
+	if sshPrivateKeyPath != "" {
+		if ok, _ := git.IsSSHURL(repo.URL); ok {
+			keyData, err := os.ReadFile(sshPrivateKeyPath)
+			if err != nil {
+				return nil, err
+			}
+			repo.SSHPrivateKey = string(keyData)
+		} else {
+			err := fmt.Errorf("--ssh-private-key-path is only supported for SSH repositories.")
+			return nil, err
+		}
+	}
+
+	// tls-client-cert-path and tls-client-cert-key-key-path must always be
+	// specified together
+	if (tlsClientCertPath != "" && tlsClientCertKeyPath == "") || (tlsClientCertPath == "" && tlsClientCertKeyPath != "") {
+		err := fmt.Errorf("--tls-client-cert-path and --tls-client-cert-key-path must be specified together")
+		return nil, err
+	}
+
+	// Specifying tls-client-cert-path is only valid for HTTPS repositories
+	if tlsClientCertPath != "" {
+		if git.IsHTTPSURL(repo.URL) {
+			tlsCertData, err := os.ReadFile(tlsClientCertPath)
+			if err != nil {
+				return nil, err
+			}
+			tlsCertKey, err := os.ReadFile(tlsClientCertKeyPath)
+			if err != nil {
+				return nil, err
+			}
+			repo.TLSClientCertData = string(tlsCertData)
+			repo.TLSClientCertKey = string(tlsCertKey)
+		} else {
+			err := fmt.Errorf("--tls-client-cert-path is only supported for HTTPS repositories")
+			return nil, err
+		}
+	}
+
+	// Specifying github-app-private-key-path is only valid for HTTPS repositories
+	if githubAppPrivateKeyPath != "" {
+		if git.IsHTTPSURL(repo.URL) {
+			githubAppPrivateKey, err := os.ReadFile(githubAppPrivateKeyPath)
+			if err != nil {
+				return nil, err
+			}
+			repo.GithubAppPrivateKey = string(githubAppPrivateKey)
+		} else {
+			err := fmt.Errorf("--github-app-private-key-path is only supported for HTTPS repositories")
+			return nil, err
+		}
+	}
+
+	conn, repoClient, err := a.client.NewRepoCredsClient()
+	if err != nil {
+		a.logger.Errorf("Application client intilialization failed: %v", err)
+		return nil, err
+	}
+
+	defer io.Close(conn)
+	// If the user set a username, but didn't supply password via --password,
+	// then we prompt for it
+	if repo.Username != "" && repo.Password == "" {
+		repo.Password = cli.PromptPassword(repo.Password)
+	}
+
+	repoCreateReq := repocredspkg.RepoCredsCreateRequest{
+		Creds:  &repo,
+		Upsert: upsert,
+	}
+
+	createdRepo, err := repoClient.CreateRepositoryCredentials(ctx, &repoCreateReq)
+	errors.CheckError(err)
+	fmt.Printf("Repository credentials for '%s' added\n", createdRepo.URL)
+	cr, err := json.Marshal(createdRepo)
+	if err != nil {
+		a.logger.Errorf("failed to marshal newly added repo creds details  %w", err)
+		return nil, err
+	}
+	return cr, nil
+}
+
+func (a *ArgoCDCLient) RepoCredsDelete(req model.ConfigPayload) (json.RawMessage, error) {
+	ctx := context.Background()
+	ru, ok := req.Data["repoURL"]
+	if !ok {
+		return nil, fmt.Errorf("failed to get repoURL from config payload")
+	}
+	repoURL, ok := ru.(string)
+	if !ok {
+		return nil, fmt.Errorf("repoURL type is not string")
+	}
+	conn, repoClient, err := a.client.NewRepoCredsClient()
+	if err != nil {
+		a.logger.Errorf("Application client intilialization failed: %v", err)
+		return nil, err
+	}
+	defer io.Close(conn)
+
+	deletedRepoCreds, err := repoClient.DeleteRepositoryCredentials(ctx, &repocredspkg.RepoCredsDeleteRequest{Url: repoURL})
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("Repository '%s' removed\n", repoURL)
+	dr, err := json.Marshal(deletedRepoCreds)
 	if err != nil {
 		a.logger.Errorf("failed to marshal deleted repo details  %w", err)
 		return nil, err

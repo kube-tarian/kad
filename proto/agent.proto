@@ -22,8 +22,8 @@ service Agent {
   rpc ClusterAdd (ClusterRequest) returns (JobResponse) {}
   rpc ClusterDelete (ClusterRequest) returns (JobResponse) {}
 
-  rpc RepositoryAdd (RepositoryAddRequest) returns (JobResponse) {}
-  rpc RepositoryDelete (RepositoryDeleteRequest) returns (JobResponse) {}
+  rpc RepoAdd (RepositoryAddRequest) returns (JobResponse) {}
+  rpc RepoDelete (RepositoryDeleteRequest) returns (JobResponse) {}
 
   rpc RepoCredsAdd (RepositoryAddRequest) returns (JobResponse) {}
   rpc RepoCredsDelete (RepositoryDeleteRequest) returns (JobResponse) {}
