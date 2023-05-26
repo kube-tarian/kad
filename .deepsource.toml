@@ -55,5 +55,5 @@ name = "go"
 enabled = true
 
   [analyzers.meta]
-  import_root = "github.com/kube-tarian/integrator"
+  import_root = "github.com/kube-tarian/capten"
   dependencies_vendored = true

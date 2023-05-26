@@ -9,7 +9,6 @@ import (
 )
 
 func (a *APIHandler) setFailedResponse(c *gin.Context, msg string, err error) {
-	a.log.Errorf("failed to submit job", err)
 	c.IndentedJSON(http.StatusInternalServerError, &api.Response{
 		Status:  "FAILED",
 		Message: fmt.Sprintf("%s, %v", msg, err),

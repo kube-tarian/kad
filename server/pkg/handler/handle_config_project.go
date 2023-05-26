@@ -12,9 +12,7 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
 
-func (a *APIHandler) PostConfigatorProject(c *gin.Context) {
-	a.log.Debugf("Add project api invocation started")
-
+func (a *APIHandler) PostAgentProject(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -34,7 +32,7 @@ func (a *APIHandler) PostConfigatorProject(c *gin.Context) {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 	}
 
-	response, err := agent.GetClient().ProjectAdd(ctx, &agentpb.ProjectAddRequest{
+	_, err := agent.GetClient().ProjectAdd(ctx, &agentpb.ProjectAddRequest{
 		PluginName:  req.PluginName,
 		ProjectName: req.ProjectName,
 	})
@@ -47,19 +45,12 @@ func (a *APIHandler) PostConfigatorProject(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
 
-	a.log.Infof("response received", response)
-	a.log.Debugf("Add project api invocation finished")
 }
-func (a *APIHandler) PutConfigatorProject(c *gin.Context) {
-	a.log.Debugf("Update project from plugin api invocation started")
-
-	a.PostConfigatorProject(c)
-	a.log.Debugf("Delete project from plugin api invocation finished")
+func (a *APIHandler) PutAgentProject(c *gin.Context) {
+	a.PostAgentProject(c)
 }
 
-func (a *APIHandler) DeleteConfigatorProject(c *gin.Context) {
-	a.log.Debugf("Delete project from plugin api invocation started")
-
+func (a *APIHandler) DeleteAgentProject(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -79,7 +70,7 @@ func (a *APIHandler) DeleteConfigatorProject(c *gin.Context) {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 	}
 
-	response, err := agent.GetClient().ProjectDelete(ctx, &agentpb.ProjectDeleteRequest{
+	_, err := agent.GetClient().ProjectDelete(ctx, &agentpb.ProjectDeleteRequest{
 		PluginName:  req.PluginName,
 		ProjectName: req.ProjectName,
 	})
@@ -91,7 +82,4 @@ func (a *APIHandler) DeleteConfigatorProject(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, &api.Response{
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
-
-	a.log.Infof("response received", response)
-	a.log.Debugf("Delete project from plugin api invocation finished")
 }
