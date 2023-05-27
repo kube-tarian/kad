@@ -69,7 +69,7 @@ func (a *ArgoCDCLient) ConfigurationActivities(req interface{}) (json.RawMessage
 	case "cluster":
 		return a.HandleCluster(req)
 	case "repo":
-		return a.HandleRepo(payload)
+		return a.HandleRepo(req)
 	default:
 		return nil, fmt.Errorf("unsupported action for argocd plugin: %v", payload.Action)
 	}
@@ -79,7 +79,7 @@ func (a *ArgoCDCLient) HandleCluster(req interface{}) (json.RawMessage, error) {
 	payload, _ := req.(model.ConfigPayload)
 	switch payload.Action {
 	case "add":
-		return a.ClusterAdd(payload)
+		return a.ClusterAdd(&payload)
 	case "delete":
 		// return a.ClusterDelete(payload)
 	case "list":
@@ -94,9 +94,9 @@ func (a *ArgoCDCLient) HandleRepo(req interface{}) (json.RawMessage, error) {
 	payload, _ := req.(model.ConfigPayload)
 	switch payload.Action {
 	case "add":
-		return a.RepoAdd(payload)
+		return a.RepoAdd(&payload)
 	case "delete":
-		return a.RepoDelete(payload)
+		return a.RepoDelete(&payload)
 	case "list":
 		// return a.RepoList(payload)
 	default:
@@ -109,9 +109,9 @@ func (a *ArgoCDCLient) HandleRepoCreds(req interface{}) (json.RawMessage, error)
 	payload, _ := req.(model.ConfigPayload)
 	switch payload.Action {
 	case "add":
-		return a.RepoCredsAdd(payload)
+		return a.RepoCredsAdd(&payload)
 	case "delete":
-		return a.RepoCredsDelete(payload)
+		return a.RepoCredsDelete(&payload)
 	case "list":
 		// return a.RepoCRedsList(payload)
 	default:
@@ -243,7 +243,7 @@ func (a *ArgoCDCLient) List(req *model.ListRequestPayload) (json.RawMessage, err
 	return listMsg, nil
 }
 
-func (a *ArgoCDCLient) ClusterAdd(req model.ConfigPayload) (json.RawMessage, error) {
+func (a *ArgoCDCLient) ClusterAdd(req *model.ConfigPayload) (json.RawMessage, error) {
 	opts, ok := req.Data["clusterOpts"]
 	if !ok {
 		return nil, fmt.Errorf("repo options not present in data")
@@ -340,7 +340,7 @@ func (a *ArgoCDCLient) ClusterAdd(req model.ConfigPayload) (json.RawMessage, err
 	return cluster, nil
 }
 
-func (a *ArgoCDCLient) ClusterDelete(req model.ConfigPayload) (json.RawMessage, error) {
+func (a *ArgoCDCLient) ClusterDelete(req *model.ConfigPayload) (json.RawMessage, error) {
 	ctx := context.Background()
 	conn, clusterClient, err := a.client.NewClusterClient()
 	if err != nil {
@@ -410,7 +410,7 @@ func (a *ArgoCDCLient) ClusterDelete(req model.ConfigPayload) (json.RawMessage, 
 	return cr, nil
 }
 
-func (a *ArgoCDCLient) RepoAdd(req model.ConfigPayload) (json.RawMessage, error) {
+func (a *ArgoCDCLient) RepoAdd(req *model.ConfigPayload) (json.RawMessage, error) {
 	opts, ok := req.Data["repoOpts"]
 	if !ok {
 		return nil, fmt.Errorf("repo options not present in data")
@@ -547,7 +547,7 @@ func (a *ArgoCDCLient) RepoAdd(req model.ConfigPayload) (json.RawMessage, error)
 	return cr, nil
 }
 
-func (a *ArgoCDCLient) RepoDelete(req model.ConfigPayload) (json.RawMessage, error) {
+func (a *ArgoCDCLient) RepoDelete(req *model.ConfigPayload) (json.RawMessage, error) {
 	opts, ok := req.Data["repoOpts"]
 	if !ok {
 		return nil, fmt.Errorf("repo options not present in data")
@@ -580,7 +580,7 @@ func (a *ArgoCDCLient) RepoDelete(req model.ConfigPayload) (json.RawMessage, err
 	return dr, nil
 }
 
-func (a *ArgoCDCLient) RepoCredsAdd(req model.ConfigPayload) (json.RawMessage, error) {
+func (a *ArgoCDCLient) RepoCredsAdd(req *model.ConfigPayload) (json.RawMessage, error) {
 	var (
 		repo   appsv1.RepoCreds
 		upsert bool
@@ -684,7 +684,7 @@ func (a *ArgoCDCLient) RepoCredsAdd(req model.ConfigPayload) (json.RawMessage, e
 	return cr, nil
 }
 
-func (a *ArgoCDCLient) RepoCredsDelete(req model.ConfigPayload) (json.RawMessage, error) {
+func (a *ArgoCDCLient) RepoCredsDelete(req *model.ConfigPayload) (json.RawMessage, error) {
 	ctx := context.Background()
 	ru, ok := req.Data["repoURL"]
 	if !ok {
