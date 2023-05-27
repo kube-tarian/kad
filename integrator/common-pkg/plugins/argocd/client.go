@@ -248,7 +248,7 @@ func (a *ArgoCDCLient) ClusterAdd(req *model.ConfigPayload) (json.RawMessage, er
 	if !ok {
 		return nil, fmt.Errorf("repo options not present in data")
 	}
-	clusterOpts := opts.(cmdutil.ClusterOptions)
+	clusterOpts := opts.(*cmdutil.ClusterOptions)
 	ctx := context.Background()
 
 	conn, clusterClient, err := a.client.NewClusterClient()
