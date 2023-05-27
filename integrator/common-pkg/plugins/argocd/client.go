@@ -244,14 +244,19 @@ func (a *ArgoCDCLient) List(req *model.ListRequestPayload) (json.RawMessage, err
 }
 
 func (a *ArgoCDCLient) ClusterAdd(req model.ConfigPayload) (json.RawMessage, error) {
+	opts, ok := req.Data["clusterOpts"]
+	if !ok {
+		return nil, fmt.Errorf("repo options not present in data")
+	}
+	clusterOpts := opts.(cmdutil.ClusterOptions)
+	ctx := context.Background()
+
 	conn, clusterClient, err := a.client.NewClusterClient()
 	if err != nil {
 		a.logger.Errorf("Application client intilialization failed: %v", err)
 		return nil, err
 	}
-
 	defer io.Close(conn)
-	var clusterOpts cmdutil.ClusterOptions
 	var labels []string
 	var annotations []string
 	cn, ok := req.Data["contextName"]
@@ -320,7 +325,6 @@ func (a *ArgoCDCLient) ClusterAdd(req model.ConfigPayload) (json.RawMessage, err
 		Cluster: clst,
 		Upsert:  clusterOpts.Upsert,
 	}
-	ctx := context.Background()
 	c, err := clusterClient.Create(ctx, &clstCreateReq)
 	if err != nil {
 		a.logger.Errorf("failed to create cluster client %w", err)
@@ -407,18 +411,15 @@ func (a *ArgoCDCLient) ClusterDelete(req model.ConfigPayload) (json.RawMessage, 
 }
 
 func (a *ArgoCDCLient) RepoAdd(req model.ConfigPayload) (json.RawMessage, error) {
-	var repoOpts cmdutil.RepoOptions
+	opts, ok := req.Data["repoOpts"]
+	if !ok {
+		return nil, fmt.Errorf("repo options not present in data")
+	}
+	repoOpts := opts.(cmdutil.RepoOptions)
 	ctx := context.Background()
-	ru, ok := req.Data["repoURL"]
-	if !ok {
-		return nil, fmt.Errorf("failed to get repoURL from config payload")
-	}
-	repoURL, ok := ru.(string)
-	if !ok {
-		return nil, fmt.Errorf("repoURL type is not string")
-	}
-	// Repository URL
-	repoOpts.Repo.Repo = repoURL
+
+	// specify Repository URL as below in Data field of configPayload
+	//repoOpts.Repo.Repo = repoURL
 
 	// Specifying ssh-private-key-path is only valid for SSH repositories
 	if repoOpts.SshPrivateKeyPath != "" {
@@ -460,7 +461,9 @@ func (a *ArgoCDCLient) RepoAdd(req model.ConfigPayload) (json.RawMessage, error)
 	if repoOpts.GithubAppPrivateKeyPath != "" {
 		if git.IsHTTPSURL(repoOpts.Repo.Repo) {
 			githubAppPrivateKey, err := os.ReadFile(repoOpts.GithubAppPrivateKeyPath)
-			return nil, err
+			if err != nil {
+				return nil, err
+			}
 			repoOpts.Repo.GithubAppPrivateKey = string(githubAppPrivateKey)
 		} else {
 			err := fmt.Errorf("--github-app-private-key-path is only supported for HTTPS repositories")
@@ -545,14 +548,16 @@ func (a *ArgoCDCLient) RepoAdd(req model.ConfigPayload) (json.RawMessage, error)
 }
 
 func (a *ArgoCDCLient) RepoDelete(req model.ConfigPayload) (json.RawMessage, error) {
-	ctx := context.Background()
-	ru, ok := req.Data["repoURL"]
+	opts, ok := req.Data["repoOpts"]
 	if !ok {
-		return nil, fmt.Errorf("failed to get repoURL from config payload")
+		return nil, fmt.Errorf("repo options not present in data")
 	}
-	repoURL, ok := ru.(string)
-	if !ok {
-		return nil, fmt.Errorf("repoURL type is not string")
+	repoOpts := opts.(cmdutil.RepoOptions)
+	ctx := context.Background()
+
+	repoURL := repoOpts.Repo.Repo
+	if repoURL == "" {
+		return nil, fmt.Errorf("repoURL is empty")
 	}
 	conn, repoClient, err := a.client.NewRepoClient()
 	if err != nil {
@@ -577,28 +582,29 @@ func (a *ArgoCDCLient) RepoDelete(req model.ConfigPayload) (json.RawMessage, err
 
 func (a *ArgoCDCLient) RepoCredsAdd(req model.ConfigPayload) (json.RawMessage, error) {
 	var (
-		repo                    appsv1.RepoCreds
-		upsert                  bool
-		sshPrivateKeyPath       string
-		tlsClientCertPath       string
-		tlsClientCertKeyPath    string
-		githubAppPrivateKeyPath string
+		repo   appsv1.RepoCreds
+		upsert bool
 	)
+	opts, ok := req.Data["repoOpts"]
+	if !ok {
+		return nil, fmt.Errorf("repo options not present in data")
+	}
+	repoOpts := opts.(cmdutil.RepoOptions)
 	ctx := context.Background()
-	ru, ok := req.Data["repoURL"]
-	if !ok {
-		return nil, fmt.Errorf("failed to get repoURL from config payload")
-	}
-	repoURL, ok := ru.(string)
-	if !ok {
-		return nil, fmt.Errorf("repoURL type is not string")
-	}
+	//ru, ok := req.Data["repoURL"]
+	//if !ok {
+	//	return nil, fmt.Errorf("failed to get repoURL from config payload")
+	//}
+	//repoURL, ok := ru.(string)
+	//if !ok {
+	//	return nil, fmt.Errorf("repoURL type is not string")
+	//}
 	// Repository URL
-	repo.URL = repoURL
+	repo.URL = repoOpts.Repo.Repo
 	// Specifying ssh-private-key-path is only valid for SSH repositories
-	if sshPrivateKeyPath != "" {
+	if repoOpts.SshPrivateKeyPath != "" {
 		if ok, _ := git.IsSSHURL(repo.URL); ok {
-			keyData, err := os.ReadFile(sshPrivateKeyPath)
+			keyData, err := os.ReadFile(repoOpts.SshPrivateKeyPath)
 			if err != nil {
 				return nil, err
 			}
@@ -611,19 +617,19 @@ func (a *ArgoCDCLient) RepoCredsAdd(req model.ConfigPayload) (json.RawMessage, e
 
 	// tls-client-cert-path and tls-client-cert-key-key-path must always be
 	// specified together
-	if (tlsClientCertPath != "" && tlsClientCertKeyPath == "") || (tlsClientCertPath == "" && tlsClientCertKeyPath != "") {
+	if (repoOpts.TlsClientCertPath != "" && repoOpts.TlsClientCertKeyPath == "") || (repoOpts.TlsClientCertPath == "" && repoOpts.TlsClientCertKeyPath != "") {
 		err := fmt.Errorf("--tls-client-cert-path and --tls-client-cert-key-path must be specified together")
 		return nil, err
 	}
 
 	// Specifying tls-client-cert-path is only valid for HTTPS repositories
-	if tlsClientCertPath != "" {
+	if repoOpts.TlsClientCertPath != "" {
 		if git.IsHTTPSURL(repo.URL) {
-			tlsCertData, err := os.ReadFile(tlsClientCertPath)
+			tlsCertData, err := os.ReadFile(repoOpts.TlsClientCertPath)
 			if err != nil {
 				return nil, err
 			}
-			tlsCertKey, err := os.ReadFile(tlsClientCertKeyPath)
+			tlsCertKey, err := os.ReadFile(repoOpts.TlsClientCertKeyPath)
 			if err != nil {
 				return nil, err
 			}
@@ -636,9 +642,9 @@ func (a *ArgoCDCLient) RepoCredsAdd(req model.ConfigPayload) (json.RawMessage, e
 	}
 
 	// Specifying github-app-private-key-path is only valid for HTTPS repositories
-	if githubAppPrivateKeyPath != "" {
+	if repoOpts.GithubAppPrivateKeyPath != "" {
 		if git.IsHTTPSURL(repo.URL) {
-			githubAppPrivateKey, err := os.ReadFile(githubAppPrivateKeyPath)
+			githubAppPrivateKey, err := os.ReadFile(repoOpts.GithubAppPrivateKeyPath)
 			if err != nil {
 				return nil, err
 			}
@@ -658,7 +664,7 @@ func (a *ArgoCDCLient) RepoCredsAdd(req model.ConfigPayload) (json.RawMessage, e
 	defer io.Close(conn)
 	// If the user set a username, but didn't supply password via --password,
 	// then we prompt for it
-	if repo.Username != "" && repo.Password == "" {
+	if repoOpts.Repo.Username != "" && repoOpts.Repo.Password == "" {
 		repo.Password = cli.PromptPassword(repo.Password)
 	}
 
