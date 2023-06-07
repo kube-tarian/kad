@@ -99,3 +99,15 @@ For example,
 curl -X DELETE -k $ARGOCD_SERVER/api/v1/applications/demo
 
 ```
+
+```
+We have exposed below APIs to interact with ArgoCD:
+Cluster Add
+Cluster Delete
+Repo Add
+Repo Delete
+RepoCreds Add
+RepoCreds Delete
+
+Sample Payload for each of above APIs can be found in test files.
+```

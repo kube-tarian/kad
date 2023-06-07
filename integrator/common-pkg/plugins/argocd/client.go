@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/argoproj/argo-cd/v2/common"
 	"os"
 	"regexp"
 
@@ -13,7 +14,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 
 	cmdutil "github.com/argoproj/argo-cd/v2/cmd/util"
-	"github.com/argoproj/argo-cd/v2/common"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	clusterpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
@@ -81,7 +81,7 @@ func (a *ArgoCDCLient) HandleCluster(req interface{}) (json.RawMessage, error) {
 	case "add":
 		return a.ClusterAdd(&payload)
 	case "delete":
-		// return a.ClusterDelete(payload)
+		return a.ClusterDelete(&payload)
 	case "list":
 		// return a.ClusterList(payload)
 	default:
@@ -267,17 +267,22 @@ func (a *ArgoCDCLient) ClusterAdd(req *model.ConfigPayload) (json.RawMessage, er
 	if !ok {
 		return nil, fmt.Errorf("context name type is not string")
 	}
+	var pathOpts *clientcmd.PathOptions
 	po, ok := req.Data["pathOpts"]
-	if !ok {
-		return nil, fmt.Errorf("failed to get path options from config payload")
+	if ok {
+		pathOpts, ok = po.(*clientcmd.PathOptions)
+		if !ok {
+			return nil, fmt.Errorf("path options type is not string")
+		}
 	}
-	pathOpts, ok := po.(*clientcmd.PathOptions)
 	if !ok {
-		return nil, fmt.Errorf("path options type is not string")
+		// if pathOpts missing use default options
+		pathOpts = clientcmd.NewDefaultPathOptions()
 	}
+
 	conf, err := getRestConfig(pathOpts, contextName)
 	if err != nil {
-		a.logger.Errorf("failed to get rest config %w", err)
+		a.logger.Errorf("failed to get rest config %v", err)
 		return nil, err
 	}
 	managerBearerToken := ""
@@ -292,22 +297,23 @@ func (a *ArgoCDCLient) ClusterAdd(req *model.ConfigPayload) (json.RawMessage, er
 	if len(clusterOpts.Namespaces) > 0 {
 		accessLevel = "namespace"
 	}
-	fmt.Printf("WARNING: This will create a service account `argocd-manager` on the cluster referenced by context `%s` with full %s level privileges. Do you want to continue [y/N]? ", contextName, accessLevel)
+	fmt.Printf("WARNING: This will create a service account `argocd-manager` on the cluster referenced by context `%s` with full %s level privileges ", contextName, accessLevel)
 	managerBearerToken, err = clusterauth.InstallClusterManagerRBAC(clientset, clusterOpts.SystemNamespace, clusterOpts.Namespaces, common.BearerTokenTimeout)
-
+	if err != nil {
+		a.logger.Errorf("failed to Install ClusterManagerRBAC %v", err)
+		return nil, err
+	}
 	labelsMap, err := label.Parse(labels)
 	if err != nil {
-		a.logger.Errorf("failed to parse labels %w", err)
+		a.logger.Errorf("failed to parse labels %v", err)
 		return nil, err
 	}
 	annotationsMap, err := label.Parse(annotations)
 	if err != nil {
-		a.logger.Errorf("failed to parse annotations %w", err)
+		a.logger.Errorf("failed to parse annotations %v", err)
 		return nil, err
 	}
 
-	//conn, clusterIf := headless.NewClientOrDie(clientOpts, c).NewClusterClientOrDie()
-	//defer io.Close(conn)
 	if clusterOpts.Name != "" {
 		contextName = clusterOpts.Name
 	}
@@ -327,13 +333,13 @@ func (a *ArgoCDCLient) ClusterAdd(req *model.ConfigPayload) (json.RawMessage, er
 	}
 	c, err := clusterClient.Create(ctx, &clstCreateReq)
 	if err != nil {
-		a.logger.Errorf("failed to create cluster client %w", err)
+		a.logger.Errorf("failed to create cluster client %v", err)
 		return nil, err
 	}
 	fmt.Printf("Cluster '%s' added\n", clst.Server)
 	cluster, err := json.Marshal(c)
 	if err != nil {
-		a.logger.Errorf("failed to marshal newly created cluster  %w", err)
+		a.logger.Errorf("failed to marshal newly created cluster  %v", err)
 		return nil, err
 	}
 
