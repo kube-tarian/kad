@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/helm"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"

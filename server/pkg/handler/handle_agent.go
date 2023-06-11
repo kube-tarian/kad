@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"io"
 	"net/http"
+
+	"github.com/kube-tarian/kad/server/pkg/client"
+	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
 	"github.com/kube-tarian/kad/server/api"
-	"github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/log"
@@ -63,18 +64,11 @@ func (a *APIHandler) PostAgentEndpoint(c *gin.Context) {
 		return
 	}
 
-	vaultSession, err := client.NewVault()
-	if err != nil {
-		a.setFailedResponse(c, "failed to register", nil)
-		logger.Error("failed to create vault session", zap.Error(err))
-		return
-	}
-
-	err = vaultSession.PutCert("secret",
+	err = client.PutCaptenClusterCertificate(c, customerId,
 		fileContentsMap[types.ClientCertChainFileName],
-		fileContentsMap[types.ClientCertFileName],
 		fileContentsMap[types.ClientKeyFileName],
-		customerId)
+		fileContentsMap[types.ClientCertFileName],
+	)
 
 	if err != nil {
 		a.setFailedResponse(c, "failed to register", nil)

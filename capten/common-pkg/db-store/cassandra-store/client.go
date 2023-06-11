@@ -1,6 +1,6 @@
 package cassandrastore
 
-import "github.com/kube-tarian/kad/capten/common-pkg/logging"
+import "github.com/intelops/go-common/logging"
 
 // This package creates a client to cassandra using go-cql
 // CRUD operations specific to table under keyspace should be implemented by user

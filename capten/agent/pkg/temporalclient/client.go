@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
 
 	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/client"
