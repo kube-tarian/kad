@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 	"github.com/stretchr/testify/assert"
 	"k8s.io/client-go/util/homedir"
 )

@@ -3,13 +3,11 @@ package agent
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
-	"github.com/kube-tarian/kad/capten/agent/pkg/vaultservpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
 	"go.temporal.io/sdk/client"
 )
 
@@ -62,26 +60,14 @@ func prepareJobResponse(run client.WorkflowRun, name string) *agentpb.JobRespons
 }
 
 func (a *Agent) StoreCred(ctx context.Context, request *agentpb.StoreCredRequest) (*agentpb.StoreCredResponse, error) {
-	vaultServ, err := GetVaultServClient()
+	err := StoreCredential(ctx, request)
 	if err != nil {
-		log.Println("failed to connect vaultserv", err)
 		return &agentpb.StoreCredResponse{
 			Status: "FAILED",
 		}, err
 	}
 
-	response, err := vaultServ.StoreCred(ctx, &vaultservpb.StoreCredRequest{
-		Username: request.Username,
-		Password: request.Password,
-		Credname: request.Credname,
-	})
-
-	if err != nil {
-		log.Println("failed to store creds", err)
-		return nil, err
-	}
-
 	return &agentpb.StoreCredResponse{
-		Status: response.Status,
+		Status: "SUCCESS",
 	}, nil
 }

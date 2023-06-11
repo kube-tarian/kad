@@ -2,8 +2,8 @@
 package cassandra
 
 import (
+	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
 )
 
 func Create(log logging.Logger) error {

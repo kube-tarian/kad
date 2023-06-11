@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 )
 
 type CredentialFetcher struct {

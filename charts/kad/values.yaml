@@ -37,6 +37,10 @@ service:
   type: ClusterIP
   port: 8080
 
+vaultcred:
+  address: "vault-cred:8080"
+  role: capten-agent-vault-role
+
 ingressroute:
   enabled: true
   mtls:
