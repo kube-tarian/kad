@@ -24,10 +24,10 @@ type Vault struct {
 func NewVault() (*Vault, error) {
 	config := vault.DefaultConfig()
 	config.Address = os.Getenv("VAULT_ADDR")
-	tlsConfig := vault.TLSConfig{CACert: os.Getenv("VAULT_CACERT")}
-	if err := config.ConfigureTLS(&tlsConfig); err != nil {
-		log.Fatalf("unable to configure tls %v", err)
-	}
+	// tlsConfig := vault.TLSConfig{CACert: os.Getenv("VAULT_CACERT")}
+	// if err := config.ConfigureTLS(&tlsConfig); err != nil {
+	// 	log.Fatalf("unable to configure tls %v", err)
+	// }
 
 	client, err := vault.NewClient(config)
 	if err != nil {
@@ -93,9 +93,15 @@ func (v *Vault) PostCredentials(secretName, username, password, dbcreds string) 
 		return fmt.Errorf("Vault client is not initialized")
 	}
 	secretData := map[string]interface{}{
-		"username": username,
-		"password": password,
+		"data": map[string]interface{}{
+			"username": username,
+			"password": password,
+		},
 	}
+	// secretData := map[string]interface{}{
+	// 	"username": username,
+	// 	"password": password,
+	// }
 
 	ctx := context.Background()
 

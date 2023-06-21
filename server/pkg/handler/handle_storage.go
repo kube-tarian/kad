@@ -9,10 +9,15 @@ import (
 	//	"path"
 	"time"
 
+	//"github.com/argoproj/argo-cd/v2/util/grpc"
 	"github.com/gin-gonic/gin"
+	"google.golang.org/grpc"
+
+	//	"github.com/kube-tarian/kad/integrator/agent/pkg/vaultservpb"
 	"github.com/kube-tarian/kad/server/api"
-	"github.com/kube-tarian/kad/server/pkg/client"
+	client "github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
+	//"k8s.io/kubernetes/pkg/kubelet/secret"
 )
 
 func (a *APIHandler) PostStoreAgentCred(c *gin.Context) {
@@ -119,4 +124,47 @@ func (a *APIHandler) GetStoreCred(c *gin.Context) {
 	a.log.Infof("Username:%v,Password:%v", username, password)
 
 	a.log.Debugf("Credentials retrieved successfully from Vault")
+}
+
+func (a *APIHandler) PostStoreSecret(c *gin.Context) {
+	// Parse the request body to get the name and kubeconfig
+	var requestBody api.StoreSecretRequest
+
+	client := agentpb.NewAgentClient(&grpc.ClientConn{})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	if err := c.ShouldBindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	resp := agentpb.StoreSecretRequest{
+		Name:       *requestBody.Name,
+		Kubeconfig: *requestBody.Kubeconfig,
+	}
+
+	//response,err:=agentpb.AgentClient.StoreSecret(ctx,resp,)
+	response, err := client.StoreSecret(ctx, &resp)
+	if err != nil {
+		a.setFailedResponse(c, "failed to store credentials", err)
+		return
+	}
+	fmt.Println("Response is ", response)
+	if response.Status != "SUCCESS" {
+		a.setFailedResponse(c, "failed to store credentials", err)
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, &api.Response{
+		Status:  "SUCCESS",
+		Message: "stored credentials"})
+
+	a.log.Infof("response received from agent", response)
+	a.log.Debugf("credentials is stored successfully")
+
+}
+
+func (a *APIHandler) GetStoreSecret(c *gin.Context) {
+
 }

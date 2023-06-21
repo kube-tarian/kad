@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+
 	"github.com/kube-tarian/kad/vaultserv/pkg/client"
 	"github.com/kube-tarian/kad/vaultserv/pkg/pb/vaultservpb"
 	"go.uber.org/zap"
@@ -35,6 +36,22 @@ func (v *VaultServ) StoreCred(ctx context.Context, request *vaultservpb.StoreCre
 	}
 
 	return &vaultservpb.StoreCredResponse{
+		Status: "SUCCESS",
+	}, nil
+}
+func (v *VaultServ) StoreSecret(ctx context.Context, request *vaultservpb.StoreSecretRequest) (*vaultservpb.StoreSecretResponse, error) {
+	log, _ := zap.NewProduction()
+	defer log.Sync()
+
+	err := v.client.PutSecret("secret", request)
+	if err != nil {
+		log.Error("failed to store cred", zap.Error(err))
+		return &vaultservpb.StoreSecretResponse{
+			Status: "FAILED",
+		}, err
+	}
+
+	return &vaultservpb.StoreSecretResponse{
 		Status: "SUCCESS",
 	}, nil
 }

@@ -326,19 +326,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+  /store/secret:
     get:
       tags:
-        - agent-registration
-      summary: Register agent
+      - store
+      summary: Retrieve stored secrets from agent vault
+      responses:
+        '200':
+         description: OK
+         content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Response'
+    post:
+      tags:
+        - store
+      summary: to store the credentials in agent vault
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreSecretRequest'
       responses:
         '200':
           description: OK
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/StoreCredRequest'
-
+                $ref: '#/components/schemas/Response'
+  
+  
   /store/agent/cred:
     post:
       tags:
@@ -356,8 +373,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+          
 components:
   schemas:
+    StoreSecretRequest:
+      title: store secrets
+      type: object
+      properties:
+        name:
+          type: string
+        
+        kubeconfig:
+          type: object
+          additionalProperties: 
+           type: string
     StoreAgentCredRequest:
       title: store secrets
       type: object

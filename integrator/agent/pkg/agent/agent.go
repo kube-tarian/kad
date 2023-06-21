@@ -61,6 +61,29 @@ func prepareJobResponse(run client.WorkflowRun, name string) *agentpb.JobRespons
 	return &agentpb.JobResponse{}
 }
 
+func (a *Agent) StoreSecret(ctx context.Context, request *agentpb.StoreSecretRequest) (*agentpb.StoreSecretResponse, error) {
+	vaultServ, err := GetVaultServClient()
+	if err != nil {
+		log.Println("failed to connect vaultserv", err)
+		return &agentpb.StoreSecretResponse{
+			Status: "FAILED",
+		}, err
+	}
+
+	response, err := vaultServ.StoreSecret(ctx, &vaultservpb.StoreSecretRequest{
+		Name:       request.Name,
+		Kubeconfig: request.Kubeconfig,
+	})
+
+	if err != nil {
+		log.Println("failed to store creds", err)
+		return nil, err
+	}
+
+	return &agentpb.StoreSecretResponse{
+		Status: response.Status,
+	}, nil
+}
 func (a *Agent) StoreCred(ctx context.Context, request *agentpb.StoreCredRequest) (*agentpb.StoreCredResponse, error) {
 	vaultServ, err := GetVaultServClient()
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Agent struct {
@@ -22,18 +23,22 @@ type Agent struct {
 
 // NewAgent returns agent object creates grpc connection for given address
 func NewAgent(log logging.Logger, cfg *types.AgentConfiguration) (*Agent, error) {
-	tlsCreds, err := loadTLSCredentials(cfg)
-	if err != nil {
-		return nil, err
-	}
+	// tlsCreds, err := loadTLSCredentials(cfg)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port),
-		grpc.WithTransportCredentials(tlsCreds))
+	// conn, err := grpc.Dial(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port),
+	// 	grpc.WithTransportCredentials(tlsCreds))
+	// if err != nil {
+	// 	log.Errorf("failed to connect: %v", err)
+	// 	return nil, err
+	// }
+	conn,err:=grpc.Dial(fmt.Sprintf("%s:%d", cfg.Address, cfg.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Errorf("failed to connect: %v", err)
-		return nil, err
-	}
-
+			log.Errorf("failed to connect: %v", err)
+			return nil, err
+		}
 	log.Infof("gRPC connection started to %s:%d", cfg.Address, cfg.Port)
 	agentClient := agentpb.NewAgentClient(conn)
 	return &Agent{

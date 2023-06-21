@@ -11,6 +11,7 @@ package agentpb;
 service Agent {
   rpc SubmitJob (JobRequest) returns (JobResponse) {}
   rpc StoreCred (StoreCredRequest) returns (StoreCredResponse) {}
+  rpc StoreSecret (StoreSecretRequest) returns (StoreSecretResponse) {}
 
   rpc ClimonAppInstall (ClimonInstallRequest) returns (JobResponse) {}
   rpc ClimonAppDelete (ClimonDeleteRequest) returns (JobResponse) {}
@@ -26,12 +27,20 @@ service Agent {
 
   rpc ProjectAdd (ProjectAddRequest) returns (JobResponse) {}
   rpc ProjectDelete (ProjectDeleteRequest) returns (JobResponse) {}
+
 }
 
 message StoreCredRequest {
   string credname = 1;
   string username = 2;
   string password = 3;
+}
+message StoreSecretRequest {
+  string name = 1;
+  map<string,string> kubeconfig = 2;
+}
+message StoreSecretResponse {
+  string status = 1;
 }
 
 message StoreCredResponse {

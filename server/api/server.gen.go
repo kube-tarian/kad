@@ -195,6 +195,12 @@ type StoreCredRequest struct {
 	Username *string `json:"username,omitempty"`
 }
 
+// StoreSecretRequest defines model for StoreSecretRequest.
+type StoreSecretRequest struct {
+	Kubeconfig *map[string]string `json:"kubeconfig,omitempty"`
+	Name       *string            `json:"name,omitempty"`
+}
+
 // DeleteClimonJSONRequestBody defines body for DeleteClimon for application/json ContentType.
 type DeleteClimonJSONRequestBody = ClimonDeleteRequest
 
@@ -248,6 +254,9 @@ type PostStoreAgentCredJSONRequestBody = StoreAgentCredRequest
 
 // PostStoreCredJSONRequestBody defines body for PostStoreCred for application/json ContentType.
 type PostStoreCredJSONRequestBody = StoreCredRequest
+
+// PostStoreSecretJSONRequestBody defines body for PostStoreSecret for application/json ContentType.
+type PostStoreSecretJSONRequestBody = StoreSecretRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -311,12 +320,15 @@ type ServerInterface interface {
 	// to store the credentials in agent vault
 	// (POST /store/agent/cred)
 	PostStoreAgentCred(c *gin.Context)
-	// Register agent
-	// (GET /store/cred)
-	GetStoreCred(c *gin.Context)
 	// to store the credentials in agent vault
 	// (POST /store/cred)
 	PostStoreCred(c *gin.Context)
+	// Retrieve stored secrets from agent vault
+	// (GET /store/secret)
+	GetStoreSecret(c *gin.Context)
+	// to store the credentials in agent vault
+	// (POST /store/secret)
+	PostStoreSecret(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -528,16 +540,6 @@ func (siw *ServerInterfaceWrapper) PostStoreAgentCred(c *gin.Context) {
 	siw.Handler.PostStoreAgentCred(c)
 }
 
-// GetStoreCred operation middleware
-func (siw *ServerInterfaceWrapper) GetStoreCred(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-	}
-
-	siw.Handler.GetStoreCred(c)
-}
-
 // PostStoreCred operation middleware
 func (siw *ServerInterfaceWrapper) PostStoreCred(c *gin.Context) {
 
@@ -546,6 +548,26 @@ func (siw *ServerInterfaceWrapper) PostStoreCred(c *gin.Context) {
 	}
 
 	siw.Handler.PostStoreCred(c)
+}
+
+// GetStoreSecret operation middleware
+func (siw *ServerInterfaceWrapper) GetStoreSecret(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetStoreSecret(c)
+}
+
+// PostStoreSecret operation middleware
+func (siw *ServerInterfaceWrapper) PostStoreSecret(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostStoreSecret(c)
 }
 
 // GinServerOptions provides options for the Gin server.
@@ -617,9 +639,11 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.POST(options.BaseURL+"/store/agent/cred", wrapper.PostStoreAgentCred)
 
-	router.GET(options.BaseURL+"/store/cred", wrapper.GetStoreCred)
-
 	router.POST(options.BaseURL+"/store/cred", wrapper.PostStoreCred)
+
+	router.GET(options.BaseURL+"/store/secret", wrapper.GetStoreSecret)
+
+	router.POST(options.BaseURL+"/store/secret", wrapper.PostStoreSecret)
 
 	return router
 }
@@ -627,30 +651,31 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+yawW7jNhPHX4Xg9x2dOO3efEuTogh20Q3sbS9FENDi2OZWIrlDygsj8LsXJCVZkiXL",
-	"cmI33vpmmSI589N/htRQLzRSiVYSpDV09EJNtICE+Z+3c5B2DN9SMNZda1Qa0ArwrRF7jtD/Lywk/q+Z",
-	"woRZOqJTIRmu6IDalQY6osaikHO6Lv5giGzlrqNYgLRvONLfsHrdSOsBRfiWCgROR3/lblYsrUz2NKBW",
-	"2NiN4IERIcOcQsnNbGr6FSLrZsuoGq2kgQasqbEqAXwW3F1uGQuSayWkbWisW14aqdRvy17MbWkw9i4W",
-	"iZL3EIOFdiXEqbGAz5Il3iEOJkKhPYARvQutREjyfSGiBbGKTIFwPyYfEA4zlsYO29U0FTEn2XBNT6oL",
-	"jrPAaBY1mPF73kSiBUObWSGksSyOgTfNpuN0LmSLW4++kfjGhr4IMTADLZ3HodX3zixJDXAyU5ib1ChU",
-	"kYBK7fZ4X0KD728XQJjWsYi8BPPxanoU0sIcsEM0ZQJlujX/NpaVxHUPOlYr4oQSDMGgH6LZKlaMt8vt",
-	"UZkdacc9vTap+SfroQpJxqCVEVY1B/1Boi3k0k+2P7gsEbRqHTF/BjtM0uo5xXhn5z/Gn04VEAO6BDR+",
-	"mPqof4YGomZ+UP/Ets2qRVQ1hjasSp4Pyqo+TZx5re6d0Xsn4ppG+yxUVV4VS0pe3yk5E/MUYZebAQ3g",
-	"u1m/LuvTa9enU69IuYQua9JlTbqsSceMtEdU7mdHrn6N0HSYoa1zaC0LLUJgFriLuDBvT7CVCfsuXpk9",
-	"OxPPf4fGJu6OKJD9koZVhHEO3P04CMRmmsMpHE0Wb8fgNWm0f77qj3JTgamts1n3auYqVUmqsBMwhs2b",
-	"t8nGMpua7h1wdt+gGOypweKJVQi+ZHOHwNs3Iwj88H07M+a7wubG1AC27+hz+saZSQxECNbQNj8Od2Gn",
-	"iZrZRWvPN7Hf3SrkTG3rZsLYhBjAJSD5rEGS8a+TL+T28YEYDZGYZWs93UzV3mNS61Es//Sn65vrG+eN",
-	"0iCZFnREP1zfXH+gwXnPb8i0uOIq8hdz8ISLtfiB0xH9DeytFvfuFqfEIG1/+883N9uuff7oEZk0SRiu",
-	"6Ih+Esa6Lcft44MhGtVSuGQwXfk9iPNI+J2CZXPj4zedxiKiT26QYeSLPGESl8q3rQspPhSDaIgUMPYX",
-	"xX1pN1LSQiiAlrZQw68mDBoK2O7X/xFmdET/N9xUuIdZeXvYVNhcr0NcbtN4kymLjOOn6QDMww6qtk8s",
-	"Ic0oPjnRK9PwiN0KcQKE5YXobAGmTfzSC7598PmQ9ksmswqH+Stnd3gXfe6Kt9TjcK7Uut4T5ABiJ+RA",
-	"piPKLyT3kGtOsqbX7K2kj16zd6MjUW58Dz4r1jnSfVV7Ep5nm2grNNsWqgvLnixrWQA3ddkeiaBSzT0G",
-	"77aqx1lBL7HdNyOcEOzZarmOtTM1XKD2hOpyBM/Of7rTQn5SdCS4zWeZZwW3YLk7DZwI5NlqtIqxJewv",
-	"EPeG6MIcYS7c+8GQzTND28pm4+xOX4ilr/S3+Epxl+PVDwa3v1fsppHbTFhmdE7BX18F54ObHbG57X2b",
-	"tpI0tkIztMOZwuSKM8v2f9aVL0/bdfXWbrfE0v5OH67uf8NjJ/zNCUWb4Cf52US3PSaNIjBmlsabo9+a",
-	"hR/TKaAEC4YgMC4kGEOY5CQWS/AXGtUUSPG5annzLpbMQmG4QgjhOoz8McrLDt1Wz06O9AybD2jeU1q0",
-	"ioTjDf+pAAIHaQWLDREySIYsWRqXofvbK8hz2O16yY53TpIctw6T1qdNiFVvj6SpH1BObhx/8OX+fqH+",
-	"kJgO6fpp/U8AAAD///KrcKyRMAAA",
+	"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",
+	"3wAAAP//R+tE4qYyAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

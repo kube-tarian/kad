@@ -16,6 +16,7 @@ require (
 )
 
 require (
+	github.com/aws/aws-sdk-go v1.44.268
 	github.com/cenkalti/backoff/v3 v3.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect

@@ -1,10 +1,17 @@
 syntax = "proto3";
 option go_package = "/vaultservpb";
 
+
 package vaultservpb;
 
 service Vault {
   rpc StoreCred (StoreCredRequest) returns (StoreCredResponse) {}
+  rpc StoreSecret(StoreSecretRequest) returns (StoreSecretResponse) {}
+}
+
+message StoreSecretRequest {
+  string name = 1;
+  map<string,string> kubeconfig = 2;
 }
 
 message StoreCredRequest {
@@ -16,3 +23,7 @@ message StoreCredRequest {
 message StoreCredResponse {
   string status = 1;
 }
+message StoreSecretResponse {
+  string status = 1;
+}
+

@@ -10,6 +10,13 @@ import (
 	"github.com/hashicorp/vault/api"
 
 	"path/filepath"
+	//	"strings"
+	//	"time"
+
+	// "github.com/aws/aws-sdk-go/aws"
+	// "github.com/aws/aws-sdk-go/aws/credentials"
+	// "github.com/aws/aws-sdk-go/aws/session"
+	// "github.com/aws/aws-sdk-go/service/s3"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

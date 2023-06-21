@@ -32,3 +32,6 @@ func GetVaultServClient() (*Vault, error) {
 func (v *Vault) StoreCred(ctx context.Context, request *vaultservpb.StoreCredRequest) (*vaultservpb.StoreCredResponse, error) {
 	return v.client.StoreCred(ctx, request)
 }
+func (v *Vault) StoreSecret(ctx context.Context, request *vaultservpb.StoreSecretRequest) (*vaultservpb.StoreSecretResponse, error) {
+	return v.client.StoreSecret(ctx, request)
+}

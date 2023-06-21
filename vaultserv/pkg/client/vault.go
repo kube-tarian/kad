@@ -3,10 +3,11 @@ package client
 import (
 	"context"
 	"fmt"
-	vault "github.com/hashicorp/vault/api"
-	"github.com/kube-tarian/kad/vaultserv/pkg/pb/vaultservpb"
 	"log"
 	"os"
+
+	vault "github.com/hashicorp/vault/api"
+	"github.com/kube-tarian/kad/vaultserv/pkg/pb/vaultservpb"
 )
 
 type Vault struct {
@@ -57,6 +58,23 @@ func (v *Vault) PutCredential(secretName string, credDetails *vaultservpb.StoreC
 
 	// Write a secret
 	_, err := v.client.KVv2(secretName).Put(ctx, credDetails.Credname, secretData)
+	if err != nil {
+		return fmt.Errorf("unable to write secret: %w", err)
+	}
+
+	log.Println("credential written successfully.")
+	return nil
+}
+func (v *Vault) PutSecret(secretName string, credDetails *vaultservpb.StoreSecretRequest) error {
+	secretData := map[string]interface{}{
+		"name":       credDetails.Name,
+		"kubeconfig": credDetails.Kubeconfig,
+	}
+
+	ctx := context.Background()
+
+	// Write a secret
+	_, err := v.client.KVv2(secretName).Put(ctx, credDetails.Name, secretData)
 	if err != nil {
 		return fmt.Errorf("unable to write secret: %w", err)
 	}
