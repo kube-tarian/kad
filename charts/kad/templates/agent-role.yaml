@@ -1,0 +1,12 @@
+{{- range .Values.vaultcred.role }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vaultcredrole
+data:
+  roleName: capten-agent-vault-write
+  policyNames: vault-policy-certs-read
+  servieAccounts: vault-cred
+  servieAccountNameSpaces: capten
+---
+{{- end }}
