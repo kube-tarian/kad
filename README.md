@@ -3,4 +3,4 @@
 
 # Kad 
 Universal **Integrator** - Framework to easily integrate with other tools/platforms to use their APIs, gRPC, DB, Workflows, etc. and also to develop workflows around them. This framework development is based on Temporal and NATS. 
-> name - Kad is Haitian Creole word, translates to framework. 
+> name -Kad is Haitian Creole word, translates to framework. 
