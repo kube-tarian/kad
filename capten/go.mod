@@ -10,7 +10,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/intelops/go-common v1.0.7
+	github.com/intelops/go-common v1.0.8
 	github.com/json-iterator/go v1.1.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kube-tarian/kad/integrator v0.0.0-20230520105805-73f03d9dcfcc

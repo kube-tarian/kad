@@ -7,7 +7,7 @@ require (
 	github.com/getkin/kin-openapi v0.108.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/gocql/gocql v1.3.1
-	github.com/intelops/go-common v1.0.7
+	github.com/intelops/go-common v1.0.8
 	github.com/kube-tarian/kad/agent v0.0.0-20221228201013-ed4f78e4b887
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0

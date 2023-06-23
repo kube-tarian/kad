@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -22,7 +21,7 @@ func PutCaptenClusterCertificate(ctx context.Context, certIdentifier, caCertData
 			Cert:   certData,
 		})
 	if err != nil {
-		err = errors.WithMessage(err, "error in reading ceritification from vault")
+		err = errors.WithMessage(err, "error in storing ceritification")
 	}
 	return err
 }
@@ -36,7 +35,7 @@ func GetCaptenClusterCertificate(ctx context.Context, certIdentifier string) (ca
 
 	resCertData, err := certReader.GetCertificate(ctx, vaultcredclient.CaptenClusterCert, certIdentifier)
 	if err != nil {
-		fmt.Printf("read failed %v\n", err)
+		err = errors.WithMessage(err, "error in reading certificate")
 		return
 	}
 	caCertData = resCertData.CACert
