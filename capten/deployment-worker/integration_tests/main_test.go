@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/application"
 	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/workflows"
 	"github.com/kube-tarian/kad/capten/model"

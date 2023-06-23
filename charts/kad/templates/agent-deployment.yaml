@@ -52,6 +52,10 @@ spec:
               value: "{{ .Values.temporal.temporalServiceURL }}.{{ .Release.Namespace }}.svc.cluster.local:7233"
             - name: PORT
               value: "{{ .Values.service.port }}"
+            - name: VAULT_CRED_SERVICE
+              value: {{ .Values.vaultcred.address }}
+            - name: VAULT_ROLE
+              value: {{ .Values.vaultcred.role }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

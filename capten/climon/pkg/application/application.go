@@ -13,7 +13,7 @@ import (
 	"github.com/kube-tarian/kad/capten/climon/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/capten/climon/pkg/handler"
 	"github.com/kube-tarian/kad/capten/climon/pkg/workflows"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
 )
 

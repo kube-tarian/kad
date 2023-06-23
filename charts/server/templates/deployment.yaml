@@ -54,6 +54,10 @@ spec:
               value: "{{ .Values.cassandra.username }}"
             - name: CASSANDRA_PASSWORD
               value: "{{ .Values.cassandra.password }}"
+            - name: VAULT_CRED_SERVICE
+              value: {{ .Values.vaultcred.address }}
+            - name: VAULT_ROLE
+              value: {{ .Values.vaultcred.role }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

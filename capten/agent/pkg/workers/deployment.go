@@ -11,7 +11,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/workflows"
 	"go.temporal.io/sdk/client"
 )
