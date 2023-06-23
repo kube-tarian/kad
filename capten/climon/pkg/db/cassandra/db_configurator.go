@@ -2,7 +2,7 @@
 package cassandra
 
 import (
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 )
 
 type DbConfigurator struct {

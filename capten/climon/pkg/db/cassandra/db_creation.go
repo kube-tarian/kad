@@ -3,7 +3,7 @@ package cassandra
 
 import (
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 )
 
 func Create(log logging.Logger) (Store, error) {

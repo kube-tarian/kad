@@ -9,10 +9,10 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agent"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
 	"google.golang.org/grpc/reflection"
 )
 

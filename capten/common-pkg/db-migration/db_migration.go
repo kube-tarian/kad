@@ -9,7 +9,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database"
 	"github.com/golang-migrate/migrate/v4/source"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 )
 
 var log = logging.NewLogger()

@@ -7,11 +7,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/climon/pkg/application"
 	"github.com/kube-tarian/kad/capten/climon/pkg/db/cassandra"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
 )
+
+var logger = logging.NewLogger()
 
 type TestContextData struct {
 }

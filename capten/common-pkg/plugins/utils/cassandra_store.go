@@ -3,7 +3,7 @@ package utils
 import (
 	"github.com/gocql/gocql"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 )
 
 type Configuration struct {

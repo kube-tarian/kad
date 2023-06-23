@@ -6,10 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/climon/pkg/application"
 	"github.com/kube-tarian/kad/capten/climon/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/capten/climon/pkg/temporal"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
 )
 
 func main() {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/capten/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
 	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/activities"
 	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/handler"

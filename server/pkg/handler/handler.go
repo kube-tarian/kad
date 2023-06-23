@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 	"sync"
 
@@ -113,18 +113,6 @@ func getAgentConfig(customerID string) (*types.AgentConfiguration, error) {
 	agentCfg.Address = agentInfo.Endpoint
 	agentCfg.Port = cfg.GetInt("agent.Port")
 	agentCfg.TlsEnabled = cfg.GetBool("agent.tlsEnabled")
-	vaultSession, err := client.NewVault()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get vault session: %w", err)
-	}
-
-	certMap, err := vaultSession.GetCert("secret", customerID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get certs")
-	}
-
-	agentCfg.CaCert = certMap[types.ClientCertChainFileName]
-	agentCfg.Cert = certMap[types.ClientCertFileName]
-	agentCfg.Key = certMap[types.ClientKeyFileName]
+	agentCfg.CaCert, agentCfg.Key, agentCfg.Cert, err = client.GetCaptenClusterCertificate(context.TODO(), customerID)
 	return agentCfg, err
 }
