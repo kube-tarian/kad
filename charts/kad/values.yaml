@@ -39,7 +39,8 @@ service:
 
 vaultcred:
   address: "vault-cred:8080"
-  role: capten-agent-vault-role
+  role: vault-role-capten-agent
+  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin"
 
 ingressroute:
   enabled: true
