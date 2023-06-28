@@ -7,9 +7,14 @@ CLIMON_APP_NAME := climon
 BUILD := 0.1.1
 
 gen-protoc:
+	mkdir -p server/pkg/pb/serverpb
 	mkdir -p capten/agent/pkg/agentpb
 	mkdir -p server/pkg/pb/agentpb
 	mkdir -p server/pkg/pb/climonpb
+
+	cd proto && protoc --go_out=../server/pkg/pb/serverpb/ --go_opt=paths=source_relative \
+    		--go-grpc_out=../server/pkg/pb/serverpb  --go-grpc_opt=paths=source_relative \
+    		./server.proto
 
 	cd proto && protoc --go_out=../capten/agent/pkg/agentpb/ --go_opt=paths=source_relative \
     		--go-grpc_out=../capten/agent/pkg/agentpb/ --go-grpc_opt=paths=source_relative \
