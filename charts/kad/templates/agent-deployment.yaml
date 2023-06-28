@@ -29,6 +29,7 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      serviceAccountName: {{ include "kad.serviceAccountName" . }}
       containers:
         - name: {{ .Chart.Name }}-agent
           securityContext:

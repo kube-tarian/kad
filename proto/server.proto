@@ -1,0 +1,129 @@
+
+syntax = "proto3";
+
+option go_package = "/serverpb";
+
+package serverpb;
+
+service Server {
+  rpc NewClusterRegistration (NewClusterRegistrationRequest) returns (NewClusterRegistrationResponse) {}  
+  rpc UpdateClusterRegistration (UpdateClusterRegistrationRequest) returns (UpdateClusterRegistrationResponse) {} 
+  rpc DeleteClusterRegistration (DeleteClusterRegistrationRequest) returns (DeleteClusterRegistrationResponse) {}
+  
+  rpc GetClusters (GetClustersRequest) returns (GetClustersResponse) {}  
+
+  rpc GetClusterApps (GetClusterAppsRequest) returns (GetClusterAppsResponse) {}
+  rpc GetClusterAppConfig (GetClusterAppConfigRequest) returns (GetClusterAppConfigResponse) {}
+}
+
+message NewClusterRegistrationRequest {
+  string clusterName = 1;
+  string agentEndpoint = 2;
+  string clientKeyData = 3;
+  string clientCertData = 4;
+  string clientCAChainData = 5;
+}
+
+message NewClusterRegistrationResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UpdateClusterRegistrationRequest {
+  string clusterName = 1;
+  string agentEndpoint = 2;
+  string clientKeyData = 3;
+  string clientCertData = 4;
+  string clientCAChainData = 5;
+}
+
+message UpdateClusterRegistrationResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message DeleteClusterRegistrationRequest {
+  string clusterName = 1;  
+}
+
+message DeleteClusterRegistrationResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message GetClustersRequest {
+}
+
+message GetClustersResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  repeated ClusterInfo data = 3; 
+}
+
+message GetClusterAppsRequest {
+  string clusterName = 1; 
+}
+
+message GetClusterAppsResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  repeated ClusterApps clusterApps = 3; 
+}
+
+message GetClusterAppConfigRequest {
+  string clusterName = 1;
+  string appInstanceName = 2;
+}
+
+message GetClusterAppConfigResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  string appConfig = 3; 
+}
+
+message ClusterInfo {
+  string clusterName = 1;
+  string agentEndpoint = 2;
+  repeated ClusterAttribute attributes = 3;
+  repeated AppLaunchData appLaunches = 4;
+}
+
+message AppLaunchData {
+  string appInstanceName = 1;
+  string appName = 2;
+  string appDescription = 3;
+  string appType = 4;
+  bytes appIcon = 5;
+  string launchEndpoint = 6;
+}
+
+message ClusterAttribute {
+  string key = 1;
+  string value = 2;  
+}
+
+message ClusterApps {
+  string clusterName = 1;
+  string agentEndpoint = 2;
+  repeated InstalledAppData installedApps = 3;
+}
+
+message InstalledAppData {
+  string instanceName = 1;
+  string name = 2;
+  string description = 3;
+  string type = 4;
+  string icon = 5;
+  string launchEndpoint = 6;
+  string appVersion = 7;
+  bool defaultApp = 8;
+  string installStatus = 9;
+  string runtimeStatus = 10;
+}
+
+enum StatusCode {
+  OK = 0;
+  INTERNRAL_ERROR = 1;
+  INVALID_ARGUMENT = 2;
+  NOT_FOUND = 3;
+}
