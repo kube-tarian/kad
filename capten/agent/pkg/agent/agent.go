@@ -62,11 +62,16 @@ func prepareJobResponse(run client.WorkflowRun, name string) *agentpb.JobRespons
 func (a *Agent) StoreCred(ctx context.Context, request *agentpb.StoreCredRequest) (*agentpb.StoreCredResponse, error) {
 	err := StoreCredential(ctx, request)
 	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system",
+			"failed to store credentail for entity %s, user %s", request.Credname, request.Username)
+		a.log.Errorf("failed to store credentail for entity %s, user %s, %v", request.Credname, request.Username, err)
 		return &agentpb.StoreCredResponse{
 			Status: "FAILED",
 		}, err
 	}
 
+	a.log.Audit("security", "storecred", "success", "system", "credentail stored for entity %s", request.Credname)
+	a.log.Infof("stored credentail for entity %s, user %s", request.Credname, request.Username, err)
 	return &agentpb.StoreCredResponse{
 		Status: "SUCCESS",
 	}, nil
