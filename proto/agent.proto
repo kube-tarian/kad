@@ -39,6 +39,7 @@ message StoreCredResponse {
   string status = 1;
 }
 
+
 message SyncRequest {
   string type = 1;
   string data = 2;
