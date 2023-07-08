@@ -11,6 +11,7 @@ package agentpb;
 service Agent {
   rpc SubmitJob (JobRequest) returns (JobResponse) {}
   rpc StoreCred (StoreCredRequest) returns (StoreCredResponse) {}
+  rpc StoreGerericCred (StoreGerericCredRequest) returns (StoreGenericCredResponse) {}
   rpc Sync(SyncRequest) returns (SyncResponse) {}
 
   rpc ClimonAppInstall (ClimonInstallRequest) returns (JobResponse) {}
@@ -39,6 +40,16 @@ message StoreCredResponse {
   string status = 1;
 }
 
+message StoreGerericCredRequest {
+  string               credentialType = 1;
+  string               credEntityName = 2;
+  string               credIdentifier = 3;
+  map<string, string>  credential = 4;
+}
+
+message StoreGenericCredResponse {
+  string status = 1;
+}
 
 message SyncRequest {
   string type = 1;

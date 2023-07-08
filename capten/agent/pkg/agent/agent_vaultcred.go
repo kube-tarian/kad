@@ -18,3 +18,12 @@ func StoreCredential(ctx context.Context, request *agentpb.StoreCredRequest) err
 	return credAdmin.PutServiceCredential(ctx, request.Credname, request.Username,
 		vaultcredclient.ServiceCredentail{UserName: request.Username, Password: request.Password})
 }
+
+func StoreGerericCredential(ctx context.Context, request *agentpb.StoreGerericCredRequest) error {
+	credAdmin, err := vaultcredclient.NewGerericCredentailAdmin()
+	if err != nil {
+		return errors.WithMessage(err, "error in initializing vault credential client")
+	}
+	return credAdmin.PutGenericCredential(ctx, request.CredentialType, request.CredEntityName, request.CredIdentifier,
+		vaultcredclient.GerericCredentail{Credential: request.Credential})
+}
