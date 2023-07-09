@@ -52,7 +52,7 @@ func main() {
 
 	grpcServer := grpc.NewServer()
 	agentpb.RegisterAgentServer(grpcServer, s)
-	log.Infof("Server listening at %v", listener.Addr())
+	log.Infof("Agent listening at %v", listener.Addr())
 	// Register reflection service on gRPC server.
 	reflection.Register(grpcServer)
 

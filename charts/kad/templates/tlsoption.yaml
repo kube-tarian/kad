@@ -7,7 +7,7 @@ spec:
   clientAuth:
     clientAuthType: RequireAndVerifyClientCert
     secretNames:
-    - {{ include "kad.fullname" . }}-root-ca
+    - {{ .Values.cert.secretName }}
   maxVersion: VersionTLS13
   minVersion: VersionTLS12
   sniStrict: true

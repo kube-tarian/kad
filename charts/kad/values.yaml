@@ -33,6 +33,9 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+env:
+  logLevel: info
+
 service:
   type: ClusterIP
   port: 8080
@@ -46,10 +49,10 @@ ingressroute:
   enabled: true
   mtls:
     enabled: false
-    caCrt: ""
-    tlsCrt: ""
-    tlsKey: ""
   host: "captenagent.dev.optimizor.app"
+
+cert:
+  secretName: "kad-agent-cert"
 
 ingress:
   enabled: false

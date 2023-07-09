@@ -9,6 +9,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kube-tarian/kad/server/api"
+	"github.com/kube-tarian/kad/server/credentials"
 	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
@@ -35,12 +36,17 @@ func (a *APIHandler) PostAgentSecret(c *gin.Context) {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", *req.CustomerId), errors.New(""))
 	}
 
-	response, err := agent.GetClient().StoreCred(
-		ctx,
-		&agentpb.StoreCredRequest{
-			Credname: *req.Credname,
-			Username: *req.Username,
-			Password: *req.Password,
+	serviceCred := credentials.ServiceCredentail{
+		UserName: *req.Username,
+		Password: *req.Password,
+	}
+	serviceCredMap := credentials.PrepareServiceCredentailMap(serviceCred)
+	response, err := agent.GetClient().StoreCredential(ctx,
+		&agentpb.StoreCredentialRequest{
+			CredentialType: credentials.ServiceUserCredentialType,
+			CredEntityName: *req.Credname,
+			CredIdentifier: *req.Username,
+			Credential:     serviceCredMap,
 		},
 	)
 	if err != nil {
@@ -48,7 +54,7 @@ func (a *APIHandler) PostAgentSecret(c *gin.Context) {
 		return
 	}
 
-	if response.Status != "SUCCESS" {
+	if response.Status != agentpb.StatusCode_OK {
 		a.setFailedResponse(c, "failed to store credentials", err)
 		return
 	}
