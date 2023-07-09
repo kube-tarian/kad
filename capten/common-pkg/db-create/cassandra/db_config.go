@@ -1,6 +1,8 @@
 // Package cassandra contains ...
 package cassandra
 
+import "github.com/gocql/gocql"
+
 type DBConfig struct {
 	DbAddresses         []string `envconfig:"DB_ADDRESSES" required:"true"`
 	DbAdminUsername     string   `envconfig:"DB_ADMIN_USERNAME" required:"true"`
@@ -13,6 +15,7 @@ type DBConfig struct {
 
 type Store interface {
 	Connect(dbAddrs []string, dbAdminUsername string, dbAdminPassword string) (err error)
+	Session() *gocql.Session
 	Close()
 	CreateDbUser(serviceUsername string, servicePassword string) (err error)
 	GrantPermission(serviceUsername string, dbName string) (err error)

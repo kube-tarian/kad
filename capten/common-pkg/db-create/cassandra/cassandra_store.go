@@ -53,7 +53,12 @@ func (c *CassandraStore) Connect(dbAddrs []string, dbAdminUsername string, dbAdm
 	return
 }
 
+func (c *CassandraStore) Session() *gocql.Session {
+	return c.session
+}
+
 func (c *CassandraStore) Close() {
+	c.logg.Info("closing cassandra session")
 	c.session.Close()
 }
 func (c *CassandraStore) CreateDbUser(serviceUsername string, servicePassword string) (err error) {

@@ -8,24 +8,24 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
+	"github.com/kube-tarian/kad/capten/common-pkg/db-create/cassandra"
 	"go.temporal.io/sdk/client"
 )
 
+var _ agentpb.AgentServer = &Agent{}
+
 type Agent struct {
 	agentpb.UnimplementedAgentServer
+
 	client *temporalclient.Client
+	store  cassandra.Store
 	log    logging.Logger
 }
 
-func NewAgent(log logging.Logger) (*Agent, error) {
-	temporalClient, err := temporalclient.NewClient(log)
-	if err != nil {
-		log.Errorf("Agent creation failed, %v", err)
-		return nil, err
-	}
-
+func NewAgent(log logging.Logger, temporalClient *temporalclient.Client, store cassandra.Store) (*Agent, error) {
 	return &Agent{
 		client: temporalClient,
+		store:  store,
 		log:    log,
 	}, nil
 }
@@ -70,4 +70,18 @@ func (a *Agent) StoreCred(ctx context.Context, request *agentpb.StoreCredRequest
 	return &agentpb.StoreCredResponse{
 		Status: "SUCCESS",
 	}, nil
+}
+
+func (a *Agent) SyncApp(ctx context.Context, request *agentpb.SyncAppRequest) (*agentpb.SyncAppResponse, error) {
+	err := a.syncApp(ctx, request)
+	if err != nil {
+		return &agentpb.SyncAppResponse{
+			Status: "FAILED",
+		}, err
+	}
+
+	return &agentpb.SyncAppResponse{
+		Status: "SUCCESS",
+	}, nil
+
 }

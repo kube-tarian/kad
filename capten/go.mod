@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/argoproj/argo-cd/v2 v2.5.5
+	github.com/davecgh/go-spew v1.1.1
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/gocql/gocql v1.3.1
@@ -54,7 +55,6 @@ require (
 	github.com/containerd/containerd v1.6.15 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/docker/cli v20.10.18+incompatible // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect

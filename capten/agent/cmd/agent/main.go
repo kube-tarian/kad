@@ -13,6 +13,8 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/agent"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
+	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
+	"github.com/kube-tarian/kad/capten/common-pkg/db-create/cassandra"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -26,7 +28,19 @@ func main() {
 		log.Fatalf("Fetching application configuration failed, %v", err)
 	}
 
-	s, err := agent.NewAgent(log)
+	//Todo: read from env var
+	store := cassandra.NewCassandraStore(log, nil)
+	err = store.Connect([]string{"localhost:9042"}, "cassandra", "cassandra")
+	if err != nil {
+		log.Fatalf("could not connect to cassandra, err: %v", err)
+	}
+
+	temporalClient, err := temporalclient.NewClient(log)
+	if err != nil {
+		log.Fatalf("Agent initialization failed, %v", err)
+	}
+
+	s, err := agent.NewAgent(log, temporalClient, store)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 	}
