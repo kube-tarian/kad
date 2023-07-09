@@ -10,7 +10,7 @@ package agentpb;
 // The greeting service definition.
 service Agent {
   rpc SubmitJob (JobRequest) returns (JobResponse) {}
-  rpc StoreCred (StoreCredRequest) returns (StoreCredResponse) {}
+  rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
   rpc Sync(SyncRequest) returns (SyncResponse) {}
 
   rpc ClimonAppInstall (ClimonInstallRequest) returns (JobResponse) {}
@@ -29,14 +29,23 @@ service Agent {
   rpc ProjectDelete (ProjectDeleteRequest) returns (JobResponse) {}
 }
 
-message StoreCredRequest {
-  string credname = 1;
-  string username = 2;
-  string password = 3;
+enum StatusCode {
+  OK = 0;
+  INTERNRAL_ERROR = 1;
+  INVALID_ARGUMENT = 2;
+  NOT_FOUND = 3;
 }
 
-message StoreCredResponse {
-  string status = 1;
+message StoreCredentialRequest {
+  string credentialType = 1;
+  string credEntityName = 2;
+  string credIdentifier = 3;
+  map<string, string>  credential = 4;  
+}
+
+message StoreCredentialResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
 }
 
 message SyncRequest {
