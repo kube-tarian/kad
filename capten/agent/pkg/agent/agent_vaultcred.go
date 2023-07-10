@@ -10,7 +10,7 @@ import (
 )
 
 func StoreCredential(ctx context.Context, request *agentpb.StoreCredentialRequest) error {
-	credAdmin, err := credentials.NewCredentailAdmin(ctx)
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		return errors.WithMessage(err, "error in initializing vault credential client")
 	}
