@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/server/api"
-	"github.com/kube-tarian/kad/server/credentials"
 	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
@@ -36,11 +36,11 @@ func (a *APIHandler) PostAgentSecret(c *gin.Context) {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", *req.CustomerId), errors.New(""))
 	}
 
-	serviceCred := credentials.ServiceCredentail{
+	serviceCred := credentials.ServiceCredential{
 		UserName: *req.Username,
 		Password: *req.Password,
 	}
-	serviceCredMap := credentials.PrepareServiceCredentailMap(serviceCred)
+	serviceCredMap := credentials.PrepareServiceCredentialMap(serviceCred)
 	response, err := agent.GetClient().StoreCredential(ctx,
 		&agentpb.StoreCredentialRequest{
 			CredentialType: credentials.ServiceUserCredentialType,
