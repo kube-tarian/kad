@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 
 	"github.com/gin-gonic/gin"
@@ -57,14 +56,14 @@ func (a *APIHandler) PostAgentEndpoint(c *gin.Context) {
 		return
 	}
 
-	err = session.RegisterEndpoint(customerId, endpoint)
+	err = session.RegisterCluster(customerId, customerId, endpoint)
 	if err != nil {
 		a.setFailedResponse(c, "failed to store data", nil)
 		logger.Error("failed to get db session", zap.Error(err))
 		return
 	}
 
-	err = client.PutCaptenClusterCertificate(c, customerId,
+	err = a.vault.PutCert(c, customerId, customerId,
 		fileContentsMap[types.ClientCertChainFileName],
 		fileContentsMap[types.ClientKeyFileName],
 		fileContentsMap[types.ClientCertFileName],

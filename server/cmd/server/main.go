@@ -2,19 +2,26 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	middleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
 	"github.com/gin-gonic/gin"
+
 	"go.uber.org/zap"
 
 	"github.com/kube-tarian/kad/server/api"
+	rpcapi "github.com/kube-tarian/kad/server/pkg/api"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/handler"
 	"github.com/kube-tarian/kad/server/pkg/log"
+	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 )
 
 func main() {
@@ -46,6 +53,29 @@ func main() {
 	if err != nil {
 		logger.Fatal("Failed to connect to cassandra database", zap.Error(err))
 	}
+
+	rpcServer, err := rpcapi.New()
+	if err != nil {
+		logger.Fatal("grpc server initialization failed", zap.Error(err))
+	}
+
+	target := fmt.Sprintf("%s:%d", cfg.GetString("server.host"), cfg.GetInt("server.tcpPort"))
+	listener, err := net.Listen("tcp", target)
+	if err != nil {
+		logger.Fatal("Failed to listen: ", zap.Error(err))
+	}
+
+	grpcServer := grpc.NewServer()
+	serverpb.RegisterServerServer(grpcServer, rpcServer)
+	logger.Info("Server listening at", zap.Any("address", listener.Addr()))
+	// Register reflection service on gRPC server.
+	reflection.Register(grpcServer)
+
+	go func() {
+		if err := grpcServer.Serve(listener); err != nil {
+			logger.Fatal("failed to start grpc server: ", zap.Error(err))
+		}
+	}()
 
 	r := gin.Default()
 	r.Use(middleware.OapiRequestValidator(swagger))

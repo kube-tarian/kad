@@ -19,6 +19,7 @@ import (
 
 type APIHandler struct {
 	agents map[string]*client.Agent
+	vault  *client.Vault
 }
 
 var (
@@ -26,8 +27,14 @@ var (
 )
 
 func NewAPIHandler() (*APIHandler, error) {
+	vaultClient, err := client.NewVault()
+	if err != nil {
+		return nil, err
+	}
+
 	return &APIHandler{
 		agents: make(map[string]*client.Agent),
+		vault:  vaultClient,
 	}, nil
 }
 
@@ -36,7 +43,7 @@ func (a *APIHandler) ConnectClient(customerId string) error {
 		return nil
 	}
 
-	agentCfg, err := getAgentConfig(customerId)
+	agentCfg, err := a.getAgentConfig(customerId)
 	if err != nil {
 		return err
 	}
@@ -95,7 +102,7 @@ func (a *APIHandler) GetStatus(c *gin.Context) {
 	c.String(http.StatusOK, "")
 }
 
-func getAgentConfig(customerID string) (*types.AgentConfiguration, error) {
+func (a *APIHandler) getAgentConfig(customerID string) (*types.AgentConfiguration, error) {
 	agentCfg := &types.AgentConfiguration{}
 	cfg := config.GetConfig()
 	session, err := db.New(cfg.GetString("server.db"))
@@ -104,15 +111,18 @@ func getAgentConfig(customerID string) (*types.AgentConfiguration, error) {
 		return nil, err
 	}
 
-	agentInfo, err := session.GetAgentInfo(customerID)
+	endpoint, err := session.GetClusterEndpoint(customerID, customerID)
 	if err != nil {
 		logrus.Error("failed to get db session", err)
 		return nil, err
 	}
 
-	agentCfg.Address = agentInfo.Endpoint
+	agentCfg.Address = endpoint
 	agentCfg.Port = cfg.GetInt("agent.Port")
 	agentCfg.TlsEnabled = cfg.GetBool("agent.tlsEnabled")
-	agentCfg.CaCert, agentCfg.Key, agentCfg.Cert, err = client.GetCaptenClusterCertificate(context.TODO(), customerID)
+	certDataMap, err := a.vault.GetCert(context.TODO(), customerID, customerID)
+	agentCfg.CaCert = certDataMap[types.ClientCertChainFileName]
+	agentCfg.Key = certDataMap[types.ClientKeyFileName]
+	agentCfg.Cert = certDataMap[types.ClientCertFileName]
 	return agentCfg, err
 }

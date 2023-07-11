@@ -2,44 +2,63 @@ package client
 
 import (
 	"context"
+	"fmt"
+	"github.com/kube-tarian/kad/server/pkg/config"
+	"github.com/kube-tarian/kad/server/pkg/types"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/pkg/errors"
-
-	vaultcredclient "github.com/intelops/go-common/vault-cred-client"
+	vaultpb "github.com/intelops/vault-cred/proto/pb/vaultcredpb"
 )
 
-func PutCaptenClusterCertificate(ctx context.Context, certIdentifier, caCertData, keyData, certData string) error {
-	certAdmin, err := vaultcredclient.NewCertificateAdmin()
+const (
+	vaultAddressCfgKey = "vault.address"
+	vaultPortCfgKey    = "vault.port"
+)
+
+type Vault struct {
+	client vaultpb.VaultCredClient
+}
+
+func NewVault() (*Vault, error) {
+	cfg := config.GetConfig()
+	target := fmt.Sprintf("%s:%d", cfg.GetString(vaultAddressCfgKey), cfg.GetInt(vaultPortCfgKey))
+	conn, err := grpc.Dial(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return errors.WithMessage(err, "error in initializing vault credential client")
+		return nil, err
 	}
 
-	err = certAdmin.StoreCertificate(ctx, vaultcredclient.CaptenClusterCert, certIdentifier,
-		vaultcredclient.CertificateData{
-			CACert: caCertData,
-			Key:    keyData,
-			Cert:   certData,
-		})
-	if err != nil {
-		err = errors.WithMessage(err, "error in storing ceritification")
+	client := vaultpb.NewVaultCredClient(conn)
+	return &Vault{
+		client: client,
+	}, nil
+}
+
+func (v *Vault) PutCert(ctx context.Context, orgId, clusterName, caCertData, keyData, certData string) error {
+	certReqMap := map[string]string{
+		types.ClientCertChainFileName: caCertData,
+		types.ClientKeyFileName:       keyData,
+		types.ClientCertFileName:      certData,
 	}
+
+	putCredReq := vaultpb.PutCredRequest{
+		CredentialType: "cert",
+		CredEntityName: orgId,
+		CredIdentifier: clusterName,
+		Credential:     certReqMap,
+	}
+
+	_, err := v.client.PutCred(ctx, &putCredReq)
 	return err
 }
 
-func GetCaptenClusterCertificate(ctx context.Context, certIdentifier string) (caCertData, keyData, certData string, err error) {
-	certReader, err := vaultcredclient.NewCertificateReader()
-	if err != nil {
-		err = errors.WithMessage(err, "error in initializing vault credential client")
-		return
+func (v *Vault) GetCert(ctx context.Context, orgId, clusterName string) (map[string]string, error) {
+	getCredReq := vaultpb.GetCredRequest{
+		CredentialType: "cert",
+		CredEntityName: orgId,
+		CredIdentifier: clusterName,
 	}
 
-	resCertData, err := certReader.GetCertificate(ctx, vaultcredclient.CaptenClusterCert, certIdentifier)
-	if err != nil {
-		err = errors.WithMessage(err, "error in reading certificate")
-		return
-	}
-	caCertData = resCertData.CACert
-	keyData = resCertData.Key
-	certData = resCertData.Cert
-	return
+	response, err := v.client.GetCred(ctx, &getCredReq)
+	return response.Credential, err
 }

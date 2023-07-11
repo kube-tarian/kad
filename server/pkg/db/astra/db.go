@@ -1,22 +1,15 @@
 package astra
 
 import (
-	"crypto/tls"
 	"fmt"
-	"github.com/kube-tarian/kad/server/pkg/config"
-	"os"
-	"sync"
-
+	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/server/pkg/types"
+	"sync"
+	"time"
 
-	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/auth"
-	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/client"
-	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
-
+	gocqlastra "github.com/datastax/gocql-astra"
+	"github.com/kube-tarian/kad/server/pkg/config"
 	"go.uber.org/zap"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 var (
@@ -24,10 +17,8 @@ var (
 	astraObj *astra
 )
 
-const keyspace = "capten"
-
 type astra struct {
-	stargateClient *client.StargateClient
+	session *gocql.Session
 }
 
 func New() (*astra, error) {
@@ -36,76 +27,142 @@ func New() (*astra, error) {
 	defer logger.Sync()
 	once.Do(func() {
 		astraObj = &astra{}
-		astraObj.stargateClient, err = connect()
+		astraObj.session, err = connect()
 		if err != nil {
 			logger.Error("failed to connect to astra db", zap.Error(err))
+		}
+		err = astraObj.initializeDb()
+		if err != nil {
+			logger.Error("failed to initialize db")
 		}
 	})
 
 	return astraObj, err
 }
 
-func connect() (*client.StargateClient, error) {
+func connect() (*gocql.Session, error) {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
+	var cluster *gocql.ClusterConfig
 	// Astra DB configuration
 	//const astraUri = "0d175de3-c592-43f7-adf5-1bdda2761385-us-east1.apps.astra.datastax.com:443"
 	//const bearerToken = "AstraCS:kYZPvIeLpthElpvKXQZUWHZF:32613fec5fe0be7f3cff755c2a09c5a411f0b0516d5521fc1fe8f3cbb3bf74ef"
 	cfg := config.GetConfig()
 	host := cfg.GetString("server.dbHost")
-	bearerToken := os.Getenv("server.dbPassword")
+	user := cfg.GetString("server.dbUsername")
+	password := cfg.GetString("server.dbPassword")
 
 	// Create connection with authentication
 	// For Astra DB:
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: false,
-	}
+	//tlsConfig := &tls.Config{
+	//	InsecureSkipVerify: false,
+	//}
 
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
-		grpc.WithBlock(),
-		grpc.WithPerRPCCredentials(
-			auth.NewStaticTokenProvider(bearerToken),
-		),
-	)
+	//conn, err := grpc.Dial(host, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+	//	grpc.WithBlock(),
+	//	grpc.WithPerRPCCredentials(
+	//		auth.NewStaticTokenProvider(bearerToken),
+	//	),
+	//)
+	//
+	//stargateClient, err := client.NewStargateClientWithConn(conn)
+	//if err != nil {
+	//	logger.Error("error creating stargate client", zap.Error(err))
+	//	return nil, err
+	//}
+	cluster, err := gocqlastra.NewClusterFromURL(host,
+		user, password, 50*time.Second)
 
-	stargateClient, err := client.NewStargateClientWithConn(conn)
 	if err != nil {
-		logger.Error("error creating stargate client", zap.Error(err))
 		return nil, err
 	}
 
-	return stargateClient, nil
-}
-
-func (a *astra) GetAgentInfo(customerID string) (*types.AgentInfo, error) {
-	agentInfo := types.AgentInfo{}
-	selectQuery := &pb.Query{
-		Cql: fmt.Sprintf("SELECT endpoint FROM %s.endpoints WHERE customer_id = %s", keyspace, customerID),
-	}
-
-	response, err := a.stargateClient.ExecuteQuery(selectQuery)
+	cluster.Timeout = 80 * time.Second
+	session, err := gocql.NewSession(*cluster)
 	if err != nil {
-		return nil, fmt.Errorf("failed fetch endpoint details %w", err)
+		return nil, err
 	}
 
-	result := response.GetResultSet()
-	if len(result.Rows) == 0 {
-		return nil, fmt.Errorf("no data found")
-	}
-
-	if len(result.Rows[0].Values) == 0 {
-		return nil, fmt.Errorf("no data found")
-	}
-
-	agentInfo.Endpoint, _ = client.ToString(result.Rows[0].Values[0])
-	return &agentInfo, nil
+	return session, nil
 }
 
-func (a *astra) RegisterEndpoint(customerID, endpoint string) error {
-	_, err := a.stargateClient.ExecuteQuery(&pb.Query{
-		Cql: fmt.Sprintf("INSERT INTO %s.endpoints (customer_id, endpoint) VALUES ('%s', '%s');",
-			keyspace, customerID, endpoint),
-	})
-	return err
+func (a *astra) initializeDb() error {
+	if err := a.session.Query(createKeyspaceQuery).Exec(); err != nil {
+		return fmt.Errorf("failed to create keyspace, %w", err)
+	}
+
+	if err := a.session.Query(createClusterEndpointTableQuery).Exec(); err != nil {
+		return fmt.Errorf("failed to create cluster_endpoint table, %w", err)
+	}
+
+	if err := a.session.Query(createClusterEndpointTableQuery).Exec(); err != nil {
+		return fmt.Errorf("failed to create cluster_endpoint table, %w", err)
+	}
+
+	return nil
+}
+
+func (a *astra) GetClusterEndpoint(orgID, clusterName string) (string, error) {
+	//selectQuery := &pb.Query{
+	//	Cql: fmt.Sprintf("SELECT endpoint FROM %s.cluster WHERE org_id = %s AND name = %s", keyspace, orgID, clusterName),
+	//}
+
+	return "", nil
+}
+
+func (a *astra) RegisterCluster(orgId, clusterName, endpoint string) error {
+	clusterId, err := a.createCluster(orgId)
+	if err != nil {
+		return err
+	}
+
+	err = a.session.Query(fmt.Sprintf("INSERT INTO %s.cluster_endpoint (cluster_id, org_id, cluster_name, endpoint) VALUES (%s, %s, '%s', '%s');",
+		keyspace, clusterId, orgId, clusterName, endpoint)).Exec()
+	if err != nil {
+		return fmt.Errorf("failed insert cluster details %w", err)
+	}
+
+	return nil
+}
+
+func (a *astra) createCluster(orgID string) (string, error) {
+	clusterId := gocql.TimeUUID()
+	iter := a.session.Query(fmt.Sprintf("Select * FROM %s.org_cluster WHERE org_id=%s;",
+		keyspace, orgID)).Iter()
+
+	clusterIds := make([]string, 0)
+	iter.Scan(&clusterIds)
+	if len(clusterIds) == 0 {
+		err := a.session.Query(
+			fmt.Sprintf("INSERT INTO %s.org_cluster(org_id, cluster_ids) VALUES (%s, {%s});",
+				keyspace, orgID, clusterId),
+		).Exec()
+		return clusterId.String(), err
+	}
+
+	err := a.session.Query(
+		fmt.Sprintf("UPDATE %s.org_cluster SET cluster_ids= cluster_ids + {%s};", keyspace, clusterId.String())).
+		Exec()
+
+	if err != nil {
+		return "", err
+	}
+
+	return clusterId.String(), nil
+}
+
+func (a *astra) UpdateCluster(orgID, clusterID, endpoint string) error {
+
+	return nil
+}
+
+func (a *astra) DeleteCluster(orgID, clusterID string) error {
+
+	return nil
+}
+
+func (a *astra) GetClusters(orgID string) ([]types.ClusterDetails, error) {
+
+	return nil, nil
 }
