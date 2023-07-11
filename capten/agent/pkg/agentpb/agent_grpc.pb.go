@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	Agent_SubmitJob_FullMethodName          = "/agentpb.Agent/SubmitJob"
-	Agent_StoreCred_FullMethodName          = "/agentpb.Agent/StoreCred"
+	Agent_StoreCredential_FullMethodName    = "/agentpb.Agent/StoreCredential"
 	Agent_Sync_FullMethodName               = "/agentpb.Agent/Sync"
 	Agent_ClimonAppInstall_FullMethodName   = "/agentpb.Agent/ClimonAppInstall"
 	Agent_ClimonAppDelete_FullMethodName    = "/agentpb.Agent/ClimonAppDelete"
@@ -39,7 +39,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AgentClient interface {
 	SubmitJob(ctx context.Context, in *JobRequest, opts ...grpc.CallOption) (*JobResponse, error)
-	StoreCred(ctx context.Context, in *StoreCredRequest, opts ...grpc.CallOption) (*StoreCredResponse, error)
+	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
 	Sync(ctx context.Context, in *SyncRequest, opts ...grpc.CallOption) (*SyncResponse, error)
 	ClimonAppInstall(ctx context.Context, in *ClimonInstallRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	ClimonAppDelete(ctx context.Context, in *ClimonDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error)
@@ -70,9 +70,9 @@ func (c *agentClient) SubmitJob(ctx context.Context, in *JobRequest, opts ...grp
 	return out, nil
 }
 
-func (c *agentClient) StoreCred(ctx context.Context, in *StoreCredRequest, opts ...grpc.CallOption) (*StoreCredResponse, error) {
-	out := new(StoreCredResponse)
-	err := c.cc.Invoke(ctx, Agent_StoreCred_FullMethodName, in, out, opts...)
+func (c *agentClient) StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error) {
+	out := new(StoreCredentialResponse)
+	err := c.cc.Invoke(ctx, Agent_StoreCredential_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (c *agentClient) ProjectDelete(ctx context.Context, in *ProjectDeleteReques
 // for forward compatibility
 type AgentServer interface {
 	SubmitJob(context.Context, *JobRequest) (*JobResponse, error)
-	StoreCred(context.Context, *StoreCredRequest) (*StoreCredResponse, error)
+	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
 	Sync(context.Context, *SyncRequest) (*SyncResponse, error)
 	ClimonAppInstall(context.Context, *ClimonInstallRequest) (*JobResponse, error)
 	ClimonAppDelete(context.Context, *ClimonDeleteRequest) (*JobResponse, error)
@@ -205,8 +205,8 @@ type UnimplementedAgentServer struct {
 func (UnimplementedAgentServer) SubmitJob(context.Context, *JobRequest) (*JobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitJob not implemented")
 }
-func (UnimplementedAgentServer) StoreCred(context.Context, *StoreCredRequest) (*StoreCredResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method StoreCred not implemented")
+func (UnimplementedAgentServer) StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StoreCredential not implemented")
 }
 func (UnimplementedAgentServer) Sync(context.Context, *SyncRequest) (*SyncResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Sync not implemented")
@@ -272,20 +272,20 @@ func _Agent_SubmitJob_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Agent_StoreCred_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StoreCredRequest)
+func _Agent_StoreCredential_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StoreCredentialRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentServer).StoreCred(ctx, in)
+		return srv.(AgentServer).StoreCredential(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Agent_StoreCred_FullMethodName,
+		FullMethod: Agent_StoreCredential_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).StoreCred(ctx, req.(*StoreCredRequest))
+		return srv.(AgentServer).StoreCredential(ctx, req.(*StoreCredentialRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -500,8 +500,8 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Agent_SubmitJob_Handler,
 		},
 		{
-			MethodName: "StoreCred",
-			Handler:    _Agent_StoreCred_Handler,
+			MethodName: "StoreCredential",
+			Handler:    _Agent_StoreCredential_Handler,
 		},
 		{
 			MethodName: "Sync",
