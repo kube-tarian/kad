@@ -2,13 +2,15 @@ package astra
 
 import (
 	"fmt"
-	"github.com/gocql/gocql"
-	"github.com/kube-tarian/kad/server/pkg/types"
 	"sync"
 	"time"
 
 	gocqlastra "github.com/datastax/gocql-astra"
+	"github.com/gocql/gocql"
+
 	"github.com/kube-tarian/kad/server/pkg/config"
+	"github.com/kube-tarian/kad/server/pkg/types"
+
 	"go.uber.org/zap"
 )
 
