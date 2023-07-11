@@ -142,5 +142,6 @@ message SyncAppRequest {
 }
 
 message SyncAppResponse {
-  string status = 1;
+  StatusCode status = 1;
+  string statusMessage = 2;
 }

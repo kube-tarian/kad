@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
@@ -22,12 +23,21 @@ type Agent struct {
 	log    logging.Logger
 }
 
-func NewAgent(log logging.Logger, temporalClient *temporalclient.Client, store cassandra.Store) (*Agent, error) {
-	return &Agent{
-		client: temporalClient,
-		store:  store,
-		log:    log,
-	}, nil
+type AgentOption func(*Agent) error
+
+func NewAgent(log logging.Logger, opts ...AgentOption) (*Agent, error) {
+
+	agent := &Agent{
+		log: log,
+	}
+	for _, opt := range opts {
+		if err := opt(agent); err != nil {
+			log.Errorf("Agent creation failed, %v", err)
+			return nil, err
+		}
+	}
+
+	return agent, nil
 }
 
 func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*agentpb.JobResponse, error) {
@@ -82,12 +92,50 @@ func (a *Agent) SyncApp(ctx context.Context, request *agentpb.SyncAppRequest) (*
 	err := a.syncApp(ctx, request)
 	if err != nil {
 		return &agentpb.SyncAppResponse{
-			Status: "FAILED",
+			Status:        agentpb.StatusCode(1),
+			StatusMessage: "FAILED",
 		}, err
 	}
 
 	return &agentpb.SyncAppResponse{
-		Status: "SUCCESS",
+		Status:        agentpb.StatusCode(0),
+		StatusMessage: "SUCCESS",
 	}, nil
 
+}
+
+func WithTemporal(log logging.Logger) AgentOption {
+
+	return func(a *Agent) error {
+		temporalClient, err := temporalclient.NewClient(log)
+		if err != nil {
+			return err
+		}
+		a.client = temporalClient
+		return nil
+	}
+
+}
+
+func WithCassandra(log logging.Logger) AgentOption {
+	return func(a *Agent) error {
+
+		store := cassandra.NewCassandraStore(log, nil)
+		config := &cassandra.DBConfig{}
+		err := envconfig.Process("", config)
+		if err != nil {
+			return err
+		}
+
+		if err := store.Connect(
+			config.DbAddresses,
+			config.DbAdminUsername,
+			config.DbAdminPassword); err != nil {
+			return err
+		}
+
+		a.store = store
+
+		return nil
+	}
 }

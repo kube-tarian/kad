@@ -7,7 +7,7 @@ import (
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
-	"github.com/kube-tarian/kad/capten/common-pkg/db-create/cassandra"
+	"github.com/kube-tarian/kad/capten/agent/pkg/types"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )
@@ -16,15 +16,12 @@ func TestSyncApp(t *testing.T) {
 
 	assert := require.New(t)
 
-	var wantConfig AppConfig
+	var wantConfig types.AppConfig
 	err := yaml.Unmarshal([]byte(content), &wantConfig)
 	assert.Nil(err)
 
-	store := cassandra.NewCassandraStore(logging.NewLogger(), nil)
-	err = store.Connect([]string{"localhost:9042"}, "cassandra", "cassandra")
-	assert.Nil(err)
-
-	agent, err := NewAgent(logging.NewLogger(), nil, store)
+	logger := logging.NewLogger()
+	agent, err := NewAgent(logger, WithCassandra(logger))
 	assert.Nil(err)
 
 	err = agent.syncApp(context.TODO(), &agentpb.SyncAppRequest{Payload: []byte(content)})

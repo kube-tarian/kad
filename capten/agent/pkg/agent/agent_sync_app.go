@@ -6,12 +6,13 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/types"
 	"gopkg.in/yaml.v2"
 )
 
 func (a Agent) syncApp(ctx context.Context, request *agentpb.SyncAppRequest) error {
 
-	var appConfig AppConfig
+	var appConfig types.AppConfig
 	if err := yaml.Unmarshal(request.Payload, &appConfig); err != nil {
 		a.log.Errorf("could not unmarshal appConfig yaml: %v", err)
 		return err
@@ -34,31 +35,6 @@ func (a Agent) syncApp(ctx context.Context, request *agentpb.SyncAppRequest) err
 	}
 
 	return nil
-}
-
-// Todo: These structs along with proto file should be a part of common package
-
-type LaunchUIConfig struct {
-	RedirectURL string `yaml:"RedirectURL"`
-}
-
-type Override struct {
-	LaunchUIConfig LaunchUIConfig `yaml:"LaunchUIConfig"`
-	LaunchUIValues map[string]any `yaml:"LaunchUIValues"`
-	Values         map[string]any `yaml:"Values"`
-}
-
-type AppConfig struct {
-	Name                string   `yaml:"Name"`
-	ChartName           string   `yaml:"ChartName"`
-	RepoName            string   `yaml:"RepoName"`
-	RepoURL             string   `yaml:"RepoURL"`
-	Namespace           string   `yaml:"Namespace"`
-	ReleaseName         string   `yaml:"ReleaseName"`
-	Version             string   `yaml:"Version"`
-	Override            Override `yaml:"Override"` // this can be marshled as json and stored as string
-	CreateNamespace     bool     `yaml:"CreateNamespace"`
-	PrivilegedNamespace bool     `yaml:"PrivilegedNamespace"`
 }
 
 const createKeyspaceCQL = "CREATE KEYSPACE IF NOT EXISTS Apps WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : %s } AND DURABLE_WRITES = true"
@@ -95,7 +71,7 @@ INSERT INTO Apps.Configs(
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
-func insert(session *gocql.Session, config AppConfig) error {
+func insert(session *gocql.Session, config types.AppConfig) error {
 	query := session.Query(insertQuery)
 	override, err := yaml.Marshal(config.Override)
 	if err != nil {
@@ -118,7 +94,7 @@ func insert(session *gocql.Session, config AppConfig) error {
 	).Exec()
 }
 
-func getAppsByName(session *gocql.Session, name string) (config AppConfig, err error) {
+func getAppsByName(session *gocql.Session, name string) (config types.AppConfig, err error) {
 
 	selectQuery := session.Query(`
 	SELECT name, chart_name, repo_name, repo_url, namespace, release_name, version, override, create_namespace, privileged_namespace
