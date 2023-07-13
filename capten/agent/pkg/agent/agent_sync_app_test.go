@@ -21,13 +21,13 @@ func TestSyncApp(t *testing.T) {
 	assert.Nil(err)
 
 	logger := logging.NewLogger()
-	agent, err := NewAgent(logger, WithCassandra(logger))
+	agent, err := NewAgent(logger, WithApp(logger))
 	assert.Nil(err)
 
 	err = agent.syncApp(context.TODO(), &agentpb.SyncAppRequest{Payload: []byte(content)})
 	assert.Nil(err)
 
-	gotConfig, err := getAppsByName(agent.store.Session(), "signoz")
+	gotConfig, err := agent.Store.GetAppConfigByName("signoz")
 	assert.Nil(err)
 
 	reflect.DeepEqual(wantConfig, gotConfig)

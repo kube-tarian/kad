@@ -7,9 +7,11 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
 	"github.com/kube-tarian/kad/capten/common-pkg/db-create/cassandra"
+
 	"go.temporal.io/sdk/client"
 )
 
@@ -19,7 +21,7 @@ type Agent struct {
 	agentpb.UnimplementedAgentServer
 
 	client *temporalclient.Client
-	store  cassandra.Store
+	Store  *store.Store
 	log    logging.Logger
 }
 
@@ -117,24 +119,24 @@ func WithTemporal(log logging.Logger) AgentOption {
 
 }
 
-func WithCassandra(log logging.Logger) AgentOption {
+func WithApp(log logging.Logger) AgentOption {
 	return func(a *Agent) error {
 
-		store := cassandra.NewCassandraStore(log, nil)
+		cs := cassandra.NewCassandraStore(log, nil)
 		config := &cassandra.DBConfig{}
 		err := envconfig.Process("", config)
 		if err != nil {
 			return err
 		}
 
-		if err := store.Connect(
+		if err := cs.Connect(
 			config.DbAddresses,
 			config.DbAdminUsername,
 			config.DbAdminPassword); err != nil {
 			return err
 		}
 
-		a.store = store
+		a.Store = store.New(cs)
 
 		return nil
 	}
