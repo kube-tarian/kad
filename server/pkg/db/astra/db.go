@@ -1,15 +1,22 @@
 package astra
 
 import (
+	"crypto/tls"
 	"fmt"
+	"strings"
 	"sync"
-	"time"
-
-	gocqlastra "github.com/datastax/gocql-astra"
-	"github.com/gocql/gocql"
 
 	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/types"
+
+	"github.com/gocql/gocql"
+	"github.com/google/uuid"
+	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/auth"
+	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/client"
+	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"go.uber.org/zap"
 )
@@ -20,7 +27,7 @@ var (
 )
 
 type astra struct {
-	session *gocql.Session
+	session *client.StargateClient
 }
 
 func New() (*astra, error) {
@@ -42,129 +49,308 @@ func New() (*astra, error) {
 	return astraObj, err
 }
 
-func connect() (*gocql.Session, error) {
+func connect() (*client.StargateClient, error) {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 
-	var cluster *gocql.ClusterConfig
-	// Astra DB configuration
+	// Astra DB configuration example (dummy entries):
 	//const astraUri = "0d175de3-c592-43f7-adf5-1bdda2761385-us-east1.apps.astra.datastax.com:443"
 	//const bearerToken = "AstraCS:kYZPvIeLpthElpvKXQZUWHZF:32613fec5fe0be7f3cff755c2a09c5a411f0b0516d5521fc1fe8f3cbb3bf74ef"
 	cfg := config.GetConfig()
 	host := cfg.GetString("server.dbHost")
-	user := cfg.GetString("server.dbUsername")
 	password := cfg.GetString("server.dbPassword")
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: false,
+	}
 
-	// Create connection with authentication
-	// For Astra DB:
-	//tlsConfig := &tls.Config{
-	//	InsecureSkipVerify: false,
-	//}
-
-	//conn, err := grpc.Dial(host, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
-	//	grpc.WithBlock(),
-	//	grpc.WithPerRPCCredentials(
-	//		auth.NewStaticTokenProvider(bearerToken),
-	//	),
-	//)
-	//
-	//stargateClient, err := client.NewStargateClientWithConn(conn)
-	//if err != nil {
-	//	logger.Error("error creating stargate client", zap.Error(err))
-	//	return nil, err
-	//}
-	cluster, err := gocqlastra.NewClusterFromURL(host,
-		user, password, 50*time.Second)
+	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+		grpc.WithBlock(),
+		grpc.WithPerRPCCredentials(
+			auth.NewStaticTokenProvider(password),
+		),
+	)
 
 	if err != nil {
+		return nil, fmt.Errorf("failed to connect to astra db: %w ", err)
+	}
+
+	stargateClient, err := client.NewStargateClientWithConn(conn)
+	if err != nil {
+		logger.Error("error creating stargate client", zap.Error(err))
 		return nil, err
 	}
 
-	cluster.Timeout = 80 * time.Second
-	session, err := gocql.NewSession(*cluster)
-	if err != nil {
-		return nil, err
-	}
-
-	return session, nil
+	return stargateClient, nil
 }
 
 func (a *astra) initializeDb() error {
-	if err := a.session.Query(createKeyspaceQuery).Exec(); err != nil {
-		return fmt.Errorf("failed to create keyspace, %w", err)
+	initDbQueries := []string{
+		createClusterEndpointTableQuery,
+		createOrgClusterTableQuery,
 	}
 
-	if err := a.session.Query(createClusterEndpointTableQuery).Exec(); err != nil {
-		return fmt.Errorf("failed to create cluster_endpoint table, %w", err)
-	}
+	for _, query := range initDbQueries {
+		createQuery := &pb.Query{
+			Cql: query,
+		}
 
-	if err := a.session.Query(createClusterEndpointTableQuery).Exec(); err != nil {
-		return fmt.Errorf("failed to create cluster_endpoint table, %w", err)
+		_, err := a.session.ExecuteQuery(createQuery)
+		if err != nil {
+			return fmt.Errorf("failed to initialise db: %w", err)
+		}
 	}
 
 	return nil
 }
 
 func (a *astra) GetClusterEndpoint(orgID, clusterName string) (string, error) {
-	//selectQuery := &pb.Query{
-	//	Cql: fmt.Sprintf("SELECT endpoint FROM %s.cluster WHERE org_id = %s AND name = %s", keyspace, orgID, clusterName),
-	//}
+	clusterId, err := a.getClusterID(orgID, clusterName)
+	if err != nil {
+		return "", fmt.Errorf("failed to get cluster endpoint: %w", err)
+	}
 
-	return "", nil
+	endpointQuery := &pb.Query{
+		Cql: fmt.Sprintf("Select endpoint FROM %s.cluster_endpoint WHERE cluster_id=%s;",
+			keyspace, clusterId),
+	}
+
+	response, err := a.session.ExecuteQuery(endpointQuery)
+	result := response.GetResultSet()
+
+	if len(result.Rows) == 0 {
+		return "", fmt.Errorf("cluster: %s not found", clusterName)
+	}
+
+	endpoint, err := client.ToString(result.Rows[0].Values[0])
+	if err != nil {
+		return "", fmt.Errorf("cluster: %s unable to convert endpoint to string", clusterName)
+	}
+
+	return endpoint, nil
 }
 
 func (a *astra) RegisterCluster(orgId, clusterName, endpoint string) error {
-	clusterId, err := a.createCluster(orgId)
+	clusterExists, err := a.clusterEntryExists(orgId)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to store cluster details: %w", err)
 	}
 
-	err = a.session.Query(fmt.Sprintf("INSERT INTO %s.cluster_endpoint (cluster_id, org_id, cluster_name, endpoint) VALUES (%s, %s, '%s', '%s');",
-		keyspace, clusterId, orgId, clusterName, endpoint)).Exec()
-	if err != nil {
-		return fmt.Errorf("failed insert cluster details %w", err)
-	}
-
-	return nil
-}
-
-func (a *astra) createCluster(orgID string) (string, error) {
 	clusterId := gocql.TimeUUID()
-	iter := a.session.Query(fmt.Sprintf("Select * FROM %s.org_cluster WHERE org_id=%s;",
-		keyspace, orgID)).Iter()
-
-	clusterIds := make([]string, 0)
-	iter.Scan(&clusterIds)
-	if len(clusterIds) == 0 {
-		err := a.session.Query(
-			fmt.Sprintf("INSERT INTO %s.org_cluster(org_id, cluster_ids) VALUES (%s, {%s});",
-				keyspace, orgID, clusterId),
-		).Exec()
-		return clusterId.String(), err
+	var batchQueries []*pb.BatchQuery
+	if clusterExists {
+		batchQueries = append(batchQueries,
+			&pb.BatchQuery{
+				Cql: fmt.Sprintf(
+					"UPDATE %s.org_cluster SET cluster_ids= cluster_ids + {%s} WHERE org_id=%s;",
+					keyspace, clusterId.String(), orgId),
+			})
+	} else {
+		batchQueries = append(batchQueries,
+			&pb.BatchQuery{
+				Cql: fmt.Sprintf("INSERT INTO %s.org_cluster(org_id, cluster_ids) VALUES (%s, {%s});",
+					keyspace, orgId, clusterId),
+			})
 	}
 
-	err := a.session.Query(
-		fmt.Sprintf("UPDATE %s.org_cluster SET cluster_ids= cluster_ids + {%s};", keyspace, clusterId.String())).
-		Exec()
+	batchQueries = append(batchQueries,
+		&pb.BatchQuery{
+			Cql: fmt.Sprintf("INSERT INTO %s.cluster_endpoint (cluster_id, org_id, cluster_name, endpoint) VALUES (%s, %s, '%s', '%s');",
+				keyspace, clusterId, orgId, clusterName, endpoint),
+		})
 
+	batch := &pb.Batch{
+		Type:    pb.Batch_LOGGED,
+		Queries: batchQueries,
+	}
+
+	_, err = a.session.ExecuteBatch(batch)
 	if err != nil {
-		return "", err
+		return fmt.Errorf("failed store cluster details %w", err)
 	}
-
-	return clusterId.String(), nil
-}
-
-func (a *astra) UpdateCluster(orgID, clusterID, endpoint string) error {
 
 	return nil
 }
 
-func (a *astra) DeleteCluster(orgID, clusterID string) error {
+func (a *astra) clusterEntryExists(orgID string) (bool, error) {
+	selectClusterQuery := &pb.Query{
+		Cql: fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
+			keyspace, orgID),
+	}
+
+	response, err := a.session.ExecuteQuery(selectClusterQuery)
+	if err != nil {
+		return false, fmt.Errorf("failed to initialise db: %w", err)
+	}
+
+	result := response.GetResultSet()
+	if len(result.Rows) > 0 {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (a *astra) UpdateCluster(orgID, clusterName, endpoint string) error {
+	clusterId, err := a.getClusterID(orgID, clusterName)
+	if err != nil {
+		return fmt.Errorf("failed to update the cluster info: %w", err)
+	}
+
+	updateQuery := &pb.Query{
+		Cql: fmt.Sprintf(
+			"UPDATE %s.cluster_endpoint set endpoint='%s' WHERE cluster_id=%s AND org_id=%s",
+			keyspace, endpoint, clusterId, orgID),
+	}
+
+	_, err = a.session.ExecuteQuery(updateQuery)
+	if err != nil {
+		return fmt.Errorf("failed to update cluster info: %w", err)
+	}
+
+	return nil
+}
+
+func (a *astra) DeleteCluster(orgID, clusterName string) error {
+	clusterId, err := a.getClusterID(orgID, clusterName)
+	if err != nil {
+		return fmt.Errorf("failed to delete cluster info: %w", err)
+	}
+
+	batch := &pb.Batch{
+		Type: pb.Batch_LOGGED,
+		Queries: []*pb.BatchQuery{
+			{
+				Cql: fmt.Sprintf(
+					"DELETE FROM %s.cluster_endpoint WHERE cluster_id=%s ;",
+					keyspace, clusterId),
+			},
+			{
+				Cql: fmt.Sprintf(
+					"UPDATE %s.org_cluster set cluster_ids = cluster_ids - {%s} WHERE org_id=%s ;",
+					keyspace, clusterId, orgID),
+			},
+		},
+	}
+
+	_, err = a.session.ExecuteBatch(batch)
+	if err != nil {
+		return fmt.Errorf("failed delete cluster details %w", err)
+	}
 
 	return nil
 }
 
 func (a *astra) GetClusters(orgID string) ([]types.ClusterDetails, error) {
+	selectClusterIdsQuery := &pb.Query{
+		Cql: fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
+			keyspace, orgID),
+	}
 
-	return nil, nil
+	response, err := a.session.ExecuteQuery(selectClusterIdsQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cluster info from db: %w", err)
+	}
+
+	result := response.GetResultSet()
+	if len(result.Rows) == 0 {
+		return []types.ClusterDetails{}, nil
+	}
+
+	clusterIds, err := client.ToSet(result.Rows[0].Values[0], UuidSetSpec)
+	if err != nil {
+		return nil, err
+	}
+
+	var clusterIdStrs []string
+	for _, clusterId := range clusterIds.([]interface{}) {
+		clusterIdStrs = append(clusterIdStrs, clusterId.(*uuid.UUID).String())
+	}
+
+	selectClustersQuery := &pb.Query{
+		Cql: fmt.Sprintf("Select cluster_name, endpoint FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
+			keyspace, strings.Join(clusterIdStrs, ",")),
+	}
+
+	response, err = a.session.ExecuteQuery(selectClustersQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cluster endpoint info from db: %w", err)
+	}
+
+	result = response.GetResultSet()
+	var clusterDetails []types.ClusterDetails
+	for _, row := range result.Rows {
+		cqlClusterName, err := client.ToString(row.Values[0])
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cluster name: %w", err)
+		}
+
+		cqlEndpoint, err := client.ToString(row.Values[1])
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cluster endpoint: %w", err)
+		}
+
+		clusterDetails = append(clusterDetails,
+			types.ClusterDetails{
+				ClusterName: cqlClusterName,
+				Endpoint:    cqlEndpoint,
+			})
+	}
+
+	return clusterDetails, nil
+}
+
+func (a *astra) getClusterID(orgID, clusterName string) (string, error) {
+	selectClusterIdsQuery := &pb.Query{
+		Cql: fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
+			keyspace, orgID),
+	}
+
+	response, err := a.session.ExecuteQuery(selectClusterIdsQuery)
+	if err != nil {
+		return "", fmt.Errorf("failed to get cluster info from db: %w", err)
+	}
+
+	result := response.GetResultSet()
+	if len(result.Rows) == 0 {
+		return "", fmt.Errorf("no cluster found for orgId %s", orgID)
+	}
+
+	clusterIds, err := client.ToSet(result.Rows[0].Values[0], UuidSetSpec)
+	if err != nil {
+		return "", err
+	}
+
+	var clusterIdStrs []string
+	for _, clusterId := range clusterIds.([]interface{}) {
+		clusterIdStrs = append(clusterIdStrs, clusterId.(*uuid.UUID).String())
+	}
+
+	selectClustersQuery := &pb.Query{
+		Cql: fmt.Sprintf("Select cluster_id, cluster_name FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
+			keyspace, strings.Join(clusterIdStrs, ",")),
+	}
+
+	response, err = a.session.ExecuteQuery(selectClustersQuery)
+	if err != nil {
+		return "", fmt.Errorf("failed to get cluster endpoint info from db: %w", err)
+	}
+
+	result = response.GetResultSet()
+	for _, row := range result.Rows {
+		cqlClusterId, err := client.ToUUID(row.Values[0])
+		if err != nil {
+			return "", fmt.Errorf("failed to get cluster uuid: %w", err)
+		}
+
+		cqlClusterName, err := client.ToString(row.Values[1])
+		if err != nil {
+			return "", fmt.Errorf("failed to get cluster name: %w", err)
+		}
+
+		if cqlClusterName == clusterName {
+			return cqlClusterId.String(), nil
+		}
+	}
+
+	return "", fmt.Errorf("cluster not found")
 }

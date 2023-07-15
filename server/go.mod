@@ -3,7 +3,6 @@ module github.com/kube-tarian/kad/server
 go 1.19
 
 require (
-	github.com/datastax/gocql-astra v0.0.0-20230519175251-eb676ab27549
 	github.com/deepmap/oapi-codegen v1.12.2
 	github.com/getkin/kin-openapi v0.108.0
 	github.com/gin-gonic/gin v1.8.1
@@ -14,6 +13,7 @@ require (
 	github.com/kube-tarian/kad/agent v0.0.0-20221228201013-ed4f78e4b887
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/viper v1.15.0
+	github.com/stargate/stargate-grpc-go-client v0.0.0-20220822130422-9a1c6261d4fa
 	github.com/stretchr/testify v1.8.2
 	go.uber.org/zap v1.24.0
 	google.golang.org/grpc v1.55.0
@@ -21,11 +21,7 @@ require (
 )
 
 require (
-	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/cenkalti/backoff/v3 v3.0.0 // indirect
-	github.com/datastax/astra-client-go/v2 v2.2.9 // indirect
-	github.com/datastax/cql-proxy v0.1.4 // indirect
-	github.com/datastax/go-cassandra-native-protocol v0.0.0-20211124104234-f6aea54fa801 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
