@@ -2,15 +2,18 @@ package db
 
 import (
 	"fmt"
-
-	"github.com/kube-tarian/kad/server/pkg/db/astra"
 	"github.com/kube-tarian/kad/server/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/server/pkg/types"
+
+	"github.com/kube-tarian/kad/server/pkg/db/astra"
 )
 
 type DB interface {
-	GetAgentInfo(customerID string) (*types.AgentInfo, error)
-	RegisterEndpoint(customerID, endpoint string) error
+	GetClusterEndpoint(organizationID, clusterName string) (string, error)
+	GetClusters(organizationID string) ([]types.ClusterDetails, error)
+	RegisterCluster(organizationID, clusterName, endpoint string) error
+	UpdateCluster(organizationID, clusterName, endpoint string) error
+	DeleteCluster(organizationID, clusterName string) error
 }
 
 func New(db string) (DB, error) {

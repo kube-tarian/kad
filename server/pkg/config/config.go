@@ -29,7 +29,7 @@ func New() (*viper.Viper, error) {
 		cfg := viper.New()
 		bindEnvs(cfg)
 		cfg.SetConfigType("yaml")
-		cfg.SetConfigName("talos")
+		cfg.SetConfigName("config")
 		cfg.AddConfigPath(getConfigPath())
 		err = cfg.ReadInConfig()
 		configObj = cfg
