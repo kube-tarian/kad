@@ -4,6 +4,6 @@ metadata:
   name: vault-role-capten-server
 data:
   roleName: vault-role-capten-server
-  policyNames: {{ .Values.vaultcred.policyNames | quote }}
+  policyNames: {{ .Values.vault.policyNames | quote }}
   servieAccounts: {{ include "server.serviceAccountName" . }}
   servieAccountNameSpaces: {{ .Release.Namespace }}

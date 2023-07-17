@@ -60,8 +60,8 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-vaultcred:
-  address: "vault-cred:8080"
+vault:
+  address: http://vault:8200
   role: vault-role-capten-server
   policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin"
 
