@@ -48,7 +48,7 @@ vaultcred:
 ingressroute:
   enabled: true
   mtls:
-    enabled: false
+    enabled: true
   host: "captenagent.dev.optimizor.app"
 
 cert:
