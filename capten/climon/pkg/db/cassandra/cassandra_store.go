@@ -4,10 +4,11 @@ package cassandra
 import (
 	"errors"
 	"fmt"
-	"github.com/kube-tarian/kad/capten/climon/pkg/types"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/kube-tarian/kad/capten/climon/pkg/types"
 
 	"github.com/kube-tarian/kad/capten/model"
 
@@ -18,7 +19,7 @@ import (
 const (
 	createKeyspaceSchemaChangeCQL         = `CREATE KEYSPACE IF NOT EXISTS schema_change WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', %s } AND DURABLE_WRITES = true`
 	createTableKeyspaceLockCQL            = "CREATE TABLE IF NOT EXISTS schema_change.lock(keyspace_to_lock text, started_at timestamp, PRIMARY KEY(keyspace_to_lock)) WITH default_time_to_live = 300"
-	createKeyspaceCQL                     = "CREATE KEYSPACE IF NOT EXISTS %s WITH REPLICATION = { 'class' : 'SimpleStrategy', 'replication_factor' : %s } AND DURABLE_WRITES = true"
+	createKeyspaceCQL                     = "CREATE KEYSPACE IF NOT EXISTS %s WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : %s } AND DURABLE_WRITES = true"
 	createUser                            = "CREATE USER %s WITH PASSWORD '%s' NOSUPERUSER;"
 	alterUser                             = "ALTER USER %s WITH PASSWORD '%s' NOSUPERUSER;"
 	grantPermission                       = "GRANT ALL PERMISSIONS ON KEYSPACE %s TO %s ;"

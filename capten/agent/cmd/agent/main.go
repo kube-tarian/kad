@@ -26,7 +26,7 @@ func main() {
 		log.Fatalf("Fetching application configuration failed, %v", err)
 	}
 
-	s, err := agent.NewAgent(log)
+	s, err := agent.NewAgent(log, agent.WithTemporal(log), agent.WithCassandraStore(log))
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 	}

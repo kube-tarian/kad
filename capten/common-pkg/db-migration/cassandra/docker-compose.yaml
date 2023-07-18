@@ -4,7 +4,7 @@ services:
   cassandra:
     image: cassandra:3.11.9
     ports:
-      - '7000:7000'
+      - '7001:7000' # for some reason port 7000 doesn't work
       - '9042:9042'
     volumes:
       - ./tests/config/cassandra.yaml:/etc/cassandra/cassandra.yaml

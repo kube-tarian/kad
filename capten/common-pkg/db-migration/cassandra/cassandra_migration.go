@@ -6,18 +6,18 @@ import (
 	"net/url"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	dbmigration "github.com/kube-tarian/kad/capten/common-pkg/db-migration"
-	"github.com/intelops/go-common/logging"
 )
 
 var log = logging.NewLogger()
 
 type DBConfig struct {
-	DbDsn       string `envconfig:"DB_ADDRESSES" required:"true"`
+	DbDsn       string `envconfig:"DB_ADDRESSES" required:"true" default:"localhost:9042"`
 	DbName      string `envconfig:"CASSANDRA_DB_NAME" required:"true"`
-	Username    string `envconfig:"DB_SERVICE_USERNAME" required:"true"`
-	Password    string `envconfig:"DB_SERVICE_PASSWD" required:"true"`
+	Username    string `envconfig:"DB_SERVICE_USERNAME" required:"true" default:"cassandra"`
+	Password    string `envconfig:"DB_SERVICE_PASSWD" required:"true" default:"cassandra"`
 	Consistency string `envconfig:"CASSANDRA_CONSISTENCY" default:"ALL"`
 	SourceURI   string `envconfig:"SOURCE_URI" default:"file:///migrations"`
 }
@@ -41,18 +41,17 @@ func NewCassandraMigrate(log logging.Logger) (*CassandraMigrate, error) {
 		log.Errorf("Not able form the DB connection Url: %v", err)
 		return nil, err
 	}
-	sourceURI := config.SourceURI
 
 	return &CassandraMigrate{
 		conf:               config,
 		log:                log,
-		sourceURI:          sourceURI,
+		sourceURI:          config.SourceURI,
 		dbConnectionString: dbConnectionString,
 	}, nil
 }
 
-func (c *CassandraMigrate) Run() error {
-	if err := dbmigration.RunMigrations(c.sourceURI, c.dbConnectionString, "cassandra"); err != nil {
+func (c *CassandraMigrate) Run(whichDb string, mode dbmigration.Mode) error {
+	if err := dbmigration.RunMigrations(c.sourceURI, c.dbConnectionString, whichDb, dbmigration.UP); err != nil {
 		log.Errorf("Error string: %s\nError: %+v", err.Error(), err)
 		return err
 	}

@@ -27,6 +27,8 @@ service Agent {
 
   rpc ProjectAdd (ProjectAddRequest) returns (JobResponse) {}
   rpc ProjectDelete (ProjectDeleteRequest) returns (JobResponse) {}
+
+  rpc SyncApp(SyncAppRequest) returns (SyncAppResponse) {}
 }
 
 enum StatusCode {
@@ -133,4 +135,13 @@ message JobResponse {
   string id = 1;
   string runID = 2;
   string workflowName = 3;
+}
+
+message SyncAppRequest {
+  bytes payload = 1;
+}
+
+message SyncAppResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
 }

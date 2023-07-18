@@ -14,15 +14,23 @@ import (
 
 var log = logging.NewLogger()
 
-func RunMigrations(sourceURL, databaseURL, dbName string) (err error) {
+type Mode int
+
+const (
+	UP    Mode = Mode(1)
+	DOWN  Mode = Mode(2)
+	PURGE Mode = Mode(3)
+)
+
+func RunMigrations(sourceURL, databaseURL, dbName string, mode Mode) (err error) {
 	sourceDriver, err := source.Open(sourceURL)
 	if err != nil {
 		return err
 	}
+	defer sourceDriver.Close()
 
 	dbDriver, err := database.Open(databaseURL)
 	if err != nil {
-		sourceDriver.Close()
 		return err
 	}
 
@@ -41,7 +49,15 @@ func RunMigrations(sourceURL, databaseURL, dbName string) (err error) {
 		return nil
 	}
 
-	err = mgr.Up()
+	switch mode {
+	case UP:
+		err = mgr.Up()
+	case DOWN:
+		err = mgr.Down()
+	case PURGE:
+		err = mgr.Drop()
+	}
+
 	if err == migrate.ErrNoChange {
 		return nil
 	}
