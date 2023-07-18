@@ -3,19 +3,22 @@ package client
 import (
 	"context"
 
+	"github.com/intelops/go-common/credentials"
 	"github.com/pkg/errors"
+)
 
-	vaultcredclient "github.com/intelops/go-common/vault-cred-client"
+const (
+	captenClusterCertType = "capten-cert"
 )
 
 func PutCaptenClusterCertificate(ctx context.Context, certIdentifier, caCertData, keyData, certData string) error {
-	certAdmin, err := vaultcredclient.NewCertificateAdmin()
+	certAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		return errors.WithMessage(err, "error in initializing vault credential client")
 	}
 
-	err = certAdmin.StoreCertificate(ctx, vaultcredclient.CaptenClusterCert, certIdentifier,
-		vaultcredclient.CertificateData{
+	err = certAdmin.PutCertificateData(ctx, captenClusterCertType, certIdentifier,
+		credentials.CertificateData{
 			CACert: caCertData,
 			Key:    keyData,
 			Cert:   certData,
@@ -27,13 +30,13 @@ func PutCaptenClusterCertificate(ctx context.Context, certIdentifier, caCertData
 }
 
 func GetCaptenClusterCertificate(ctx context.Context, certIdentifier string) (caCertData, keyData, certData string, err error) {
-	certReader, err := vaultcredclient.NewCertificateReader()
+	certReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
 		err = errors.WithMessage(err, "error in initializing vault credential client")
 		return
 	}
 
-	resCertData, err := certReader.GetCertificate(ctx, vaultcredclient.CaptenClusterCert, certIdentifier)
+	resCertData, err := certReader.GetCertificateData(ctx, captenClusterCertType, certIdentifier)
 	if err != nil {
 		err = errors.WithMessage(err, "error in reading certificate")
 		return

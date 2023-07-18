@@ -48,16 +48,18 @@ spec:
           env:
             - name: PORT
               value: "{{ .Values.service.port }}"
+            - name: LOG_LEVEL
+              value: {{ .Values.env.logLevel }}
             - name: CASSANDRA_HOST
               value: "{{ .Values.cassandra.host }}"
             - name: CASSANDRA_USERNAME
               value: "{{ .Values.cassandra.username }}"
             - name: CASSANDRA_PASSWORD
               value: "{{ .Values.cassandra.password }}"
-            - name: VAULT_CRED_SERVICE
-              value: {{ .Values.vaultcred.address }}
+            - name: VAULT_ADDR
+              value: {{ .Values.vault.address }}
             - name: VAULT_ROLE
-              value: {{ .Values.vaultcred.role }}
+              value: {{ .Values.vault.role }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

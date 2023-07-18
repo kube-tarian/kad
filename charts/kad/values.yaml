@@ -40,15 +40,15 @@ service:
   type: ClusterIP
   port: 8080
 
-vaultcred:
-  address: "vault-cred:8080"
+vault:
+  address: http://vault:8200
   role: vault-role-capten-agent
   policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin"
 
 ingressroute:
   enabled: true
   mtls:
-    enabled: false
+    enabled: true
   host: "captenagent.dev.optimizor.app"
 
 cert:

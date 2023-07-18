@@ -19,7 +19,7 @@ import (
 var log = logging.NewLogger()
 
 func main() {
-	log.Debugf("Staring Agent")
+	log.Infof("Staring Agent")
 
 	cfg, err := config.FetchConfiguration()
 	if err != nil {

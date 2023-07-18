@@ -74,7 +74,7 @@ func prepareJobResponse(run client.WorkflowRun, name string) *agentpb.JobRespons
 
 func (a *Agent) StoreCred(ctx context.Context, request *agentpb.StoreCredentialRequest) (*agentpb.StoreCredentialResponse, error) {
 	credPath := fmt.Sprintf("%s/%s/%s", request.CredentialType, request.CredEntityName, request.CredIdentifier)
-	err := StoreCredential(ctx, request)
+	res, err := a.StoreCredential(ctx, request)
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to store credentail for %s", credPath)
 		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
@@ -86,9 +86,7 @@ func (a *Agent) StoreCred(ctx context.Context, request *agentpb.StoreCredentialR
 
 	a.log.Audit("security", "storecred", "success", "system", "credentail stored for %s", credPath)
 	a.log.Infof("stored credentail for entity %s", credPath)
-	return &agentpb.StoreCredentialResponse{
-		Status: *agentpb.StatusCode_OK.Enum(),
-	}, nil
+	return res, nil
 }
 
 func (a *Agent) SyncApp(ctx context.Context, request *agentpb.SyncAppRequest) (*agentpb.SyncAppResponse, error) {
