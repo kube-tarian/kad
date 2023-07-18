@@ -21,12 +21,12 @@ var log = logging.NewLogger()
 func main() {
 	log.Infof("Staring Agent")
 
-	cfg, err := config.FetchConfiguration()
+	cfg, err := config.GetServiceConfig()
 	if err != nil {
-		log.Fatalf("Fetching application configuration failed, %v", err)
+		log.Fatalf("service config reading failed, %v", err)
 	}
 
-	s, err := agent.NewAgent(log, agent.WithTemporal(log), agent.WithCassandraStore(log))
+	s, err := agent.NewAgent(log)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 	}
@@ -39,7 +39,6 @@ func main() {
 	grpcServer := grpc.NewServer()
 	agentpb.RegisterAgentServer(grpcServer, s)
 	log.Infof("Agent listening at %v", listener.Addr())
-	// Register reflection service on gRPC server.
 	reflection.Register(grpcServer)
 
 	go func() {
