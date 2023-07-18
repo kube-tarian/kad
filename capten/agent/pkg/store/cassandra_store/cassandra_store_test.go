@@ -1,10 +1,11 @@
-package store
+package cassandra_store
 
 import (
 	"os"
 	"testing"
 
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/capten/agent/pkg/store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/types"
 	"github.com/kube-tarian/kad/capten/common-pkg/db-create/cassandra"
 	dbmigration "github.com/kube-tarian/kad/capten/common-pkg/db-migration"
@@ -16,7 +17,7 @@ type StoreSuite struct {
 	suite.Suite
 
 	logger logging.Logger
-	store  *Store
+	cs     store.StoreIface
 	mig    *migrator.CassandraMigrate
 }
 
@@ -30,12 +31,11 @@ func TestStoreTestSuite(t *testing.T) {
 	if err != nil {
 		t.Fatalf("couldn't connect to cassandra, err: %v", err)
 	}
-	ss.store = New(cdb)
-
-	err = ss.store.CreateLockSchemaDb("1")
+	err = cdb.CreateLockSchemaDb("1")
 	if err != nil {
 		t.Fatalf("createLockSchemaDb failed, err: %v", err)
 	}
+	ss.cs = New(cdb)
 
 	suite.Run(t, ss)
 
@@ -44,16 +44,14 @@ func TestStoreTestSuite(t *testing.T) {
 func (suite *StoreSuite) SetupSuite() {
 
 	// create keyspace
-	err := suite.store.CreateKeyspace("Apps", "1")
+	err := suite.cs.CreateDB("apps")
 	if err != nil {
 		suite.FailNowf("error creating db/keyspace", "err: %v", err)
 	}
-	suite.logger.Infof("Keyspace %v created!", "Apps")
 
 	// setEnvVars
 	os.Setenv("SOURCE_URI", "file://migrations")
-	os.Setenv("CASSANDRA_DB_NAME", "apps") // keyspace
-	// Note: apparently this keyspace is created in small case
+	os.Setenv("CASSANDRA_DB_NAME", "apps") // dbName/keyspace
 
 	mig, err := migrator.NewCassandraMigrate(suite.logger)
 	if err != nil {
@@ -75,18 +73,31 @@ func (suite *StoreSuite) TearDownSuite() {
 	if err := suite.mig.Run("cassandra", dbmigration.PURGE); err != nil {
 		suite.logger.Errorf("Error migrating down, err: %v", err)
 	}
-	if err := suite.store.DropKeyspace("apps"); err != nil {
+	if err := suite.cs.DropDB("apps"); err != nil {
 		suite.logger.Errorf("Error dropping keyspace apps, err: %v", err)
 	}
-	suite.store.cassandraStore.Session().Close()
+	suite.cs.CloseSession()
 }
 
 func (suite *StoreSuite) TestInsertAndGetAppConfigs() {
 
 	for _, config := range configs {
-		err := suite.store.InsertAppConfig(config)
+		err := suite.cs.InsertAppConfig(config)
 		suite.Nil(err)
 	}
+
+	for _, config := range upsertConfigs {
+		err := suite.cs.UpsertAppConfig(config)
+		suite.Nil(err)
+	}
+
+	cfg, err := suite.cs.GetAppConfigByName("App1")
+	suite.Nil(err)
+
+	suite.Equal("App1", cfg.Name)
+	suite.Equal("App1ChartName", cfg.ChartName)
+	suite.Empty(cfg.RepoName, "non empty repoName")
+	suite.Equal("2", cfg.Version)
 
 }
 
@@ -94,12 +105,20 @@ var configs = []types.AppConfig{
 	{
 		Name:      "App1",
 		ChartName: "App1ChartName",
-		Override:  types.Override{LaunchUIValues: map[string]any{}, Values: map[string]any{}},
+		Version:   "1",
+		Override:  &types.Override{LaunchUIValues: map[string]any{}, Values: map[string]any{}},
 	},
 
 	{
 		Name:      "App2",
 		ChartName: "App2ChartName",
-		Override:  types.Override{LaunchUIValues: map[string]any{}, Values: map[string]any{}},
+		Override:  &types.Override{LaunchUIValues: map[string]any{}, Values: map[string]any{}},
+	},
+}
+
+var upsertConfigs = []types.AppConfig{
+	{
+		Name:    "App1",
+		Version: "2",
 	},
 }

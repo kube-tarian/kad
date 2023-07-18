@@ -6,6 +6,7 @@ import (
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/common-pkg/db-create/cassandra"
+	dbmigration "github.com/kube-tarian/kad/capten/common-pkg/db-migration"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +20,10 @@ func TestCreate(t *testing.T) {
 	migrationClient, err := NewCassandraMigrate(log)
 	assert.Nil(t, err)
 
-	err = migrationClient.Run("cassandra")
+	err = migrationClient.Run("cassandra", dbmigration.UP)
+	assert.Nil(t, err)
+
+	err = migrationClient.Run("cassandra", dbmigration.PURGE)
 	assert.Nil(t, err)
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/store"
+	"github.com/kube-tarian/kad/capten/agent/pkg/store/cassandra_store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
 	"github.com/kube-tarian/kad/capten/common-pkg/db-create/cassandra"
@@ -21,7 +22,7 @@ type Agent struct {
 	agentpb.UnimplementedAgentServer
 
 	client *temporalclient.Client
-	Store  *store.Store
+	Store  store.StoreIface
 	log    logging.Logger
 }
 
@@ -119,7 +120,7 @@ func WithTemporal(log logging.Logger) AgentOption {
 
 }
 
-func WithApp(log logging.Logger) AgentOption {
+func WithCassandraStore(log logging.Logger) AgentOption {
 	return func(a *Agent) error {
 
 		cs := cassandra.NewCassandraStore(log, nil)
@@ -136,7 +137,7 @@ func WithApp(log logging.Logger) AgentOption {
 			return err
 		}
 
-		a.Store = store.New(cs)
+		a.Store = cassandra_store.New(cs)
 
 		return nil
 	}
