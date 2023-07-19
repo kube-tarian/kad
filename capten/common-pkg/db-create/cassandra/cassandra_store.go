@@ -61,6 +61,7 @@ func (c *CassandraStore) Close() {
 	c.logg.Info("closing cassandra session")
 	c.session.Close()
 }
+
 func (c *CassandraStore) CreateDbUser(serviceUsername string, servicePassword string) (err error) {
 	// Create database user for service usage
 	err = c.session.Query(fmt.Sprintf(createUser, serviceUsername, servicePassword)).Exec()

@@ -45,6 +45,12 @@ vault:
   role: vault-role-capten-agent
   policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin"
 
+cassandra:
+  addresses: localhost:9042
+  userName: kadagent
+  entityName: cassandra
+  keyspace: capten
+
 ingressroute:
   enabled: true
   mtls:

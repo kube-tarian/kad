@@ -1254,8 +1254,8 @@ github.com/inconshreveable/mousetrap v1.0.1 h1:U3uMjPSQEBMNp1lFxmllqCPM6P5u/Xq7P
 github.com/inconshreveable/mousetrap v1.0.1/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/intel/goresctrl v0.2.0/go.mod h1:+CZdzouYFn5EsxgqAQTEzMfwKwuc0fVdMrT9FCCAVRQ=
-github.com/intelops/go-common v1.0.13 h1:Gu3g56MCyDaq00ZLObNEmEIy+OIXsq6b8WUjj8C6uoA=
-github.com/intelops/go-common v1.0.13/go.mod h1:MtFNUbf8Br2pyCB4cOOGXnLcODJm6oBgmpnWpnFUD4g=
+github.com/intelops/go-common v1.0.14 h1:LfPJUqPF8DyDsay2J+ssFP+dpI5kYCQXPgIUtKadmDc=
+github.com/intelops/go-common v1.0.14/go.mod h1:MtFNUbf8Br2pyCB4cOOGXnLcODJm6oBgmpnWpnFUD4g=
 github.com/invopop/yaml v0.1.0 h1:YW3WGUoJEXYfzWBjn00zIlrw7brGVD0fUKRYDPAPhrc=
 github.com/invopop/yaml v0.1.0/go.mod h1:2XuRLgs/ouIrW3XNzuNj7J3Nvu/Dig5MXvbCEdiBN3Q=
 github.com/ishidawataru/sctp v0.0.0-20190723014705-7c296d48a2b5/go.mod h1:DM4VvS+hD/kDi1U1QsX2fnZowwBhqD0Dk3bRPKF/Oc8=

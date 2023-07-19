@@ -59,6 +59,14 @@ spec:
               value: {{ .Values.vault.address }}
             - name: VAULT_ROLE
               value: {{ .Values.vault.role }}
+            - name: DB_ADDRESSES
+              value: {{ .Values.cassandra.addresses }}
+            - name: DB_SERVICE_USERNAME
+              value: {{ .Values.cassandra.userName }}
+            - name: DB_ENTITY_NAME
+              value: {{ .Values.cassandra.entityName }}
+            - name: DB_NAME
+              value: {{ .Values.cassandra.keyspace }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

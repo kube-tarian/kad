@@ -9,7 +9,7 @@ import (
 
 func (a *Agent) ClimonAppInstall(ctx context.Context, request *agentpb.ClimonInstallRequest) (*agentpb.JobResponse, error) {
 	a.log.Infof("Recieved Climon Install event %+v", request)
-	worker := workers.NewClimon(a.client, a.log)
+	worker := workers.NewClimon(a.tc, a.log)
 
 	if request.ClusterName == "" {
 		request.ClusterName = "inbuilt"
@@ -24,7 +24,7 @@ func (a *Agent) ClimonAppInstall(ctx context.Context, request *agentpb.ClimonIns
 
 func (a *Agent) ClimonAppDelete(ctx context.Context, request *agentpb.ClimonDeleteRequest) (*agentpb.JobResponse, error) {
 	a.log.Infof("Recieved Climon delete event %+v", request)
-	worker := workers.NewClimon(a.client, a.log)
+	worker := workers.NewClimon(a.tc, a.log)
 
 	if request.ClusterName == "" {
 		request.ClusterName = "inbuilt"

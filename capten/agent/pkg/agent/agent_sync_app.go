@@ -8,18 +8,23 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func (a Agent) syncApp(ctx context.Context, request *agentpb.SyncAppRequest) error {
-
+func (a *Agent) SyncApp(ctx context.Context, request *agentpb.SyncAppRequest) (*agentpb.SyncAppResponse, error) {
 	var appConfig types.AppConfig
 	if err := yaml.Unmarshal(request.Payload, &appConfig); err != nil {
 		a.log.Errorf("could not unmarshal appConfig yaml: %v", err)
-		return err
+		return nil, err
 	}
 
-	if err := a.Store.InsertAppConfig(appConfig); err != nil {
+	if err := a.as.AddAppConfig(appConfig); err != nil {
 		a.log.Errorf("could not insert, err: %v", err)
-		return err
+		return &agentpb.SyncAppResponse{
+			Status:        agentpb.StatusCode(1),
+			StatusMessage: "FAILED",
+		}, err
 	}
 
-	return nil
+	return &agentpb.SyncAppResponse{
+		Status:        agentpb.StatusCode(0),
+		StatusMessage: "SUCCESS",
+	}, nil
 }

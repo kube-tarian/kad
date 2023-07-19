@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
 )
@@ -17,7 +18,7 @@ func (a *Agent) Sync(ctx context.Context, request *agentpb.SyncRequest) (*agentp
 
 	syncDataRequest.Type = request.Type
 	fmt.Printf("%+v", syncDataRequest)
-	syncWorker := workers.NewSync(a.client)
+	syncWorker := workers.NewSync(a.tc)
 	_, err := syncWorker.SendEvent(context.Background(), syncDataRequest)
 	if err != nil {
 		return nil, err

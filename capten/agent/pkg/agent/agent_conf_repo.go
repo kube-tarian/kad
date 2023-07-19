@@ -10,7 +10,7 @@ import (
 
 func (a *Agent) RepositoryAdd(ctx context.Context, request *agentpb.RepositoryAddRequest) (*agentpb.JobResponse, error) {
 	a.log.Infof("Recieved Deployer Install event %+v", request)
-	worker := workers.NewConfig(a.client, a.log)
+	worker := workers.NewConfig(a.tc, a.log)
 
 	run, err := worker.SendEvent(ctx, &model.ConfigureParameters{Resource: "repo", Action: "add"}, request)
 	if err != nil {
@@ -22,7 +22,7 @@ func (a *Agent) RepositoryAdd(ctx context.Context, request *agentpb.RepositoryAd
 
 func (a *Agent) RepositoryDelete(ctx context.Context, request *agentpb.RepositoryDeleteRequest) (*agentpb.JobResponse, error) {
 	a.log.Infof("Recieved Deployer delete event %+v", request)
-	worker := workers.NewConfig(a.client, a.log)
+	worker := workers.NewConfig(a.tc, a.log)
 
 	run, err := worker.SendEvent(ctx, &model.ConfigureParameters{Resource: "repo", Action: "delete"}, request)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 
 func (a *Agent) DeployerAppInstall(ctx context.Context, request *agentpb.ApplicationInstallRequest) (*agentpb.JobResponse, error) {
 	a.log.Infof("Recieved Deployer Install event %+v", request)
-	worker := workers.NewDeployment(a.client, a.log)
+	worker := workers.NewDeployment(a.tc, a.log)
 
 	if request.ClusterName == "" {
 		request.ClusterName = "inbuilt"
@@ -24,7 +24,7 @@ func (a *Agent) DeployerAppInstall(ctx context.Context, request *agentpb.Applica
 
 func (a *Agent) DeployerAppDelete(ctx context.Context, request *agentpb.ApplicationDeleteRequest) (*agentpb.JobResponse, error) {
 	a.log.Infof("Recieved Deployer delete event %+v", request)
-	worker := workers.NewDeployment(a.client, a.log)
+	worker := workers.NewDeployment(a.tc, a.log)
 
 	if request.ClusterName == "" {
 		request.ClusterName = "inbuilt"
