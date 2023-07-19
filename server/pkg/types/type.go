@@ -4,6 +4,9 @@ const (
 	ClientCertChainFileName = "cert-chain.pem"
 	ClientCertFileName      = "client.crt"
 	ClientKeyFileName       = "client.key"
+	AgentPortCfgKey         = "agent.port"
+	AgentTlsEnabledCfgKey   = "agent.tlsEnabled"
+	ServerDbCfgKey          = "server.db"
 )
 
 type AgentInfo struct {
@@ -20,4 +23,9 @@ type AgentConfiguration struct {
 	Cert       string
 	Key        string
 	TlsEnabled bool
+}
+
+type ClusterDetails struct {
+	ClusterName string
+	Endpoint    string
 }
