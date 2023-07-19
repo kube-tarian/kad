@@ -218,8 +218,8 @@ github.com/hashicorp/vault/api/auth/kubernetes v0.4.1 h1:amFWL1ZhwMWdmqvT51J9phX
 github.com/hashicorp/vault/api/auth/kubernetes v0.4.1/go.mod h1:ikWDT8Adnfvm+8DzKez50vvLD9GWD/unZfJxeqP09sU=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
-github.com/intelops/go-common v1.0.13 h1:Gu3g56MCyDaq00ZLObNEmEIy+OIXsq6b8WUjj8C6uoA=
-github.com/intelops/go-common v1.0.13/go.mod h1:MtFNUbf8Br2pyCB4cOOGXnLcODJm6oBgmpnWpnFUD4g=
+github.com/intelops/go-common v1.0.14 h1:LfPJUqPF8DyDsay2J+ssFP+dpI5kYCQXPgIUtKadmDc=
+github.com/intelops/go-common v1.0.14/go.mod h1:MtFNUbf8Br2pyCB4cOOGXnLcODJm6oBgmpnWpnFUD4g=
 github.com/intelops/vault-cred v1.0.3 h1:mnlTYh3XfWTCZ5d9HXqMnMjaJc6isSDONhmpxvJg/yY=
 github.com/intelops/vault-cred v1.0.3/go.mod h1:IPDdys+Lf0lnvyu5mbtH2MMIYbaODylmp5xGnFRpOSg=
 github.com/invopop/yaml v0.1.0 h1:YW3WGUoJEXYfzWBjn00zIlrw7brGVD0fUKRYDPAPhrc=
