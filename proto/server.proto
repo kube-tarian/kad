@@ -14,6 +14,12 @@ service Server {
 
   rpc GetClusterApps (GetClusterAppsRequest) returns (GetClusterAppsResponse) {}
   rpc GetClusterAppConfig (GetClusterAppConfigRequest) returns (GetClusterAppConfigResponse) {}
+
+  rpc AddAppStoreApp (AddAppStoreAppRequest) returns (AddAppStoreAppResponse) {}
+  rpc GetAppStoreAppConfig (GetAppStoreAppConfigRequest) returns (GetAppStoreAppConfigResponse) {}
+  rpc GetAppStoreAppList (GetAppStoreAppListRequest) returns (GetAppStoreAppListResponse) {}
+  rpc UpdateAppStoreApp(UpdateAppStoreAppRequest) returns (UpdateAppStoreAppRsponse){}
+  rpc DeleteAppStoreApp(DeleteAppStoreAppRequest) returns (DeleteAppStoreAppResponse){}
 }
 
 message NewClusterRegistrationRequest {
@@ -126,4 +132,99 @@ enum StatusCode {
   INTERNRAL_ERROR = 1;
   INVALID_ARGUMENT = 2;
   NOT_FOUND = 3;
+}
+
+
+message AddAppStoreAppRequest{
+  string name = 1;
+  string chartName = 2;
+  string repoName = 3;
+  string repoURL = 4;
+  string namespace = 5;
+  string version = 6;
+  bool createNamespace = 7;
+  bool privilegedNamespace = 8; 
+  string launchUIURL =9;
+  string launchUIRedirectURL =10;
+  string category =11;
+  bytes icon =12; 
+  string description =13;
+  bytes launchUIValues = 14;
+  bytes overrideValues = 15;
+}
+message AddAppStoreAppResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message GetAppStoreAppConfigRequest{
+  string name = 1;
+}
+message AppConfig {
+  string name = 1;
+  string chartName = 2;
+  string repoName = 3;
+  string repoURL = 4;
+  string namespace = 5;
+  string version = 6;
+  bool createNamespace = 7;
+  bool privilegedNamespace = 8; 
+  string launchUIURL =9;
+  string launchUIRedirectURL =10;
+  string category =11;
+  bytes icon =12; 
+  string description =13;
+  bytes launchUIValues = 14;
+  bytes overrideValues = 15;
+}
+message GetAppStoreAppConfigResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+  AppConfig data = 3;
+}
+
+message GetAppStoreAppListRequest{ 
+}
+message StoreApp{
+  string name = 1;
+  string version = 2;
+  string category =3;
+  string description = 4;
+  bytes  icon = 5;
+}
+message GetAppStoreAppListResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  repeated StoreApp data = 3;
+}
+
+message UpdateAppStoreAppRequest{
+  string name = 1;
+  string chartName = 2;
+  string repoName = 3;
+  string repoURL = 4;
+  string namespace = 5;
+  string version = 6;
+  bool createNamespace = 7;
+  bool privilegedNamespace = 8; 
+  string launchUIURL =9;
+  string launchUIRedirectURL =10;
+  string category =11;
+  bytes icon =12; 
+  string description =13;
+  bytes launchUIValues = 14;
+  bytes overrideValues = 15;
+}
+message UpdateAppStoreAppRsponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message DeleteAppStoreAppRequest{
+  string name = 1;
+  string version = 2;
+}
+message DeleteAppStoreAppResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
 }
