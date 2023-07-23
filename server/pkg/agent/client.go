@@ -1,9 +1,10 @@
-package client
+package agent
 
 import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/kube-tarian/kad/agent/pkg/logging"
@@ -23,9 +24,7 @@ type Agent struct {
 	log        logging.Logger
 }
 
-// NewAgent returns agent object creates grpc connection for given address
 func NewAgent(cfg *types.AgentConfiguration) (*Agent, error) {
-
 	logger := log.GetLogger()
 	defer logger.Sync()
 
