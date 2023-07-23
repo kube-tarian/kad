@@ -8,7 +8,6 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/intelops/go-common/credentials"
-	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pkg/errors"
 )
@@ -27,13 +26,12 @@ type Config struct {
 }
 
 type Client struct {
-	logger  logging.Logger
 	cluster *gocql.ClusterConfig
 	session *gocql.Session
 	conf    *Config
 }
 
-func NewClient(logger logging.Logger) (*Client, error) {
+func NewClient() (*Client, error) {
 	conf := &Config{}
 	if err := envconfig.Process("", conf); err != nil {
 		return nil, fmt.Errorf("cassandra config read faile, %v", err)
@@ -70,7 +68,6 @@ func NewClient(logger logging.Logger) (*Client, error) {
 		session.SetTrace(gocql.NewTraceWriter(session, os.Stdout))
 	}
 	store := &Client{
-		logger:  logger,
 		cluster: cluster,
 		session: session,
 		conf:    conf,
