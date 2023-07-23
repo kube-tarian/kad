@@ -27,7 +27,7 @@ func NewStore(log logging.Logger) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	client, err := cassandraclient.NewClient(log)
+	client, err := cassandraclient.NewClient()
 	if err != nil {
 		return nil, err
 	}
