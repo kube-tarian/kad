@@ -14,16 +14,18 @@ import (
 )
 
 type AstraServerStore struct {
-	c *astraclient.Client
+	c        *astraclient.Client
+	keyspace string
 }
 
 func NewStore() (*AstraServerStore, error) {
-	ac := &AstraServerStore{}
-	err := ac.initClient()
+	a := &AstraServerStore{}
+	err := a.initClient()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to astra db, %w", err)
 	}
-	return ac, nil
+	a.keyspace = a.c.Keyspace()
+	return a, nil
 }
 
 func (a *AstraServerStore) initClient() error {
@@ -34,8 +36,8 @@ func (a *AstraServerStore) initClient() error {
 
 func (a *AstraServerStore) InitializeDb() error {
 	initDbQueries := []string{
-		createClusterEndpointTableQuery,
-		createOrgClusterTableQuery,
+		fmt.Sprintf(createClusterEndpointTableQuery, a.keyspace),
+		fmt.Sprintf(createOrgClusterTableQuery, a.keyspace),
 	}
 
 	for _, query := range initDbQueries {
@@ -60,10 +62,13 @@ func (a *AstraServerStore) GetClusterEndpoint(orgID, clusterName string) (string
 
 	endpointQuery := &pb.Query{
 		Cql: fmt.Sprintf("Select endpoint FROM %s.cluster_endpoint WHERE cluster_id=%s;",
-			keyspace, clusterId),
+			a.keyspace, clusterId),
 	}
 
 	response, err := a.c.Session().ExecuteQuery(endpointQuery)
+	if err != nil {
+		return "", err
+	}
 	result := response.GetResultSet()
 
 	if len(result.Rows) == 0 {
@@ -91,20 +96,20 @@ func (a *AstraServerStore) AddCluster(orgId, clusterName, endpoint string) error
 			&pb.BatchQuery{
 				Cql: fmt.Sprintf(
 					"UPDATE %s.org_cluster SET cluster_ids= cluster_ids + {%s} WHERE org_id=%s;",
-					keyspace, clusterId.String(), orgId),
+					a.keyspace, clusterId.String(), orgId),
 			})
 	} else {
 		batchQueries = append(batchQueries,
 			&pb.BatchQuery{
 				Cql: fmt.Sprintf("INSERT INTO %s.org_cluster(org_id, cluster_ids) VALUES (%s, {%s});",
-					keyspace, orgId, clusterId),
+					a.keyspace, orgId, clusterId),
 			})
 	}
 
 	batchQueries = append(batchQueries,
 		&pb.BatchQuery{
 			Cql: fmt.Sprintf("INSERT INTO %s.cluster_endpoint (cluster_id, org_id, cluster_name, endpoint) VALUES (%s, %s, '%s', '%s');",
-				keyspace, clusterId, orgId, clusterName, endpoint),
+				a.keyspace, clusterId, orgId, clusterName, endpoint),
 		})
 
 	batch := &pb.Batch{
@@ -123,7 +128,7 @@ func (a *AstraServerStore) AddCluster(orgId, clusterName, endpoint string) error
 func (a *AstraServerStore) clusterEntryExists(orgID string) (bool, error) {
 	selectClusterQuery := &pb.Query{
 		Cql: fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
-			keyspace, orgID),
+			a.keyspace, orgID),
 	}
 
 	response, err := a.c.Session().ExecuteQuery(selectClusterQuery)
@@ -148,7 +153,7 @@ func (a *AstraServerStore) UpdateCluster(orgID, clusterName, endpoint string) er
 	updateQuery := &pb.Query{
 		Cql: fmt.Sprintf(
 			"UPDATE %s.cluster_endpoint set endpoint='%s' WHERE cluster_id=%s AND org_id=%s",
-			keyspace, endpoint, clusterId, orgID),
+			a.keyspace, endpoint, clusterId, orgID),
 	}
 
 	_, err = a.c.Session().ExecuteQuery(updateQuery)
@@ -171,12 +176,12 @@ func (a *AstraServerStore) DeleteCluster(orgID, clusterName string) error {
 			{
 				Cql: fmt.Sprintf(
 					"DELETE FROM %s.cluster_endpoint WHERE cluster_id=%s ;",
-					keyspace, clusterId),
+					a.keyspace, clusterId),
 			},
 			{
 				Cql: fmt.Sprintf(
 					"UPDATE %s.org_cluster set cluster_ids = cluster_ids - {%s} WHERE org_id=%s ;",
-					keyspace, clusterId, orgID),
+					a.keyspace, clusterId, orgID),
 			},
 		},
 	}
@@ -192,7 +197,7 @@ func (a *AstraServerStore) DeleteCluster(orgID, clusterName string) error {
 func (a *AstraServerStore) GetClusters(orgID string) ([]types.ClusterDetails, error) {
 	selectClusterIdsQuery := &pb.Query{
 		Cql: fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
-			keyspace, orgID),
+			a.keyspace, orgID),
 	}
 
 	response, err := a.c.Session().ExecuteQuery(selectClusterIdsQuery)
@@ -217,7 +222,7 @@ func (a *AstraServerStore) GetClusters(orgID string) ([]types.ClusterDetails, er
 
 	selectClustersQuery := &pb.Query{
 		Cql: fmt.Sprintf("Select cluster_name, endpoint FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
-			keyspace, strings.Join(clusterIdStrs, ",")),
+			a.keyspace, strings.Join(clusterIdStrs, ",")),
 	}
 
 	response, err = a.c.Session().ExecuteQuery(selectClustersQuery)
@@ -251,7 +256,7 @@ func (a *AstraServerStore) GetClusters(orgID string) ([]types.ClusterDetails, er
 func (a *AstraServerStore) getClusterID(orgID, clusterName string) (string, error) {
 	selectClusterIdsQuery := &pb.Query{
 		Cql: fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
-			keyspace, orgID),
+			a.keyspace, orgID),
 	}
 
 	response, err := a.c.Session().ExecuteQuery(selectClusterIdsQuery)
@@ -276,7 +281,7 @@ func (a *AstraServerStore) getClusterID(orgID, clusterName string) (string, erro
 
 	selectClustersQuery := &pb.Query{
 		Cql: fmt.Sprintf("Select cluster_id, cluster_name FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
-			keyspace, strings.Join(clusterIdStrs, ",")),
+			a.keyspace, strings.Join(clusterIdStrs, ",")),
 	}
 
 	response, err = a.c.Session().ExecuteQuery(selectClustersQuery)

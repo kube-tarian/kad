@@ -10,12 +10,17 @@ import (
 )
 
 type CassandraServerStore struct {
-	c *cassandraclient.Client
+	c        *cassandraclient.Client
+	keyspace string
 }
 
 func NewStore() (*CassandraServerStore, error) {
 	cs := &CassandraServerStore{}
 	err := cs.initSession()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to cassandra db, %w", err)
+	}
+	cs.keyspace = cs.c.Keyspace()
 	return cs, err
 }
 
@@ -29,15 +34,15 @@ func (c *CassandraServerStore) initSession() error {
 }
 
 func (c *CassandraServerStore) InitializeDb() error {
-	if err := c.c.Session().Query(createKeyspaceQuery).Exec(); err != nil {
-		return fmt.Errorf("failed to create keyspace, %w", err)
+	if err := c.c.Session().Query(fmt.Sprintf(createKeyspaceQuery, c.keyspace)).Exec(); err != nil {
+		return fmt.Errorf("failed to create c.keyspace, %w", err)
 	}
 
-	if err := c.c.Session().Query(createClusterEndpointTableQuery).Exec(); err != nil {
+	if err := c.c.Session().Query(fmt.Sprintf(createClusterEndpointTableQuery, c.keyspace)).Exec(); err != nil {
 		return fmt.Errorf("failed to create cluster_endpoint table, %w", err)
 	}
 
-	if err := c.c.Session().Query(createOrgClusterTableQuery).Exec(); err != nil {
+	if err := c.c.Session().Query(fmt.Sprintf(createOrgClusterTableQuery, c.keyspace)).Exec(); err != nil {
 		return fmt.Errorf("failed to create cluster_endpoint table, %w", err)
 	}
 
@@ -51,7 +56,7 @@ func (c *CassandraServerStore) GetClusterEndpoint(orgID, clusterName string) (st
 	}
 
 	iter := c.c.Session().Query(fmt.Sprintf("Select endpoint FROM %s.cluster_endpoint WHERE cluster_id=%s;",
-		keyspace, clusterId)).Iter()
+		c.keyspace, clusterId)).Iter()
 	var endpoint string
 	iter.Scan(&endpoint)
 	return endpoint, nil
@@ -59,7 +64,7 @@ func (c *CassandraServerStore) GetClusterEndpoint(orgID, clusterName string) (st
 
 func (c *CassandraServerStore) GetClusters(orgId string) ([]types.ClusterDetails, error) {
 	iter := c.c.Session().Query(fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
-		keyspace, orgId)).Iter()
+		c.keyspace, orgId)).Iter()
 	var clusterUUIds []gocql.UUID
 	iter.Scan(&clusterUUIds)
 	var clusterIds []string
@@ -68,7 +73,7 @@ func (c *CassandraServerStore) GetClusters(orgId string) ([]types.ClusterDetails
 	}
 
 	iter = c.c.Session().Query(fmt.Sprintf("Select cluster_name, endpoint FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
-		keyspace, strings.Join(clusterIds, ","))).Iter()
+		c.keyspace, strings.Join(clusterIds, ","))).Iter()
 
 	var cqlClusterName string
 	var cqlClusterEndpoint string
@@ -96,16 +101,16 @@ func (c *CassandraServerStore) AddCluster(orgId, clusterName, endpoint string) e
 		batch.Query(
 			fmt.Sprintf(
 				"UPDATE %s.org_cluster SET cluster_ids= cluster_ids + {%s} WHERE org_id=%s;",
-				keyspace, clusterId.String(), orgId))
+				c.keyspace, clusterId.String(), orgId))
 	} else {
 		batch.Query(
 			fmt.Sprintf("INSERT INTO %s.org_cluster(org_id, cluster_ids) VALUES (%s, {%s});",
-				keyspace, orgId, clusterId),
+				c.keyspace, orgId, clusterId),
 		)
 	}
 
 	batch.Query(fmt.Sprintf("INSERT INTO %s.cluster_endpoint (cluster_id, org_id, cluster_name, endpoint) VALUES (%s, %s, '%s', '%s');",
-		keyspace, clusterId, orgId, clusterName, endpoint))
+		c.keyspace, clusterId, orgId, clusterName, endpoint))
 	err := c.c.Session().ExecuteBatch(batch)
 	if err != nil {
 		return fmt.Errorf("failed insert cluster details %w", err)
@@ -116,7 +121,7 @@ func (c *CassandraServerStore) AddCluster(orgId, clusterName, endpoint string) e
 
 func (c *CassandraServerStore) clusterEntryExists(orgID string) bool {
 	iter := c.c.Session().Query(fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
-		keyspace, orgID)).Iter()
+		c.keyspace, orgID)).Iter()
 	var clusterIds []gocql.UUID
 	iter.Scan(&clusterIds)
 	if len(clusterIds) == 0 {
@@ -134,13 +139,13 @@ func (c *CassandraServerStore) UpdateCluster(orgID, clusterName, endpoint string
 
 	err = c.c.Session().Query(fmt.Sprintf(
 		"UPDATE %s.cluster_endpoint set endpoint='%s' WHERE cluster_id=%s AND org_id=%s",
-		keyspace, endpoint, clusterId, orgID)).Exec()
+		c.keyspace, endpoint, clusterId, orgID)).Exec()
 	return err
 }
 
 func (c *CassandraServerStore) getClusterID(orgID, clusterName string) (string, error) {
 	iter := c.c.Session().Query(fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s;",
-		keyspace, orgID)).Iter()
+		c.keyspace, orgID)).Iter()
 
 	var clusterUUIds []gocql.UUID
 	iter.Scan(&clusterUUIds)
@@ -150,7 +155,7 @@ func (c *CassandraServerStore) getClusterID(orgID, clusterName string) (string, 
 	}
 
 	iter = c.c.Session().Query(fmt.Sprintf("Select cluster_id, cluster_name FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
-		keyspace, strings.Join(clusterIds, ","))).Iter()
+		c.keyspace, strings.Join(clusterIds, ","))).Iter()
 
 	var cqlClusterId gocql.UUID
 	var cqlClusterName string
@@ -177,9 +182,9 @@ func (c *CassandraServerStore) DeleteCluster(orgID, clusterName string) error {
 	batch := c.c.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(
 		"DELETE FROM %s.cluster_endpoint WHERE cluster_id=%s ;",
-		keyspace, clusterId))
+		c.keyspace, clusterId))
 	batch.Query(fmt.Sprintf(
 		"UPDATE %s.org_cluster set cluster_ids = cluster_ids - {%s} WHERE org_id=%s ;",
-		keyspace, clusterId, orgID))
+		c.keyspace, clusterId, orgID))
 	return c.c.Session().ExecuteBatch(batch)
 }
