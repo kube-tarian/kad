@@ -4,24 +4,25 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/kube-tarian/kad/server/api"
-	"github.com/kube-tarian/kad/server/pkg/client"
-	"github.com/kube-tarian/kad/server/pkg/log"
-	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
-	"github.com/kube-tarian/kad/server/pkg/types"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"reflect"
 	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/kube-tarian/kad/server/api"
+	"github.com/kube-tarian/kad/server/pkg/agent"
+	"github.com/kube-tarian/kad/server/pkg/log"
+	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/server/pkg/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAPIHandler_Close(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		customerId string
@@ -45,7 +46,7 @@ func TestAPIHandler_Close(t *testing.T) {
 
 func TestAPIHandler_CloseAll(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	tests := []struct {
 		name   string
@@ -65,7 +66,7 @@ func TestAPIHandler_CloseAll(t *testing.T) {
 
 func TestAPIHandler_ConnectClient(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		customerId string
@@ -92,7 +93,7 @@ func TestAPIHandler_ConnectClient(t *testing.T) {
 
 func TestAPIHandler_DeleteAgentClimondeploy(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -116,7 +117,7 @@ func TestAPIHandler_DeleteAgentClimondeploy(t *testing.T) {
 
 func TestAPIHandler_DeleteAgentCluster(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -140,7 +141,7 @@ func TestAPIHandler_DeleteAgentCluster(t *testing.T) {
 
 func TestAPIHandler_DeleteAgentDeploy(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -164,7 +165,7 @@ func TestAPIHandler_DeleteAgentDeploy(t *testing.T) {
 
 func TestAPIHandler_DeleteAgentProject(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -188,7 +189,7 @@ func TestAPIHandler_DeleteAgentProject(t *testing.T) {
 
 func TestAPIHandler_DeleteAgentRepository(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -212,7 +213,7 @@ func TestAPIHandler_DeleteAgentRepository(t *testing.T) {
 
 func TestAPIHandler_GetAgentEndpoint(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -236,7 +237,7 @@ func TestAPIHandler_GetAgentEndpoint(t *testing.T) {
 
 func TestAPIHandler_GetApiDocs(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -260,7 +261,7 @@ func TestAPIHandler_GetApiDocs(t *testing.T) {
 
 func TestAPIHandler_GetClient(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		customerId string
@@ -269,7 +270,7 @@ func TestAPIHandler_GetClient(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   *client.Agent
+		want   *agent.Agent
 	}{
 		// TODO: Add test cases.
 	}
@@ -287,7 +288,7 @@ func TestAPIHandler_GetClient(t *testing.T) {
 
 func TestAPIHandler_GetStatus(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -311,7 +312,7 @@ func TestAPIHandler_GetStatus(t *testing.T) {
 
 func TestAPIHandler_PostAgentApps(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -368,7 +369,7 @@ func TestAPIHandler_PostAgentApps(t *testing.T) {
 	c.Request.Header.Set("customer_id", "1")
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(jsonByte))
 	fmt.Println(c.Request.Body)
-	agentConn, err := client.NewAgent(&types.AgentConfiguration{
+	agentConn, err := agent.NewAgent(&types.AgentConfiguration{
 		Address:    "127.0.0.1",
 		Port:       9091,
 		TlsEnabled: false,
@@ -383,7 +384,7 @@ func TestAPIHandler_PostAgentApps(t *testing.T) {
 	}{
 		{
 			name: "post apps",
-			fields: fields{agents: map[string]*client.Agent{
+			fields: fields{agents: map[string]*agent.Agent{
 				"1": agentConn,
 			}},
 			args: args{c: c},
@@ -402,7 +403,7 @@ func TestAPIHandler_PostAgentApps(t *testing.T) {
 
 func TestAPIHandler_PostAgentClimondeploy(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -426,7 +427,7 @@ func TestAPIHandler_PostAgentClimondeploy(t *testing.T) {
 
 func TestAPIHandler_PostAgentCluster(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -450,7 +451,7 @@ func TestAPIHandler_PostAgentCluster(t *testing.T) {
 
 func TestAPIHandler_PostAgentDeploy(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -474,7 +475,7 @@ func TestAPIHandler_PostAgentDeploy(t *testing.T) {
 
 func TestAPIHandler_PostAgentEndpoint(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -498,7 +499,7 @@ func TestAPIHandler_PostAgentEndpoint(t *testing.T) {
 
 func TestAPIHandler_PostAgentProject(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -522,7 +523,7 @@ func TestAPIHandler_PostAgentProject(t *testing.T) {
 
 func TestAPIHandler_PostAgentRepository(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -546,7 +547,7 @@ func TestAPIHandler_PostAgentRepository(t *testing.T) {
 
 func TestAPIHandler_PostAgentSecret(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -570,7 +571,7 @@ func TestAPIHandler_PostAgentSecret(t *testing.T) {
 
 func TestAPIHandler_PutAgentClimondeploy(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -594,7 +595,7 @@ func TestAPIHandler_PutAgentClimondeploy(t *testing.T) {
 
 func TestAPIHandler_PutAgentDeploy(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -618,7 +619,7 @@ func TestAPIHandler_PutAgentDeploy(t *testing.T) {
 
 func TestAPIHandler_PutAgentEndpoint(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -642,7 +643,7 @@ func TestAPIHandler_PutAgentEndpoint(t *testing.T) {
 
 func TestAPIHandler_PutAgentProject(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -666,7 +667,7 @@ func TestAPIHandler_PutAgentProject(t *testing.T) {
 
 func TestAPIHandler_PutAgentRepository(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c *gin.Context
@@ -690,7 +691,7 @@ func TestAPIHandler_PutAgentRepository(t *testing.T) {
 
 func TestAPIHandler_getFileContent(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c        *gin.Context
@@ -724,7 +725,7 @@ func TestAPIHandler_getFileContent(t *testing.T) {
 
 func TestAPIHandler_sendResponse(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c   *gin.Context
@@ -750,7 +751,7 @@ func TestAPIHandler_sendResponse(t *testing.T) {
 
 func TestAPIHandler_setFailedResponse(t *testing.T) {
 	type fields struct {
-		agents map[string]*client.Agent
+		agents map[string]*agent.Agent
 	}
 	type args struct {
 		c   *gin.Context
@@ -791,32 +792,6 @@ func TestNewAPIHandler(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewAPIHandler() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_getAgentConfig(t *testing.T) {
-	type args struct {
-		customerID string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    *types.AgentConfiguration
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getAgentConfig(tt.args.customerID)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getAgentConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getAgentConfig() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

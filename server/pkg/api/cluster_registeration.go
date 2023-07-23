@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/db"
@@ -16,7 +17,7 @@ import (
 
 type Api struct {
 	serverpb.UnimplementedServerServer
-	agents map[string]*client.Agent
+	agents map[string]*agent.Agent
 	vault  *client.Vault
 }
 
@@ -27,7 +28,7 @@ func New() (*Api, error) {
 	}
 
 	return &Api{
-		agents: make(map[string]*client.Agent),
+		agents: make(map[string]*agent.Agent),
 		vault:  vaultClient,
 	}, nil
 }
@@ -254,16 +255,4 @@ func (a *Api) GetClusters(ctx context.Context, request *serverpb.GetClustersRequ
 		StatusMessage: "retrieved cluster details successfully",
 		Data:          data,
 	}, nil
-}
-
-func (a *Api) GetClusterApps(ctx context.Context, request *serverpb.GetClusterAppsRequest) (
-	*serverpb.GetClusterAppsResponse, error) {
-
-	return &serverpb.GetClusterAppsResponse{}, nil
-}
-
-func (a *Api) GetClusterAppConfig(ctx context.Context, request *serverpb.GetClusterAppConfigRequest) (
-	*serverpb.GetClusterAppConfigResponse, error) {
-
-	return &serverpb.GetClusterAppConfigResponse{}, nil
 }

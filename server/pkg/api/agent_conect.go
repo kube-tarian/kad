@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/kube-tarian/kad/server/pkg/client"
+	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/log"
@@ -26,7 +26,7 @@ func (a *Api) ConnectClient(orgId, clusterName string, agentCfg *types.AgentConf
 
 	logger := log.GetLogger()
 	defer logger.Sync()
-	agent, err := client.NewAgent(agentCfg)
+	agent, err := agent.NewAgent(agentCfg)
 	if err != nil {
 		logger.Error("failed to connect agent internal error", zap.Error(err))
 		return err
@@ -48,7 +48,7 @@ func (a *Api) ReConnect(orgId, clusterName string, agentCfg *types.AgentConfigur
 	return a.ConnectClient(orgId, clusterName, agentCfg)
 }
 
-func (a *Api) GetClient(orgId, clusterName string) *client.Agent {
+func (a *Api) GetClient(orgId, clusterName string) *agent.Agent {
 	agentMutex.RLock()
 	clusterKey := getClusterKey(orgId, clusterName)
 	if agent, ok := a.agents[clusterKey]; ok && agent != nil {

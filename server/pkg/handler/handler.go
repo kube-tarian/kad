@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/kube-tarian/kad/server/api"
+	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/client"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/db"
@@ -18,7 +19,7 @@ import (
 )
 
 type APIHandler struct {
-	agents map[string]*client.Agent
+	agents map[string]*agent.Agent
 	vault  *client.Vault
 }
 
@@ -33,7 +34,7 @@ func NewAPIHandler() (*APIHandler, error) {
 	}
 
 	return &APIHandler{
-		agents: make(map[string]*client.Agent),
+		agents: make(map[string]*agent.Agent),
 		vault:  vaultClient,
 	}, nil
 }
@@ -50,7 +51,7 @@ func (a *APIHandler) ConnectClient(customerId string) error {
 
 	logger := log.GetLogger()
 	defer logger.Sync()
-	agent, err := client.NewAgent(agentCfg)
+	agent, err := agent.NewAgent(agentCfg)
 	if err != nil {
 		logger.Error("failed to connect agent internal error", zap.Error(err))
 		return err
@@ -62,7 +63,7 @@ func (a *APIHandler) ConnectClient(customerId string) error {
 	return err
 }
 
-func (a *APIHandler) GetClient(customerId string) *client.Agent {
+func (a *APIHandler) GetClient(customerId string) *agent.Agent {
 	agentMutex.RLock()
 	if agent, ok := a.agents[customerId]; ok && agent != nil {
 		return agent
