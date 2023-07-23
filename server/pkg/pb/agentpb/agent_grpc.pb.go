@@ -19,20 +19,23 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Agent_SubmitJob_FullMethodName          = "/agentpb.Agent/SubmitJob"
-	Agent_StoreCredential_FullMethodName    = "/agentpb.Agent/StoreCredential"
-	Agent_Sync_FullMethodName               = "/agentpb.Agent/Sync"
-	Agent_ClimonAppInstall_FullMethodName   = "/agentpb.Agent/ClimonAppInstall"
-	Agent_ClimonAppDelete_FullMethodName    = "/agentpb.Agent/ClimonAppDelete"
-	Agent_DeployerAppInstall_FullMethodName = "/agentpb.Agent/DeployerAppInstall"
-	Agent_DeployerAppDelete_FullMethodName  = "/agentpb.Agent/DeployerAppDelete"
-	Agent_ClusterAdd_FullMethodName         = "/agentpb.Agent/ClusterAdd"
-	Agent_ClusterDelete_FullMethodName      = "/agentpb.Agent/ClusterDelete"
-	Agent_RepositoryAdd_FullMethodName      = "/agentpb.Agent/RepositoryAdd"
-	Agent_RepositoryDelete_FullMethodName   = "/agentpb.Agent/RepositoryDelete"
-	Agent_ProjectAdd_FullMethodName         = "/agentpb.Agent/ProjectAdd"
-	Agent_ProjectDelete_FullMethodName      = "/agentpb.Agent/ProjectDelete"
-	Agent_SyncApp_FullMethodName            = "/agentpb.Agent/SyncApp"
+	Agent_SubmitJob_FullMethodName                = "/agentpb.Agent/SubmitJob"
+	Agent_StoreCredential_FullMethodName          = "/agentpb.Agent/StoreCredential"
+	Agent_Sync_FullMethodName                     = "/agentpb.Agent/Sync"
+	Agent_ClimonAppInstall_FullMethodName         = "/agentpb.Agent/ClimonAppInstall"
+	Agent_ClimonAppDelete_FullMethodName          = "/agentpb.Agent/ClimonAppDelete"
+	Agent_DeployerAppInstall_FullMethodName       = "/agentpb.Agent/DeployerAppInstall"
+	Agent_DeployerAppDelete_FullMethodName        = "/agentpb.Agent/DeployerAppDelete"
+	Agent_ClusterAdd_FullMethodName               = "/agentpb.Agent/ClusterAdd"
+	Agent_ClusterDelete_FullMethodName            = "/agentpb.Agent/ClusterDelete"
+	Agent_RepositoryAdd_FullMethodName            = "/agentpb.Agent/RepositoryAdd"
+	Agent_RepositoryDelete_FullMethodName         = "/agentpb.Agent/RepositoryDelete"
+	Agent_ProjectAdd_FullMethodName               = "/agentpb.Agent/ProjectAdd"
+	Agent_ProjectDelete_FullMethodName            = "/agentpb.Agent/ProjectDelete"
+	Agent_SyncApp_FullMethodName                  = "/agentpb.Agent/SyncApp"
+	Agent_GetAllApplicationConfigs_FullMethodName = "/agentpb.Agent/GetAllApplicationConfigs"
+	Agent_GetApplicationConfig_FullMethodName     = "/agentpb.Agent/GetApplicationConfig"
+	Agent_GetApplicationValues_FullMethodName     = "/agentpb.Agent/GetApplicationValues"
 )
 
 // AgentClient is the client API for Agent service.
@@ -53,6 +56,9 @@ type AgentClient interface {
 	ProjectAdd(ctx context.Context, in *ProjectAddRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	ProjectDelete(ctx context.Context, in *ProjectDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	SyncApp(ctx context.Context, in *SyncAppRequest, opts ...grpc.CallOption) (*SyncAppResponse, error)
+	GetAllApplicationConfigs(ctx context.Context, in *GetAllApplicationConfigsRequest, opts ...grpc.CallOption) (*GetAllApplicationConfigsResponse, error)
+	GetApplicationConfig(ctx context.Context, in *GetApplicationConfigRequest, opts ...grpc.CallOption) (*GetApplicationConfigResponse, error)
+	GetApplicationValues(ctx context.Context, in *GetApplicationValuesRequest, opts ...grpc.CallOption) (*GetApplicationValuesResponse, error)
 }
 
 type agentClient struct {
@@ -189,6 +195,33 @@ func (c *agentClient) SyncApp(ctx context.Context, in *SyncAppRequest, opts ...g
 	return out, nil
 }
 
+func (c *agentClient) GetAllApplicationConfigs(ctx context.Context, in *GetAllApplicationConfigsRequest, opts ...grpc.CallOption) (*GetAllApplicationConfigsResponse, error) {
+	out := new(GetAllApplicationConfigsResponse)
+	err := c.cc.Invoke(ctx, Agent_GetAllApplicationConfigs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) GetApplicationConfig(ctx context.Context, in *GetApplicationConfigRequest, opts ...grpc.CallOption) (*GetApplicationConfigResponse, error) {
+	out := new(GetApplicationConfigResponse)
+	err := c.cc.Invoke(ctx, Agent_GetApplicationConfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) GetApplicationValues(ctx context.Context, in *GetApplicationValuesRequest, opts ...grpc.CallOption) (*GetApplicationValuesResponse, error) {
+	out := new(GetApplicationValuesResponse)
+	err := c.cc.Invoke(ctx, Agent_GetApplicationValues_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AgentServer is the server API for Agent service.
 // All implementations must embed UnimplementedAgentServer
 // for forward compatibility
@@ -207,6 +240,9 @@ type AgentServer interface {
 	ProjectAdd(context.Context, *ProjectAddRequest) (*JobResponse, error)
 	ProjectDelete(context.Context, *ProjectDeleteRequest) (*JobResponse, error)
 	SyncApp(context.Context, *SyncAppRequest) (*SyncAppResponse, error)
+	GetAllApplicationConfigs(context.Context, *GetAllApplicationConfigsRequest) (*GetAllApplicationConfigsResponse, error)
+	GetApplicationConfig(context.Context, *GetApplicationConfigRequest) (*GetApplicationConfigResponse, error)
+	GetApplicationValues(context.Context, *GetApplicationValuesRequest) (*GetApplicationValuesResponse, error)
 	mustEmbedUnimplementedAgentServer()
 }
 
@@ -255,6 +291,15 @@ func (UnimplementedAgentServer) ProjectDelete(context.Context, *ProjectDeleteReq
 }
 func (UnimplementedAgentServer) SyncApp(context.Context, *SyncAppRequest) (*SyncAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SyncApp not implemented")
+}
+func (UnimplementedAgentServer) GetAllApplicationConfigs(context.Context, *GetAllApplicationConfigsRequest) (*GetAllApplicationConfigsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllApplicationConfigs not implemented")
+}
+func (UnimplementedAgentServer) GetApplicationConfig(context.Context, *GetApplicationConfigRequest) (*GetApplicationConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetApplicationConfig not implemented")
+}
+func (UnimplementedAgentServer) GetApplicationValues(context.Context, *GetApplicationValuesRequest) (*GetApplicationValuesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetApplicationValues not implemented")
 }
 func (UnimplementedAgentServer) mustEmbedUnimplementedAgentServer() {}
 
@@ -521,6 +566,60 @@ func _Agent_SyncApp_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Agent_GetAllApplicationConfigs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllApplicationConfigsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).GetAllApplicationConfigs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_GetAllApplicationConfigs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).GetAllApplicationConfigs(ctx, req.(*GetAllApplicationConfigsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_GetApplicationConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetApplicationConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).GetApplicationConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_GetApplicationConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).GetApplicationConfig(ctx, req.(*GetApplicationConfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_GetApplicationValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetApplicationValuesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).GetApplicationValues(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_GetApplicationValues_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).GetApplicationValues(ctx, req.(*GetApplicationValuesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Agent_ServiceDesc is the grpc.ServiceDesc for Agent service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -583,6 +682,18 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SyncApp",
 			Handler:    _Agent_SyncApp_Handler,
+		},
+		{
+			MethodName: "GetAllApplicationConfigs",
+			Handler:    _Agent_GetAllApplicationConfigs_Handler,
+		},
+		{
+			MethodName: "GetApplicationConfig",
+			Handler:    _Agent_GetApplicationConfig_Handler,
+		},
+		{
+			MethodName: "GetApplicationValues",
+			Handler:    _Agent_GetApplicationValues_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

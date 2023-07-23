@@ -26,6 +26,9 @@ func main() {
 		log.Fatalf("service config reading failed, %v", err)
 	}
 
+	//create schema
+	// create migration
+
 	s, err := agent.NewAgent(log)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)

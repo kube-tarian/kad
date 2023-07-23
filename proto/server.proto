@@ -78,7 +78,7 @@ message GetClusterAppsResponse {
 
 message GetClusterAppConfigRequest {
   string clusterName = 1;
-  string appInstanceName = 2;
+  string appReleaseName = 2;
 }
 
 message GetClusterAppConfigResponse {
@@ -95,7 +95,7 @@ message ClusterInfo {
 }
 
 message AppLaunchData {
-  string appInstanceName = 1;
+  string appReleaseName = 1;
   string appName = 2;
   string appDescription = 3;
   string appType = 4;
@@ -115,16 +115,18 @@ message ClusterApps {
 }
 
 message InstalledAppData {
-  string instanceName = 1;
+  string releaseName = 1;
   string name = 2;
   string description = 3;
   string type = 4;
-  string icon = 5;
+  bytes icon = 5;
   string launchEndpoint = 6;
   string appVersion = 7;
   bool defaultApp = 8;
   string installStatus = 9;
   string runtimeStatus = 10;
+  string launchUIRedirect = 11;
+  string category = 12;
 }
 
 enum StatusCode {
@@ -144,11 +146,11 @@ message AddAppStoreAppRequest{
   string version = 6;
   bool createNamespace = 7;
   bool privilegedNamespace = 8; 
-  string launchUIURL =9;
-  string launchUIRedirectURL =10;
+  string launchUIURL = 9;
+  string launchUIRedirectURL = 10;
   string category =11;
-  bytes icon =12; 
-  string description =13;
+  bytes icon = 12; 
+  string description = 13;
   bytes launchUIValues = 14;
   bytes overrideValues = 15;
 }
@@ -169,11 +171,11 @@ message AppConfig {
   string version = 6;
   bool createNamespace = 7;
   bool privilegedNamespace = 8; 
-  string launchUIURL =9;
-  string launchUIRedirectURL =10;
-  string category =11;
-  bytes icon =12; 
-  string description =13;
+  string launchUIURL = 9;
+  string launchUIRedirectURL = 10;
+  string category = 11;
+  bytes icon = 12; 
+  string description = 13;
   bytes launchUIValues = 14;
   bytes overrideValues = 15;
 }
@@ -207,11 +209,11 @@ message UpdateAppStoreAppRequest{
   string version = 6;
   bool createNamespace = 7;
   bool privilegedNamespace = 8; 
-  string launchUIURL =9;
-  string launchUIRedirectURL =10;
-  string category =11;
-  bytes icon =12; 
-  string description =13;
+  string launchUIURL = 9;
+  string launchUIRedirectURL = 10;
+  string category = 11;
+  bytes icon = 12; 
+  string description = 13;
   bytes launchUIValues = 14;
   bytes overrideValues = 15;
 }

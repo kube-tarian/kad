@@ -106,6 +106,8 @@ type DeployerPostRequest struct {
 
 	// Version Version of the chart
 	Version *string `json:"version,omitempty"`
+
+	ValuesYaml *string `json:"values_yaml,omitempty"`
 }
 
 // ProjectDeleteRequest defines model for ProjectDeleteRequest.

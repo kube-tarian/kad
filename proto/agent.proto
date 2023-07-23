@@ -29,6 +29,10 @@ service Agent {
   rpc ProjectDelete (ProjectDeleteRequest) returns (JobResponse) {}
 
   rpc SyncApp(SyncAppRequest) returns (SyncAppResponse) {}
+  rpc GetAllApplicationConfigs(GetAllApplicationConfigsRequest) returns (GetAllApplicationConfigsResponse) {}
+
+  rpc GetApplicationConfig(GetApplicationConfigRequest) returns (GetApplicationConfigResponse) {}
+  rpc GetApplicationValues(GetApplicationValuesRequest) returns (GetApplicationValuesResponse) {}
 }
 
 enum StatusCode {
@@ -138,10 +142,61 @@ message JobResponse {
 }
 
 message SyncAppRequest {
-  bytes payload = 1;
+  AppConfig appConfig = 1;
+  AppConfigValues appConfigValues = 2;
 }
 
 message SyncAppResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }
+
+message GetAllApplicationConfigsRequest {}
+
+message GetAllApplicationConfigsResponse {
+  repeated AppConfig appConfigs = 1;
+}
+
+message GetApplicationConfigRequest {
+  string releaseName = 1;
+}
+
+message GetApplicationConfigResponse {
+  AppConfig appConfig = 1;
+}
+
+message GetApplicationValuesRequest {
+  string releaseName = 1;
+}
+
+message GetApplicationValuesResponse {
+  AppConfigValues appConfigValues = 1;
+}
+
+// ------- App Metadata -------
+
+message AppConfig {
+  string name = 1;
+  string chartName = 2;
+  string repoName = 3;
+  string repoURL = 4;
+  string namespace = 5;
+  string releaseName = 6;
+  string version = 7;
+  bool createNamespace = 8;
+  bool privilegedNamespace = 9;
+  bytes icon = 10;
+}
+
+message AppConfigValues {
+  // launch ui config
+  bytes launchUIConfig = 10;
+  
+  // values for deploying helm chart initially
+  bytes launchUiValues = 11;
+  
+  // overriden values for re-deploying helm chart
+  bytes overrideValues = 12;
+}
+
+// ------- App Metadata -------
