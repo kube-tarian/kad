@@ -1,89 +1,38 @@
 package astra
 
 import (
-	"crypto/tls"
 	"fmt"
 	"strings"
-	"sync"
 
-	"github.com/kube-tarian/kad/server/pkg/config"
+	astraclient "github.com/kube-tarian/kad/server/pkg/astra-client"
 	"github.com/kube-tarian/kad/server/pkg/types"
 
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
-	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/auth"
 	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/client"
 	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
-
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-
-	"go.uber.org/zap"
 )
 
-var (
-	once     sync.Once
-	astraObj *astra
-)
-
-type astra struct {
-	session *client.StargateClient
+type AstraServerStore struct {
+	c *astraclient.Client
 }
 
-func New() (*astra, error) {
+func NewStore() (*AstraServerStore, error) {
+	ac := &AstraServerStore{}
+	err := ac.initClient()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to astra db, %w", err)
+	}
+	return ac, nil
+}
+
+func (a *AstraServerStore) initClient() error {
 	var err error
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
-	once.Do(func() {
-		astraObj = &astra{}
-		astraObj.session, err = connect()
-		if err != nil {
-			logger.Error("failed to connect to astra db", zap.Error(err))
-		}
-		err = astraObj.initializeDb()
-		if err != nil {
-			logger.Error("failed to initialize db")
-		}
-	})
-
-	return astraObj, err
+	a.c, err = astraclient.NewClient()
+	return err
 }
 
-func connect() (*client.StargateClient, error) {
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
-
-	// Astra DB configuration example (dummy entries):
-	//const astraUri = "0d175de3-c592-43f7-adf5-1bdda2761385-us-east1.apps.astra.datastax.com:443"
-	//const bearerToken = "AstraCS:kYZPvIeLpthElpvKXQZUWHZF:32613fec5fe0be7f3cff755c2a09c5a411f0b0516d5521fc1fe8f3cbb3bf74ef"
-	cfg := config.GetConfig()
-	host := cfg.GetString("server.dbHost")
-	password := cfg.GetString("server.dbPassword")
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: false,
-	}
-
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
-		grpc.WithBlock(),
-		grpc.WithPerRPCCredentials(
-			auth.NewStaticTokenProvider(password),
-		),
-	)
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect to astra db: %w ", err)
-	}
-
-	stargateClient, err := client.NewStargateClientWithConn(conn)
-	if err != nil {
-		logger.Error("error creating stargate client", zap.Error(err))
-		return nil, err
-	}
-
-	return stargateClient, nil
-}
-
-func (a *astra) initializeDb() error {
+func (a *AstraServerStore) InitializeDb() error {
 	initDbQueries := []string{
 		createClusterEndpointTableQuery,
 		createOrgClusterTableQuery,
@@ -94,7 +43,7 @@ func (a *astra) initializeDb() error {
 			Cql: query,
 		}
 
-		_, err := a.session.ExecuteQuery(createQuery)
+		_, err := a.c.Session().ExecuteQuery(createQuery)
 		if err != nil {
 			return fmt.Errorf("failed to initialise db: %w", err)
 		}
@@ -103,7 +52,7 @@ func (a *astra) initializeDb() error {
 	return nil
 }
 
-func (a *astra) GetClusterEndpoint(orgID, clusterName string) (string, error) {
+func (a *AstraServerStore) GetClusterEndpoint(orgID, clusterName string) (string, error) {
 	clusterId, err := a.getClusterID(orgID, clusterName)
 	if err != nil {
 		return "", fmt.Errorf("failed to get cluster endpoint: %w", err)
@@ -114,7 +63,7 @@ func (a *astra) GetClusterEndpoint(orgID, clusterName string) (string, error) {
 			keyspace, clusterId),
 	}
 
-	response, err := a.session.ExecuteQuery(endpointQuery)
+	response, err := a.c.Session().ExecuteQuery(endpointQuery)
 	result := response.GetResultSet()
 
 	if len(result.Rows) == 0 {
@@ -129,7 +78,7 @@ func (a *astra) GetClusterEndpoint(orgID, clusterName string) (string, error) {
 	return endpoint, nil
 }
 
-func (a *astra) RegisterCluster(orgId, clusterName, endpoint string) error {
+func (a *AstraServerStore) AddCluster(orgId, clusterName, endpoint string) error {
 	clusterExists, err := a.clusterEntryExists(orgId)
 	if err != nil {
 		return fmt.Errorf("failed to store cluster details: %w", err)
@@ -163,7 +112,7 @@ func (a *astra) RegisterCluster(orgId, clusterName, endpoint string) error {
 		Queries: batchQueries,
 	}
 
-	_, err = a.session.ExecuteBatch(batch)
+	_, err = a.c.Session().ExecuteBatch(batch)
 	if err != nil {
 		return fmt.Errorf("failed store cluster details %w", err)
 	}
@@ -171,13 +120,13 @@ func (a *astra) RegisterCluster(orgId, clusterName, endpoint string) error {
 	return nil
 }
 
-func (a *astra) clusterEntryExists(orgID string) (bool, error) {
+func (a *AstraServerStore) clusterEntryExists(orgID string) (bool, error) {
 	selectClusterQuery := &pb.Query{
 		Cql: fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
 			keyspace, orgID),
 	}
 
-	response, err := a.session.ExecuteQuery(selectClusterQuery)
+	response, err := a.c.Session().ExecuteQuery(selectClusterQuery)
 	if err != nil {
 		return false, fmt.Errorf("failed to initialise db: %w", err)
 	}
@@ -190,7 +139,7 @@ func (a *astra) clusterEntryExists(orgID string) (bool, error) {
 	return false, nil
 }
 
-func (a *astra) UpdateCluster(orgID, clusterName, endpoint string) error {
+func (a *AstraServerStore) UpdateCluster(orgID, clusterName, endpoint string) error {
 	clusterId, err := a.getClusterID(orgID, clusterName)
 	if err != nil {
 		return fmt.Errorf("failed to update the cluster info: %w", err)
@@ -202,7 +151,7 @@ func (a *astra) UpdateCluster(orgID, clusterName, endpoint string) error {
 			keyspace, endpoint, clusterId, orgID),
 	}
 
-	_, err = a.session.ExecuteQuery(updateQuery)
+	_, err = a.c.Session().ExecuteQuery(updateQuery)
 	if err != nil {
 		return fmt.Errorf("failed to update cluster info: %w", err)
 	}
@@ -210,7 +159,7 @@ func (a *astra) UpdateCluster(orgID, clusterName, endpoint string) error {
 	return nil
 }
 
-func (a *astra) DeleteCluster(orgID, clusterName string) error {
+func (a *AstraServerStore) DeleteCluster(orgID, clusterName string) error {
 	clusterId, err := a.getClusterID(orgID, clusterName)
 	if err != nil {
 		return fmt.Errorf("failed to delete cluster info: %w", err)
@@ -232,7 +181,7 @@ func (a *astra) DeleteCluster(orgID, clusterName string) error {
 		},
 	}
 
-	_, err = a.session.ExecuteBatch(batch)
+	_, err = a.c.Session().ExecuteBatch(batch)
 	if err != nil {
 		return fmt.Errorf("failed delete cluster details %w", err)
 	}
@@ -240,13 +189,13 @@ func (a *astra) DeleteCluster(orgID, clusterName string) error {
 	return nil
 }
 
-func (a *astra) GetClusters(orgID string) ([]types.ClusterDetails, error) {
+func (a *AstraServerStore) GetClusters(orgID string) ([]types.ClusterDetails, error) {
 	selectClusterIdsQuery := &pb.Query{
 		Cql: fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
 			keyspace, orgID),
 	}
 
-	response, err := a.session.ExecuteQuery(selectClusterIdsQuery)
+	response, err := a.c.Session().ExecuteQuery(selectClusterIdsQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cluster info from db: %w", err)
 	}
@@ -271,7 +220,7 @@ func (a *astra) GetClusters(orgID string) ([]types.ClusterDetails, error) {
 			keyspace, strings.Join(clusterIdStrs, ",")),
 	}
 
-	response, err = a.session.ExecuteQuery(selectClustersQuery)
+	response, err = a.c.Session().ExecuteQuery(selectClustersQuery)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cluster endpoint info from db: %w", err)
 	}
@@ -299,13 +248,13 @@ func (a *astra) GetClusters(orgID string) ([]types.ClusterDetails, error) {
 	return clusterDetails, nil
 }
 
-func (a *astra) getClusterID(orgID, clusterName string) (string, error) {
+func (a *AstraServerStore) getClusterID(orgID, clusterName string) (string, error) {
 	selectClusterIdsQuery := &pb.Query{
 		Cql: fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
 			keyspace, orgID),
 	}
 
-	response, err := a.session.ExecuteQuery(selectClusterIdsQuery)
+	response, err := a.c.Session().ExecuteQuery(selectClusterIdsQuery)
 	if err != nil {
 		return "", fmt.Errorf("failed to get cluster info from db: %w", err)
 	}
@@ -330,7 +279,7 @@ func (a *astra) getClusterID(orgID, clusterName string) (string, error) {
 			keyspace, strings.Join(clusterIdStrs, ",")),
 	}
 
-	response, err = a.session.ExecuteQuery(selectClustersQuery)
+	response, err = a.c.Session().ExecuteQuery(selectClustersQuery)
 	if err != nil {
 		return "", fmt.Errorf("failed to get cluster endpoint info from db: %w", err)
 	}

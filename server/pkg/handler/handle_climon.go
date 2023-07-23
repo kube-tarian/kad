@@ -22,14 +22,10 @@ func (a *APIHandler) PostAgentClimondeploy(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient("1"); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
-		return
-	}
-
-	agent := a.GetClient("1")
-	if agent == nil {
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
+		return
 	}
 
 	response, err := agent.GetClient().ClimonAppInstall(
@@ -69,9 +65,10 @@ func (a *APIHandler) DeleteAgentClimondeploy(c *gin.Context) {
 		return
 	}
 
-	agent := a.GetClient("1")
-	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", req.CustomerId), errors.New(""))
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
+		return
 	}
 
 	response, err := agent.GetClient().ClimonAppDelete(

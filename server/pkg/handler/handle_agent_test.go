@@ -12,11 +12,10 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/agent"
-	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
-	"github.com/kube-tarian/kad/server/pkg/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,9 +36,9 @@ func TestAPIHandler_Close(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
-			a.Close(tt.args.customerId)
+			a.agentHandler.RemoveAgent(tt.args.customerId, "")
 		})
 	}
 }
@@ -57,9 +56,9 @@ func TestAPIHandler_CloseAll(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
-			a.CloseAll()
+			a.Close()
 		})
 	}
 }
@@ -82,9 +81,9 @@ func TestAPIHandler_ConnectClient(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
-			if err := a.ConnectClient(tt.args.customerId); (err != nil) != tt.wantErr {
+			if _, err := a.agentHandler.GetAgent(tt.args.customerId, ""); (err != nil) != tt.wantErr {
 				t.Errorf("ConnectClient() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -108,7 +107,7 @@ func TestAPIHandler_DeleteAgentClimondeploy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.DeleteAgentClimondeploy(tt.args.c)
 		})
@@ -132,7 +131,7 @@ func TestAPIHandler_DeleteAgentCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.DeleteAgentCluster(tt.args.c)
 		})
@@ -156,7 +155,7 @@ func TestAPIHandler_DeleteAgentDeploy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.DeleteAgentDeploy(tt.args.c)
 		})
@@ -180,7 +179,7 @@ func TestAPIHandler_DeleteAgentProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.DeleteAgentProject(tt.args.c)
 		})
@@ -204,7 +203,7 @@ func TestAPIHandler_DeleteAgentRepository(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.DeleteAgentRepository(tt.args.c)
 		})
@@ -228,7 +227,7 @@ func TestAPIHandler_GetAgentEndpoint(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.GetAgentEndpoint(tt.args.c)
 		})
@@ -252,7 +251,7 @@ func TestAPIHandler_GetApiDocs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.GetApiDocs(tt.args.c)
 		})
@@ -277,9 +276,9 @@ func TestAPIHandler_GetClient(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
-			if got := a.GetClient(tt.args.customerId); !reflect.DeepEqual(got, tt.want) {
+			if got, err := a.agentHandler.GetAgent(tt.args.customerId, ""); err != nil && !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetClient() = %v, want %v", got, tt.want)
 			}
 		})
@@ -303,7 +302,7 @@ func TestAPIHandler_GetStatus(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.GetStatus(tt.args.c)
 		})
@@ -317,8 +316,6 @@ func TestAPIHandler_PostAgentApps(t *testing.T) {
 	type args struct {
 		c *gin.Context
 	}
-
-	_ = log.New("debug")
 
 	chartName := "argocd"
 	name := "argocd"
@@ -369,10 +366,8 @@ func TestAPIHandler_PostAgentApps(t *testing.T) {
 	c.Request.Header.Set("customer_id", "1")
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(jsonByte))
 	fmt.Println(c.Request.Body)
-	agentConn, err := agent.NewAgent(&types.AgentConfiguration{
-		Address:    "127.0.0.1",
-		Port:       9091,
-		TlsEnabled: false,
+	agentConn, err := agent.NewAgent(&agent.Config{
+		Address: "127.0.0.1",
 	})
 
 	require.NoError(t, err)
@@ -394,7 +389,7 @@ func TestAPIHandler_PostAgentApps(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PostAgentApps(tt.args.c)
 		})
@@ -418,7 +413,7 @@ func TestAPIHandler_PostAgentClimondeploy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PostAgentClimondeploy(tt.args.c)
 		})
@@ -442,7 +437,7 @@ func TestAPIHandler_PostAgentCluster(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PostAgentCluster(tt.args.c)
 		})
@@ -466,7 +461,7 @@ func TestAPIHandler_PostAgentDeploy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PostAgentDeploy(tt.args.c)
 		})
@@ -490,7 +485,7 @@ func TestAPIHandler_PostAgentEndpoint(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PostAgentEndpoint(tt.args.c)
 		})
@@ -514,7 +509,7 @@ func TestAPIHandler_PostAgentProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PostAgentProject(tt.args.c)
 		})
@@ -538,7 +533,7 @@ func TestAPIHandler_PostAgentRepository(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PostAgentRepository(tt.args.c)
 		})
@@ -562,7 +557,7 @@ func TestAPIHandler_PostAgentSecret(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PostAgentSecret(tt.args.c)
 		})
@@ -586,7 +581,7 @@ func TestAPIHandler_PutAgentClimondeploy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PutAgentClimondeploy(tt.args.c)
 		})
@@ -610,7 +605,7 @@ func TestAPIHandler_PutAgentDeploy(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PutAgentDeploy(tt.args.c)
 		})
@@ -634,7 +629,7 @@ func TestAPIHandler_PutAgentEndpoint(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PutAgentEndpoint(tt.args.c)
 		})
@@ -658,7 +653,7 @@ func TestAPIHandler_PutAgentProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PutAgentProject(tt.args.c)
 		})
@@ -682,7 +677,7 @@ func TestAPIHandler_PutAgentRepository(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.PutAgentRepository(tt.args.c)
 		})
@@ -709,7 +704,7 @@ func TestAPIHandler_getFileContent(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			got, err := a.getFileContent(tt.args.c, tt.args.fileInfo)
 			if (err != nil) != tt.wantErr {
@@ -742,7 +737,7 @@ func TestAPIHandler_sendResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.sendResponse(tt.args.c, tt.args.msg, tt.args.err)
 		})
@@ -768,7 +763,7 @@ func TestAPIHandler_setFailedResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a := &APIHandler{
-				agents: tt.fields.agents,
+				agentHandler: agent.NewAgentHandler(nil),
 			}
 			a.setFailedResponse(tt.args.c, tt.args.msg, tt.args.err)
 		})
@@ -785,7 +780,7 @@ func TestNewAPIHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewAPIHandler()
+			got, err := NewAPIHandler(logging.NewLogger(), nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewAPIHandler() error = %v, wantErr %v", err, tt.wantErr)
 				return

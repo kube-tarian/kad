@@ -22,17 +22,13 @@ func (a *APIHandler) PostAgentProject(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient("1"); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
 	}
 
-	agent := a.GetClient("1")
-	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
-	}
-
-	_, err := agent.GetClient().ProjectAdd(ctx, &agentpb.ProjectAddRequest{
+	_, err = agent.GetClient().ProjectAdd(ctx, &agentpb.ProjectAddRequest{
 		PluginName:  req.PluginName,
 		ProjectName: req.ProjectName,
 	})
@@ -60,17 +56,13 @@ func (a *APIHandler) DeleteAgentProject(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient("1"); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
 	}
 
-	agent := a.GetClient("1")
-	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
-	}
-
-	_, err := agent.GetClient().ProjectDelete(ctx, &agentpb.ProjectDeleteRequest{
+	_, err = agent.GetClient().ProjectDelete(ctx, &agentpb.ProjectDeleteRequest{
 		PluginName:  req.PluginName,
 		ProjectName: req.ProjectName,
 	})

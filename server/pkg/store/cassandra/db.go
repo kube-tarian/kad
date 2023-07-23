@@ -2,92 +2,63 @@ package cassandra
 
 import (
 	"fmt"
-	"github.com/gocql/gocql"
-	"github.com/kube-tarian/kad/server/pkg/config"
-	"github.com/kube-tarian/kad/server/pkg/types"
-	"log"
 	"strings"
-	"sync"
+
+	"github.com/gocql/gocql"
+	cassandraclient "github.com/kube-tarian/kad/server/pkg/cassandra-client"
+	"github.com/kube-tarian/kad/server/pkg/types"
 )
 
-type cassandra struct {
-	session *gocql.Session
+type CassandraServerStore struct {
+	c *cassandraclient.Client
 }
 
-var (
-	cassandraSession *cassandra
-	once             sync.Once
-)
+func NewStore() (*CassandraServerStore, error) {
+	cs := &CassandraServerStore{}
+	err := cs.initSession()
+	return cs, err
+}
 
-func New() (*cassandra, error) {
+func (c *CassandraServerStore) initSession() error {
 	var err error
-	once.Do(func() {
-		cassandraSession = &cassandra{}
-		cassandraSession.session, err = connect()
-		if err != nil {
-			log.Println("failed to connect to cassandra")
-		}
-
-		err = cassandraSession.initializeDb()
-		if err != nil {
-			log.Println("failed to initialize db")
-		}
-	})
-
-	return cassandraSession, err
-}
-
-func connect() (*gocql.Session, error) {
-	cfg := config.GetConfig()
-	host := cfg.GetString("server.dbHost")
-	user := cfg.GetString("server.dbUsername")
-	password := cfg.GetString("server.dbPassword")
-	cluster := gocql.NewCluster(host)
-	cluster.Consistency = gocql.Quorum
-	cluster.Authenticator = gocql.PasswordAuthenticator{
-		Username: user,
-		Password: password,
-	}
-
-	session, err := cluster.CreateSession()
+	c.c, err = cassandraclient.NewClient()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create c")
+		return fmt.Errorf("failed to create cassandra session")
 	}
-
-	return session, nil
+	return nil
 }
 
-func (c *cassandra) initializeDb() error {
-	if err := c.session.Query(createKeyspaceQuery).Exec(); err != nil {
+func (c *CassandraServerStore) InitializeDb() error {
+	if err := c.c.Session().Query(createKeyspaceQuery).Exec(); err != nil {
 		return fmt.Errorf("failed to create keyspace, %w", err)
 	}
 
-	if err := c.session.Query(createClusterEndpointTableQuery).Exec(); err != nil {
+	if err := c.c.Session().Query(createClusterEndpointTableQuery).Exec(); err != nil {
 		return fmt.Errorf("failed to create cluster_endpoint table, %w", err)
 	}
 
-	if err := c.session.Query(createOrgClusterTableQuery).Exec(); err != nil {
+	if err := c.c.Session().Query(createOrgClusterTableQuery).Exec(); err != nil {
 		return fmt.Errorf("failed to create cluster_endpoint table, %w", err)
 	}
 
 	return nil
 }
 
-func (c *cassandra) GetClusterEndpoint(orgID, clusterName string) (string, error) {
+func (c *CassandraServerStore) GetClusterEndpoint(orgID, clusterName string) (string, error) {
 	clusterId, err := c.getClusterID(orgID, clusterName)
 	if err != nil {
 		return "", err
 	}
 
-	iter := c.session.Query(fmt.Sprintf("Select endpoint FROM %s.cluster_endpoint WHERE cluster_id=%s;",
+	iter := c.c.Session().Query(fmt.Sprintf("Select endpoint FROM %s.cluster_endpoint WHERE cluster_id=%s;",
 		keyspace, clusterId)).Iter()
 	var endpoint string
 	iter.Scan(&endpoint)
 	return endpoint, nil
 }
 
-func (c *cassandra) GetClusters(orgId string) ([]types.ClusterDetails, error) {
-	iter := c.session.Query(fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
+func (c *CassandraServerStore) GetClusters(orgId string) ([]types.ClusterDetails, error) {
+	iter := c.c.Session().Query(fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
 		keyspace, orgId)).Iter()
 	var clusterUUIds []gocql.UUID
 	iter.Scan(&clusterUUIds)
@@ -96,7 +67,7 @@ func (c *cassandra) GetClusters(orgId string) ([]types.ClusterDetails, error) {
 		clusterIds = append(clusterIds, id.String())
 	}
 
-	iter = c.session.Query(fmt.Sprintf("Select cluster_name, endpoint FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
+	iter = c.c.Session().Query(fmt.Sprintf("Select cluster_name, endpoint FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
 		keyspace, strings.Join(clusterIds, ","))).Iter()
 
 	var cqlClusterName string
@@ -117,10 +88,10 @@ func (c *cassandra) GetClusters(orgId string) ([]types.ClusterDetails, error) {
 	return clusterDetails, nil
 }
 
-func (c *cassandra) RegisterCluster(orgId, clusterName, endpoint string) error {
+func (c *CassandraServerStore) AddCluster(orgId, clusterName, endpoint string) error {
 	clusterExists := c.clusterEntryExists(orgId)
 	clusterId := gocql.TimeUUID()
-	batch := c.session.NewBatch(gocql.LoggedBatch)
+	batch := c.c.Session().NewBatch(gocql.LoggedBatch)
 	if clusterExists {
 		batch.Query(
 			fmt.Sprintf(
@@ -135,7 +106,7 @@ func (c *cassandra) RegisterCluster(orgId, clusterName, endpoint string) error {
 
 	batch.Query(fmt.Sprintf("INSERT INTO %s.cluster_endpoint (cluster_id, org_id, cluster_name, endpoint) VALUES (%s, %s, '%s', '%s');",
 		keyspace, clusterId, orgId, clusterName, endpoint))
-	err := c.session.ExecuteBatch(batch)
+	err := c.c.Session().ExecuteBatch(batch)
 	if err != nil {
 		return fmt.Errorf("failed insert cluster details %w", err)
 	}
@@ -143,8 +114,8 @@ func (c *cassandra) RegisterCluster(orgId, clusterName, endpoint string) error {
 	return nil
 }
 
-func (c *cassandra) clusterEntryExists(orgID string) bool {
-	iter := c.session.Query(fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
+func (c *CassandraServerStore) clusterEntryExists(orgID string) bool {
+	iter := c.c.Session().Query(fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s ;",
 		keyspace, orgID)).Iter()
 	var clusterIds []gocql.UUID
 	iter.Scan(&clusterIds)
@@ -155,20 +126,20 @@ func (c *cassandra) clusterEntryExists(orgID string) bool {
 	return true
 }
 
-func (c *cassandra) UpdateCluster(orgID, clusterName, endpoint string) error {
+func (c *CassandraServerStore) UpdateCluster(orgID, clusterName, endpoint string) error {
 	clusterId, err := c.getClusterID(orgID, clusterName)
 	if err != nil {
 		return err
 	}
 
-	err = c.session.Query(fmt.Sprintf(
+	err = c.c.Session().Query(fmt.Sprintf(
 		"UPDATE %s.cluster_endpoint set endpoint='%s' WHERE cluster_id=%s AND org_id=%s",
 		keyspace, endpoint, clusterId, orgID)).Exec()
 	return err
 }
 
-func (c *cassandra) getClusterID(orgID, clusterName string) (string, error) {
-	iter := c.session.Query(fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s;",
+func (c *CassandraServerStore) getClusterID(orgID, clusterName string) (string, error) {
+	iter := c.c.Session().Query(fmt.Sprintf("Select cluster_ids FROM %s.org_cluster WHERE org_id=%s;",
 		keyspace, orgID)).Iter()
 
 	var clusterUUIds []gocql.UUID
@@ -178,7 +149,7 @@ func (c *cassandra) getClusterID(orgID, clusterName string) (string, error) {
 		clusterIds = append(clusterIds, id.String())
 	}
 
-	iter = c.session.Query(fmt.Sprintf("Select cluster_id, cluster_name FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
+	iter = c.c.Session().Query(fmt.Sprintf("Select cluster_id, cluster_name FROM %s.cluster_endpoint WHERE cluster_id in (%s);",
 		keyspace, strings.Join(clusterIds, ","))).Iter()
 
 	var cqlClusterId gocql.UUID
@@ -197,18 +168,18 @@ func (c *cassandra) getClusterID(orgID, clusterName string) (string, error) {
 	return "", fmt.Errorf("cluster not found")
 }
 
-func (c *cassandra) DeleteCluster(orgID, clusterName string) error {
+func (c *CassandraServerStore) DeleteCluster(orgID, clusterName string) error {
 	clusterId, err := c.getClusterID(orgID, clusterName)
 	if err != nil {
 		return err
 	}
 
-	batch := c.session.NewBatch(gocql.LoggedBatch)
+	batch := c.c.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(
 		"DELETE FROM %s.cluster_endpoint WHERE cluster_id=%s ;",
 		keyspace, clusterId))
 	batch.Query(fmt.Sprintf(
 		"UPDATE %s.org_cluster set cluster_ids = cluster_ids - {%s} WHERE org_id=%s ;",
 		keyspace, clusterId, orgID))
-	return c.session.ExecuteBatch(batch)
+	return c.c.Session().ExecuteBatch(batch)
 }

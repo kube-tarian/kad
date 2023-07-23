@@ -9,10 +9,19 @@ image:
   pullPolicy: Always
   tag: "latest"
 
+env:
+	database: astra
+  logLevel: info
+
 cassandra:
-  host: cassandra.cassandra.svc.cluster.local
-  username: admin
-  password: admin
+  dbAddresses: cassandra.cassandra.svc.cluster.local
+  dbUserName: admin
+  entityName: cassandra
+  dbName: capten-server
+
+astra:
+  entityName: astra
+  credIdentifier: auth-token
 
 imagePullSecrets: []
 nameOverride: ""
