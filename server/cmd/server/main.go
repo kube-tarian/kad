@@ -13,67 +13,57 @@ import (
 	middleware "github.com/deepmap/oapi-codegen/pkg/gin-middleware"
 	"github.com/gin-gonic/gin"
 
-	"go.uber.org/zap"
-
+	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/api"
 	rpcapi "github.com/kube-tarian/kad/server/pkg/api"
 	"github.com/kube-tarian/kad/server/pkg/config"
-	"github.com/kube-tarian/kad/server/pkg/db"
 	"github.com/kube-tarian/kad/server/pkg/handler"
-	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	"github.com/kube-tarian/kad/server/pkg/store"
 )
 
 func main() {
-	cfg, err := config.New()
+	log := logging.NewLogger()
+
+	cfg, err := config.GetServiceConfig()
 	if err != nil {
-		fmt.Println("failed to load configuration", err)
-		return
+		log.Fatal("failed to load service congfig", err)
 	}
-
-	if err := log.New(cfg.GetString("log.level")); err != nil {
-		fmt.Println("failed to configure logger", err)
-		return
-	}
-
-	logger := log.GetLogger()
-	defer logger.Sync()
 
 	swagger, err := api.GetSwagger()
 	if err != nil {
-		logger.Fatal("Failed to get the swagger", zap.Error(err))
+		log.Fatal("Failed to get the swagger", err)
 	}
 
-	server, err := handler.NewAPIHandler()
+	serverStore, err := store.NewStore(cfg.Database)
 	if err != nil {
-		logger.Fatal("APIHandler initialization failed", zap.Error(err))
+		log.Fatal("Failed to connect to cassandra database", err)
 	}
 
-	_, err = db.New(cfg.GetString("server.db"))
+	server, err := handler.NewAPIHandler(log, serverStore)
 	if err != nil {
-		logger.Fatal("Failed to connect to cassandra database", zap.Error(err))
+		log.Fatal("APIHandler initialization failed", err)
 	}
 
-	rpcServer, err := rpcapi.New()
+	rpcServer, err := rpcapi.NewServer(log, serverStore)
 	if err != nil {
-		logger.Fatal("grpc server initialization failed", zap.Error(err))
+		log.Fatal("grpc server initialization failed", err)
 	}
 
-	target := fmt.Sprintf("%s:%d", cfg.GetString("server.host"), cfg.GetInt("server.tcpPort"))
+	target := fmt.Sprintf("%s:%d", cfg.ServerHost, cfg.ServerPort)
 	listener, err := net.Listen("tcp", target)
 	if err != nil {
-		logger.Fatal("Failed to listen: ", zap.Error(err))
+		log.Fatal("failed to listen: ", err)
 	}
 
 	grpcServer := grpc.NewServer()
 	serverpb.RegisterServerServer(grpcServer, rpcServer)
-	logger.Info("Server listening at", zap.Any("address", listener.Addr()))
-	// Register reflection service on gRPC server.
+	log.Info("Server listening at ", listener.Addr())
 	reflection.Register(grpcServer)
 
 	go func() {
 		if err := grpcServer.Serve(listener); err != nil {
-			logger.Fatal("failed to start grpc server: ", zap.Error(err))
+			log.Fatal("failed to start grpc server: ", err)
 		}
 	}()
 
@@ -82,15 +72,14 @@ func main() {
 	r = api.RegisterHandlers(r, server)
 
 	go func() {
-		serverAddress := fmt.Sprintf("%s:%d", cfg.GetString("server.host"), cfg.GetInt("server.port"))
+		serverAddress := fmt.Sprintf("%s:%d", cfg.ServerHTTPHost, cfg.ServerHTTPPort)
 		if err := r.Run(serverAddress); err != nil {
-			logger.Fatal("failed to start server", zap.Error(err))
+			log.Fatal("failed to start server", err)
 		}
 	}()
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	<-signals
-	server.CloseAll()
-	logger.Info("interrupt received, exiting")
+	log.Info("interrupt received, exiting")
 }

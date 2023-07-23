@@ -22,17 +22,13 @@ func (a *APIHandler) PostAgentRepository(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient("1"); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
 	}
 
-	agent := a.GetClient("1")
-	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
-	}
-
-	_, err := agent.GetClient().RepositoryAdd(ctx, &agentpb.RepositoryAddRequest{
+	_, err = agent.GetClient().RepositoryAdd(ctx, &agentpb.RepositoryAddRequest{
 		PluginName: req.PluginName,
 		RepoName:   req.RepoName,
 		RepoUrl:    req.RepoUrl,
@@ -60,17 +56,13 @@ func (a *APIHandler) DeleteAgentRepository(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient("1"); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
 	}
 
-	agent := a.GetClient("1")
-	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
-	}
-
-	_, err := agent.GetClient().RepositoryDelete(ctx, &agentpb.RepositoryDeleteRequest{
+	_, err = agent.GetClient().RepositoryDelete(ctx, &agentpb.RepositoryDeleteRequest{
 		PluginName: req.PluginName,
 		RepoName:   req.RepoName,
 	})

@@ -22,17 +22,13 @@ func (a *APIHandler) PostAgentCluster(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient("1"); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
 	}
 
-	agent := a.GetClient("1")
-	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
-	}
-
-	_, err := agent.GetClient().ClusterAdd(ctx, &agentpb.ClusterRequest{
+	_, err = agent.GetClient().ClusterAdd(ctx, &agentpb.ClusterRequest{
 		PluginName:  req.PluginName,
 		ClusterName: req.ClusterName,
 	})
@@ -57,17 +53,13 @@ func (a *APIHandler) DeleteAgentCluster(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient("1"); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
 	}
 
-	agent := a.GetClient("1")
-	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
-	}
-
-	_, err := agent.GetClient().ClusterDelete(ctx, &agentpb.ClusterRequest{
+	_, err = agent.GetClient().ClusterDelete(ctx, &agentpb.ClusterRequest{
 		PluginName:  req.PluginName,
 		ClusterName: req.ClusterName,
 	})
@@ -79,5 +71,4 @@ func (a *APIHandler) DeleteAgentCluster(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, &api.Response{
 		Status:  "SUCCESS",
 		Message: "submitted Job"})
-
 }

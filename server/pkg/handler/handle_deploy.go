@@ -10,15 +10,11 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/kube-tarian/kad/server/api"
-	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
 
 func (a *APIHandler) PostAgentDeploy(c *gin.Context) {
-	logger := log.GetLogger()
-	defer logger.Sync()
-
-	logger.Debug("deploying application")
+	a.log.Debug("deploying application")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -28,14 +24,10 @@ func (a *APIHandler) PostAgentDeploy(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient("1"); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
-	}
-
-	agent := a.GetClient("1")
-	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", 1), errors.New(""))
 	}
 
 	response, err := agent.GetClient().DeployerAppInstall(
@@ -59,7 +51,7 @@ func (a *APIHandler) PostAgentDeploy(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: toString(response)})
 
-	logger.Debug("deployed application successfully")
+	a.log.Debug("deployed application successfully")
 }
 
 func (a *APIHandler) PutAgentDeploy(c *gin.Context) {
@@ -67,8 +59,7 @@ func (a *APIHandler) PutAgentDeploy(c *gin.Context) {
 }
 
 func (a *APIHandler) DeleteAgentDeploy(c *gin.Context) {
-	logger := log.GetLogger()
-	logger.Debug("deleting application")
+	a.log.Debug("deleting application")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -78,14 +69,10 @@ func (a *APIHandler) DeleteAgentDeploy(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient("1"); err != nil {
-		a.setFailedResponse(c, "agent connection failed", err)
-		return
-	}
-
-	agent := a.GetClient("1")
-	if agent == nil {
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
+		return
 	}
 
 	response, err := agent.GetClient().DeployerAppDelete(
@@ -106,7 +93,7 @@ func (a *APIHandler) DeleteAgentDeploy(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: toString(response)})
 
-	logger.Debug("application deleted successfully")
+	a.log.Debug("application deleted successfully")
 }
 
 func (a *APIHandler) sendResponse(c *gin.Context, msg string, err error) {

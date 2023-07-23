@@ -10,13 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/server/api"
-	"github.com/kube-tarian/kad/server/pkg/log"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
 
 func (a *APIHandler) PostAgentSecret(c *gin.Context) {
-	logger := log.GetLogger()
-	defer logger.Sync()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -26,14 +23,10 @@ func (a *APIHandler) PostAgentSecret(c *gin.Context) {
 		return
 	}
 
-	if err := a.ConnectClient(*req.CustomerId); err != nil {
-		a.setFailedResponse(c, "failed to connect agent", err)
+	agent, err := a.agentHandler.GetAgent("", "")
+	if err != nil {
+		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
-	}
-
-	agent := a.GetClient(*req.CustomerId)
-	if agent == nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", *req.CustomerId), errors.New(""))
 	}
 
 	serviceCred := credentials.ServiceCredential{
@@ -63,5 +56,5 @@ func (a *APIHandler) PostAgentSecret(c *gin.Context) {
 		Status:  "SUCCESS",
 		Message: "stored credentials"})
 
-	logger.Debug("credentials is stored successfully")
+	a.log.Debug("credentials is stored successfully")
 }

@@ -46,20 +46,28 @@ spec:
               path: /status
               port: http
           env:
-            - name: PORT
+            - name: SERVER_PORT
               value: "{{ .Values.service.port }}"
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel }}
-            - name: CASSANDRA_HOST
-              value: "{{ .Values.cassandra.host }}"
-            - name: CASSANDRA_USERNAME
-              value: "{{ .Values.cassandra.username }}"
-            - name: CASSANDRA_PASSWORD
-              value: "{{ .Values.cassandra.password }}"
             - name: VAULT_ADDR
               value: {{ .Values.vault.address }}
             - name: VAULT_ROLE
               value: {{ .Values.vault.role }}
+            - name: DATABASE
+              value: {{ .Values.env.database }}
+            - name: ASTRA_ENTITY_NAME
+              value: "{{ .Values.astra.entityName }}"
+            - name: ASTRA_CRED_IDENTIFIER
+              value: "{{ .Values.astra.credIdentifier }}"
+            - name: CASSANDRA_ADDRESSES
+              value: "{{ .Values.cassandra.dbAddresses }}"
+            - name: CASSANDRA_SERVICE_USERNAME
+              value: "{{ .Values.cassandra.dbUserName }}"
+            - name: CASSANDRA_ENTITY_NAME
+              value: "{{ .Values.cassandra.entityName }}"
+            - name: CASSANDRA_DB_NAME
+              value: "{{ .Values.cassandra.dbName }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
