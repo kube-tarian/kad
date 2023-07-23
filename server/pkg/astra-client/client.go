@@ -1,4 +1,4 @@
-package astra
+package astraclient
 
 import (
 	"context"
@@ -14,17 +14,21 @@ import (
 )
 
 const (
-	astraCredHostKey  = "host"
-	astraCredTokenKey = "token"
+	astraCredDBIDKey     = "ASTRA_DB_ID"
+	astraCredDBRegionKey = "ASTRA_DB_REGION"
+	astraCredTokenKey    = "TOKEN"
 )
 
 type Config struct {
+	DbHost               string `envconfig:"ASTRA_DB_HOST" default:"apps.astra.datastax.com"`
 	EntityName           string `envconfig:"ASTRA_ENTITY_NAME" required:"true"`
 	CredentailIdentifier string `envconfig:"ASTRA_CRED_IDENTIFIER" required:"true"`
+	Keyspace             string `envconfig:"ASTRA_DB_NAME" default:"capten"`
 }
 
 type Client struct {
 	session *client.StargateClient
+	conf    *Config
 }
 
 func NewClient() (*Client, error) {
@@ -39,16 +43,19 @@ func NewClient() (*Client, error) {
 		return nil, err
 	}
 
-	host := serviceCredential[astraCredHostKey]
-	password := serviceCredential[astraCredTokenKey]
+	dbAddress, err := prepareDBAddress(conf, serviceCredential)
+	if err != nil {
+		return nil, err
+	}
+	token := serviceCredential[astraCredTokenKey]
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: false,
 	}
 
-	conn, err := grpc.Dial(host, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
+	conn, err := grpc.Dial(dbAddress, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
 		grpc.WithBlock(),
 		grpc.WithPerRPCCredentials(
-			auth.NewStaticTokenProvider(password),
+			auth.NewStaticTokenProvider(token),
 		),
 	)
 	if err != nil {
@@ -59,7 +66,11 @@ func NewClient() (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating stargate client, %w", err)
 	}
-	return &Client{session: session}, nil
+	return &Client{conf: conf, session: session}, nil
+}
+
+func (c *Client) Keyspace() string {
+	return c.conf.Keyspace
 }
 
 func (c *Client) Session() *client.StargateClient {
@@ -67,4 +78,15 @@ func (c *Client) Session() *client.StargateClient {
 }
 
 func (c *Client) Close() {
+}
+
+func prepareDBAddress(conf *Config, serviceCredential map[string]string) (string, error) {
+	dbID := serviceCredential[astraCredDBIDKey]
+	region := serviceCredential[astraCredDBRegionKey]
+
+	if len(dbID) == 0 || len(region) == 0 || len(serviceCredential[astraCredTokenKey]) == 0 {
+		return "", fmt.Errorf("invalid credential")
+	}
+	return fmt.Sprintf("%s-%s.%s:443", serviceCredential[astraCredDBIDKey],
+		serviceCredential[astraCredDBRegionKey], conf.DbHost), nil
 }

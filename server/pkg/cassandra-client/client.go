@@ -80,6 +80,10 @@ func (c *Client) Session() *gocql.Session {
 	return c.session
 }
 
+func (c *Client) Keyspace() string {
+	return c.conf.Keyspace
+}
+
 func (c *Client) Close() {
 	c.session.Close()
 }
