@@ -1,0 +1,21 @@
+{{- if .Values.istio.enabled -}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "server.fullname" . }}-vs
+  labels:
+    {{- include "server.labels" . | nindent 4 }}
+spec:
+  gateways:
+    - istio-system/intelops-gateway
+  hosts:
+    - {{ .Values.istio.host }}
+  http:
+    - route:
+        - destination:
+            host: {{ include "server.fullname" . }}
+            port:
+              number: {{ .Values.service.port }}
+      timeout: 30s
+{{- end }}
+

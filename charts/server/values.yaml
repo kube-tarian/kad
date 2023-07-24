@@ -10,7 +10,7 @@ image:
   tag: "latest"
 
 env:
-	database: astra
+  database: astra
   logLevel: info
 
 cassandra:
@@ -52,6 +52,10 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 8080
+
+istio:
+  enabled: true
+  host: kad.alpha.optimizor.app
 
 ingress:
   enabled: false
