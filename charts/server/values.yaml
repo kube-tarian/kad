@@ -72,7 +72,7 @@ ingress:
 vault:
   address: http://vault:8200
   role: vault-role-capten-server
-  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-read,vault-policy-cluster-read"
+  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-read,vault-policy-generic-cred-read"
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
