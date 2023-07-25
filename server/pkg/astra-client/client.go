@@ -66,6 +66,7 @@ func NewClient() (*Client, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error creating stargate client, %w", err)
 	}
+
 	return &Client{conf: conf, session: session}, nil
 }
 
