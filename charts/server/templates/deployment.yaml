@@ -40,14 +40,6 @@ spec:
             - name: grpc
               containerPort: {{ .Values.service.grpcport }}
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /status
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /status
-              port: http
           env:
             - name: SERVER_PORT
               value: "{{ .Values.service.port }}"

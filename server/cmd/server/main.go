@@ -24,6 +24,7 @@ import (
 
 func main() {
 	log := logging.NewLogger()
+	log.Infof("Staring Server")
 
 	cfg, err := config.GetServiceConfig()
 	if err != nil {
