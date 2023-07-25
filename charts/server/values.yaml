@@ -55,7 +55,7 @@ service:
 
 istio:
   enabled: true
-  host: kad.alpha.optimizor.app
+  host: capten.server.local
 
 ingress:
   enabled: false
