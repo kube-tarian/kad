@@ -7,8 +7,8 @@ import (
 type ServiceConfig struct {
 	ServerHost     string `envconfig:"SERVER_HOST" default:"0.0.0.0"`
 	ServerPort     int    `envconfig:"SERVER_PORT" default:"8080"`
-	ServerHTTPHost string `envconfig:"SERVER_HTTP_HOST" default:"0.0.0.0"`
-	ServerHTTPPort int    `envconfig:"SERVER_HTTP_PORT" default:"8081"`
+	ServerGRPCHost string `envconfig:"SERVER_GRPC_HOST" default:"0.0.0.0"`
+	ServerGRPCPort int    `envconfig:"SERVER_GRPC_PORT" default:"8081"`
 	Database       string `envconfig:"DATABASE" default:"astra"`
 }
 
