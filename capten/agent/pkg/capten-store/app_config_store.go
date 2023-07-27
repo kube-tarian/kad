@@ -5,148 +5,222 @@ import (
 	"strings"
 
 	"github.com/gocql/gocql"
-	"github.com/kube-tarian/kad/capten/agent/pkg/types"
-	"gopkg.in/yaml.v2"
+	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 )
+
+func init() {
+	p := make([]string, len(fields))
+	for i := 0; i < len(fields); i++ {
+		p[i] = "?"
+	}
+
+	placeholder := strings.Join(p, ", ")
+
+	InsertAllAppConfigQuery = "INSERT INTO apps.AppConfig( " +
+		strings.Join(fields, ", ") +
+		fmt.Sprintf(" ) VALUES (%s)", placeholder)
+
+}
+
+func CreateSelectByFieldNameQuery(field string) string {
+	return "SELECT" +
+		strings.Join(fields, ", ") +
+		"FROM apps.AppConfig" + fmt.Sprintf(" WHERE %s = ?", field)
+}
 
 const (
-	AppConfigTable string = "AppConfig"
-
-	insertAppConfigQuery string = `
-		INSERT INTO %s.%s(
-			name, chart_name, repo_name, repo_url,
-			namespace, release_name, version, override,
-			create_namespace, privileged_namespace
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-
-	selectAppConfigByNameQuery string = `
-		SELECT name, chart_name, repo_name, repo_url, 
-				namespace, release_name, version, override,
-				create_namespace, privileged_namespace
-		FROM %s.%s WHERE name = ? LIMIT 1`
-
-	updateAppConfigByNameQuery string = `
-		UPDATE %s.%s SET %s WHERE name = ?`
+	appName, description, category       = "app_name", "description", "category"
+	chartName, repoName, repoUrl         = "chart_name", "repo_name", "repo_url"
+	namespace, releaseName, version      = "namespace", "release_name", "version"
+	launchUrl, launchRedirectUrl         = "launch_url", "launch_redirect_url"
+	createNamespace, privilegedNamespace = "create_namespace", "privileged_namespace"
+	overrideValues, launchUiValues       = "override_values", "launch_ui_values"
 )
 
-func (a *Store) AddAppConfig(config types.AppConfig) error {
-	query := a.client.Session().Query(fmt.Sprintf(insertAppConfigQuery, a.conf.Keyspace, AppConfigTable))
-	var override []byte
-	var err error
-	if config.Override != nil {
-		override, err = yaml.Marshal(config.Override)
-		if err != nil {
-			return err
-		}
+var (
+	fields []string = []string{
+		appName, description, category,
+		chartName, repoName, repoUrl,
+		namespace, releaseName, version,
+		launchUrl, launchRedirectUrl,
+		createNamespace, privilegedNamespace,
+		overrideValues, launchUiValues,
 	}
+
+	InsertAllAppConfigQuery           string
+	UpdateAppConfigByReleaseNameQuery = "UPDATE apps.AppConfig SET %s WHERE release_name = ?"
+)
+
+func (a *Store) AddAppConfig(config *agentpb.SyncAppData) error {
+	if config.Config == nil {
+		return fmt.Errorf("config value nil")
+	}
+	query := a.client.Session().Query(InsertAllAppConfigQuery)
+
+	override, launchUiValues := "", ""
+	if config.Values != nil {
+		override, launchUiValues =
+			string(config.Values.OverrideValues), string(config.Values.LaunchUIValues)
+	}
+	c := config.Config
 	return query.Bind(
-		config.Name,
-		config.ChartName,
-		config.RepoName,
-		config.RepoURL,
-		config.Namespace,
-		config.ReleaseName,
-		config.Version,
-		string(override),
-		config.CreateNamespace,
-		config.PrivilegedNamespace,
+		c.AppName, c.Description, c.Category,
+
+		c.ChartName, c.RepoName, c.RepoURL,
+
+		c.Namespace, c.ReleaseName, c.Version,
+
+		c.LaunchURL, c.LaunchRedirectURL,
+
+		c.CreateNamespace, c.PrivilegedNamespace,
+
+		override, launchUiValues,
 	).Exec()
 }
 
-func (a *Store) UpdateAppConfig(config types.AppConfig) error {
-	if config.Name == "" {
-		return fmt.Errorf("invalid attribute")
+func (a *Store) UpdateAppConfig(config *agentpb.SyncAppData) error {
+
+	if config.Config != nil && config.Config.ReleaseName == "" {
+		return fmt.Errorf("no release name")
 	}
 
-	kvPairs, err := formUpdateKvPairs(&config)
+	kvPairs, err := formUpdateKvPairs(config)
 	if err != nil {
 		return err
 	}
 
-	var insertNameOnlyAppConfigQuery string = `
-	INSERT INTO %s.%s(
-		name
+	var insertReleaseNameOnlyAppConfigQuery string = `
+	INSERT INTO apps.AppConfig(
+		release_name
 	) VALUES (?)`
 
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertNameOnlyAppConfigQuery, a.conf.Keyspace, AppConfigTable), config.Name)
-	batch.Query(fmt.Sprintf(updateAppConfigByNameQuery, a.conf.Keyspace, AppConfigTable, kvPairs), config.Name)
+	batch.Query(insertReleaseNameOnlyAppConfigQuery, config.Config.ReleaseName)
+	batch.Query(fmt.Sprintf(UpdateAppConfigByReleaseNameQuery, kvPairs), config.Config.ReleaseName)
 	return a.client.Session().ExecuteBatch(batch)
 
 }
 
-func (a *Store) GetAppConfig(appName string) (config types.AppConfig, err error) {
-	selectQuery := a.client.Session().Query(fmt.Sprintf(selectAppConfigByNameQuery, a.conf.Keyspace, AppConfigTable), appName)
-	var overrideYaml string
-	if err = selectQuery.Scan(
-		&config.Name,
-		&config.ChartName,
-		&config.RepoName,
-		&config.RepoURL,
-		&config.Namespace,
-		&config.ReleaseName,
-		&config.Version,
-		&overrideYaml,
-		&config.CreateNamespace,
-		&config.PrivilegedNamespace,
+func (a *Store) GetAppConfig(column, value string) (*agentpb.SyncAppData, error) {
+	selectQuery := a.client.Session().Query(CreateSelectByFieldNameQuery(column))
+
+	config := new(agentpb.AppConfig)
+
+	var overrideValues, launchUiValues string
+	if err := selectQuery.Scan(
+
+		config.AppName, config.Description, config.Category,
+
+		config.ChartName, config.RepoName, config.RepoURL,
+
+		config.Namespace, config.ReleaseName, config.Version,
+
+		config.LaunchURL, config.LaunchRedirectURL,
+
+		config.CreateNamespace, config.PrivilegedNamespace,
+
+		&overrideValues, &launchUiValues,
 	); err != nil {
-		return
+		return nil, err
 	}
 
-	if overrideYaml != "" {
-		err = yaml.Unmarshal([]byte(overrideYaml), &config.Override)
-	}
-	return
+	return &agentpb.SyncAppData{
+		Config: config,
+		Values: &agentpb.AppValues{
+			OverrideValues: []byte(overrideValues),
+			LaunchUIValues: []byte(launchUiValues)},
+	}, nil
+
 }
 
-func formUpdateKvPairs(config *types.AppConfig) (string, error) {
+func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 	params := []string{}
-	if config.Override != nil {
-		marshaled, err := yaml.Marshal(config.Override)
-		if err != nil {
-			return "", err
+
+	if config.Values != nil && len(config.Values.OverrideValues) > 0 {
+		params = append(params,
+			fmt.Sprintf("%s = '%s'", overrideValues, string(config.Values.OverrideValues)))
+	}
+
+	if config.Values != nil && len(config.Values.LaunchUIValues) > 0 {
+		params = append(params,
+			fmt.Sprintf("%s = '%s'", launchUiValues, string(config.Values.LaunchUIValues)))
+
+	}
+
+	// -- namespace
+	{
+
+		if config.Config.CreateNamespace {
+			params = append(params,
+				fmt.Sprintf("%s = 'true'", createNamespace))
 		}
-		params = append(params, fmt.Sprintf("override = '%s'", marshaled))
-	}
-
-	if config.CreateNamespace != nil {
-		val := "false"
-		if *config.CreateNamespace {
-			val = "true"
+		if config.Config.PrivilegedNamespace {
+			params = append(params,
+				fmt.Sprintf("%s = 'true'", privilegedNamespace))
 		}
-		params = append(params, fmt.Sprintf("create_namespace = '%s'", val))
+
 	}
 
-	if config.PrivilegedNamespace != nil {
-		val := "false"
-		if *config.PrivilegedNamespace {
-			val = "true"
+	// -- launchUrl, launchRedirecturl
+	{
+
+		if config.Config.LaunchURL != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", launchUrl, config.Config.LaunchURL))
 		}
-		params = append(params, fmt.Sprintf("privileged_namespace = '%s'", val))
+		if config.Config.LaunchRedirectURL != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", launchRedirectUrl, config.Config.LaunchRedirectURL))
+		}
 	}
 
-	if config.ChartName != "" {
-		params = append(params, fmt.Sprintf("chart_name = '%s'", config.ChartName))
+	// -- appName, description, category,
+	{
+		if config.Config.AppName != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", appName, config.Config.AppName))
+		}
+		if config.Config.Description != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", description, config.Config.Description))
+		}
+		if config.Config.Category != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", category, config.Config.Category))
+		}
 	}
 
-	if config.Namespace != "" {
-		params = append(params, fmt.Sprintf("namespace = '%s'", config.Namespace))
+	// -- chartName, repoName, repoUrl,
+	{
+		if config.Config.ChartName != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", chartName, config.Config.ChartName))
+		}
+		if config.Config.RepoName != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", repoName, config.Config.RepoName))
+		}
+		if config.Config.RepoURL != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", repoUrl, config.Config.RepoURL))
+		}
+
 	}
 
-	if config.ReleaseName != "" {
-		params = append(params, fmt.Sprintf("release_name = '%s'", config.ReleaseName))
-	}
-
-	if config.RepoName != "" {
-		params = append(params, fmt.Sprintf("repo_name = '%s'", config.RepoName))
-	}
-
-	if config.RepoURL != "" {
-		params = append(params, fmt.Sprintf("repo_url = '%s'", config.RepoURL))
-	}
-
-	if config.Version != "" {
-		params = append(params, fmt.Sprintf("version = '%s'", config.Version))
+	// -- namespace, releaseName, version,
+	{
+		if config.Config.Namespace != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", namespace, config.Config.Namespace))
+		}
+		if config.Config.ReleaseName != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", releaseName, config.Config.ReleaseName))
+		}
+		if config.Config.Version != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", version, config.Config.Version))
+		}
 	}
 
 	return strings.Join(params, ", "), nil

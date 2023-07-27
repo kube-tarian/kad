@@ -13,14 +13,15 @@ type Override struct {
 }
 
 type AppConfig struct {
-	Name                string    `yaml:"Name"`
-	ChartName           string    `yaml:"ChartName"`
-	RepoName            string    `yaml:"RepoName"`
-	RepoURL             string    `yaml:"RepoURL"`
-	Namespace           string    `yaml:"Namespace"`
-	ReleaseName         string    `yaml:"ReleaseName"`
-	Version             string    `yaml:"Version"`
-	Override            *Override `yaml:"Override"`
-	CreateNamespace     *bool     `yaml:"CreateNamespace"`
-	PrivilegedNamespace *bool     `yaml:"PrivilegedNamespace"`
+	Name        string    `yaml:"Name"`
+	ChartName   string    `yaml:"ChartName"`
+	RepoName    string    `yaml:"RepoName"`
+	RepoURL     string    `yaml:"RepoURL"`
+	Namespace   string    `yaml:"Namespace"`
+	ReleaseName string    `yaml:"ReleaseName"`
+	Version     string    `yaml:"Version"`
+	Override    *Override `yaml:"Override"`
+
+	CreateNamespace     *bool `yaml:"CreateNamespace"`
+	PrivilegedNamespace *bool `yaml:"PrivilegedNamespace"`
 }

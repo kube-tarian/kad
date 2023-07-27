@@ -43,6 +43,9 @@ func (a *Activities) DeploymentInstallActivity(ctx context.Context, req *model.D
 	if req.Version == nil {
 		req.Version = &emptyVersion
 	}
+	if req.ValuesYaml == nil {
+		req.ValuesYaml = &emptyVersion
+	}
 	msg, err := deployerPlugin.Create(&model.CreteRequestPayload{
 		RepoName:    req.RepoName,
 		RepoURL:     req.RepoUrl,
@@ -51,6 +54,7 @@ func (a *Activities) DeploymentInstallActivity(ctx context.Context, req *model.D
 		ReleaseName: req.ReleaseName,
 		Timeout:     req.Timeout,
 		Version:     *req.Version,
+		ValuesYaml:  *req.ValuesYaml,
 	})
 	if err != nil {
 		logger.Errorf("Deploy activities failed %v", err)
