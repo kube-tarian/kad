@@ -188,3 +188,65 @@ func (c *CassandraServerStore) DeleteCluster(orgID, clusterName string) error {
 		c.keyspace, clusterId, orgID))
 	return c.c.Session().ExecuteBatch(batch)
 }
+
+func (c *CassandraServerStore) isAppExistsInStore(name, version string) bool {
+
+	iter := c.c.Session().Query(fmt.Sprintf("Select cluster_ids FROM %s.app_config WHERE name=%s AND version =%s ;",
+		c.keyspace, name, version)).Iter()
+
+	var config types.AppConfig
+	iter.Scan(&config)
+	if config.Name != "" {
+		return false
+	}
+	return true
+}
+
+func (c *CassandraServerStore) AddAppToStore(config *types.StoreAppConfig) error {
+
+	if ok := c.isAppExistsInStore(config.AppName, config.Version); ok {
+		return fmt.Errorf("app is already available")
+	}
+
+	err := c.c.Session().Query(fmt.Sprintf("INSERT INTO %s.app_config (name, chart_name, repo_name, repo_url, namespace, version, create_namespace,privileged_namespace, launch_ui_url, launch_ui_redirect_url, category, icon, description, launch_ui_values, override_values) VALUES (%s, %s, %s, %s, %s, %s, %t, %t, %s, %s, %s, %s, %s, %s, %s );",
+		c.keyspace, config.AppName, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues)).Exec()
+
+	return err
+}
+
+func (c *CassandraServerStore) UpdateAppInStore(config *types.StoreAppConfig) error {
+
+	err := c.c.Session().Query(fmt.Sprintf("UPDATE %s.app_config SET chart_name = '%s', repo_name = '%s', repo_url = '%s', namespace = '%s', version = '%s', create_namespace = %t, privileged_namespace = %t, launch_ui_url = '%s', launch_ui_redirect_url = '%s', category = '%s', icon = %s, description = '%s', launch_ui_values = %s, override_values = %s WHERE name = '%s' AND version = '%s';",
+		c.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, config.AppName, config.Version)).Exec()
+
+	return err
+}
+func (c *CassandraServerStore) DeleteAppFromStore(name, version string) error {
+
+	err := c.c.Session().Query(fmt.Sprintf("DELETE FROM %s.app_config WHERE name=%s AND version=%s ;",
+		c.keyspace, name, version)).Exec()
+
+	if err != nil {
+		return fmt.Errorf("failed to delete app config: %w", err)
+	}
+
+	return nil
+}
+
+func (c *CassandraServerStore) GetAppFromStore(name, version string) (*types.AppConfig, error) {
+
+	iter := c.c.Session().Query(fmt.Sprintf("Select * FROM %s.app_config WHERE name=%s AND version=%s;",
+		c.keyspace, name, version)).Iter()
+	var config types.AppConfig
+	iter.Scan(&config)
+	return &config, nil
+}
+
+func (c *CassandraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
+
+	iter := c.c.Session().Query(fmt.Sprintf("Select * FROM %s.app_config;",
+		c.keyspace)).Iter()
+	var config []types.AppConfig
+	iter.Scan(&config)
+	return &config, nil
+}

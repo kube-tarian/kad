@@ -4,29 +4,222 @@ import (
 	"context"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	"github.com/kube-tarian/kad/server/pkg/types"
 )
 
 func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppRequest) (
 	*serverpb.AddStoreAppResponse, error) {
-	return &serverpb.AddStoreAppResponse{}, nil
+
+	if request.AppConfig.AppName == "" {
+		s.log.Errorf("failed to add app cnfig to store, %v", "App name is missing")
+		return &serverpb.AddStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed add app config to store, app name is missing",
+		}, nil
+	} else if request.AppConfig.Version == "" {
+		s.log.Errorf("failed to add app cnfig to store, %v", "App version is")
+		return &serverpb.AddStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed add app config to store, app version is missing",
+		}, nil
+	}
+
+	config := &types.StoreAppConfig{
+		ReleaseName:         request.AppConfig.ReleaseName,
+		AppName:             request.AppConfig.AppName,
+		Version:             request.AppConfig.Version,
+		Category:            request.AppConfig.Category,
+		Description:         request.AppConfig.Description,
+		ChartName:           request.AppConfig.ChartName,
+		RepoName:            request.AppConfig.RepoName,
+		RepoURL:             request.AppConfig.RepoURL,
+		Namespace:           request.AppConfig.Namespace,
+		CreateNamespace:     request.AppConfig.CreateNamespace,
+		PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
+		Icon:                request.AppConfig.Icon,
+		LaunchURL:           request.AppConfig.LaunchURL,
+		LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
+		OverrideValues:      request.AppValues.OverrideValues,
+		LaunchUIValues:      request.AppValues.LaunchUIValues,
+	}
+
+	if err := s.serverStore.AddAppToStore(config); err != nil {
+		s.log.Errorf("failed to add app cnfig to store, %v", err)
+		return &serverpb.AddStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed add app config to store",
+		}, nil
+	}
+
+	return &serverpb.AddStoreAppResponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "app config is sucessfuly added to store",
+	}, nil
 }
 
 func (s *Server) UpdateStoreApp(ctx context.Context, request *serverpb.UpdateStoreAppRequest) (
 	*serverpb.UpdateStoreAppRsponse, error) {
-	return &serverpb.UpdateStoreAppRsponse{}, nil
+	if request.AppConfig.AppName == "" {
+		s.log.Errorf("failed to update app cnfig to store, %v", "App name is missing")
+		return &serverpb.UpdateStoreAppRsponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed add app config to store, app name is missing",
+		}, nil
+	} else if request.AppConfig.Version == "" {
+		s.log.Errorf("failed to update app cnfig to store, %v", "App version is")
+		return &serverpb.UpdateStoreAppRsponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed add app config to store, app version is missing",
+		}, nil
+	}
+
+	config := &types.StoreAppConfig{
+		ReleaseName:         request.AppConfig.ReleaseName,
+		AppName:             request.AppConfig.AppName,
+		Version:             request.AppConfig.Version,
+		Category:            request.AppConfig.Category,
+		Description:         request.AppConfig.Description,
+		ChartName:           request.AppConfig.ChartName,
+		RepoName:            request.AppConfig.RepoName,
+		RepoURL:             request.AppConfig.RepoURL,
+		Namespace:           request.AppConfig.Namespace,
+		CreateNamespace:     request.AppConfig.CreateNamespace,
+		PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
+		Icon:                request.AppConfig.Icon,
+		LaunchURL:           request.AppConfig.LaunchURL,
+		LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
+		OverrideValues:      request.AppValues.OverrideValues,
+		LaunchUIValues:      request.AppValues.LaunchUIValues,
+	}
+
+	if err := s.serverStore.UpdateAppInStore(config); err != nil {
+		s.log.Errorf("failed to update app cnfig in store, %v", err)
+		return &serverpb.UpdateStoreAppRsponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed update app config to store",
+		}, nil
+	}
+
+	return &serverpb.UpdateStoreAppRsponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "app config is sucessfuly updated",
+	}, nil
 }
 
 func (s *Server) DeleteStoreApp(ctx context.Context, request *serverpb.DeleteStoreAppRequest) (
 	*serverpb.DeleteStoreAppResponse, error) {
-	return &serverpb.DeleteStoreAppResponse{}, nil
+	if request.AppName == "" {
+		s.log.Errorf("failed to delete app cnfig from store, %v", "App name is missing")
+		return &serverpb.DeleteStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to delete app config from store, app name is missing",
+		}, nil
+	} else if request.Version == "" {
+		s.log.Errorf("failed to delete app cnfig from store, %v", "App version is")
+		return &serverpb.DeleteStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to delete app config from store, app version is missing",
+		}, nil
+	}
+
+	if err := s.serverStore.DeleteAppFromStore(request.AppName, request.Version); err != nil {
+		s.log.Errorf("failed to delete app cnfig from store, %v", err)
+		return &serverpb.DeleteStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed delete app config from store",
+		}, nil
+	}
+
+	return &serverpb.DeleteStoreAppResponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "app config is sucessfuly deleted",
+	}, nil
+
 }
 
 func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppRequest) (
 	*serverpb.GetStoreAppResponse, error) {
-	return &serverpb.GetStoreAppResponse{}, nil
+	if request.AppName == "" {
+		s.log.Errorf("failed to get app config from store, %v", "App name is missing")
+		return &serverpb.GetStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to get app config from store, app name is missing",
+		}, nil
+	} else if request.Version == "" {
+		s.log.Errorf("failed to get app config from store, %v", "App version is")
+		return &serverpb.GetStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to get app config from store, app version is missing",
+		}, nil
+	}
+
+	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
+	if err != nil {
+		s.log.Errorf("failed to get app cnfig from store, %v", err)
+		return &serverpb.GetStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed get app config from store",
+		}, nil
+	}
+
+	appConfig := &serverpb.StoreAppConfig{
+		AppName:             config.Name,
+		Version:             config.Version,
+		Category:            config.Category,
+		Description:         config.Description,
+		ChartName:           config.ChartName,
+		RepoName:            config.RepoName,
+		RepoURL:             config.RepoURL,
+		Namespace:           config.Namespace,
+		CreateNamespace:     config.CreateNamespace,
+		PrivilegedNamespace: config.PrivilegedNamespace,
+		Icon:                config.Icon,
+		LaunchURL:           config.LaunchUIURL,
+		LaunchRedirectURL:   config.LaunchUIRedirectURL,
+	}
+
+	return &serverpb.GetStoreAppResponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "app config is sucessfuly fetched from store",
+		AppConfig:     appConfig,
+	}, nil
+
 }
 
 func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreAppsRequest) (
 	*serverpb.GetStoreAppsResponse, error) {
-	return &serverpb.GetStoreAppsResponse{}, nil
+
+	configs, err := s.serverStore.GetAppsFromStore()
+	if err != nil {
+		s.log.Errorf("failed to get app cnfigs from store, %v", err)
+		return &serverpb.GetStoreAppsResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed get app configs from store",
+		}, nil
+	}
+
+	appConfigs := []*serverpb.StoreAppConfig{}
+	for _, config := range *configs {
+		appConfigs = append(appConfigs, &serverpb.StoreAppConfig{
+			AppName:             config.Name,
+			Version:             config.Version,
+			Category:            config.Category,
+			Description:         config.Description,
+			ChartName:           config.ChartName,
+			RepoName:            config.RepoName,
+			RepoURL:             config.RepoURL,
+			Namespace:           config.Namespace,
+			CreateNamespace:     config.CreateNamespace,
+			PrivilegedNamespace: config.PrivilegedNamespace,
+			Icon:                config.Icon,
+			LaunchURL:           config.LaunchUIURL,
+			LaunchRedirectURL:   config.LaunchUIRedirectURL,
+		})
+	}
+
+	return &serverpb.GetStoreAppsResponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "app configs are sucessfuly fetched from store",
+		AppConfigs:    appConfigs,
+	}, nil
 }
