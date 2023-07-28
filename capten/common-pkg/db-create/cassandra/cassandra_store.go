@@ -133,7 +133,7 @@ func (c *CassandraStore) CreateLockSchemaDb(replicationFactor string) (err error
 	return
 }
 
-var configureClusterConfig = func(addrs []string, adminUsername string, adminPassword string) (cluster *gocql.ClusterConfig, err error) {
+func configureClusterConfig(addrs []string, adminUsername string, adminPassword string) (cluster *gocql.ClusterConfig, err error) {
 	if len(addrs) == 0 {
 		err = errors.New("you must specify a Cassandra address to connect to")
 		return
@@ -154,7 +154,7 @@ var configureClusterConfig = func(addrs []string, adminUsername string, adminPas
 	return
 }
 
-var createDbSession = func(cluster *gocql.ClusterConfig) (session *gocql.Session, err error) {
+func createDbSession(cluster *gocql.ClusterConfig) (session *gocql.Session, err error) {
 	session, err = cluster.CreateSession()
 	if err != nil {
 		return nil, err

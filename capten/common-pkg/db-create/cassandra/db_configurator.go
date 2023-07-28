@@ -44,6 +44,8 @@ func (dbConf *DbConfigurator) ConfigureDb(conf DBConfig) (err error) {
 		return
 	}
 
+	// store the password in vault
+
 	dbConf.logg.Info("Grant permission to service user")
 	err = dbConf.store.GrantPermission(conf.DbServiceUsername, conf.DbName)
 	if err != nil {

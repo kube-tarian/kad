@@ -6,11 +6,12 @@ import "github.com/gocql/gocql"
 type DBConfig struct {
 	DbAddresses         []string `envconfig:"DB_ADDRESSES" required:"true" default:"localhost:9042"`
 	DbAdminUsername     string   `envconfig:"DB_ADMIN_USERNAME" required:"true" default:"cassandra"`
-	DbServiceUsername   string   `envconfig:"DB_SERVICE_USERNAME" required:"false"`
-	DbName              string   `envconfig:"CASSANDRA_DB_NAME" required:"false"`
 	DbReplicationFactor string   `envconfig:"DB_REPLICATION_FACTOR" required:"true" default:"1"`
 	DbAdminPassword     string   `envconfig:"DB_ADMIN_PASSWD" required:"true" default:"cassandra"`
-	DbServicePassword   string   `envconfig:"DB_SERVICE_PASSWD" required:"false"`
+
+	DbName            string `envconfig:"CASSANDRA_DB_NAME" required:"true"`
+	DbServiceUsername string `envconfig:"DB_SERVICE_USERNAME" required:"true"`
+	DbServicePassword string `envconfig:"DB_SERVICE_PASSWD" required:"true"`
 }
 
 type Store interface {
