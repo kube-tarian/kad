@@ -11,13 +11,13 @@ func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppR
 	*serverpb.AddStoreAppResponse, error) {
 
 	if request.AppConfig.AppName == "" {
-		s.log.Errorf("failed to add app cnfig to store, %v", "App name is missing")
+		s.log.Errorf("failed to add app config to store, %v", "App name is missing")
 		return &serverpb.AddStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed add app config to store, app name is missing",
 		}, nil
 	} else if request.AppConfig.Version == "" {
-		s.log.Errorf("failed to add app cnfig to store, %v", "App version is")
+		s.log.Errorf("failed to add app config to store, %v", "App version is missing")
 		return &serverpb.AddStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed add app config to store, app version is missing",
@@ -44,7 +44,7 @@ func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppR
 	}
 
 	if err := s.serverStore.AddAppToStore(config); err != nil {
-		s.log.Errorf("failed to add app cnfig to store, %v", err)
+		s.log.Errorf("failed to add app config to store, %v", err)
 		return &serverpb.AddStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed add app config to store",
@@ -60,16 +60,16 @@ func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppR
 func (s *Server) UpdateStoreApp(ctx context.Context, request *serverpb.UpdateStoreAppRequest) (
 	*serverpb.UpdateStoreAppRsponse, error) {
 	if request.AppConfig.AppName == "" {
-		s.log.Errorf("failed to update app cnfig to store, %v", "App name is missing")
+		s.log.Errorf("failed to update app config in store, %v", "App name is missing")
 		return &serverpb.UpdateStoreAppRsponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed add app config to store, app name is missing",
+			StatusMessage: "failed to update app config in store, app name is missing",
 		}, nil
 	} else if request.AppConfig.Version == "" {
-		s.log.Errorf("failed to update app cnfig to store, %v", "App version is")
+		s.log.Errorf("failed to update app config in store, %v", "App version is")
 		return &serverpb.UpdateStoreAppRsponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed add app config to store, app version is missing",
+			StatusMessage: "failed to update app config in store, app version is missing",
 		}, nil
 	}
 
@@ -93,10 +93,10 @@ func (s *Server) UpdateStoreApp(ctx context.Context, request *serverpb.UpdateSto
 	}
 
 	if err := s.serverStore.UpdateAppInStore(config); err != nil {
-		s.log.Errorf("failed to update app cnfig in store, %v", err)
+		s.log.Errorf("failed to update app config in store, %v", err)
 		return &serverpb.UpdateStoreAppRsponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed update app config to store",
+			StatusMessage: "failed to update app config in store",
 		}, nil
 	}
 
@@ -109,7 +109,7 @@ func (s *Server) UpdateStoreApp(ctx context.Context, request *serverpb.UpdateSto
 func (s *Server) DeleteStoreApp(ctx context.Context, request *serverpb.DeleteStoreAppRequest) (
 	*serverpb.DeleteStoreAppResponse, error) {
 	if request.AppName == "" {
-		s.log.Errorf("failed to delete app cnfig from store, %v", "App name is missing")
+		s.log.Errorf("failed to delete app config from store, %v", "App name is missing")
 		return &serverpb.DeleteStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to delete app config from store, app name is missing",
@@ -123,10 +123,10 @@ func (s *Server) DeleteStoreApp(ctx context.Context, request *serverpb.DeleteSto
 	}
 
 	if err := s.serverStore.DeleteAppFromStore(request.AppName, request.Version); err != nil {
-		s.log.Errorf("failed to delete app cnfig from store, %v", err)
+		s.log.Errorf("failed to delete app config from store, %v", err)
 		return &serverpb.DeleteStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed delete app config from store",
+			StatusMessage: "failed to delete app config from store",
 		}, nil
 	}
 
@@ -155,10 +155,10 @@ func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppR
 
 	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
 	if err != nil {
-		s.log.Errorf("failed to get app cnfig from store, %v", err)
+		s.log.Errorf("failed to get app config from store, %v", err)
 		return &serverpb.GetStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed get app config from store",
+			StatusMessage: "failed to get app config from store",
 		}, nil
 	}
 
@@ -191,10 +191,10 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 
 	configs, err := s.serverStore.GetAppsFromStore()
 	if err != nil {
-		s.log.Errorf("failed to get app cnfigs from store, %v", err)
+		s.log.Errorf("failed to get app config's from store, %v", err)
 		return &serverpb.GetStoreAppsResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed get app configs from store",
+			StatusMessage: "failed to get app config's from store",
 		}, nil
 	}
 
@@ -219,7 +219,7 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 
 	return &serverpb.GetStoreAppsResponse{
 		Status:        serverpb.StatusCode_OK,
-		StatusMessage: "app configs are sucessfuly fetched from store",
+		StatusMessage: "app config's are sucessfuly fetched from store",
 		AppConfigs:    appConfigs,
 	}, nil
 }

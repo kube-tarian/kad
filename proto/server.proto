@@ -206,12 +206,12 @@ message StoreAppConfig {
   string namespace = 9;
   bool createNamespace = 10;
   bool privilegedNamespace = 11;
-  bytes icon = 12;
+  string icon = 12;
   string launchURL = 13;
   string launchRedirectURL = 14;
 }
 
 message StoreAppValues {
-  bytes overrideValues = 1;
-  bytes launchUIValues = 2;
+  map<string, string> overrideValues = 1;
+  map<string, string> launchUIValues = 2;
 }
