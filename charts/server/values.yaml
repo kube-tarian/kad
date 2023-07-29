@@ -9,9 +9,10 @@ image:
   pullPolicy: Always
   tag: "latest"
 
-env:
-	database: astra
-  logLevel: info
+vault:
+  address: http://vault:8200
+  role: vault-role-capten-server
+  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-read,vault-policy-generic-cred-read"
 
 cassandra:
   dbAddresses: cassandra.cassandra.svc.cluster.local
@@ -22,6 +23,10 @@ cassandra:
 astra:
   entityName: astra
   credIdentifier: auth-token
+
+env:
+  logLevel: info
+  database: astra
 
 imagePullSecrets: []
 nameOverride: ""
@@ -52,6 +57,7 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 8080
+  grpcport: 8081
 
 ingress:
   enabled: false
@@ -68,11 +74,6 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
-
-vault:
-  address: http://vault:8200
-  role: vault-role-capten-server
-  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-read,vault-policy-cluster-read"
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -98,7 +99,3 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
-agent:
-  address: "kad-agent.default.svc.cluster.local"
-  port: 8080

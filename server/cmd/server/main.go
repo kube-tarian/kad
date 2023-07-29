@@ -24,6 +24,7 @@ import (
 
 func main() {
 	log := logging.NewLogger()
+	log.Infof("Staring Server")
 
 	cfg, err := config.GetServiceConfig()
 	if err != nil {
@@ -50,7 +51,7 @@ func main() {
 		log.Fatal("grpc server initialization failed", err)
 	}
 
-	target := fmt.Sprintf("%s:%d", cfg.ServerHost, cfg.ServerPort)
+	target := fmt.Sprintf("%s:%d", cfg.ServerGRPCHost, cfg.ServerGRPCPort)
 	listener, err := net.Listen("tcp", target)
 	if err != nil {
 		log.Fatal("failed to listen: ", err)
@@ -72,7 +73,7 @@ func main() {
 	r = api.RegisterHandlers(r, server)
 
 	go func() {
-		serverAddress := fmt.Sprintf("%s:%d", cfg.ServerHTTPHost, cfg.ServerHTTPPort)
+		serverAddress := fmt.Sprintf("%s:%d", cfg.ServerHost, cfg.ServerPort)
 		if err := r.Run(serverAddress); err != nil {
 			log.Fatal("failed to start server", err)
 		}

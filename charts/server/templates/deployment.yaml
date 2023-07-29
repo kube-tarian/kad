@@ -37,17 +37,14 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /status
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /status
-              port: http
+            - name: grpc
+              containerPort: {{ .Values.service.grpcport }}
+              protocol: TCP
           env:
             - name: SERVER_PORT
               value: "{{ .Values.service.port }}"
+            - name: SERVER_GRPC_PORT
+              value: "{{ .Values.service.grpcport }}"
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel }}
             - name: VAULT_ADDR

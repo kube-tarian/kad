@@ -130,8 +130,8 @@ github.com/hashicorp/vault/api v1.9.2 h1:YjkZLJ7K3inKgMZ0wzCU9OHqc+UqMQyXsPXnf3C
 github.com/hashicorp/vault/api v1.9.2/go.mod h1:jo5Y/ET+hNyz+JnKDt8XLAdKs+AM0G5W0Vp1IrFI8N8=
 github.com/hashicorp/vault/api/auth/kubernetes v0.4.1 h1:amFWL1ZhwMWdmqvT51J9phXu835kY25wFfTrY/3yXd0=
 github.com/hashicorp/vault/api/auth/kubernetes v0.4.1/go.mod h1:ikWDT8Adnfvm+8DzKez50vvLD9GWD/unZfJxeqP09sU=
-github.com/intelops/go-common v1.0.14 h1:LfPJUqPF8DyDsay2J+ssFP+dpI5kYCQXPgIUtKadmDc=
-github.com/intelops/go-common v1.0.14/go.mod h1:MtFNUbf8Br2pyCB4cOOGXnLcODJm6oBgmpnWpnFUD4g=
+github.com/intelops/go-common v1.0.15 h1:w5arGiN4bUxYNOK+Bhk3nUGgRy2mzrzyqMQSZHTLg5g=
+github.com/intelops/go-common v1.0.15/go.mod h1:MtFNUbf8Br2pyCB4cOOGXnLcODJm6oBgmpnWpnFUD4g=
 github.com/invopop/yaml v0.1.0 h1:YW3WGUoJEXYfzWBjn00zIlrw7brGVD0fUKRYDPAPhrc=
 github.com/invopop/yaml v0.1.0/go.mod h1:2XuRLgs/ouIrW3XNzuNj7J3Nvu/Dig5MXvbCEdiBN3Q=
 github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8HmY=
