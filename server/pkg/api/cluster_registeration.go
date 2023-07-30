@@ -6,12 +6,20 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/credential"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	"google.golang.org/grpc/metadata"
 )
 
 func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.NewClusterRegistrationRequest) (
 	*serverpb.NewClusterRegistrationResponse, error) {
-	orgId, ok := ctx.Value("organizationID").(string)
-	if !ok || orgId == "" {
+	metadata, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return &serverpb.NewClusterRegistrationResponse{
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Need organizationid in the metadata",
+		}, nil
+	}
+	orgId := metadata["organizationid"]
+	if len(orgId) != 1 {
 		s.log.Error("organizationID is missing in the request")
 		return &serverpb.NewClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
@@ -25,7 +33,7 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		Cert:    request.ClientKeyData,
 		Key:     request.ClientCertData,
 	}
-	if err := s.agentHandeler.AddAgent(orgId, request.ClusterName, agentConfig); err != nil {
+	if err := s.agentHandeler.AddAgent(orgId[0], request.ClusterName, agentConfig); err != nil {
 		s.log.Errorf("failed to connect to agent, %s", err)
 		return &serverpb.NewClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -33,7 +41,7 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		}, nil
 	}
 
-	err := credential.PutClusterCerts(ctx, orgId, request.ClusterName,
+	err := credential.PutClusterCerts(ctx, orgId[0], request.ClusterName,
 		request.ClientCAChainData, request.ClientKeyData, request.ClientCertData)
 	if err != nil {
 		s.log.Errorf("failed to store cert in vault, %v", err)
@@ -43,7 +51,7 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		}, nil
 	}
 
-	err = s.serverStore.AddCluster(orgId, request.ClusterName, request.AgentEndpoint)
+	err = s.serverStore.AddCluster(orgId[0], request.ClusterName, request.AgentEndpoint)
 	if err != nil {
 		s.log.Errorf("failed to get db session, %v", err)
 		return &serverpb.NewClusterRegistrationResponse{
@@ -60,8 +68,15 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 
 func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverpb.UpdateClusterRegistrationRequest) (
 	*serverpb.UpdateClusterRegistrationResponse, error) {
-	orgId, ok := ctx.Value("organizationID").(string)
-	if !ok || orgId == "" {
+	metadata, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return &serverpb.UpdateClusterRegistrationResponse{
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Need organizationid in the metadata",
+		}, nil
+	}
+	orgId := metadata["organizationid"]
+	if len(orgId) != 1 {
 		s.log.Error("organizationID is missing in the request")
 		return &serverpb.UpdateClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
@@ -76,7 +91,7 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 		Key:     request.ClientCertData,
 	}
 
-	if err := s.agentHandeler.UpdateAgent(orgId, request.ClusterName, agentConfig); err != nil {
+	if err := s.agentHandeler.UpdateAgent(orgId[0], request.ClusterName, agentConfig); err != nil {
 		s.log.Errorf("failed to connect to agent, %s", err)
 		return &serverpb.UpdateClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -84,7 +99,7 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	err := credential.PutClusterCerts(ctx, orgId, request.ClusterName,
+	err := credential.PutClusterCerts(ctx, orgId[0], request.ClusterName,
 		request.ClientCAChainData, request.ClientKeyData, request.ClientCertData)
 	if err != nil {
 		s.log.Errorf("failed to store cert in vault, %v", err)
@@ -94,7 +109,7 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	err = s.serverStore.UpdateCluster(orgId, request.ClusterName, request.AgentEndpoint)
+	err = s.serverStore.UpdateCluster(orgId[0], request.ClusterName, request.AgentEndpoint)
 	if err != nil {
 		s.log.Errorf("failed to get db session, %v", err)
 		return &serverpb.UpdateClusterRegistrationResponse{
@@ -111,8 +126,15 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 
 func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverpb.DeleteClusterRegistrationRequest) (
 	*serverpb.DeleteClusterRegistrationResponse, error) {
-	orgId, ok := ctx.Value("organizationID").(string)
-	if !ok || orgId == "" {
+	metadata, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return &serverpb.DeleteClusterRegistrationResponse{
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Need organizationid in the metadata",
+		}, nil
+	}
+	orgId := metadata["organizationid"]
+	if len(orgId) != 1 {
 		s.log.Error("organizationID is missing in the request")
 		return &serverpb.DeleteClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
@@ -120,8 +142,8 @@ func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	s.agentHandeler.RemoveAgent(orgId, request.ClusterName)
-	err := credential.DeleteClusterCerts(ctx, orgId, request.ClusterName)
+	s.agentHandeler.RemoveAgent(orgId[0], request.ClusterName)
+	err := credential.DeleteClusterCerts(ctx, orgId[0], request.ClusterName)
 	if err != nil {
 		s.log.Errorf("failed to delete cert in vault, %v", err)
 		return &serverpb.DeleteClusterRegistrationResponse{
@@ -130,7 +152,7 @@ func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	err = s.serverStore.DeleteCluster(orgId, request.ClusterName)
+	err = s.serverStore.DeleteCluster(orgId[0], request.ClusterName)
 	if err != nil {
 		s.log.Errorf("failed to get db session, %v", err)
 		return &serverpb.DeleteClusterRegistrationResponse{
@@ -147,8 +169,15 @@ func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverp
 
 func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersRequest) (
 	*serverpb.GetClustersResponse, error) {
-	orgId, ok := ctx.Value("organizationID").(string)
-	if !ok || orgId == "" {
+	metadata, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return &serverpb.GetClustersResponse{
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Need organizationid in the metadata",
+		}, nil
+	}
+	orgId := metadata["organizationid"]
+	if len(orgId) != 1 {
 		s.log.Error("organizationID is missing in the request")
 		return &serverpb.GetClustersResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
@@ -156,7 +185,7 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 		}, nil
 	}
 
-	clusterDetails, err := s.serverStore.GetClusters(orgId)
+	clusterDetails, err := s.serverStore.GetClusters(orgId[0])
 	if err != nil {
 		s.log.Errorf("failed to get cluster details, %v", err)
 		return &serverpb.GetClustersResponse{
