@@ -176,6 +176,7 @@ func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppR
 		Icon:                config.Icon,
 		LaunchURL:           config.LaunchUIURL,
 		LaunchRedirectURL:   config.LaunchUIRedirectURL,
+		ReleaseName:         config.ReleaseName,
 	}
 
 	return &serverpb.GetStoreAppResponse{
@@ -214,6 +215,7 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 			Icon:                config.Icon,
 			LaunchURL:           config.LaunchUIURL,
 			LaunchRedirectURL:   config.LaunchUIRedirectURL,
+			ReleaseName:         config.ReleaseName,
 		})
 	}
 

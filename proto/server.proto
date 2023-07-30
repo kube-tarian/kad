@@ -212,6 +212,6 @@ message StoreAppConfig {
 }
 
 message StoreAppValues {
-  map<string, string> overrideValues = 1;
-  map<string, string> launchUIValues = 2;
+  string overrideValues = 1;
+  string launchUIValues = 2;
 }

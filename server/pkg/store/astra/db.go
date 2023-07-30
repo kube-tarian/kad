@@ -1,9 +1,9 @@
 package astra
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	astraclient "github.com/kube-tarian/kad/server/pkg/astra-client"
 	"github.com/kube-tarian/kad/server/pkg/types"
@@ -26,6 +26,7 @@ func NewStore() (*AstraServerStore, error) {
 		return nil, fmt.Errorf("failed to connect to astra db, %w", err)
 	}
 	a.keyspace = a.c.Keyspace()
+	a.keyspace = "capten_server"
 	return a, nil
 }
 
@@ -339,20 +340,9 @@ func (a *AstraServerStore) AddAppToStore(config *types.StoreAppConfig) error {
 		return fmt.Errorf("app is already available")
 	}
 
-	jsonLaunchUIValues, err := json.Marshal(config.LaunchUIValues)
-	if err != nil {
-		return err
-	}
-	launchUIValues := strings.ReplaceAll(string(jsonLaunchUIValues), `"`, `'`)
-	jsonOverrideValues, err := json.Marshal(config.OverrideValues)
-	if err != nil {
-		return err
-	}
-	overrideValues := strings.ReplaceAll(string(jsonOverrideValues), `"`, `'`)
-
 	insertQuery := &pb.Query{
-		Cql: fmt.Sprintf("INSERT INTO %s.app_config (name, chart_name, repo_name, repo_url, namespace, version, create_namespace,privileged_namespace, launch_ui_url, launch_ui_redirect_url, category, icon, description, launch_ui_values, override_values) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', %t, %t, '%s', '%s', '%s', '%s', '%s', %v, %v );",
-			a.keyspace, config.AppName, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, launchUIValues, overrideValues),
+		Cql: fmt.Sprintf("INSERT INTO %s.app_config (name, chart_name, repo_name,release_name, repo_url, namespace, version, create_namespace, privileged_namespace, launch_ui_url, launch_ui_redirect_url, category, icon, description, launch_ui_values, override_values, created_time, id) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %t, %t, '%s', '%s', '%s', '%s', '%s', '%s', '%s','%v', '%s' );",
+			a.keyspace, config.AppName, config.ChartName, config.RepoName, config.ReleaseName, config.RepoURL, config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), uuid.New().String()),
 	}
 
 	_, err = a.c.Session().ExecuteQuery(insertQuery)
@@ -365,23 +355,13 @@ func (a *AstraServerStore) AddAppToStore(config *types.StoreAppConfig) error {
 
 func (a *AstraServerStore) UpdateAppInStore(config *types.StoreAppConfig) error {
 
-	jsonLaunchUIValues, err := json.Marshal(config.LaunchUIValues)
-	if err != nil {
-		return err
-	}
-	launchUIValues := strings.ReplaceAll(string(jsonLaunchUIValues), `"`, `'`)
-	jsonOverrideValues, err := json.Marshal(config.OverrideValues)
-	if err != nil {
-		return err
-	}
-	overrideValues := strings.ReplaceAll(string(jsonOverrideValues), `"`, `'`)
-
 	updateQuery := &pb.Query{
-		Cql: fmt.Sprintf("UPDATE %s.app_config SET chart_name = '%s', repo_name = '%s', repo_url = '%s', namespace = '%s', create_namespace = %t, privileged_namespace = %t, launch_ui_url = '%s', launch_ui_redirect_url = '%s', category = '%s', icon = '%s', description = '%s', launch_ui_values = %v, override_values = %v WHERE name = '%s' AND version = '%s';",
-			a.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, launchUIValues, overrideValues, config.AppName, config.Version),
+		Cql: fmt.Sprintf("UPDATE %s.app_config SET chart_name = '%s', repo_name = '%s', repo_url = '%s', namespace = '%s', create_namespace = %t, privileged_namespace = %t, launch_ui_url = '%s', launch_ui_redirect_url = '%s', category = '%s', icon = '%s', description = '%s', launch_ui_values = '%s', override_values = '%s',last_updated_time='%v' WHERE name = '%s' AND version = '%s';",
+			a.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), config.AppName, config.Version),
 	}
 
-	_, err = a.c.Session().ExecuteQuery(updateQuery)
+	fmt.Println(updateQuery)
+	_, err := a.c.Session().ExecuteQuery(updateQuery)
 	if err != nil {
 		return fmt.Errorf("failed to initialise db: %w", err)
 	}
@@ -408,7 +388,7 @@ func (a *AstraServerStore) DeleteAppFromStore(name, version string) error {
 func (a *AstraServerStore) GetAppFromStore(name, version string) (*types.AppConfig, error) {
 
 	selectQuery := &pb.Query{
-		Cql: fmt.Sprintf("Select name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values FROM %s.app_config WHERE name='%s' AND version='%s';",
+		Cql: fmt.Sprintf("Select name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, release_name FROM %s.app_config WHERE name='%s' AND version='%s';",
 			a.keyspace, name, version),
 	}
 
@@ -475,14 +455,18 @@ func (a *AstraServerStore) GetAppFromStore(name, version string) (*types.AppConf
 	if err != nil {
 		return nil, fmt.Errorf("failed to get launch ui redirect url: %w", err)
 	}
-	// cqlLaunchUiValues, err := client.ToMap(result.Rows[0].Values[13],&pb.TypeSpec{})
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get launch ui values: %w", err)
-	// }
-	// cqlOverrideValues, err := client.ToMap(result.Rows[0].Values[14], &pb.TypeSpec{})
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to get override values: %w", err)
-	// }
+	cqlLaunchUiValues, err := client.ToString(result.Rows[0].Values[13])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get launch ui values: %w", err)
+	}
+	cqlOverrideValues, err := client.ToString(result.Rows[0].Values[14])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get override values: %w", err)
+	}
+	cqlReleaseNameValues, err := client.ToString(result.Rows[0].Values[15])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get override values: %w", err)
+	}
 
 	config := &types.AppConfig{
 		Name:                cqlAppName,
@@ -498,8 +482,9 @@ func (a *AstraServerStore) GetAppFromStore(name, version string) (*types.AppConf
 		Category:            cqlCategory,
 		Icon:                cqlIcon,
 		Description:         cqlDescription,
-		// LaunchUIValues: cqlLaunchUiValues.(map[string]string),
-		// OverrideValues: cqlOverrideValues.(map[string]string),
+		LaunchUIValues:      cqlLaunchUiValues,
+		OverrideValues:      cqlOverrideValues,
+		ReleaseName:         cqlReleaseNameValues,
 	}
 
 	return config, nil
@@ -508,7 +493,7 @@ func (a *AstraServerStore) GetAppFromStore(name, version string) (*types.AppConf
 func (a *AstraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
 
 	selectQuery := &pb.Query{
-		Cql: fmt.Sprintf("Select name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values FROM %s.app_config;",
+		Cql: fmt.Sprintf("Select name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, release_name FROM %s.app_config;",
 			a.keyspace),
 	}
 
@@ -577,14 +562,19 @@ func (a *AstraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to get launch ui redirect url: %w", err)
 		}
-		// cqlLaunchUiValues, err := client.ToMap(row.Values[13],&pb.TypeSpec{})
-		// if err != nil {
-		// 	return nil, fmt.Errorf("failed to get launch ui values: %w", err)
-		// }
-		// cqlOverrideValues, err := client.ToMap(row.Values[14],&pb.TypeSpec{})
-		// if err != nil {
-		// 	return nil, fmt.Errorf("failed to get override values: %w", err)
-		// }
+		cqlLaunchUiValues, err := client.ToString(row.Values[13])
+		if err != nil {
+			return nil, fmt.Errorf("failed to get launch ui values: %w", err)
+		}
+		cqlOverrideValues, err := client.ToString(row.Values[14])
+		if err != nil {
+			return nil, fmt.Errorf("failed to get override values: %w", err)
+		}
+
+		cqlReleaseNameValues, err := client.ToString(result.Rows[0].Values[15])
+		if err != nil {
+			return nil, fmt.Errorf("failed to get override values: %w", err)
+		}
 
 		appConfigs = append(appConfigs, types.AppConfig{
 			Name:                cqlAppName,
@@ -600,8 +590,9 @@ func (a *AstraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
 			Category:            cqlCategory,
 			Icon:                cqlIcon,
 			Description:         cqlDescription,
-			// LaunchUIValues:  cqlLaunchUiValues.(map[string]string),
-			// OverrideValues: cqlOverrideValues.(map[string]string),
+			LaunchUIValues:      cqlLaunchUiValues,
+			OverrideValues:      cqlOverrideValues,
+			ReleaseName:         cqlReleaseNameValues,
 		})
 	}
 
