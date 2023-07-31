@@ -10,8 +10,9 @@ import (
 
 func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.NewClusterRegistrationRequest) (
 	*serverpb.NewClusterRegistrationResponse, error) {
-	orgId, ok := ctx.Value("organizationID").(string)
-	if !ok || orgId == "" {
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if len(orgId) == 0 {
 		s.log.Error("organizationID is missing in the request")
 		return &serverpb.NewClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
@@ -60,8 +61,9 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 
 func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverpb.UpdateClusterRegistrationRequest) (
 	*serverpb.UpdateClusterRegistrationResponse, error) {
-	orgId, ok := ctx.Value("organizationID").(string)
-	if !ok || orgId == "" {
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if len(orgId) == 0 {
 		s.log.Error("organizationID is missing in the request")
 		return &serverpb.UpdateClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
@@ -111,8 +113,9 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 
 func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverpb.DeleteClusterRegistrationRequest) (
 	*serverpb.DeleteClusterRegistrationResponse, error) {
-	orgId, ok := ctx.Value("organizationID").(string)
-	if !ok || orgId == "" {
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if len(orgId) == 0 {
 		s.log.Error("organizationID is missing in the request")
 		return &serverpb.DeleteClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
@@ -147,8 +150,9 @@ func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverp
 
 func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersRequest) (
 	*serverpb.GetClustersResponse, error) {
-	orgId, ok := ctx.Value("organizationID").(string)
-	if !ok || orgId == "" {
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if len(orgId) == 0 {
 		s.log.Error("organizationID is missing in the request")
 		return &serverpb.GetClustersResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
