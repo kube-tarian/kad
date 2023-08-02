@@ -15,6 +15,10 @@ type ServerStore interface {
 	AddCluster(organizationID, clusterName, endpoint string) error
 	UpdateCluster(organizationID, clusterName, endpoint string) error
 	DeleteCluster(organizationID, clusterName string) error
+	AddOrUpdateApp(config *types.StoreAppConfig) error
+	DeleteAppInStore(name, version string) error
+	GetAppFromStore(name, version string) (*types.AppConfig, error)
+	GetAppsFromStore() (*[]types.AppConfig, error)
 }
 
 func NewStore(db string) (ServerStore, error) {
