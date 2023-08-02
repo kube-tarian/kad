@@ -11,6 +11,15 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/types"
 )
 
+const (
+	createAppConfigQuery         string = "INSERT INTO %s.app_config (name, chart_name, repo_name,release_name, repo_url, namespace, version, create_namespace, privileged_namespace, launch_ui_url, launch_ui_redirect_url, category, icon, description, launch_ui_values, override_values, created_time, id) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %t, %t, '%s', '%s', '%s', '%s', '%s', '%s', '%s','%v', '%s' );"
+	updateAppConfigQuery         string = "UPDATE %s.app_config SET chart_name = '%s', repo_name = '%s', repo_url = '%s', namespace = '%s', create_namespace = %t, privileged_namespace = %t, launch_ui_url = '%s', launch_ui_redirect_url = '%s', category = '%s', icon = '%s', description = '%s', launch_ui_values = '%s', override_values = '%s',last_updated_time='%v' WHERE name = '%s' AND version = '%s';"
+	deleteAppConfigQuery         string = "DELETE FROM %s.app_config WHERE name='%s' AND version='%s' ;"
+	getAppConfigQuery            string = "Select name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values,release_name FROM %s.app_config WHERE name='%s' AND version='%s';"
+	getAllAppConfigsQuery        string = "Select name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values,release_name FROM %s.app_config;"
+	appConfigExistanceCheckQuery string = "Select name, version FROM %s.app_config WHERE name='%s' AND version ='%s';"
+)
+
 type CassandraServerStore struct {
 	c        *cassandraclient.Client
 	keyspace string
@@ -197,7 +206,7 @@ func (c *CassandraServerStore) DeleteCluster(orgID, clusterName string) error {
 
 func (c *CassandraServerStore) isAppExistsInStore(name, version string) bool {
 
-	iter := c.c.Session().Query(fmt.Sprintf("Select name, version FROM %s.app_config WHERE name='%s' AND version ='%s';",
+	iter := c.c.Session().Query(fmt.Sprintf(appConfigExistanceCheckQuery,
 		c.keyspace, name, version)).Iter()
 
 	var config types.AppConfig
@@ -208,29 +217,23 @@ func (c *CassandraServerStore) isAppExistsInStore(name, version string) bool {
 	return true
 }
 
-func (c *CassandraServerStore) AddAppToStore(config *types.StoreAppConfig) error {
+func (c *CassandraServerStore) AddOrUpdateApp(config *types.StoreAppConfig) error {
 
 	if ok := c.isAppExistsInStore(config.AppName, config.Version); ok {
-		return fmt.Errorf("app is already available")
+		err := c.c.Session().Query(fmt.Sprintf(updateAppConfigQuery,
+			c.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), config.AppName, config.Version)).Exec()
+		return err
+	} else {
+		err := c.c.Session().Query(fmt.Sprintf(createAppConfigQuery,
+			c.keyspace, config.AppName, config.ChartName, config.RepoName, config.ReleaseName, config.RepoURL, config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), uuid.New().String())).Exec()
+
+		return err
 	}
-
-	err := c.c.Session().Query(fmt.Sprintf("INSERT INTO %s.app_config (name, chart_name, repo_name,release_name, repo_url, namespace, version, create_namespace, privileged_namespace, launch_ui_url, launch_ui_redirect_url, category, icon, description, launch_ui_values, override_values, created_time, id) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %t, %t, '%s', '%s', '%s', '%s', '%s', '%s', '%s','%v', '%s' );",
-		c.keyspace, config.AppName, config.ChartName, config.RepoName, config.ReleaseName, config.RepoURL, config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), uuid.New().String())).Exec()
-
-	return err
 }
 
-func (c *CassandraServerStore) UpdateAppInStore(config *types.StoreAppConfig) error {
+func (c *CassandraServerStore) DeleteAppInStore(name, version string) error {
 
-	err := c.c.Session().Query(fmt.Sprintf("UPDATE %s.app_config SET chart_name = '%s', repo_name = '%s', repo_url = '%s', namespace = '%s', create_namespace = %t, privileged_namespace = %t, launch_ui_url = '%s', launch_ui_redirect_url = '%s', category = '%s', icon = '%s', description = '%s', launch_ui_values = '%s', override_values = '%s',last_updated_time='%v' WHERE name = '%s' AND version = '%s';",
-		c.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), config.AppName, config.Version)).Exec()
-
-	return err
-}
-
-func (c *CassandraServerStore) DeleteAppFromStore(name, version string) error {
-
-	err := c.c.Session().Query(fmt.Sprintf("DELETE FROM %s.app_config WHERE name='%s' AND version='%s' ;",
+	err := c.c.Session().Query(fmt.Sprintf(deleteAppConfigQuery,
 		c.keyspace, name, version)).Exec()
 
 	if err != nil {
@@ -242,7 +245,7 @@ func (c *CassandraServerStore) DeleteAppFromStore(name, version string) error {
 
 func (c *CassandraServerStore) GetAppFromStore(name, version string) (*types.AppConfig, error) {
 
-	iter := c.c.Session().Query(fmt.Sprintf("Select name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values,release_name FROM %s.app_config WHERE name='%s' AND version='%s';",
+	iter := c.c.Session().Query(fmt.Sprintf(getAppConfigQuery,
 		c.keyspace, name, version)).Iter()
 	var config types.AppConfig
 	iter.Scan(&config)
@@ -251,7 +254,7 @@ func (c *CassandraServerStore) GetAppFromStore(name, version string) (*types.App
 
 func (c *CassandraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
 
-	iter := c.c.Session().Query(fmt.Sprintf("Select name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values,release_name FROM %s.app_config;",
+	iter := c.c.Session().Query(fmt.Sprintf(getAllAppConfigsQuery,
 		c.keyspace)).Iter()
 	var config []types.AppConfig
 	iter.Scan(&config)
