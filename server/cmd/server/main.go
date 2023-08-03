@@ -38,7 +38,12 @@ func main() {
 
 	serverStore, err := store.NewStore(cfg.Database)
 	if err != nil {
-		log.Fatal("Failed to connect to cassandra database", err)
+		log.Fatal("Failed to connect to %s database", cfg.Database, err)
+	}
+
+	err = serverStore.InitializeDb()
+	if err != nil {
+		log.Fatal("failed to initialize %s db, %w", cfg.Database, err)
 	}
 
 	server, err := handler.NewAPIHandler(log, serverStore)
