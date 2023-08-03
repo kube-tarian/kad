@@ -37,6 +37,9 @@ func (h *HelmCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, er
 		Wait:        true,
 		Timeout:     time.Duration(req.Timeout) * time.Minute,
 	}
+	if req.ValuesYaml != "" {
+		chartSpec.ValuesYaml = req.ValuesYaml
+	}
 
 	// Use the default rollback strategy offer by HelmClient (revert to the previous version).
 	rel, err := helmClient.InstallOrUpgradeChart(

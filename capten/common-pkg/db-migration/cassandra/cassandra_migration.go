@@ -15,7 +15,7 @@ var log = logging.NewLogger()
 
 type DBConfig struct {
 	DbDsn       string `envconfig:"DB_ADDRESSES" required:"true" default:"localhost:9042"`
-	DbName      string `envconfig:"CASSANDRA_DB_NAME" required:"true"`
+	DbName      string `envconfig:"CASSANDRA_DB_NAME" required:"true"` // keyspace
 	Username    string `envconfig:"DB_SERVICE_USERNAME" required:"true" default:"cassandra"`
 	Password    string `envconfig:"DB_SERVICE_PASSWD" required:"true" default:"cassandra"`
 	Consistency string `envconfig:"CASSANDRA_CONSISTENCY" default:"ALL"`

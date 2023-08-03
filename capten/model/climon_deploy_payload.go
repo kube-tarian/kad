@@ -11,6 +11,7 @@ type CreteRequestPayload struct {
 	Version     string `json:"version"`
 
 	ClusterName string `json:"cluster_name" required:"false"`
+	ValuesYaml  string `json:"values_yaml" required:"false"`
 }
 
 type DeleteRequestPayload struct {

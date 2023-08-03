@@ -7,7 +7,8 @@ import (
 )
 
 type StoreConfig struct {
-	Keyspace string `envconfig:"DB_NAME" required:"true"`
+	Keyspace          string `envconfig:"DB_NAME" required:"true" default:"apps"`
+	DbServiceUserName string `envconfig:"DB_SERVICE_USERNAME" required:"true" default:"app_user"`
 }
 
 func GetStoreConfig() (StoreConfig, error) {
