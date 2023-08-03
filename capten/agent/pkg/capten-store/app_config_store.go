@@ -1,26 +1,13 @@
 package captenstore
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 )
-
-func init() {
-	p := make([]string, len(fields))
-	for i := 0; i < len(fields); i++ {
-		p[i] = "?"
-	}
-
-	placeholder := strings.Join(p, ", ")
-
-	InsertAllAppConfigQuery = "INSERT INTO apps.AppConfig( " +
-		strings.Join(fields, ", ") +
-		fmt.Sprintf(" ) VALUES (%s)", placeholder)
-
-}
 
 func CreateSelectByFieldNameQuery(field string) string {
 	return "SELECT" +
@@ -35,6 +22,7 @@ const (
 	launchUrl, launchRedirectUrl         = "launch_url", "launch_redirect_url"
 	createNamespace, privilegedNamespace = "create_namespace", "privileged_namespace"
 	overrideValues, launchUiValues       = "override_values", "launch_ui_values"
+	icon, installStatus                  = "icon", "install_status"
 )
 
 var (
@@ -45,40 +33,13 @@ var (
 		launchUrl, launchRedirectUrl,
 		createNamespace, privilegedNamespace,
 		overrideValues, launchUiValues,
+		icon, installStatus,
 	}
 
-	InsertAllAppConfigQuery           string
 	UpdateAppConfigByReleaseNameQuery = "UPDATE apps.AppConfig SET %s WHERE release_name = ?"
 )
 
-func (a *Store) AddAppConfig(config *agentpb.SyncAppData) error {
-	if config.Config == nil {
-		return fmt.Errorf("config value nil")
-	}
-	query := a.client.Session().Query(InsertAllAppConfigQuery)
-
-	override, launchUiValues := "", ""
-	if config.Values != nil {
-		override, launchUiValues =
-			string(config.Values.OverrideValues), string(config.Values.LaunchUIValues)
-	}
-	c := config.Config
-	return query.Bind(
-		c.AppName, c.Description, c.Category,
-
-		c.ChartName, c.RepoName, c.RepoURL,
-
-		c.Namespace, c.ReleaseName, c.Version,
-
-		c.LaunchURL, c.LaunchRedirectURL,
-
-		c.CreateNamespace, c.PrivilegedNamespace,
-
-		override, launchUiValues,
-	).Exec()
-}
-
-func (a *Store) UpdateAppConfig(config *agentpb.SyncAppData) error {
+func (a *Store) UpsertAppConfig(config *agentpb.SyncAppData) error {
 
 	if config.Config != nil && config.Config.ReleaseName == "" {
 		return fmt.Errorf("no release name")
@@ -108,18 +69,13 @@ func (a *Store) GetAppConfig(column, value string) (*agentpb.SyncAppData, error)
 
 	var overrideValues, launchUiValues string
 	if err := selectQuery.Scan(
-
 		config.AppName, config.Description, config.Category,
-
 		config.ChartName, config.RepoName, config.RepoURL,
-
 		config.Namespace, config.ReleaseName, config.Version,
-
 		config.LaunchURL, config.LaunchRedirectURL,
-
 		config.CreateNamespace, config.PrivilegedNamespace,
-
 		&overrideValues, &launchUiValues,
+		config.Icon, config.InstallStatus,
 	); err != nil {
 		return nil, err
 	}
@@ -144,10 +100,8 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 	if config.Values != nil && len(config.Values.LaunchUIValues) > 0 {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", launchUiValues, string(config.Values.LaunchUIValues)))
-
 	}
 
-	// -- namespace
 	{
 
 		if config.Config.CreateNamespace {
@@ -158,10 +112,8 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 			params = append(params,
 				fmt.Sprintf("%s = 'true'", privilegedNamespace))
 		}
-
 	}
 
-	// -- launchUrl, launchRedirecturl
 	{
 
 		if config.Config.LaunchURL != "" {
@@ -174,7 +126,6 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 		}
 	}
 
-	// -- appName, description, category,
 	{
 		if config.Config.AppName != "" {
 			params = append(params,
@@ -190,7 +141,6 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 		}
 	}
 
-	// -- chartName, repoName, repoUrl,
 	{
 		if config.Config.ChartName != "" {
 			params = append(params,
@@ -204,10 +154,8 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 			params = append(params,
 				fmt.Sprintf("%s = '%s'", repoUrl, config.Config.RepoURL))
 		}
-
 	}
 
-	// -- namespace, releaseName, version,
 	{
 		if config.Config.Namespace != "" {
 			params = append(params,
@@ -220,6 +168,17 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 		if config.Config.Version != "" {
 			params = append(params,
 				fmt.Sprintf("%s = '%s'", version, config.Config.Version))
+		}
+	}
+
+	{
+		if config.Config.Icon != nil && len(config.Config.Icon) > 0 {
+			params = append(params,
+				fmt.Sprintf("%s = '0x%s'", icon, hex.EncodeToString(config.Config.Icon)))
+		}
+		if len(config.Config.InstallStatus) > 0 {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", installStatus, config.Config.InstallStatus))
 		}
 	}
 

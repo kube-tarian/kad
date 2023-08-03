@@ -5,6 +5,7 @@ CREATE TABLE apps.AppConfig(
     launch_url text, launch_redirect_url text,
     create_namespace boolean, privileged_namespace boolean,
     override_values text, launch_ui_values text,
+    icon blob, install_status text,
     PRIMARY KEY (release_name)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
