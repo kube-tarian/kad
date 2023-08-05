@@ -184,7 +184,7 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 		})
 	}
 
-	s.log.Infof("[%s] Found %d clusters", len(data), orgId)
+	s.log.Infof("[%s] Found %d clusters", orgId, len(data))
 	return &serverpb.GetClustersResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "get cluster details success",
