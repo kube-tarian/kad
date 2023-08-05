@@ -48,15 +48,23 @@ func NewClient() (*Client, error) {
 	cluster.RetryPolicy = &gocql.ExponentialBackoffRetryPolicy{NumRetries: conf.MaxRetryCount}
 	cluster.NumConns = conf.MaxConnectionCount
 
-	serviceCredential, err := getServiceUserCredential(context.Background(),
-		conf.EntityName, conf.ServiceUsername)
-	if err != nil {
-		return nil, err
-	}
+	if os.Getenv("ENV") != "LOCAL" {
+		serviceCredential, err := getServiceUserCredential(context.Background(),
+			conf.EntityName, conf.ServiceUsername)
+		if err != nil {
+			return nil, err
+		}
 
-	cluster.Authenticator = gocql.PasswordAuthenticator{
-		Username: serviceCredential.UserName,
-		Password: serviceCredential.Password,
+		cluster.Authenticator = gocql.PasswordAuthenticator{
+			Username: serviceCredential.UserName,
+			Password: serviceCredential.Password,
+		}
+	} else {
+		// local test env
+		cluster.Authenticator = gocql.PasswordAuthenticator{
+			Username: os.Getenv("DB_SERVICE_USERNAME"),
+			Password: os.Getenv("DB_SERVICE_PASSWD"),
+		}
 	}
 
 	session, err := cluster.CreateSession()

@@ -7,8 +7,6 @@ import (
 	cassandramigrate "github.com/kube-tarian/kad/capten/common-pkg/db-migration/cassandra"
 )
 
-func CreateDb() {}
-
 func Migrate(log logging.Logger) error {
 
 	// CASSANDRA_DB_NAME
@@ -25,5 +23,16 @@ func Migrate(log logging.Logger) error {
 	}
 
 	return mig.Run("AppConfig", dbmigration.UP)
+
+}
+
+func MigratePurge(log logging.Logger) error {
+
+	mig, err := cassandramigrate.NewCassandraMigrate(log)
+	if err != nil {
+		return err
+	}
+
+	return mig.Run("AppConfig", dbmigration.PURGE)
 
 }

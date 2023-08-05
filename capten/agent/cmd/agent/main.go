@@ -12,6 +12,7 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agent"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
 	"google.golang.org/grpc/reflection"
 )
@@ -26,8 +27,9 @@ func main() {
 		log.Fatalf("service config reading failed, %v", err)
 	}
 
-	//create schema
-	// create migration
+	if err := runAllMigrations(log); err != nil {
+		log.Fatalf("Error while running migrations: %v", err)
+	}
 
 	s, err := agent.NewAgent(log)
 	if err != nil {
@@ -56,4 +58,8 @@ func main() {
 
 	grpcServer.Stop()
 	log.Debugf("Exiting Agent")
+}
+
+func runAllMigrations(log logging.Logger) error {
+	return captenstore.Migrate(log)
 }
