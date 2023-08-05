@@ -40,7 +40,7 @@ func (suite *AgentTestSuite) SetupSuite() {
 }
 
 func (suite *AgentTestSuite) TearDownSuite() {
-	if err := captenstore.MigrateDown(suite.logger); err != nil {
+	if err := captenstore.MigratePurge(suite.logger); err != nil {
 		suite.logger.Error(err.Error())
 	}
 }

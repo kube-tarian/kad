@@ -26,7 +26,7 @@ func Migrate(log logging.Logger) error {
 
 }
 
-func MigrateDown(log logging.Logger) error {
+func MigratePurge(log logging.Logger) error {
 
 	mig, err := cassandramigrate.NewCassandraMigrate(log)
 	if err != nil {
