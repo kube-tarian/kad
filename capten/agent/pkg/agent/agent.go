@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
@@ -23,10 +24,16 @@ type Agent struct {
 }
 
 func NewAgent(log logging.Logger) (*Agent, error) {
-	tc, err := temporalclient.NewClient(log)
-	if err != nil {
-		return nil, err
+	var tc *temporalclient.Client
+	var err error
+
+	if os.Getenv("ENV") != "LOCAL" {
+		tc, err = temporalclient.NewClient(log)
+		if err != nil {
+			return nil, err
+		}
 	}
+	// Note how lack of dependecy injection leads to codesmell
 
 	as, err := captenstore.NewStore(log)
 	if err != nil {

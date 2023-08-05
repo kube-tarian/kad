@@ -10,9 +10,13 @@ import (
 )
 
 func CreateSelectByFieldNameQuery(field string) string {
-	return "SELECT" +
+	return CreateSelectAllQuery() + fmt.Sprintf(" WHERE %s = ?", field)
+}
+
+func CreateSelectAllQuery() string {
+	return "SELECT " +
 		strings.Join(fields, ", ") +
-		"FROM apps.AppConfig" + fmt.Sprintf(" WHERE %s = ?", field)
+		" FROM apps.AppConfig"
 }
 
 const (
@@ -41,14 +45,14 @@ var (
 
 func (a *Store) UpsertAppConfig(config *agentpb.SyncAppData) error {
 
+	if config == nil {
+		return fmt.Errorf("nil config")
+	}
 	if config.Config != nil && config.Config.ReleaseName == "" {
 		return fmt.Errorf("no release name")
 	}
 
-	kvPairs, err := formUpdateKvPairs(config)
-	if err != nil {
-		return err
-	}
+	kvPairs, isEmptyUpdate := formUpdateKvPairs(config)
 
 	var insertReleaseNameOnlyAppConfigQuery string = `
 	INSERT INTO apps.AppConfig(
@@ -57,39 +61,77 @@ func (a *Store) UpsertAppConfig(config *agentpb.SyncAppData) error {
 
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(insertReleaseNameOnlyAppConfigQuery, config.Config.ReleaseName)
-	batch.Query(fmt.Sprintf(UpdateAppConfigByReleaseNameQuery, kvPairs), config.Config.ReleaseName)
+	if !isEmptyUpdate {
+		batch.Query(fmt.Sprintf(UpdateAppConfigByReleaseNameQuery, kvPairs), config.Config.ReleaseName)
+	}
 	return a.client.Session().ExecuteBatch(batch)
 
 }
 
 func (a *Store) GetAppConfig(column, value string) (*agentpb.SyncAppData, error) {
-	selectQuery := a.client.Session().Query(CreateSelectByFieldNameQuery(column))
 
-	config := new(agentpb.AppConfig)
+	selectQuery := a.client.Session().Query(CreateSelectByFieldNameQuery(column), value)
 
+	config := agentpb.AppConfig{}
 	var overrideValues, launchUiValues string
+
 	if err := selectQuery.Scan(
-		config.AppName, config.Description, config.Category,
-		config.ChartName, config.RepoName, config.RepoURL,
-		config.Namespace, config.ReleaseName, config.Version,
-		config.LaunchURL, config.LaunchRedirectURL,
-		config.CreateNamespace, config.PrivilegedNamespace,
+		&config.AppName, &config.Description, &config.Category,
+		&config.ChartName, &config.RepoName, &config.RepoURL,
+		&config.Namespace, &config.ReleaseName, &config.Version,
+		&config.LaunchURL, &config.LaunchRedirectURL,
+		&config.CreateNamespace, &config.PrivilegedNamespace,
 		&overrideValues, &launchUiValues,
-		config.Icon, config.InstallStatus,
+		&config.Icon, &config.InstallStatus,
 	); err != nil {
 		return nil, err
 	}
 
 	return &agentpb.SyncAppData{
-		Config: config,
+		Config: &config,
 		Values: &agentpb.AppValues{
 			OverrideValues: []byte(overrideValues),
 			LaunchUIValues: []byte(launchUiValues)},
 	}, nil
+}
+
+func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
+
+	selectAllQuery := a.client.Session().Query(CreateSelectAllQuery())
+	iter := selectAllQuery.Iter()
+
+	config := agentpb.AppConfig{}
+	var overrideValues, launchUiValues string
+
+	ret := make([]*agentpb.SyncAppData, 0)
+	for iter.Scan(
+		&config.AppName, &config.Description, &config.Category,
+		&config.ChartName, &config.RepoName, &config.RepoURL,
+		&config.Namespace, &config.ReleaseName, &config.Version,
+		&config.LaunchURL, &config.LaunchRedirectURL,
+		&config.CreateNamespace, &config.PrivilegedNamespace,
+		&overrideValues, &launchUiValues,
+		&config.Icon, &config.InstallStatus,
+	) {
+		a := &agentpb.SyncAppData{
+			Config: &config,
+			Values: &agentpb.AppValues{
+				OverrideValues: []byte(overrideValues),
+				LaunchUIValues: []byte(launchUiValues)},
+		}
+		ret = append(ret, a)
+	}
+
+	if err := iter.Close(); err != nil {
+		a.log.Fatal("Failed to iterate through results:", err)
+		return nil, err
+	}
+
+	return ret, nil
 
 }
 
-func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
+func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 	params := []string{}
 
 	if config.Values != nil && len(config.Values.OverrideValues) > 0 {
@@ -161,10 +203,7 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 			params = append(params,
 				fmt.Sprintf("%s = '%s'", namespace, config.Config.Namespace))
 		}
-		if config.Config.ReleaseName != "" {
-			params = append(params,
-				fmt.Sprintf("%s = '%s'", releaseName, config.Config.ReleaseName))
-		}
+
 		if config.Config.Version != "" {
 			params = append(params,
 				fmt.Sprintf("%s = '%s'", version, config.Config.Version))
@@ -174,7 +213,7 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 	{
 		if config.Config.Icon != nil && len(config.Config.Icon) > 0 {
 			params = append(params,
-				fmt.Sprintf("%s = '0x%s'", icon, hex.EncodeToString(config.Config.Icon)))
+				fmt.Sprintf("%s = 0x%s", icon, hex.EncodeToString(config.Config.Icon)))
 		}
 		if len(config.Config.InstallStatus) > 0 {
 			params = append(params,
@@ -182,6 +221,11 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, error) {
 		}
 	}
 
-	return strings.Join(params, ", "), nil
+	if len(params) == 0 {
+		// query is empty there is nothing to update
+		return "", true
+	}
+
+	return strings.Join(params, ", "), false
 
 }
