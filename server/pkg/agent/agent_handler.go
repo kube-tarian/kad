@@ -17,7 +17,7 @@ type AgentHandler struct {
 }
 
 func NewAgentHandler(serverStore store.ServerStore) *AgentHandler {
-	return &AgentHandler{serverStore: serverStore}
+	return &AgentHandler{serverStore: serverStore, agents: map[string]*Agent{}}
 }
 
 func (s *AgentHandler) AddAgent(orgId, clusterName string, agentCfg *Config) error {
