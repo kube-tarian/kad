@@ -42,7 +42,7 @@ func (a *APIHandler) PostAgentEndpoint(c *gin.Context) {
 		return
 	}
 
-	err = a.serverStore.AddCluster(customerId, customerId, endpoint)
+	_, err = a.serverStore.AddCluster(customerId, customerId, endpoint)
 	if err != nil {
 		a.setFailedResponse(c, "failed to store data", nil)
 		a.log.Error("failed to get db session", err)
