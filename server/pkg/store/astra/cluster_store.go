@@ -92,17 +92,17 @@ func (a *AstraServerStore) GetClusters(orgID string) ([]types.ClusterDetails, er
 			return nil, fmt.Errorf("failed to get cluster name: %w", err)
 		}
 
-		cqlClusterID, err := client.ToString(row.Values[0])
+		cqlClusterID, err := client.ToString(row.Values[1])
 		if err != nil {
 			return nil, fmt.Errorf("failed to get cluster name: %w", err)
 		}
 
-		cqlClusterName, err := client.ToString(row.Values[0])
+		cqlClusterName, err := client.ToString(row.Values[2])
 		if err != nil {
 			return nil, fmt.Errorf("failed to get cluster name: %w", err)
 		}
 
-		cqlEndpoint, err := client.ToString(row.Values[1])
+		cqlEndpoint, err := client.ToString(row.Values[3])
 		if err != nil {
 			return nil, fmt.Errorf("failed to get cluster endpoint: %w", err)
 		}
