@@ -13,7 +13,7 @@ const (
 	updateClusterQuery      = "UPDATE %s.capten_clusters set clusterName ='%s' endpoint='%s' WHERE cluster_id=%s AND org_id=%s;"
 	deleteClusterQuery      = "DELETE FROM %s.capten_clusters WHERE cluster_id=%s AND org_id=%s;"
 	getClusterEndpointQuery = "SELECT endpoint FROM %s.capten_clusters WHERE cluster_id=%s;"
-	getClustersForOrgQuery  = "SELECT * FROM %s.capten_clusters WHERE org_id=%s ALLOW FILTERING;"
+	getClustersForOrgQuery  = "SELECT org_id, cluster_id, cluster_name, endpoint FROM %s.capten_clusters WHERE org_id=%s ALLOW FILTERING;"
 )
 
 func (a *AstraServerStore) AddCluster(orgID, clusterID, clusterName, endpoint string) error {
@@ -87,30 +87,30 @@ func (a *AstraServerStore) GetClusters(orgID string) ([]types.ClusterDetails, er
 	result := response.GetResultSet()
 	var clusterDetails []types.ClusterDetails
 	for _, row := range result.Rows {
-		cqlOrgID, err := client.ToString(row.Values[0])
+		cqlOrgID, err := client.ToUUID(row.Values[0])
 		if err != nil {
-			return nil, fmt.Errorf("failed to get cluster name: %w", err)
+			return nil, fmt.Errorf("failed to get orgID: %w", err)
 		}
 
-		cqlClusterID, err := client.ToString(row.Values[1])
+		cqlClusterID, err := client.ToUUID(row.Values[1])
 		if err != nil {
-			return nil, fmt.Errorf("failed to get cluster name: %w", err)
+			return nil, fmt.Errorf("failed to get clusterID: %w", err)
 		}
 
 		cqlClusterName, err := client.ToString(row.Values[2])
 		if err != nil {
-			return nil, fmt.Errorf("failed to get cluster name: %w", err)
+			return nil, fmt.Errorf("failed to get clusterName: %w", err)
 		}
 
 		cqlEndpoint, err := client.ToString(row.Values[3])
 		if err != nil {
-			return nil, fmt.Errorf("failed to get cluster endpoint: %w", err)
+			return nil, fmt.Errorf("failed to get clusterEndpoint: %w", err)
 		}
 
 		clusterDetails = append(clusterDetails,
 			types.ClusterDetails{
-				OrgID:       cqlOrgID,
-				ClusterID:   cqlClusterID,
+				OrgID:       cqlOrgID.String(),
+				ClusterID:   cqlClusterID.String(),
 				ClusterName: cqlClusterName,
 				Endpoint:    cqlEndpoint,
 			})
