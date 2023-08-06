@@ -12,7 +12,7 @@ type ServerStore interface {
 	InitializeDb() error
 	GetClusterEndpoint(clusterID string) (string, error)
 	GetClusters(orgID string) ([]types.ClusterDetails, error)
-	AddCluster(orgID, clusterName, endpoint string) (string, error)
+	AddCluster(orgID, clusterID, clusterName, endpoint string) error
 	UpdateCluster(orgID, clusterID, clusterName, endpoint string) error
 	DeleteCluster(orgID, clusterID string) error
 	AddOrUpdateApp(config *types.StoreAppConfig) error

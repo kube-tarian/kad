@@ -3,7 +3,6 @@ package astra
 import (
 	"fmt"
 
-	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/server/pkg/types"
 	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/client"
 	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
@@ -17,17 +16,16 @@ const (
 	getClustersForOrgQuery  = "SELECT * FROM %s.capten_clusters WHERE org_id=%s ALLOW FILTERING;"
 )
 
-func (a *AstraServerStore) AddCluster(orgID, clusterName, endpoint string) (string, error) {
-	clusterID := gocql.TimeUUID()
+func (a *AstraServerStore) AddCluster(orgID, clusterID, clusterName, endpoint string) error {
 	q := &pb.Query{
 		Cql: fmt.Sprintf(insertClusterQuery, a.keyspace, clusterID, orgID, clusterName, endpoint),
 	}
 
 	_, err := a.c.Session().ExecuteQuery(q)
 	if err != nil {
-		return "", fmt.Errorf("failed store cluster details %w", err)
+		return fmt.Errorf("failed store cluster details %w", err)
 	}
-	return clusterID.String(), nil
+	return nil
 }
 
 func (a *AstraServerStore) UpdateCluster(orgID, clusterID, clusterName, endpoint string) error {

@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/credential"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
@@ -24,8 +25,8 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 	agentConfig := &agent.Config{
 		Address: request.AgentEndpoint,
 		CaCert:  request.ClientCAChainData,
-		Cert:    request.ClientKeyData,
-		Key:     request.ClientCertData,
+		Key:     request.ClientKeyData,
+		Cert:    request.ClientCertData,
 	}
 	if err := s.agentHandeler.AddAgent(orgId, request.ClusterName, agentConfig); err != nil {
 		s.log.Errorf("[%s] failed to connect to agent on cluster %s, %v", orgId, request.ClusterName, err)
@@ -45,7 +46,8 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		}, nil
 	}
 
-	clusterID, err := s.serverStore.AddCluster(orgId, request.ClusterName, request.AgentEndpoint)
+	clusterID := gocql.TimeUUID().String()
+	err = s.serverStore.AddCluster(orgId, clusterID, request.ClusterName, request.AgentEndpoint)
 	if err != nil {
 		s.log.Errorf("[%s] failed to store cluster %s to db, %v", orgId, request.ClusterName, err)
 		return &serverpb.NewClusterRegistrationResponse{
@@ -78,8 +80,8 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 	agentConfig := &agent.Config{
 		Address: request.AgentEndpoint,
 		CaCert:  request.ClientCAChainData,
-		Cert:    request.ClientKeyData,
-		Key:     request.ClientCertData,
+		Key:     request.ClientKeyData,
+		Cert:    request.ClientCertData,
 	}
 
 	if err := s.agentHandeler.UpdateAgent(orgId, request.ClusterID, agentConfig); err != nil {
