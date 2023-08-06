@@ -14,7 +14,7 @@ const (
 	updateClusterQuery      = "UPDATE %s.capten_clusters set clusterName ='%s' endpoint='%s' WHERE cluster_id=%s AND org_id=%s;"
 	deleteClusterQuery      = "DELETE FROM %s.capten_clusters WHERE cluster_id=%s AND org_id=%s;"
 	getClusterEndpointQuery = "SELECT endpoint FROM %s.capten_clusters WHERE cluster_id=%s;"
-	getClustersForOrgQuery  = "SELECT * FROM %s.capten_clusters WHERE org_id=%s ;"
+	getClustersForOrgQuery  = "SELECT * FROM %s.capten_clusters WHERE org_id=%s ALLOW FILTERING;"
 )
 
 func (a *AstraServerStore) AddCluster(orgID, clusterName, endpoint string) (string, error) {
