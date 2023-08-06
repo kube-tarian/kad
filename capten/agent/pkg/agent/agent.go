@@ -49,6 +49,10 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
 	return agent, nil
 }
 
+func (a *Agent) Ping(ctx context.Context, request *agentpb.PingRequest) (*agentpb.PingResponse, error) {
+	return &agentpb.PingResponse{Status: agentpb.StatusCode_OK}, nil
+}
+
 func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*agentpb.JobResponse, error) {
 	a.log.Infof("Recieved event %+v", request)
 	worker, err := a.getWorker(request.Operation)

@@ -9,6 +9,8 @@ package agentpb;
 
 // The greeting service definition.
 service Agent {
+  rpc Ping (PingRequest) returns (PingResponse) {}
+
   rpc SubmitJob (JobRequest) returns (JobResponse) {}
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
   rpc Sync(SyncRequest) returns (SyncResponse) {}
@@ -41,6 +43,13 @@ enum StatusCode {
   INTERNRAL_ERROR = 1;
   INVALID_ARGUMENT = 2;
   NOT_FOUND = 3;
+}
+
+message PingRequest {  
+}
+
+message PingResponse {
+  StatusCode status = 1;
 }
 
 message StoreCredentialRequest {

@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -35,6 +36,14 @@ func NewAgent(cfg *Config) (*Agent, error) {
 	}
 
 	agentClient := agentpb.NewAgentClient(conn)
+	pingResp, err := agentClient.Ping(context.TODO(), &agentpb.PingRequest{})
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed to ping agent")
+	}
+	if pingResp.Status != agentpb.StatusCode_OK {
+		return nil, errors.WithMessage(err, "ping failed")
+	}
+
 	return &Agent{
 		cfg:        cfg,
 		connection: conn,
