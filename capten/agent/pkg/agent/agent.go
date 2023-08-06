@@ -49,6 +49,7 @@ func NewAgent(log logging.Logger) (*Agent, error) {
 }
 
 func (a *Agent) Ping(ctx context.Context, request *agentpb.PingRequest) (*agentpb.PingResponse, error) {
+	a.log.Infof("Ping request received")
 	return &agentpb.PingResponse{Status: agentpb.StatusCode_OK}, nil
 }
 

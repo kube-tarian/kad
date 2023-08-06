@@ -5,19 +5,21 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/server/pkg/credential"
 	"github.com/kube-tarian/kad/server/pkg/store"
 	"github.com/pkg/errors"
 )
 
 type AgentHandler struct {
+	log         logging.Logger
 	agentMutex  sync.RWMutex
 	agents      map[string]*Agent
 	serverStore store.ServerStore
 }
 
-func NewAgentHandler(serverStore store.ServerStore) *AgentHandler {
-	return &AgentHandler{serverStore: serverStore, agents: map[string]*Agent{}}
+func NewAgentHandler(log logging.Logger, serverStore store.ServerStore) *AgentHandler {
+	return &AgentHandler{log: log, serverStore: serverStore, agents: map[string]*Agent{}}
 }
 
 func (s *AgentHandler) AddAgent(orgId, clusterID string, agentCfg *Config) error {
@@ -26,7 +28,7 @@ func (s *AgentHandler) AddAgent(orgId, clusterID string, agentCfg *Config) error
 		return nil
 	}
 
-	agent, err := NewAgent(agentCfg)
+	agent, err := NewAgent(s.log, agentCfg)
 	if err != nil {
 		return err
 	}
@@ -39,7 +41,7 @@ func (s *AgentHandler) AddAgent(orgId, clusterID string, agentCfg *Config) error
 
 func (s *AgentHandler) UpdateAgent(orgId, clusterID string, agentCfg *Config) error {
 	clusterKey := getClusterAgentKey(orgId, clusterID)
-	if _, ok := s.agents[clusterKey]; ok {
+	if _, ok := s.agents[clusterKey]; !ok {
 		return s.AddAgent(orgId, clusterID, agentCfg)
 	}
 
