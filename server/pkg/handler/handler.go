@@ -25,7 +25,7 @@ var (
 func NewAPIHandler(log logging.Logger, serverStore store.ServerStore) (*APIHandler, error) {
 	return &APIHandler{
 		log:          log,
-		agentHandler: agent.NewAgentHandler(serverStore),
+		agentHandler: agent.NewAgentHandler(log, serverStore),
 	}, nil
 }
 
