@@ -31,6 +31,8 @@ const (
 	Server_DeleteStoreApp_FullMethodName             = "/serverpb.Server/DeleteStoreApp"
 	Server_GetStoreApp_FullMethodName                = "/serverpb.Server/GetStoreApp"
 	Server_GetStoreApps_FullMethodName               = "/serverpb.Server/GetStoreApps"
+	Server_GetStoreAppValues_FullMethodName          = "/serverpb.Server/GetStoreAppValues"
+	Server_DeployStoreApp_FullMethodName             = "/serverpb.Server/DeployStoreApp"
 )
 
 // ServerClient is the client API for Server service.
@@ -49,6 +51,8 @@ type ServerClient interface {
 	DeleteStoreApp(ctx context.Context, in *DeleteStoreAppRequest, opts ...grpc.CallOption) (*DeleteStoreAppResponse, error)
 	GetStoreApp(ctx context.Context, in *GetStoreAppRequest, opts ...grpc.CallOption) (*GetStoreAppResponse, error)
 	GetStoreApps(ctx context.Context, in *GetStoreAppsRequest, opts ...grpc.CallOption) (*GetStoreAppsResponse, error)
+	GetStoreAppValues(ctx context.Context, in *GetStoreAppValuesRequest, opts ...grpc.CallOption) (*GetStoreAppValuesResponse, error)
+	DeployStoreApp(ctx context.Context, in *DeployStoreAppRequest, opts ...grpc.CallOption) (*DeployStoreAppResponse, error)
 }
 
 type serverClient struct {
@@ -167,6 +171,24 @@ func (c *serverClient) GetStoreApps(ctx context.Context, in *GetStoreAppsRequest
 	return out, nil
 }
 
+func (c *serverClient) GetStoreAppValues(ctx context.Context, in *GetStoreAppValuesRequest, opts ...grpc.CallOption) (*GetStoreAppValuesResponse, error) {
+	out := new(GetStoreAppValuesResponse)
+	err := c.cc.Invoke(ctx, Server_GetStoreAppValues_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serverClient) DeployStoreApp(ctx context.Context, in *DeployStoreAppRequest, opts ...grpc.CallOption) (*DeployStoreAppResponse, error) {
+	out := new(DeployStoreAppResponse)
+	err := c.cc.Invoke(ctx, Server_DeployStoreApp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServerServer is the server API for Server service.
 // All implementations must embed UnimplementedServerServer
 // for forward compatibility
@@ -183,6 +205,8 @@ type ServerServer interface {
 	DeleteStoreApp(context.Context, *DeleteStoreAppRequest) (*DeleteStoreAppResponse, error)
 	GetStoreApp(context.Context, *GetStoreAppRequest) (*GetStoreAppResponse, error)
 	GetStoreApps(context.Context, *GetStoreAppsRequest) (*GetStoreAppsResponse, error)
+	GetStoreAppValues(context.Context, *GetStoreAppValuesRequest) (*GetStoreAppValuesResponse, error)
+	DeployStoreApp(context.Context, *DeployStoreAppRequest) (*DeployStoreAppResponse, error)
 	mustEmbedUnimplementedServerServer()
 }
 
@@ -225,6 +249,12 @@ func (UnimplementedServerServer) GetStoreApp(context.Context, *GetStoreAppReques
 }
 func (UnimplementedServerServer) GetStoreApps(context.Context, *GetStoreAppsRequest) (*GetStoreAppsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStoreApps not implemented")
+}
+func (UnimplementedServerServer) GetStoreAppValues(context.Context, *GetStoreAppValuesRequest) (*GetStoreAppValuesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStoreAppValues not implemented")
+}
+func (UnimplementedServerServer) DeployStoreApp(context.Context, *DeployStoreAppRequest) (*DeployStoreAppResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeployStoreApp not implemented")
 }
 func (UnimplementedServerServer) mustEmbedUnimplementedServerServer() {}
 
@@ -455,6 +485,42 @@ func _Server_GetStoreApps_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Server_GetStoreAppValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetStoreAppValuesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).GetStoreAppValues(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Server_GetStoreAppValues_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).GetStoreAppValues(ctx, req.(*GetStoreAppValuesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Server_DeployStoreApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeployStoreAppRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).DeployStoreApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Server_DeployStoreApp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).DeployStoreApp(ctx, req.(*DeployStoreAppRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Server_ServiceDesc is the grpc.ServiceDesc for Server service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -509,6 +575,14 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetStoreApps",
 			Handler:    _Server_GetStoreApps_Handler,
+		},
+		{
+			MethodName: "GetStoreAppValues",
+			Handler:    _Server_GetStoreAppValues_Handler,
+		},
+		{
+			MethodName: "DeployStoreApp",
+			Handler:    _Server_DeployStoreApp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

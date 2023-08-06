@@ -437,6 +437,32 @@ func (a *AstraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
 	return &appConfigs, nil
 }
 
+func (a *AstraServerStore) GetStoreAppValues(name, version string) (*types.AppConfig, error) {
+
+	selectQuery := &pb.Query{
+		Cql: fmt.Sprintf(getAppConfigQuery,
+			a.keyspace, name, version),
+	}
+
+	response, err := a.c.Session().ExecuteQuery(selectQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch app store values: %w", err)
+	}
+
+	result := response.GetResultSet()
+
+	if len(result.Rows) == 0 {
+		return nil, fmt.Errorf("app: %s not found", name)
+	}
+
+	config, err := toAppConfig(result.Rows[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
+}
+
 func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 
 	cqlAppName, err := client.ToString(row.Values[0])

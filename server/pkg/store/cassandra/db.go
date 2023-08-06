@@ -260,3 +260,12 @@ func (c *CassandraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
 	iter.Scan(&config)
 	return &config, nil
 }
+
+func (c *CassandraServerStore) GetStoreAppValues(name, version string) (*types.AppConfig, error) {
+
+	iter := c.c.Session().Query(fmt.Sprintf(getAppConfigQuery,
+		c.keyspace, name, version)).Iter()
+	var config types.AppConfig
+	iter.Scan(&config)
+	return &config, nil
+}
