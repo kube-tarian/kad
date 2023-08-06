@@ -181,9 +181,14 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 
 	var data []*serverpb.ClusterInfo
 	for _, cluster := range clusterDetails {
+		attributes := []*serverpb.ClusterAttribute{}
+		appLaunchConfigs := []*serverpb.AppLaunchConfig{}
 		data = append(data, &serverpb.ClusterInfo{
-			ClusterName:   cluster.ClusterName,
-			AgentEndpoint: cluster.Endpoint,
+			ClusterID:        cluster.ClusterID,
+			ClusterName:      cluster.ClusterName,
+			AgentEndpoint:    cluster.Endpoint,
+			Attributes:       attributes,
+			AppLaunchConfigs: appLaunchConfigs,
 		})
 	}
 
