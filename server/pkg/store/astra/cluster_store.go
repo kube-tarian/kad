@@ -10,7 +10,7 @@ import (
 
 const (
 	insertClusterQuery      = "INSERT INTO %s.capten_clusters (cluster_id, org_id, cluster_name, endpoint) VALUES (%s, %s, '%s', '%s');"
-	updateClusterQuery      = "UPDATE %s.capten_clusters set clusterName ='%s' endpoint='%s' WHERE cluster_id=%s AND org_id=%s;"
+	updateClusterQuery      = "UPDATE %s.capten_clusters set cluster_name ='%s' endpoint='%s' WHERE cluster_id=%s AND org_id=%s;"
 	deleteClusterQuery      = "DELETE FROM %s.capten_clusters WHERE cluster_id=%s AND org_id=%s;"
 	getClusterEndpointQuery = "SELECT endpoint FROM %s.capten_clusters WHERE cluster_id=%s;"
 	getClustersForOrgQuery  = "SELECT org_id, cluster_id, cluster_name, endpoint FROM %s.capten_clusters WHERE org_id=%s ALLOW FILTERING;"

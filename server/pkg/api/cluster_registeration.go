@@ -22,13 +22,14 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 	}
 
 	s.log.Infof("[org: %s] New cluster registration request for cluster %s recieved", orgId, request.ClusterName)
+	clusterID := gocql.TimeUUID().String()
 	agentConfig := &agent.Config{
 		Address: request.AgentEndpoint,
 		CaCert:  request.ClientCAChainData,
 		Key:     request.ClientKeyData,
 		Cert:    request.ClientCertData,
 	}
-	if err := s.agentHandeler.AddAgent(orgId, request.ClusterName, agentConfig); err != nil {
+	if err := s.agentHandeler.AddAgent(orgId, clusterID, agentConfig); err != nil {
 		s.log.Errorf("[org: %s] failed to connect to agent on cluster %s, %v", orgId, request.ClusterName, err)
 		return &serverpb.NewClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -46,7 +47,6 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		}, nil
 	}
 
-	clusterID := gocql.TimeUUID().String()
 	err = s.serverStore.AddCluster(orgId, clusterID, request.ClusterName, request.AgentEndpoint)
 	if err != nil {
 		s.log.Errorf("[org: %s] failed to store cluster %s to db, %v", orgId, request.ClusterName, err)
