@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
@@ -249,7 +248,7 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 
 func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeployStoreAppRequest) (
 	*serverpb.DeployStoreAppResponse, error) {
-	if request.AppName == "" || request.Version == "" {
+	if request.AppConfig.AppName == "" || request.AppConfig.Version == "" {
 		s.log.Errorf("failed to get store app values, %v", "App name/version is missing")
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -257,8 +256,10 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		}, nil
 	}
 
-	agentConfig := &agent.Config{}
-	agent, err := agent.NewAgent(agentConfig)
+	orgId := ""
+	clusterName := ""
+	agnetHandler := agent.NewAgentHandler(s.serverStore)
+	agent, err := agnetHandler.GetAgent(orgId, clusterName)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
 		return &serverpb.DeployStoreAppResponse{
@@ -267,28 +268,28 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		}, nil
 	}
 
-	var app types.AppInstallRequest
-
-	if err := json.Unmarshal(request.Values, &app); err != nil {
-		s.log.Errorf("failed to unmarshall app valaues, %v", err)
-		return &serverpb.DeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to deploy the app, invalid app valaues",
-		}, nil
+	req := &agentpb.InstallAppRequest{
+		AppConfig: &agentpb.AppConfig{
+			AppName:             request.AppConfig.AppName,
+			Version:             request.AppConfig.Version,
+			ReleaseName:         request.AppConfig.ReleaseName,
+			Category:            request.AppConfig.Category,
+			Description:         request.AppConfig.Description,
+			ChartName:           request.AppConfig.ChartName,
+			RepoName:            request.AppConfig.RepoName,
+			RepoURL:             request.AppConfig.RepoURL,
+			Namespace:           request.AppConfig.Namespace,
+			CreateNamespace:     request.AppConfig.CreateNamespace,
+			PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
+			Icon:                []byte(request.AppConfig.Icon),
+			LaunchURL:           request.AppConfig.LaunchURL,
+			LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
+		},
 	}
 
-	req := &agentpb.ClimonInstallRequest{
-		PluginName:  app.PluginName,
-		RepoName:    app.RepoName,
-		RepoUrl:     app.RepoUrl,
-		ChartName:   app.ChartName,
-		Namespace:   app.Namespace,
-		ReleaseName: app.ReleaseName,
-		Timeout:     uint32(app.Timeout),
-	}
-	_, err = agent.GetClient().ClimonAppInstall(ctx, req)
+	_, err = agent.GetClient().InstallApp(ctx, req)
 	if err != nil {
-		s.log.Errorf("failed to install app, %v", err)
+		s.log.Errorf("failed to deploy app, %v", err)
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to deploy the app",
