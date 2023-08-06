@@ -46,7 +46,7 @@ vault:
   policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin,vault-policy-generic-cred-read"
 
 cassandra:
-  addresses: localhost:9042
+  addresses: temporal-temporal-service:9042
   userName: kadagent
   entityName: cassandra
   keyspace: capten
@@ -108,10 +108,3 @@ temporal:
 
 argocd:
   serviceURL: argocd-server.default.svc.cluster.local
-
-# Attributes to be added
-cassandra:
-  secretName: "temporal-superuser"
-  serviceURL: "temporal-temporal-service"
-  keyspaceName: "capten"
-  tableName: "tools"

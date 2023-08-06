@@ -7,6 +7,7 @@ import (
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
+	"github.com/kube-tarian/kad/capten/agent/pkg/config"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
@@ -27,7 +28,7 @@ func TestAgentTestSuite(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	agent, err := NewAgent(agentSuite.logger)
+	agent, err := NewAgent(agentSuite.logger, &config.SericeConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -140,7 +141,7 @@ func setEnvVars() {
 
 	os.Setenv("DB_ADDRESSES", "localhost:9042")
 	os.Setenv("DB_ENTITY_NAME", "TEST_ENTITY")
-	os.Setenv("CASSANDRA_DB_NAME", "apps")
+	os.Setenv("DB_NAME", "apps")
 	os.Setenv("DB_NAME", "apps")
 	os.Setenv("DB_SERVICE_USERNAME", "apps_user")
 	os.Setenv("DB_SERVICE_PASSWD", "apps_password")

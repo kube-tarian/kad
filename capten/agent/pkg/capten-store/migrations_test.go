@@ -21,7 +21,7 @@ func TestMigrations(t *testing.T) {
 
 func setEnvVars() {
 
-	os.Setenv("CASSANDRA_DB_NAME", "apps")
+	os.Setenv("DB_NAME", "apps")
 	os.Setenv("DB_SERVICE_USERNAME", "apps_user")
 	os.Setenv("DB_SERVICE_PASSWD", "apps_password")
 	os.Setenv("SOURCE_URI", "file://test_migrations")

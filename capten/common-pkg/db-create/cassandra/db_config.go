@@ -4,14 +4,14 @@ package cassandra
 import "github.com/gocql/gocql"
 
 type DBConfig struct {
-	DbAddresses         []string `envconfig:"DB_ADDRESSES" required:"true" default:"localhost:9042"`
-	DbAdminUsername     string   `envconfig:"DB_ADMIN_USERNAME" required:"true" default:"cassandra"`
+	DbAddresses         []string `envconfig:"DB_ADDRESSES" required:"true"`
+	DbAdminUsername     string   `envconfig:"DB_ADMIN_USERNAME"`
 	DbReplicationFactor string   `envconfig:"DB_REPLICATION_FACTOR" required:"true" default:"1"`
-	DbAdminPassword     string   `envconfig:"DB_ADMIN_PASSWD" required:"true" default:"cassandra"`
+	DbAdminPassword     string   `envconfig:"DB_ADMIN_PASSWD"`
 
-	DbName            string `envconfig:"CASSANDRA_DB_NAME" required:"true"`
+	DbName            string `envconfig:"DB_NAME" required:"true"`
 	DbServiceUsername string `envconfig:"DB_SERVICE_USERNAME" required:"true"`
-	DbServicePassword string `envconfig:"DB_SERVICE_PASSWD" required:"true"`
+	DbServicePassword string `envconfig:"DB_SERVICE_PASSWD"`
 }
 
 type Store interface {

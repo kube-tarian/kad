@@ -43,7 +43,7 @@ func (suite *StoreSuite) SetupSuite() {
 
 	// setEnvVars
 	os.Setenv("SOURCE_URI", "file://migrations")
-	os.Setenv("CASSANDRA_DB_NAME", "apps") // dbName/keyspace
+	os.Setenv("DB_NAME", "apps") // dbName/keyspace
 
 	mig, err := migrator.NewCassandraMigrate(suite.logger)
 	if err != nil {
