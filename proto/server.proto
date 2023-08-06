@@ -40,14 +40,16 @@ message NewClusterRegistrationRequest {
 message NewClusterRegistrationResponse {
   StatusCode status = 1;
   string statusMessage = 2;
+  string clusterID = 3;
 }
 
 message UpdateClusterRegistrationRequest {
-  string clusterName = 1;
-  string agentEndpoint = 2;
-  string clientKeyData = 3;
-  string clientCertData = 4;
-  string clientCAChainData = 5;
+  string clusterID = 1;
+  string clusterName = 2;
+  string agentEndpoint = 3;
+  string clientKeyData = 4;
+  string clientCertData = 5;
+  string clientCAChainData = 6;
 }
 
 message UpdateClusterRegistrationResponse {
@@ -56,7 +58,7 @@ message UpdateClusterRegistrationResponse {
 }
 
 message DeleteClusterRegistrationRequest {
-  string clusterName = 1;  
+  string clusterID = 1;  
 }
 
 message DeleteClusterRegistrationResponse {
@@ -74,7 +76,7 @@ message GetClustersResponse {
 }
 
 message GetClusterAppsRequest {
-  string clusterName = 1; 
+  string clusterID = 1; 
 }
 
 message GetClusterAppsResponse {
@@ -84,7 +86,7 @@ message GetClusterAppsResponse {
 }
 
 message GetClusterAppRequest {
-  string clusterName = 1;
+  string clusterID = 1;
   string appReleaseName = 2;
 }
 
@@ -95,7 +97,7 @@ message GetClusterAppResponse {
 }
 
 message GetClusterAppLaunchConfigsRequest {
-  string clusterName = 1;
+  string clusterID = 1;
 }
 
 message GetClusterAppLaunchConfigsResponse {
@@ -105,10 +107,11 @@ message GetClusterAppLaunchConfigsResponse {
 }
 
 message ClusterInfo {
-  string clusterName = 1;
-  string agentEndpoint = 2;
-  repeated ClusterAttribute attributes = 3;
-  repeated AppLaunchConfig appLaunchConfigs = 4;
+  string clusterID = 1;
+  string clusterName = 2;
+  string agentEndpoint = 3;
+  repeated ClusterAttribute attributes = 4;
+  repeated AppLaunchConfig appLaunchConfigs = 5;
 }
 
 message AppLaunchConfig {
