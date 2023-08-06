@@ -12,7 +12,6 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agent"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
-	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
 	"google.golang.org/grpc/reflection"
 )
@@ -31,7 +30,7 @@ func main() {
 		log.Fatalf("Error while running migrations: %v", err)
 	}
 
-	s, err := agent.NewAgent(log)
+	s, err := agent.NewAgent(log, cfg)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 	}
@@ -61,5 +60,6 @@ func main() {
 }
 
 func runAllMigrations(log logging.Logger) error {
-	return captenstore.Migrate(log)
+	//return captenstore.Migrate(log)
+	return nil
 }

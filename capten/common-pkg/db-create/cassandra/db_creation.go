@@ -4,13 +4,13 @@ package cassandra
 import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/pkg/errors"
 )
 
 func Create(log logging.Logger) error {
 	dbconf := &DBConfig{}
 	if err := envconfig.Process("", dbconf); err != nil {
-		log.Errorf("Could not parse service config, Usage: %v ", err)
-		return err
+		return errors.WithMessage(err, "could not parse DB config")
 	}
 	dbStore := NewCassandraStore(log, nil)
 	dbConfigurator := NewDbConfigurator(log, dbStore)

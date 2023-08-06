@@ -40,7 +40,6 @@ func (c *CassandraStore) Connect(dbAddrs []string, dbAdminUsername string, dbAdm
 	c.logg.Info("Creating new db cluster configuration")
 	cluster, err := configureClusterConfig(dbAddrs, dbAdminUsername, dbAdminPassword)
 	if err != nil {
-		c.logg.Error("Error creating/configuring new db store", err)
 		return
 	}
 
