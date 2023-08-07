@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
-	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/stretchr/testify/suite"
@@ -24,9 +23,9 @@ func TestAgentTestSuite(t *testing.T) {
 	agentSuite := new(AgentTestSuite)
 	agentSuite.logger = logging.NewLogger()
 
-	if err := captenstore.Migrate(agentSuite.logger); err != nil {
+	/*if err := captenstore.Migrate(agentSuite.logger); err != nil {
 		t.Fatal(err)
-	}
+	}*/
 
 	agent, err := NewAgent(agentSuite.logger, &config.SericeConfig{})
 	if err != nil {
@@ -41,9 +40,9 @@ func (suite *AgentTestSuite) SetupSuite() {
 }
 
 func (suite *AgentTestSuite) TearDownSuite() {
-	if err := captenstore.MigratePurge(suite.logger); err != nil {
+	/*if err := captenstore.MigratePurge(suite.logger); err != nil {
 		suite.logger.Error(err.Error())
-	}
+	}*/
 }
 
 func (suite *AgentTestSuite) Test_1_SyncApp() {

@@ -13,6 +13,10 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/agent"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
+	"github.com/kube-tarian/kad/capten/agent/pkg/util"
+	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
+	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
+	"github.com/pkg/errors"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -26,8 +30,8 @@ func main() {
 		log.Fatalf("service config reading failed, %v", err)
 	}
 
-	if err := runAllMigrations(log); err != nil {
-		log.Fatalf("Error while running migrations: %v", err)
+	if err := configureDB(); err != nil {
+		log.Fatalf("%v", err)
 	}
 
 	s, err := agent.NewAgent(log, cfg)
@@ -59,7 +63,17 @@ func main() {
 	log.Debugf("Exiting Agent")
 }
 
-func runAllMigrations(log logging.Logger) error {
-	//return captenstore.Migrate(log)
+func configureDB() error {
+	if err := util.SyncCassandraAdminSecret(log); err != nil {
+		return errors.WithMessage(err, "error in update cassandra secret to vault")
+	}
+
+	if err := dbinit.CreatedDatabase(log); err != nil {
+		return errors.WithMessage(err, "error creating database")
+	}
+
+	if err := dbmigrate.RunMigrations(log, dbmigrate.UP); err != nil {
+		return errors.WithMessage(err, "error in migrating cassandra DB")
+	}
 	return nil
 }

@@ -1,14 +1,13 @@
-// Package cassandra contains ...
-package cassandra
+package dbinit
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/gocql/gocql"
 	"github.com/intelops/go-common/logging"
+	"github.com/pkg/errors"
 )
 
 const (
@@ -22,101 +21,93 @@ const (
 	grantSchemaChangeLockModifyPermission = "GRANT MODIFY ON TABLE schema_change.lock TO %s ;"
 )
 
-type CassandraStore struct {
-	logg    logging.Logger
+type CassandraAdmin struct {
+	log     logging.Logger
 	session *gocql.Session
 }
 
-func NewCassandraStore(logger logging.Logger, sess *gocql.Session) (store *CassandraStore) {
-	store = &CassandraStore{
-		logg:    logger,
-		session: sess,
+func NewCassandraAdmin(logger logging.Logger, dbAddrs []string, dbAdminUsername string, dbAdminPassword string) (*CassandraAdmin, error) {
+	ca := &CassandraAdmin{
+		log: logger,
 	}
-
-	return
+	err := ca.initSession(dbAddrs, dbAdminUsername, dbAdminPassword)
+	if err != nil {
+		return nil, err
+	}
+	return ca, nil
 }
 
-func (c *CassandraStore) Connect(dbAddrs []string, dbAdminUsername string, dbAdminPassword string) (err error) {
-	c.logg.Info("Creating new db cluster configuration")
+func (c *CassandraAdmin) initSession(dbAddrs []string, dbAdminUsername string, dbAdminPassword string) (err error) {
 	cluster, err := configureClusterConfig(dbAddrs, dbAdminUsername, dbAdminPassword)
 	if err != nil {
 		return
 	}
 
-	c.logg.Info("Creating new db session")
 	c.session, err = createDbSession(cluster)
 	if err != nil {
 		return
 	}
-
 	return
 }
 
-func (c *CassandraStore) Session() *gocql.Session {
+func (c *CassandraAdmin) Session() *gocql.Session {
 	return c.session
 }
 
-func (c *CassandraStore) Close() {
-	c.logg.Info("closing cassandra session")
+func (c *CassandraAdmin) Close() {
 	c.session.Close()
 }
 
-func (c *CassandraStore) CreateDbUser(serviceUsername string, servicePassword string) (err error) {
-	// Create database user for service usage
+func (c *CassandraAdmin) CreateDbUser(serviceUsername string, servicePassword string) (err error) {
 	err = c.session.Query(fmt.Sprintf(createUser, serviceUsername, servicePassword)).Exec()
 	if err != nil {
 		if strings.Contains(err.Error(), "already exists") {
 			return c.updateDbUser(serviceUsername, servicePassword)
 		} else {
-			c.logg.Error("Unable to create service user", err)
+			err = errors.WithMessage(err, "failed to create service user")
 			return
 		}
 	}
 	return
 }
 
-func (c *CassandraStore) GrantPermission(serviceUsername string, dbName string) (err error) {
+func (c *CassandraAdmin) GrantPermission(serviceUsername string, dbName string) (err error) {
 	err = c.session.Query(fmt.Sprintf(grantSchemaChangeLockSelectPermission, serviceUsername)).Exec()
 	if err != nil {
-		c.logg.Error("Unable to grant select permission to service user on schema_change.lock table", err)
+		err = errors.WithMessage(err, "failed to grant select permission to service user on schema_change.lock table")
 		return
 	}
 
 	err = c.session.Query(fmt.Sprintf(grantSchemaChangeLockModifyPermission, serviceUsername)).Exec()
 	if err != nil {
-		c.logg.Error("Unable to grant modify permission to service user on schema_change.lock table", err)
+		err = errors.WithMessage(err, "failed to grant modify permission to service user on schema_change.lock table")
 		return
 	}
 
 	err = c.session.Query(fmt.Sprintf(grantPermission, dbName, serviceUsername)).Exec()
 	if err != nil {
-		c.logg.Error("Unable to grant permission to service user", err)
+		err = errors.WithMessage(err, "failed to grant permission to service user")
 		return
 	}
-
 	return
 }
 
-func (c *CassandraStore) CreateDb(dbName string, replicationFactor string) (err error) {
-	// Create keyspace only if it does not already exist
+func (c *CassandraAdmin) CreateDb(dbName string, replicationFactor string) (err error) {
 	err = c.session.Query(fmt.Sprintf(createKeyspaceCQL, dbName, replicationFactor)).Exec()
 	if err != nil {
-		c.logg.Error("Unable to create the keyspace", err)
+		err = errors.WithMessage(err, "failed to create the keyspace")
 		return
 	}
-
 	return
 }
 
-func (c *CassandraStore) CreateLockSchemaDb(replicationFactor string) (err error) {
-	// Create keyspace only if it does not already exist
+func (c *CassandraAdmin) CreateLockSchemaDb(replicationFactor string) (err error) {
 	err = c.session.Query(fmt.Sprintf(createKeyspaceSchemaChangeCQL, replicationFactor)).Exec()
 	if err != nil {
-		c.logg.Error("Unable to create the schema_change keyspace", err)
+		err = errors.WithMessage(err, "failed to create the schema_change keyspace")
 		return
 	}
 
-	// Create table only if it does not already exist
 	err = retry(3, 2*time.Second, func() (err error) {
 		err = c.session.Query(createTableKeyspaceLockCQL).Exec()
 		if err != nil {
@@ -125,16 +116,15 @@ func (c *CassandraStore) CreateLockSchemaDb(replicationFactor string) (err error
 		return nil
 	})
 	if err != nil {
-		c.logg.Error("Unable to create the schema_change.lock table", err)
+		err = errors.WithMessage(err, "failed to create the schema_change.lock table")
 		return
 	}
-
 	return
 }
 
 func configureClusterConfig(addrs []string, adminUsername string, adminPassword string) (cluster *gocql.ClusterConfig, err error) {
 	if len(addrs) == 0 {
-		err = errors.New("you must specify a Cassandra address to connect to")
+		err = errors.New("Cassandra addresses are empty")
 		return
 	}
 
@@ -149,7 +139,6 @@ func configureClusterConfig(addrs []string, adminUsername string, adminPassword 
 			Password: adminPassword,
 		}
 	}
-
 	return
 }
 
@@ -158,15 +147,13 @@ func createDbSession(cluster *gocql.ClusterConfig) (session *gocql.Session, err 
 	if err != nil {
 		return nil, err
 	}
-
 	return
 }
 
-func (c *CassandraStore) updateDbUser(serviceUsername string, servicePassword string) (err error) {
-	// alter  database user for service usage
+func (c *CassandraAdmin) updateDbUser(serviceUsername string, servicePassword string) (err error) {
 	err = c.session.Query(fmt.Sprintf(alterUser, serviceUsername, servicePassword)).Exec()
 	if err != nil {
-		c.logg.Error("Unable to update service user, failed with error : ", err)
+		err = errors.WithMessage(err, "failed to update service user")
 		return
 	}
 	return

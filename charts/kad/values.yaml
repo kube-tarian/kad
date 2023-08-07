@@ -50,6 +50,7 @@ cassandra:
   userName: kadagent
   entityName: cassandra
   keyspace: capten
+  secretName: temporal-superuser
 
 ingressroute:
   enabled: true
