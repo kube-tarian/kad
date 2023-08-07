@@ -1,4 +1,4 @@
-CREATE TABLE apps.AppConfig(
+CREATE TABLE AppConfig(
     app_name text, description text, category text,
     chart_name text, repo_name text, repo_url text,
     namespace text, release_name text, version text,

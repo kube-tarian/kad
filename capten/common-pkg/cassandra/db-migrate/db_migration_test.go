@@ -1,12 +1,11 @@
-package cassandra
+package dbmigrate
 
 import (
 	"os"
 	"testing"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/common-pkg/db-create/cassandra"
-	dbmigration "github.com/kube-tarian/kad/capten/common-pkg/db-migration"
+	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,16 +13,13 @@ func TestCreate(t *testing.T) {
 	log := logging.NewLogger()
 	setEnvConfig()
 
-	err := cassandra.Create(log)
+	err := dbinit.CreatedDatabase(log)
 	assert.Nil(t, err)
 
-	migrationClient, err := NewCassandraMigrate(log)
+	err = RunMigrations(log, UP)
 	assert.Nil(t, err)
 
-	err = migrationClient.Run("cassandra", dbmigration.UP)
-	assert.Nil(t, err)
-
-	err = migrationClient.Run("cassandra", dbmigration.PURGE)
+	err = RunMigrations(log, PURGE)
 	assert.Nil(t, err)
 }
 

@@ -49,6 +49,10 @@ spec:
           #     path: /status
           #     port: http
           env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel }}
             - name: TEMPORAL_SERVICE_URL
@@ -67,6 +71,8 @@ spec:
               value: {{ .Values.cassandra.entityName }}
             - name: DB_NAME
               value: {{ .Values.cassandra.keyspace }}
+            - name: CASSANDRA_SECRET_NAME
+              value: {{ .Values.cassandra.secretName }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

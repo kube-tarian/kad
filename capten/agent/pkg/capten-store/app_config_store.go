@@ -10,18 +10,18 @@ import (
 )
 
 const (
-	insertAppConfigByReleaseNameQuery = "INSERT INTO apps.AppConfig(release_name) VALUES (?)"
-	updateAppConfigByReleaseNameQuery = "UPDATE apps.AppConfig SET %s WHERE release_name = ?"
+	insertAppConfigByReleaseNameQuery = "INSERT INTO %s.AppConfig(release_name) VALUES (?)"
+	updateAppConfigByReleaseNameQuery = "UPDATE %s.AppConfig SET %s WHERE release_name = ?"
 )
 
-func CreateSelectByFieldNameQuery(field string) string {
-	return CreateSelectAllQuery() + fmt.Sprintf(" WHERE %s = ?", field)
+func CreateSelectByFieldNameQuery(keyspace, field string) string {
+	return fmt.Sprintf(CreateSelectAllQuery(), keyspace) + fmt.Sprintf(" WHERE %s = ?", field)
 }
 
 func CreateSelectAllQuery() string {
 	return "SELECT " +
 		strings.Join(appConfigfields, ", ") +
-		" FROM apps.AppConfig"
+		" FROM %s.AppConfig"
 }
 
 const (
@@ -53,15 +53,15 @@ func (a *Store) UpsertAppConfig(config *agentpb.SyncAppData) error {
 
 	kvPairs, isEmptyUpdate := formUpdateKvPairs(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(insertAppConfigByReleaseNameQuery, config.Config.ReleaseName)
+	batch.Query(fmt.Sprintf(insertAppConfigByReleaseNameQuery, a.keyspace), config.Config.ReleaseName)
 	if !isEmptyUpdate {
-		batch.Query(fmt.Sprintf(updateAppConfigByReleaseNameQuery, kvPairs), config.Config.ReleaseName)
+		batch.Query(fmt.Sprintf(updateAppConfigByReleaseNameQuery, a.keyspace, kvPairs), config.Config.ReleaseName)
 	}
 	return a.client.Session().ExecuteBatch(batch)
 }
 
 func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error) {
-	selectQuery := a.client.Session().Query(CreateSelectByFieldNameQuery(releaseName), appReleaseName)
+	selectQuery := a.client.Session().Query(CreateSelectByFieldNameQuery(a.keyspace, releaseName), appReleaseName)
 
 	config := agentpb.AppConfig{}
 	var overrideValues, launchUiValues string
