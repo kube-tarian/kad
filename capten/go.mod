@@ -7,7 +7,6 @@ require (
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/gocql/gocql v1.3.1
-	github.com/gogo/status v1.1.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
@@ -92,6 +91,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/gogo/status v1.1.1 // indirect
 	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect

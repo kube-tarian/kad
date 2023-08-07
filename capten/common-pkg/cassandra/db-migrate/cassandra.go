@@ -1,4 +1,4 @@
-package cassandra
+package dbmigrate
 
 import (
 	"errors"

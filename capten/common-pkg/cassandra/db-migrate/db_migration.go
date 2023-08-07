@@ -1,5 +1,4 @@
-// Package migrate contains ...
-package dbmigration
+package dbmigrate
 
 import (
 	"os"
@@ -22,7 +21,7 @@ const (
 	PURGE Mode = Mode(3)
 )
 
-func RunMigrations(sourceURL, databaseURL, dbName string, mode Mode) (err error) {
+func runMigrations(sourceURL, databaseURL, dbName string, mode Mode) (err error) {
 	sourceDriver, err := source.Open(sourceURL)
 	if err != nil {
 		return err

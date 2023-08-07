@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	Agent_Ping_FullMethodName                  = "/agentpb.Agent/Ping"
 	Agent_SubmitJob_FullMethodName             = "/agentpb.Agent/SubmitJob"
 	Agent_StoreCredential_FullMethodName       = "/agentpb.Agent/StoreCredential"
 	Agent_Sync_FullMethodName                  = "/agentpb.Agent/Sync"
@@ -44,6 +45,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AgentClient interface {
+	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	SubmitJob(ctx context.Context, in *JobRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
 	Sync(ctx context.Context, in *SyncRequest, opts ...grpc.CallOption) (*SyncResponse, error)
@@ -71,6 +73,15 @@ type agentClient struct {
 
 func NewAgentClient(cc grpc.ClientConnInterface) AgentClient {
 	return &agentClient{cc}
+}
+
+func (c *agentClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error) {
+	out := new(PingResponse)
+	err := c.cc.Invoke(ctx, Agent_Ping_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *agentClient) SubmitJob(ctx context.Context, in *JobRequest, opts ...grpc.CallOption) (*JobResponse, error) {
@@ -248,6 +259,7 @@ func (c *agentClient) InstallApp(ctx context.Context, in *InstallAppRequest, opt
 // All implementations must embed UnimplementedAgentServer
 // for forward compatibility
 type AgentServer interface {
+	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	SubmitJob(context.Context, *JobRequest) (*JobResponse, error)
 	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
 	Sync(context.Context, *SyncRequest) (*SyncResponse, error)
@@ -274,6 +286,9 @@ type AgentServer interface {
 type UnimplementedAgentServer struct {
 }
 
+func (UnimplementedAgentServer) Ping(context.Context, *PingRequest) (*PingResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
 func (UnimplementedAgentServer) SubmitJob(context.Context, *JobRequest) (*JobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SubmitJob not implemented")
 }
@@ -342,6 +357,24 @@ type UnsafeAgentServer interface {
 
 func RegisterAgentServer(s grpc.ServiceRegistrar, srv AgentServer) {
 	s.RegisterService(&Agent_ServiceDesc, srv)
+}
+
+func _Agent_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).Ping(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_Ping_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).Ping(ctx, req.(*PingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Agent_SubmitJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -693,6 +726,10 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "agentpb.Agent",
 	HandlerType: (*AgentServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Ping",
+			Handler:    _Agent_Ping_Handler,
+		},
 		{
 			MethodName: "SubmitJob",
 			Handler:    _Agent_SubmitJob_Handler,

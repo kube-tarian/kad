@@ -19,6 +19,8 @@ type AgentInfo struct {
 }
 
 type ClusterDetails struct {
+	OrgID       string
+	ClusterID   string
 	ClusterName string
 	Endpoint    string
 }

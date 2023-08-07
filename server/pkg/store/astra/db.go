@@ -35,6 +35,7 @@ func NewStore() (*AstraServerStore, error) {
 		return nil, fmt.Errorf("failed to connect to astra db, %w", err)
 	}
 	a.keyspace = a.c.Keyspace()
+	a.keyspace = "capten_server"
 	return a, nil
 }
 

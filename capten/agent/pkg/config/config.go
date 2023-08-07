@@ -7,6 +7,7 @@ import (
 type SericeConfig struct {
 	Host string `envconfig:"HOST" default:"0.0.0.0"`
 	Port int    `envconfig:"PORT" default:"9091"`
+	Mode string `envconfig:"MODE" default:"production"`
 }
 
 func GetServiceConfig() (*SericeConfig, error) {
