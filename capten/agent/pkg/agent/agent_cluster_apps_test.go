@@ -64,8 +64,9 @@ func (suite *AgentTestSuite) Test_1_SyncApp() {
 
 	req2.Data = &agentpb.SyncAppData{
 		Config: &agentpb.AppConfig{
-			ReleaseName: "release2",
-			Icon:        []byte{0x1, 0x2, 0x3, 0x4},
+			ReleaseName:         "release2",
+			PrivilegedNamespace: true,
+			Icon:                []byte{0x1, 0x2, 0x3, 0x4},
 		},
 		Values: &agentpb.AppValues{
 			OverrideValues: override,
