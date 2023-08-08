@@ -8,12 +8,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/climon/pkg/activities"
-	"github.com/kube-tarian/kad/capten/climon/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/capten/climon/pkg/handler"
 	"github.com/kube-tarian/kad/capten/climon/pkg/workflows"
-	"github.com/intelops/go-common/logging"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
 )
 
@@ -32,10 +31,9 @@ type Application struct {
 	httpServer *http.Server
 	worker     *workerframework.Worker
 	logger     logging.Logger
-	Db         cassandra.Store
 }
 
-func New(logger logging.Logger, db cassandra.Store) *Application {
+func New(logger logging.Logger) *Application {
 	cfg := &Configuration{}
 	if err := envconfig.Process("", cfg); err != nil {
 		logger.Fatalf("Could not parse env Config: %v\n", err)
@@ -65,7 +63,6 @@ func New(logger logging.Logger, db cassandra.Store) *Application {
 		httpServer: httpServer,
 		worker:     worker,
 		logger:     logger,
-		Db:         db,
 	}
 }
 
