@@ -1,12 +1,14 @@
 package agent
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
 	"net/url"
 	"strings"
 
+	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/pkg/errors"
 
@@ -26,16 +28,27 @@ type Agent struct {
 	cfg        *Config
 	connection *grpc.ClientConn
 	client     agentpb.AgentClient
+	log        logging.Logger
 }
 
-func NewAgent(cfg *Config) (*Agent, error) {
+func NewAgent(log logging.Logger, cfg *Config) (*Agent, error) {
+	log.Infof("connecting to agent %s", cfg.Address)
 	conn, err := getConnection(cfg)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to connect to agent")
 	}
 
 	agentClient := agentpb.NewAgentClient(conn)
+	pingResp, err := agentClient.Ping(context.TODO(), &agentpb.PingRequest{})
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed to ping agent")
+	}
+	if pingResp.Status != agentpb.StatusCode_OK {
+		return nil, errors.WithMessage(err, "ping failed")
+	}
+
 	return &Agent{
+		log:        log,
 		cfg:        cfg,
 		connection: conn,
 		client:     agentClient,

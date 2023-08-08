@@ -9,9 +9,10 @@ package agentpb;
 
 // The greeting service definition.
 service Agent {
+  rpc Ping (PingRequest) returns (PingResponse) {}
+
   rpc SubmitJob (JobRequest) returns (JobResponse) {}
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
-  rpc Sync(SyncRequest) returns (SyncResponse) {}
 
   rpc ClimonAppInstall (ClimonInstallRequest) returns (JobResponse) {}
   rpc ClimonAppDelete (ClimonDeleteRequest) returns (JobResponse) {}
@@ -43,6 +44,13 @@ enum StatusCode {
   NOT_FOUND = 3;
 }
 
+message PingRequest {  
+}
+
+message PingResponse {
+  StatusCode status = 1;
+}
+
 message StoreCredentialRequest {
   string credentialType = 1;
   string credEntityName = 2;
@@ -53,16 +61,6 @@ message StoreCredentialRequest {
 message StoreCredentialResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-}
-
-message SyncRequest {
-  string type = 1;
-  string data = 2;
-}
-
-message SyncResponse {
-  string status = 1;
-  string message = 2;
 }
 
 message ClimonInstallRequest {

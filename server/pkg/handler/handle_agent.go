@@ -1,14 +1,10 @@
 package handler
 
 import (
-	"context"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/kube-tarian/kad/server/pkg/credential"
-	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 
 	"github.com/gin-gonic/gin"
 
@@ -42,7 +38,7 @@ func (a *APIHandler) PostAgentEndpoint(c *gin.Context) {
 		return
 	}
 
-	err = a.serverStore.AddCluster(customerId, customerId, endpoint)
+	err = a.serverStore.AddCluster(customerId, customerId, customerId, endpoint)
 	if err != nil {
 		a.setFailedResponse(c, "failed to store data", nil)
 		a.log.Error("failed to get db session", err)
@@ -85,32 +81,5 @@ func (a *APIHandler) PutAgentEndpoint(c *gin.Context) {
 }
 
 func (a *APIHandler) PostAgentApps(c *gin.Context) {
-	jsonData, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		a.setFailedResponse(c, "failed to read payload", err)
-		return
-	}
-
-	fmt.Println("body is", string(jsonData))
-	syncData := &agentpb.SyncRequest{
-		Type: "app-data",
-		Data: string(jsonData),
-	}
-
-	customerId := c.GetHeader("customer_id")
-	if customerId == "" {
-		a.setFailedResponse(c, "missing customer id header", errors.New(""))
-		return
-	}
-
-	agent, err := a.agentHandler.GetAgent(customerId, "")
-	if err != nil {
-		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
-		return
-	}
-
-	response, err := agent.GetClient().Sync(context.Background(), syncData)
-
-	a.log.Debug("response ")
-	fmt.Printf("response %+v, err: %v\n", response, err)
+	a.setFailedResponse(c, "not implemented", errors.New(""))
 }
