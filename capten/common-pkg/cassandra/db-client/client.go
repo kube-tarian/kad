@@ -19,7 +19,7 @@ type Config struct {
 	Keyspace              string   `envconfig:"DB_NAME" required:"true"`
 	ClusterTimeout        int      `envconfig:"CLUSTER_TIMEOUT_IN_SEC" default:"20"`
 	ClusterConnectTimeout int      `envconfig:"CLUSTER_CONNECT_TIMEOUT_IN_SEC" default:"20"`
-	ClusterConistency     uint16   `envconfig:"CLUSTER_CONSISTENCY" default:"3"`
+	ClusterConistency     uint16   `envconfig:"CLUSTER_CONSISTENCY" default:"1"`
 	MaxRetryCount         int      `envconfig:"MAX_RETRY_COUNT" default:"3"`
 	MaxConnectionCount    int      `envconfig:"MAX_CLUSTER_CONNECTION_COUNT" default:"5"`
 	EnableCassandraTrace  bool     `envconfig:"ENABLE_CASSANDRA_TRACE" default:"false"`
