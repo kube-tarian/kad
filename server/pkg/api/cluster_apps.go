@@ -10,7 +10,17 @@ import (
 
 func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetClusterAppsRequest) (
 	*serverpb.GetClusterAppsResponse, error) {
-	a, err := s.agentHandeler.GetAgent("", request.ClusterID)
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if len(orgId) == 0 {
+		s.log.Error("organizationID is missing in the request")
+		return &serverpb.GetClusterAppsResponse{
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "organizationID is missing",
+		}, nil
+	}
+
+	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
 		return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to connect to agent"}, err
@@ -41,7 +51,17 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 
 func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *serverpb.GetClusterAppLaunchConfigsRequest) (
 	*serverpb.GetClusterAppLaunchConfigsResponse, error) {
-	a, err := s.agentHandeler.GetAgent("", request.ClusterID)
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if len(orgId) == 0 {
+		s.log.Error("organizationID is missing in the request")
+		return &serverpb.GetClusterAppLaunchConfigsResponse{
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "organizationID is missing",
+		}, nil
+	}
+
+	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to connect to agent"}, err
