@@ -7,11 +7,9 @@ import (
 	"strings"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/climon/pkg/db/cassandra"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
 	"github.com/kube-tarian/kad/capten/model"
-	"github.com/pkg/errors"
 )
 
 type Activities struct {
@@ -59,14 +57,6 @@ func (a *Activities) ClimonInstallActivity(ctx context.Context, req *model.Climo
 		}, err
 	}
 
-	if err := InsertToDb(logger, req); err != nil {
-		logger.Errorf("insert db failed, %v", err)
-		return model.ResponsePayload{
-			Status:  "Failed",
-			Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
-		}, err
-	}
-
 	return model.ResponsePayload{
 		Status:  "Success",
 		Message: msg,
@@ -107,50 +97,8 @@ func (a *Activities) ClimonDeleteActivity(ctx context.Context, req *model.Climon
 		}, err
 	}
 
-	if err := DeleteDbEntry(logger, req); err != nil {
-		logger.Errorf("delete plugin failed, %v", err)
-		return model.ResponsePayload{
-			Status:  "Failed",
-			Message: json.RawMessage(fmt.Sprintf("database update failed %v", err)),
-		}, err
-	}
-
 	return model.ResponsePayload{
 		Status:  "Success",
 		Message: msg,
 	}, nil
-}
-
-func InsertToDb(logger logging.Logger, reqData *model.ClimonPostRequest) error {
-	dbConf, err := cassandra.GetDbConfig()
-	if err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	db, err := cassandra.NewCassandraStore(dbConf.DbAddresses, dbConf.DbAdminUsername, dbConf.DbAdminPassword)
-	if err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-
-	if err := db.InsertToolsDb(reqData); err != nil {
-		return errors.Wrap(err, "failed to store data in database")
-	}
-	return nil
-}
-
-func DeleteDbEntry(logger logging.Logger, reqData *model.ClimonDeleteRequest) error {
-	dbConf, err := cassandra.GetDbConfig()
-	if err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	db, err := cassandra.NewCassandraStore(dbConf.DbAddresses, dbConf.DbAdminUsername, dbConf.DbAdminPassword)
-	if err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-
-	if err := db.DeleteToolsDbEntry(reqData); err != nil {
-		return errors.Wrap(err, "failed to delete data in database")
-	}
-	return nil
 }
