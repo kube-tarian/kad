@@ -18,6 +18,7 @@ import (
 	rpcapi "github.com/kube-tarian/kad/server/pkg/api"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/handler"
+	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/store"
 )
@@ -50,8 +51,11 @@ func main() {
 	if err != nil {
 		log.Fatal("APIHandler initialization failed", err)
 	}
-
-	rpcServer, err := rpcapi.NewServer(log, serverStore)
+	oryclient, err := oryclient.NewOryClient(log)
+	if err != nil {
+		log.Fatal("OryClient initialization failed", err)
+	}
+	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient)
 	if err != nil {
 		log.Fatal("grpc server initialization failed", err)
 	}
@@ -62,7 +66,7 @@ func main() {
 		log.Fatal("failed to listen: ", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(rpcServer.UnaryInterceptor))
 	serverpb.RegisterServerServer(grpcServer, rpcServer)
 	log.Info("Server listening at ", listener.Addr())
 	reflection.Register(grpcServer)

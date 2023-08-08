@@ -5,6 +5,7 @@ import (
 
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/agent"
+	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/store"
 	"google.golang.org/grpc/metadata"
@@ -19,13 +20,15 @@ type Server struct {
 	serverStore   store.ServerStore
 	agentHandeler *agent.AgentHandler
 	log           logging.Logger
+	oryClient     oryclient.OryClient
 }
 
-func NewServer(log logging.Logger, serverStore store.ServerStore) (*Server, error) {
+func NewServer(log logging.Logger, serverStore store.ServerStore, oryClient oryclient.OryClient) (*Server, error) {
 	return &Server{
 		serverStore:   serverStore,
 		agentHandeler: agent.NewAgentHandler(log, serverStore),
 		log:           log,
+		oryClient:     oryClient,
 	}, nil
 }
 
