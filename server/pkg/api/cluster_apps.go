@@ -12,8 +12,8 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 	*serverpb.GetClusterAppsResponse, error) {
 	metadataMap := metadataContextToMap(ctx)
 	orgId := metadataMap[organizationIDAttribute]
-	if len(orgId) == 0 {
-		s.log.Error("organizationID is missing in the request")
+	if len(orgId) == 0 || request.ClusterID == "" {
+		s.log.Error("organizationID/ClusterID is missing in the request")
 		return &serverpb.GetClusterAppsResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "organizationID is missing",
@@ -22,27 +22,31 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 
 	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
+		s.log.Error("failed to connect to agent", err)
 		return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to connect to agent"}, err
+			StatusMessage: "failed to connect to agent"}, nil
 	}
 
 	resp, err := a.GetClient().GetClusterApps(ctx, &agentpb.GetClusterAppsRequest{})
 	if err != nil {
+		s.log.Error("failed to get cluster application from agent", err)
 		return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "faield to get cluster application from agent"}, err
+			StatusMessage: "failed to get cluster application from agent"}, nil
 	}
 
 	appConfigData, err := json.Marshal(resp.AppData)
 	if err != nil {
+		s.log.Error("failed to marshall appConfig", err)
 		return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "faield to marshall appConfig"}, err
+			StatusMessage: "failed to marshall appConfig"}, nil
 	}
 
 	var clusterAppConfig []*serverpb.ClusterAppConfig
 	err = json.Unmarshal(appConfigData, &clusterAppConfig)
 	if err != nil {
+		s.log.Error("Unmarshall of appConfig failed", err)
 		return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Unmarshall of appConfig failed"}, err
+			StatusMessage: "Unmarshall of appConfig failed"}, nil
 	}
 
 	return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_OK, StatusMessage: "successfully fetched the data from agent",
@@ -53,8 +57,8 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 	*serverpb.GetClusterAppLaunchConfigsResponse, error) {
 	metadataMap := metadataContextToMap(ctx)
 	orgId := metadataMap[organizationIDAttribute]
-	if len(orgId) == 0 {
-		s.log.Error("organizationID is missing in the request")
+	if len(orgId) == 0 || request.ClusterID == "" {
+		s.log.Error("organizationID/ClusterID is missing in the request")
 		return &serverpb.GetClusterAppLaunchConfigsResponse{
 			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "organizationID is missing",
@@ -63,27 +67,31 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 
 	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
+		s.log.Error("failed to connect to agent", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to connect to agent"}, err
+			StatusMessage: "failed to connect to agent"}, nil
 	}
 
 	resp, err := a.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
 	if err != nil {
+		s.log.Error("failed to get cluster application launches from agent", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "faield to get cluster application launches from agent"}, err
+			StatusMessage: "failed to get cluster application launches from agent"}, err
 	}
 
 	appConfigData, err := json.Marshal(resp.LaunchConfigList)
 	if err != nil {
+		s.log.Error("failed to marshall app launches", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "faield to marshall app launches"}, err
+			StatusMessage: "failed to marshall app launches"}, nil
 	}
 
 	var clusterAppLaunchConfig []*serverpb.AppLaunchConfig
 	err = json.Unmarshal(appConfigData, &clusterAppLaunchConfig)
 	if err != nil {
+		s.log.Error("Unmarshall of app launches failed", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Unmarshall of app launches failed"}, err
+			StatusMessage: "Unmarshall of app launches failed"}, nil
 	}
 
 	return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_OK, StatusMessage: "successfully fetched the data from agent",
