@@ -101,11 +101,14 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&overrideValues, &launchUiValues,
 		&config.Icon, &config.InstallStatus,
 	) {
+		configCopy := config
+		overrideValuesCopy := overrideValues
+		launchUiValuesCopy := launchUiValues
 		a := &agentpb.SyncAppData{
-			Config: &config,
+			Config: &configCopy,
 			Values: &agentpb.AppValues{
-				OverrideValues: []byte(overrideValues),
-				LaunchUIValues: []byte(launchUiValues)},
+				OverrideValues: []byte(overrideValuesCopy),
+				LaunchUIValues: []byte(launchUiValuesCopy)},
 		}
 		ret = append(ret, a)
 	}
