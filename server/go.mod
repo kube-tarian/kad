@@ -16,6 +16,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/stargate/stargate-grpc-go-client v0.0.0-20220822130422-9a1c6261d4fa
 	github.com/stretchr/testify v1.8.2
+	golang.org/x/oauth2 v0.10.0
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.31.0
 )
@@ -68,7 +69,6 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/oauth2 v0.10.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
 	golang.org/x/time v0.1.0 // indirect

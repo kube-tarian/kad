@@ -8,6 +8,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/server/pkg/credential"
 	ory "github.com/ory/client-go"
+	"golang.org/x/oauth2/clientcredentials"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -25,11 +27,13 @@ type Client struct {
 	oryPAT string
 	conn   *ory.APIClient
 	log    logging.Logger
+	oryURL string
 }
 
 type OryClient interface {
 	GetSessionTokenFromContext(ctx context.Context) (string, error)
 	Authorize(ctx context.Context, accessToken string) (context.Context, error)
+	UnaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error
 }
 
 // NewOryClient returns a OryClient interface
@@ -50,6 +54,7 @@ func NewOryClient(log logging.Logger) (OryClient, error) {
 		oryPAT: oryPAT,
 		conn:   conn,
 		log:    log,
+		oryURL: oryURL,
 	}, nil
 }
 
@@ -109,4 +114,42 @@ func (c *Client) Authorize(ctx context.Context, accessToken string) (context.Con
 		return ctx, status.Error(codes.Unauthenticated, "session id is not active")
 	}
 	return ctx, nil
+}
+func (c *Client) GetOryTokenUrl() string {
+	tokenUrl := c.oryURL + "/oauth2/token"
+	return tokenUrl
+}
+func (c *Client) GetOauthToken(ctx context.Context) (context.Context, error) {
+	clientid, secret, err := credential.GetIamOauthCredential(ctx)
+	if err != nil {
+		c.log.Errorf("error while getting clientid and secret from vault: %v", err.Error())
+		return ctx, err
+	}
+
+	conf := &clientcredentials.Config{
+		ClientID:     clientid,
+		ClientSecret: secret,
+		Scopes:       []string{"openid email offline"},
+		TokenURL:     c.GetOryTokenUrl(),
+	}
+	at, err := conf.Token(ctx)
+	if err != nil {
+		c.log.Errorf("error while fetching oauth token from oryapiclient ERROR: %v", err.Error())
+		return ctx, err
+	}
+	md := metadata.Pairs("oauth_token", at.AccessToken,
+		"ory_url", c.oryURL,
+		"ory_pat", c.oryPAT,
+	)
+	newCtx := metadata.NewOutgoingContext(ctx, md)
+
+	return newCtx, nil
+}
+
+func (c *Client) UnaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	newCtx, err := c.GetOauthToken(ctx)
+	if err != nil {
+		return err
+	}
+	return invoker(newCtx, method, req, reply, cc, opts...)
 }

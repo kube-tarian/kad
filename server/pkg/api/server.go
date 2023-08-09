@@ -26,7 +26,7 @@ type Server struct {
 func NewServer(log logging.Logger, serverStore store.ServerStore, oryClient oryclient.OryClient) (*Server, error) {
 	return &Server{
 		serverStore:   serverStore,
-		agentHandeler: agent.NewAgentHandler(log, serverStore),
+		agentHandeler: agent.NewAgentHandler(log, serverStore, oryClient),
 		log:           log,
 		oryClient:     oryClient,
 	}, nil

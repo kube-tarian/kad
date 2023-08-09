@@ -18,7 +18,9 @@ import (
 	rpcapi "github.com/kube-tarian/kad/server/pkg/api"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/handler"
+	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
+
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/store"
 )
@@ -47,14 +49,21 @@ func main() {
 		log.Fatal("failed to initialize %s db, %w", cfg.Database, err)
 	}
 
-	server, err := handler.NewAPIHandler(log, serverStore)
-	if err != nil {
-		log.Fatal("APIHandler initialization failed", err)
-	}
 	oryclient, err := oryclient.NewOryClient(log)
 	if err != nil {
 		log.Fatal("OryClient initialization failed", err)
 	}
+
+	server, err := handler.NewAPIHandler(log, serverStore, oryclient)
+	if err != nil {
+		log.Fatal("APIHandler initialization failed", err)
+	}
+
+	err = iamclient.RegisterWithIam(log)
+	if err != nil {
+		log.Fatal("Registering capten server as oauth client through IAM failed", err)
+	}
+
 	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient)
 	if err != nil {
 		log.Fatal("grpc server initialization failed", err)
