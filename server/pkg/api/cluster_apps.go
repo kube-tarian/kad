@@ -34,6 +34,8 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 			StatusMessage: "failed to get cluster application from agent"}, nil
 	}
 
+	s.log.Info("DATA RECIED====", resp.AppData)
+
 	appConfigData, err := json.Marshal(resp.AppData)
 	if err != nil {
 		s.log.Error("failed to marshall appConfig", err)
@@ -41,6 +43,7 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 			StatusMessage: "failed to marshall appConfig"}, nil
 	}
 
+	s.log.Info("DATA RECIED==== Bytes===", appConfigData)
 	var clusterAppConfig []*serverpb.ClusterAppConfig
 	err = json.Unmarshal(appConfigData, &clusterAppConfig)
 	if err != nil {
@@ -79,12 +82,15 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 			StatusMessage: "failed to get cluster application launches from agent"}, err
 	}
 
+	s.log.Info("DATA appConfigData==== Bytes===", resp.LaunchConfigList, resp)
 	appConfigData, err := json.Marshal(resp.LaunchConfigList)
 	if err != nil {
 		s.log.Error("failed to marshall app launches", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to marshall app launches"}, nil
 	}
+
+	s.log.Info("DATA appConfigData==== Bytes===", appConfigData)
 
 	var clusterAppLaunchConfig []*serverpb.AppLaunchConfig
 	err = json.Unmarshal(appConfigData, &clusterAppLaunchConfig)
