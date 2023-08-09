@@ -130,16 +130,13 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 			fmt.Sprintf("%s = '%s'", launchUiValues, string(config.Values.LaunchUIValues)))
 	}
 
-	{
-
-		if config.Config.CreateNamespace {
-			params = append(params,
-				fmt.Sprintf("%s = true", createNamespace))
-		}
-		if config.Config.PrivilegedNamespace {
-			params = append(params,
-				fmt.Sprintf("%s = true", privilegedNamespace))
-		}
+	if config.Config.CreateNamespace {
+		params = append(params,
+			fmt.Sprintf("%s = true", createNamespace))
+	}
+	if config.Config.PrivilegedNamespace {
+		params = append(params,
+			fmt.Sprintf("%s = true", privilegedNamespace))
 	}
 
 	if config.Config.LaunchURL != "" {
