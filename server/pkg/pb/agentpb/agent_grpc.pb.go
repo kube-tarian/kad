@@ -22,7 +22,6 @@ const (
 	Agent_Ping_FullMethodName                  = "/agentpb.Agent/Ping"
 	Agent_SubmitJob_FullMethodName             = "/agentpb.Agent/SubmitJob"
 	Agent_StoreCredential_FullMethodName       = "/agentpb.Agent/StoreCredential"
-	Agent_Sync_FullMethodName                  = "/agentpb.Agent/Sync"
 	Agent_ClimonAppInstall_FullMethodName      = "/agentpb.Agent/ClimonAppInstall"
 	Agent_ClimonAppDelete_FullMethodName       = "/agentpb.Agent/ClimonAppDelete"
 	Agent_DeployerAppInstall_FullMethodName    = "/agentpb.Agent/DeployerAppInstall"
@@ -48,7 +47,6 @@ type AgentClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	SubmitJob(ctx context.Context, in *JobRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
-	Sync(ctx context.Context, in *SyncRequest, opts ...grpc.CallOption) (*SyncResponse, error)
 	ClimonAppInstall(ctx context.Context, in *ClimonInstallRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	ClimonAppDelete(ctx context.Context, in *ClimonDeleteRequest, opts ...grpc.CallOption) (*JobResponse, error)
 	DeployerAppInstall(ctx context.Context, in *ApplicationInstallRequest, opts ...grpc.CallOption) (*JobResponse, error)
@@ -96,15 +94,6 @@ func (c *agentClient) SubmitJob(ctx context.Context, in *JobRequest, opts ...grp
 func (c *agentClient) StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error) {
 	out := new(StoreCredentialResponse)
 	err := c.cc.Invoke(ctx, Agent_StoreCredential_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentClient) Sync(ctx context.Context, in *SyncRequest, opts ...grpc.CallOption) (*SyncResponse, error) {
-	out := new(SyncResponse)
-	err := c.cc.Invoke(ctx, Agent_Sync_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +251,6 @@ type AgentServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	SubmitJob(context.Context, *JobRequest) (*JobResponse, error)
 	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
-	Sync(context.Context, *SyncRequest) (*SyncResponse, error)
 	ClimonAppInstall(context.Context, *ClimonInstallRequest) (*JobResponse, error)
 	ClimonAppDelete(context.Context, *ClimonDeleteRequest) (*JobResponse, error)
 	DeployerAppInstall(context.Context, *ApplicationInstallRequest) (*JobResponse, error)
@@ -294,9 +282,6 @@ func (UnimplementedAgentServer) SubmitJob(context.Context, *JobRequest) (*JobRes
 }
 func (UnimplementedAgentServer) StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreCredential not implemented")
-}
-func (UnimplementedAgentServer) Sync(context.Context, *SyncRequest) (*SyncResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Sync not implemented")
 }
 func (UnimplementedAgentServer) ClimonAppInstall(context.Context, *ClimonInstallRequest) (*JobResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClimonAppInstall not implemented")
@@ -409,24 +394,6 @@ func _Agent_StoreCredential_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AgentServer).StoreCredential(ctx, req.(*StoreCredentialRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Agent_Sync_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SyncRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServer).Sync(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Agent_Sync_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).Sync(ctx, req.(*SyncRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -737,10 +704,6 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StoreCredential",
 			Handler:    _Agent_StoreCredential_Handler,
-		},
-		{
-			MethodName: "Sync",
-			Handler:    _Agent_Sync_Handler,
 		},
 		{
 			MethodName: "ClimonAppInstall",

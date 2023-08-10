@@ -15,13 +15,11 @@ const (
 )
 
 func CreateSelectByFieldNameQuery(keyspace, field string) string {
-	return fmt.Sprintf(CreateSelectAllQuery(), keyspace) + fmt.Sprintf(" WHERE %s = ?", field)
+	return CreateSelectAllQuery(keyspace) + fmt.Sprintf(" WHERE %s = ?", field)
 }
 
-func CreateSelectAllQuery() string {
-	return "SELECT " +
-		strings.Join(appConfigfields, ", ") +
-		" FROM %s.AppConfig"
+func CreateSelectAllQuery(keyspace string) string {
+	return fmt.Sprintf("SELECT %s FROM %s.AppConfig", strings.Join(appConfigfields, ", "), keyspace)
 }
 
 const (
@@ -87,7 +85,7 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 }
 
 func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
-	selectAllQuery := a.client.Session().Query(CreateSelectAllQuery())
+	selectAllQuery := a.client.Session().Query(CreateSelectAllQuery(a.keyspace))
 	iter := selectAllQuery.Iter()
 
 	config := agentpb.AppConfig{}
@@ -103,11 +101,14 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&overrideValues, &launchUiValues,
 		&config.Icon, &config.InstallStatus,
 	) {
+		configCopy := config
+		overrideValuesCopy := overrideValues
+		launchUiValuesCopy := launchUiValues
 		a := &agentpb.SyncAppData{
-			Config: &config,
+			Config: &configCopy,
 			Values: &agentpb.AppValues{
-				OverrideValues: []byte(overrideValues),
-				LaunchUIValues: []byte(launchUiValues)},
+				OverrideValues: []byte(overrideValuesCopy),
+				LaunchUIValues: []byte(launchUiValuesCopy)},
 		}
 		ret = append(ret, a)
 	}
@@ -134,11 +135,11 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 
 	if config.Config.CreateNamespace {
 		params = append(params,
-			fmt.Sprintf("%s = 'true'", createNamespace))
+			fmt.Sprintf("%s = true", createNamespace))
 	}
 	if config.Config.PrivilegedNamespace {
 		params = append(params,
-			fmt.Sprintf("%s = 'true'", privilegedNamespace))
+			fmt.Sprintf("%s = true", privilegedNamespace))
 	}
 
 	if config.Config.LaunchURL != "" {
