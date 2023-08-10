@@ -127,3 +127,36 @@ func (c *Climon) getWorkflowInformation(run client.WorkflowRun) error {
 	c.log.Debugf("Result info: %+v", result)
 	return nil
 }
+
+func (c *Climon) SendInstallAppEvent(ctx context.Context, action string, payload *model.AppConfig) (client.WorkflowRun, error) {
+	options := client.StartWorkflowOptions{
+		ID:        "helm-deploy-workflow",
+		TaskQueue: ClimonHelmTaskQueue,
+	}
+
+	payloadJSON, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("payload : %v", string(payloadJSON))
+	we, err := c.client.TemporalClient.ExecuteWorkflow(context.Background(), options, DeployWorkflowName, action, json.RawMessage(payloadJSON))
+	if err != nil {
+		log.Println("error starting workflow", err)
+		return nil, err
+	}
+
+	c.log.Infof("Started workflow, ID: %v, WorkflowName: %v RunID: %v", we.GetID(), DeploymentWorkerWorkflowName, we.GetRunID())
+
+	// Wait for 5mins till workflow finishes
+	var result model.ResponsePayload
+	err = we.Get(ctx, &result)
+	if err != nil {
+		c.log.Errorf("Result for workflow ID: %v, workflowName: %v, runID: %v", we.GetID(), DeploymentWorkerWorkflowName, we.GetRunID())
+		c.log.Errorf("Workflow result failed, %v", err)
+		return we, err
+	}
+	c.log.Infof("workflow finished success, %+v", result.ToString())
+
+	return we, nil
+}

@@ -30,3 +30,21 @@ type Request struct {
 	Timeout     int    `json:"timeout" required:"true"`
 	Version     string `json:"version" required:"true"`
 }
+
+type AppConfig struct {
+	ClusterName         string `json:"ClusterName,omitempty"`
+	AppName             string `json:"AppName,omitempty"`
+	Version             string `json:"Version,omitempty"`
+	Category            string `json:"Category,omitempty"`
+	Description         string `json:"Description,omitempty"`
+	ChartName           string `json:"ChartName,omitempty"`
+	RepoName            string `json:"RepoName,omitempty"`
+	ReleaseName         string `json:"ReleaseName,omitempty"`
+	RepoURL             string `json:"RepoURL,omitempty"`
+	Namespace           string `json:"Namespace,omitempty"`
+	CreateNamespace     bool   `json:"CreateNamespace"`
+	PrivilegedNamespace bool   `json:"PrivilegedNamespace"`
+	Icon                string `json:"Icon,omitempty"`
+	LaunchURL           string `json:"LaunchURL,omitempty"`
+	LaunchRedirectURL   string `json:"LaunchRedirectURL,omitempty"`
+}
