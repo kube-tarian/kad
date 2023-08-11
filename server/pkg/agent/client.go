@@ -18,10 +18,11 @@ import (
 )
 
 type Config struct {
-	Address string
-	CaCert  string
-	Cert    string
-	Key     string
+	ClusterName string
+	Address     string
+	CaCert      string
+	Cert        string
+	Key         string
 }
 
 type Agent struct {

@@ -2,11 +2,55 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 )
+
+func mapAgentAppsToServerResp(appDataList []*agentpb.AppData) []*serverpb.ClusterAppConfig {
+	clusterAppConfigs := make([]*serverpb.ClusterAppConfig, len(appDataList))
+	for index, appConfig := range appDataList {
+		var clusterAppConfig serverpb.ClusterAppConfig
+		clusterAppConfig.AppName = appConfig.Config.AppName
+		clusterAppConfig.Version = appConfig.Config.Version
+		clusterAppConfig.Category = appConfig.Config.Category
+		clusterAppConfig.Description = appConfig.Config.Description
+		clusterAppConfig.ChartName = appConfig.Config.ChartName
+		clusterAppConfig.RepoName = appConfig.Config.RepoName
+		clusterAppConfig.RepoURL = appConfig.Config.RepoURL
+		clusterAppConfig.Namespace = appConfig.Config.Namespace
+		clusterAppConfig.CreateNamespace = appConfig.Config.CreateNamespace
+		clusterAppConfig.PrivilegedNamespace = appConfig.Config.PrivilegedNamespace
+		clusterAppConfig.Icon = appConfig.Config.Icon
+		clusterAppConfig.LaunchURL = appConfig.Config.LaunchURL
+		clusterAppConfig.LaunchRedirectURL = appConfig.Config.LaunchRedirectURL
+		clusterAppConfig.InstallStatus = appConfig.Config.InstallStatus
+		clusterAppConfig.RuntimeStatus = ""
+
+		clusterAppConfigs[index] = &clusterAppConfig
+	}
+
+	return clusterAppConfigs
+
+}
+
+func mapAgentAppLauncesToServerResp(appLaunchCfgs []*agentpb.AppLaunchConfig) []*serverpb.AppLaunchConfig {
+	svrAppLaunchCfg := make([]*serverpb.AppLaunchConfig, len(appLaunchCfgs))
+
+	for index, cfg := range appLaunchCfgs {
+		var launchCfg serverpb.AppLaunchConfig
+		launchCfg.ReleaseName = cfg.ReleaseName
+		launchCfg.Category = cfg.Category
+		launchCfg.Description = cfg.Description
+		launchCfg.Icon = cfg.Icon
+		launchCfg.LaunchRedirectURL = cfg.LaunchRedirectURL
+		launchCfg.LaunchURL = cfg.LaunchURL
+
+		svrAppLaunchCfg[index] = &launchCfg
+	}
+
+	return svrAppLaunchCfg
+}
 
 func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetClusterAppsRequest) (
 	*serverpb.GetClusterAppsResponse, error) {
@@ -34,23 +78,12 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 			StatusMessage: "failed to get cluster application from agent"}, nil
 	}
 
-	appConfigData, err := json.Marshal(resp.AppData)
-	if err != nil {
-		s.log.Error("failed to marshall appConfig", err)
-		return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to marshall appConfig"}, nil
-	}
+	agentDeails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
 
-	var clusterAppConfig []*serverpb.ClusterAppConfig
-	err = json.Unmarshal(appConfigData, &clusterAppConfig)
-	if err != nil {
-		s.log.Error("Unmarshall of appConfig failed", err)
-		return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Unmarshall of appConfig failed"}, nil
-	}
-
-	return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_OK, StatusMessage: "successfully fetched the data from agent",
-		AppConfigs: clusterAppConfig}, nil
+	return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_OK,
+		StatusMessage: "successfully fetched the data from agent",
+		AppConfigs:    mapAgentAppsToServerResp(resp.AppData),
+		ClusterName:   agentDeails.ClusterName}, nil
 }
 
 func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *serverpb.GetClusterAppLaunchConfigsRequest) (
@@ -79,23 +112,9 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 			StatusMessage: "failed to get cluster application launches from agent"}, err
 	}
 
-	appConfigData, err := json.Marshal(resp.LaunchConfigList)
-	if err != nil {
-		s.log.Error("failed to marshall app launches", err)
-		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to marshall app launches"}, nil
-	}
-
-	var clusterAppLaunchConfig []*serverpb.AppLaunchConfig
-	err = json.Unmarshal(appConfigData, &clusterAppLaunchConfig)
-	if err != nil {
-		s.log.Error("Unmarshall of app launches failed", err)
-		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Unmarshall of app launches failed"}, nil
-	}
-
-	return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_OK, StatusMessage: "successfully fetched the data from agent",
-		AppLaunchConfig: clusterAppLaunchConfig}, nil
+	return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_OK,
+		StatusMessage:   "successfully fetched the data from agent",
+		AppLaunchConfig: mapAgentAppLauncesToServerResp(resp.LaunchConfigList)}, nil
 }
 
 func (s *Server) GetClusterApp(ctx context.Context, request *serverpb.GetClusterAppRequest) (
