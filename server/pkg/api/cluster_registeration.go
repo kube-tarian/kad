@@ -24,9 +24,17 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 
 	s.log.Infof("[org: %s] New cluster registration request for cluster %s recieved", orgId, request.ClusterName)
 	clusterID := gocql.TimeUUID().String()
-	caData := s.getBase64DecodedString(request.ClientCAChainData)
-	clientKey := s.getBase64DecodedString(request.ClientKeyData)
-	clientCrt := s.getBase64DecodedString(request.ClientCertData)
+
+	caData, caDataErr := s.getBase64DecodedString(request.ClientCAChainData)
+	clientKey, clientKeyErr := s.getBase64DecodedString(request.ClientKeyData)
+	clientCrt, clientCrtErr := s.getBase64DecodedString(request.ClientCertData)
+	if caDataErr != nil || clientKeyErr != nil || clientCrtErr != nil {
+		return &serverpb.NewClusterRegistrationResponse{
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "only base64 encoded certificates are allowed",
+		}, nil
+	}
+
 	agentConfig := &agent.Config{
 		Address: request.AgentEndpoint,
 		CaCert:  caData,
@@ -81,9 +89,17 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 	}
 
 	s.log.Infof("[org: %s] Update cluster registration request for cluster %s recieved", orgId, request.ClusterName)
-	caData := s.getBase64DecodedString(request.ClientCAChainData)
-	clientKey := s.getBase64DecodedString(request.ClientKeyData)
-	clientCrt := s.getBase64DecodedString(request.ClientCertData)
+
+	caData, caDataErr := s.getBase64DecodedString(request.ClientCAChainData)
+	clientKey, clientKeyErr := s.getBase64DecodedString(request.ClientKeyData)
+	clientCrt, clientCrtErr := s.getBase64DecodedString(request.ClientCertData)
+	if caDataErr != nil || clientKeyErr != nil || clientCrtErr != nil {
+		return &serverpb.UpdateClusterRegistrationResponse{
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "only base64 encoded certificates are allowed",
+		}, nil
+	}
+
 	agentConfig := &agent.Config{
 		Address: request.AgentEndpoint,
 		CaCert:  caData,
@@ -207,13 +223,13 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 	}, nil
 }
 
-func (s *Server) getBase64DecodedString(encodedString string) string {
+func (s *Server) getBase64DecodedString(encodedString string) (string, error) {
 	decodedByte, err := base64.StdEncoding.DecodeString(encodedString)
 	if err != nil {
 		// This will assume the string is not encoded and returns the original string.
 		s.log.Errorf("Failed to decode the string: %v", err)
-		return encodedString
+		return "", err
 	}
 
-	return string(decodedByte)
+	return string(decodedByte), nil
 }
