@@ -82,7 +82,8 @@ message GetClusterAppsRequest {
 message GetClusterAppsResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  repeated ClusterAppConfig appConfigs = 3; 
+  string clusterName = 3;
+  repeated ClusterAppConfig appConfigs = 4;
 }
 
 message GetClusterAppRequest {
@@ -103,7 +104,8 @@ message GetClusterAppLaunchConfigsRequest {
 message GetClusterAppLaunchConfigsResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  repeated AppLaunchConfig appLaunchConfig = 3;
+  string clusterName = 3;
+  repeated AppLaunchConfig appLaunchConfig = 4;
 }
 
 message ClusterInfo {
