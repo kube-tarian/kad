@@ -69,7 +69,7 @@ func (a *AstraServerStore) GetClusterDetails(clusterID string) (*types.ClusterDe
 
 	clusterName, err := client.ToString(result.Rows[0].Values[0])
 	if err != nil {
-		return nil, fmt.Errorf("cluster: %s unable to convert endpoint to string", clusterID)
+		return nil, fmt.Errorf("cluster: %s unable to convert clusterName to string", clusterID)
 	}
 
 	clusterEndpoint, err := client.ToString(result.Rows[0].Values[1])
