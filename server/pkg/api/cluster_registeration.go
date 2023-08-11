@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/server/pkg/agent"
@@ -23,11 +24,14 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 
 	s.log.Infof("[org: %s] New cluster registration request for cluster %s recieved", orgId, request.ClusterName)
 	clusterID := gocql.TimeUUID().String()
+	caData := s.getBase64DecodedString(request.ClientCAChainData)
+	clientKey := s.getBase64DecodedString(request.ClientKeyData)
+	clientCrt := s.getBase64DecodedString(request.ClientCertData)
 	agentConfig := &agent.Config{
 		Address: request.AgentEndpoint,
-		CaCert:  request.ClientCAChainData,
-		Key:     request.ClientKeyData,
-		Cert:    request.ClientCertData,
+		CaCert:  caData,
+		Key:     clientKey,
+		Cert:    clientCrt,
 	}
 	if err := s.agentHandeler.AddAgent(orgId, clusterID, agentConfig); err != nil {
 		s.log.Errorf("[org: %s] failed to connect to agent on cluster %s, %v", orgId, request.ClusterName, err)
@@ -38,7 +42,7 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 	}
 
 	err := credential.PutClusterCerts(ctx, orgId, request.ClusterName,
-		request.ClientCAChainData, request.ClientKeyData, request.ClientCertData)
+		caData, clientKey, clientCrt)
 	if err != nil {
 		s.log.Errorf("[org: %s] failed to store cert in vault for cluster %s, %v", orgId, request.ClusterName, err)
 		return &serverpb.NewClusterRegistrationResponse{
@@ -77,11 +81,14 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 	}
 
 	s.log.Infof("[org: %s] Update cluster registration request for cluster %s recieved", orgId, request.ClusterName)
+	caData := s.getBase64DecodedString(request.ClientCAChainData)
+	clientKey := s.getBase64DecodedString(request.ClientKeyData)
+	clientCrt := s.getBase64DecodedString(request.ClientCertData)
 	agentConfig := &agent.Config{
 		Address: request.AgentEndpoint,
-		CaCert:  request.ClientCAChainData,
-		Key:     request.ClientKeyData,
-		Cert:    request.ClientCertData,
+		CaCert:  caData,
+		Key:     clientKey,
+		Cert:    clientCrt,
 	}
 
 	if err := s.agentHandeler.UpdateAgent(orgId, request.ClusterID, agentConfig); err != nil {
@@ -93,7 +100,7 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 	}
 
 	err := credential.PutClusterCerts(ctx, orgId, request.ClusterName,
-		request.ClientCAChainData, request.ClientKeyData, request.ClientCertData)
+		caData, clientKey, clientCrt)
 	if err != nil {
 		s.log.Errorf("[org: %s] failed to update cert in vault for cluster %s, %v", orgId, request.ClusterName, err)
 		return &serverpb.UpdateClusterRegistrationResponse{
@@ -198,4 +205,15 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 		StatusMessage: "get cluster details success",
 		Data:          data,
 	}, nil
+}
+
+func (s *Server) getBase64DecodedString(encodedString string) string {
+	decodedByte, err := base64.StdEncoding.DecodeString(encodedString)
+	if err != nil {
+		// This will assume the string is not encoded and returns the original string.
+		s.log.Errorf("Failed to decode the string: %v", err)
+		return encodedString
+	}
+
+	return string(decodedByte)
 }
