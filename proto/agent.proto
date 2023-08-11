@@ -13,7 +13,6 @@ service Agent {
 
   rpc SubmitJob (JobRequest) returns (JobResponse) {}
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
-  rpc Sync(SyncRequest) returns (SyncResponse) {}
 
   rpc ClimonAppInstall (ClimonInstallRequest) returns (JobResponse) {}
   rpc ClimonAppDelete (ClimonDeleteRequest) returns (JobResponse) {}
@@ -62,16 +61,6 @@ message StoreCredentialRequest {
 message StoreCredentialResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-}
-
-message SyncRequest {
-  string type = 1;
-  string data = 2;
-}
-
-message SyncResponse {
-  string status = 1;
-  string message = 2;
 }
 
 message ClimonInstallRequest {

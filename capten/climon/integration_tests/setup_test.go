@@ -10,7 +10,6 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/climon/pkg/application"
-	"github.com/kube-tarian/kad/capten/climon/pkg/db/cassandra"
 )
 
 var logger = logging.NewLogger()
@@ -76,12 +75,7 @@ func checkResponse(resp *http.Response, statusCode int) bool {
 func startApplication(stop chan bool) {
 	os.Setenv("PORT", "9080")
 	log := logging.NewLogger()
-	db, err := cassandra.Create(logger)
-	if err != nil {
-		logger.Fatalf("failed to create db connection", err)
-	}
-
-	app := application.New(log, db)
+	app := application.New(log)
 	go app.Start()
 
 	<-stop
