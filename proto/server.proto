@@ -10,7 +10,8 @@ service Server {
   rpc UpdateClusterRegistration (UpdateClusterRegistrationRequest) returns (UpdateClusterRegistrationResponse) {} 
   rpc DeleteClusterRegistration (DeleteClusterRegistrationRequest) returns (DeleteClusterRegistrationResponse) {}
   
-  rpc GetClusters (GetClustersRequest) returns (GetClustersResponse) {}  
+  rpc GetClusters (GetClustersRequest) returns (GetClustersResponse) {}
+  rpc GetCluster (GetClusterRequest) returns (GetClusterResponse) {}  
   rpc GetClusterApps (GetClusterAppsRequest) returns (GetClusterAppsResponse) {}
   rpc GetClusterAppLaunchConfigs (GetClusterAppLaunchConfigsRequest) returns (GetClusterAppLaunchConfigsResponse) {}
   rpc GetClusterApp (GetClusterAppRequest) returns (GetClusterAppResponse) {}
@@ -74,6 +75,17 @@ message GetClustersResponse {
   string statusMessage = 2;
   repeated ClusterInfo data = 3; 
 }
+
+message GetClusterRequest {
+  string clusterID = 1;
+}
+
+message GetClusterResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  ClusterInfo data = 3; 
+}
+
 
 message GetClusterAppsRequest {
   string clusterID = 1; 
