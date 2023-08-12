@@ -24,10 +24,11 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 	s.log.Infof("[org: %s] New cluster registration request for cluster %s recieved", orgId, request.ClusterName)
 	clusterID := gocql.TimeUUID().String()
 	agentConfig := &agent.Config{
-		Address: request.AgentEndpoint,
-		CaCert:  request.ClientCAChainData,
-		Key:     request.ClientKeyData,
-		Cert:    request.ClientCertData,
+		ClusterName: request.ClusterName,
+		Address:     request.AgentEndpoint,
+		CaCert:      request.ClientCAChainData,
+		Key:         request.ClientKeyData,
+		Cert:        request.ClientCertData,
 	}
 	if err := s.agentHandeler.AddAgent(orgId, clusterID, agentConfig); err != nil {
 		s.log.Errorf("[org: %s] failed to connect to agent on cluster %s, %v", orgId, request.ClusterName, err)
@@ -78,10 +79,11 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 
 	s.log.Infof("[org: %s] Update cluster registration request for cluster %s recieved", orgId, request.ClusterName)
 	agentConfig := &agent.Config{
-		Address: request.AgentEndpoint,
-		CaCert:  request.ClientCAChainData,
-		Key:     request.ClientKeyData,
-		Cert:    request.ClientCertData,
+		ClusterName: request.ClusterName,
+		Address:     request.AgentEndpoint,
+		CaCert:      request.ClientCAChainData,
+		Key:         request.ClientKeyData,
+		Cert:        request.ClientCertData,
 	}
 
 	if err := s.agentHandeler.UpdateAgent(orgId, request.ClusterID, agentConfig); err != nil {
