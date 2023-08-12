@@ -2207,6 +2207,7 @@ func (x *StoreAppConfig) GetIcon() string {
 	return ""
 }
 
+
 func (x *StoreAppConfig) GetLaunchURL() string {
 	if x != nil {
 		return x.LaunchURL
