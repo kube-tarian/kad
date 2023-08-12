@@ -43,7 +43,7 @@ service:
 vault:
   address: http://vault:8200
   role: vault-role-capten-agent
-  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin,vault-policy-generic-cred-read"
+  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin,vault-policy-generic-cred-admin"
 
 cassandra:
   addresses: temporal-temporal-service:9042
