@@ -7,6 +7,7 @@ import (
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/credential"
+	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 )
 
@@ -206,19 +207,87 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 
 	var data []*serverpb.ClusterInfo
 	for _, cluster := range clusterDetails {
+		a, err := s.agentHandeler.GetAgent(orgId, cluster.ClusterID)
+		if err != nil {
+			s.log.Errorf("failed to connect to agent for cluster %s, %v", cluster.ClusterID, err)
+			continue
+		}
+
+		resp, err := a.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
+		if err != nil {
+			s.log.Errorf("failed to get cluster application launches from agent for cluster %s, %v", cluster.ClusterID, err)
+			continue
+		}
+
 		attributes := []*serverpb.ClusterAttribute{}
-		appLaunchConfigs := []*serverpb.AppLaunchConfig{}
 		data = append(data, &serverpb.ClusterInfo{
 			ClusterID:        cluster.ClusterID,
 			ClusterName:      cluster.ClusterName,
 			AgentEndpoint:    cluster.Endpoint,
 			Attributes:       attributes,
-			AppLaunchConfigs: appLaunchConfigs,
+			AppLaunchConfigs: mapAgentAppLauncesToServerResp(resp.LaunchConfigList),
 		})
 	}
 
 	s.log.Infof("[org: %s] Found %d clusters", orgId, len(data))
 	return &serverpb.GetClustersResponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "get cluster details success",
+		Data:          data,
+	}, nil
+}
+
+func (s *Server) GetCluster(ctx context.Context, request *serverpb.GetClusterRequest) (
+	*serverpb.GetClusterResponse, error) {
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if len(orgId) == 0 {
+		s.log.Error("organizationID is missing in the request")
+		return &serverpb.GetClusterResponse{
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "organizationID is missing",
+		}, nil
+	}
+
+	s.log.Infof("[org: %s] GetCluster request recieved for cluster %s", orgId, request.ClusterID)
+	clusterDetails, err := s.serverStore.GetClusterDetails(request.ClusterID)
+	if err != nil {
+		s.log.Errorf("[org: %s] failed to get cluster %s, %v", orgId, request.ClusterID, err)
+		return &serverpb.GetClusterResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed get cluster details",
+		}, err
+	}
+
+	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
+	if err != nil {
+		s.log.Error("failed to connect to agent", err)
+		return &serverpb.GetClusterResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed get agent details",
+		}, err
+	}
+
+	resp, err := a.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
+	if err != nil {
+		s.log.Error("failed to get cluster application launches from agent", err)
+		return &serverpb.GetClusterResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed get cluster app lauches",
+		}, err
+	}
+
+	attributes := []*serverpb.ClusterAttribute{}
+	data := &serverpb.ClusterInfo{
+		ClusterID:        request.ClusterID,
+		ClusterName:      clusterDetails.ClusterName,
+		AgentEndpoint:    clusterDetails.Endpoint,
+		Attributes:       attributes,
+		AppLaunchConfigs: mapAgentAppLauncesToServerResp(resp.LaunchConfigList),
+	}
+
+	s.log.Infof("[org: %s] GetCluster request processed for cluster %s", orgId, request.ClusterID)
+	return &serverpb.GetClusterResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "get cluster details success",
 		Data:          data,

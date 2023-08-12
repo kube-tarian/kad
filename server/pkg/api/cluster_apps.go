@@ -63,6 +63,7 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 			StatusMessage: "organizationID is missing",
 		}, nil
 	}
+	s.log.Infof("[org: %s] GetClusterApps request recieved for cluster %s", orgId, request.ClusterID)
 
 	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
@@ -79,7 +80,7 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 	}
 
 	agentDetails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
-	s.log.Infof("[org: %s] Fetched %s installed apps in the cluster %s", orgId, len(resp.AppData), request.ClusterID)
+	s.log.Infof("[org: %s] Fetched %d installed apps from the cluster %s", orgId, len(resp.AppData), request.ClusterID)
 	return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage: "successfully fetched the data from agent",
 		AppConfigs:    mapAgentAppsToServerResp(resp.AppData),
@@ -98,6 +99,7 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 		}, nil
 	}
 
+	s.log.Infof("[org: %s] GetClusterAppLaunchConfigs request recieved for cluster %s", orgId, request.ClusterID)
 	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
 		s.log.Error("failed to connect to agent", err)
@@ -113,7 +115,7 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 	}
 
 	agentDetails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
-	s.log.Infof("[org: %s] Fetched %s app launch UIs in the cluster %s", orgId, len(resp.LaunchConfigList), request.ClusterID)
+	s.log.Infof("[org: %s] Fetched %d app launch UIs from the cluster %s", orgId, len(resp.LaunchConfigList), request.ClusterID)
 	return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage:   "successfully fetched the data from agent",
 		AppLaunchConfig: mapAgentAppLauncesToServerResp(resp.LaunchConfigList),
