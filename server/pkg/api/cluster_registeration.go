@@ -36,10 +36,11 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 	}
 
 	agentConfig := &agent.Config{
-		Address: request.AgentEndpoint,
-		CaCert:  caData,
-		Key:     clientKey,
-		Cert:    clientCrt,
+		ClusterName: request.ClusterName,
+		Address:     request.AgentEndpoint,
+		CaCert:      caData,
+		Key:         clientKey,
+		Cert:        clientCrt,
 	}
 	if err := s.agentHandeler.AddAgent(orgId, clusterID, agentConfig); err != nil {
 		s.log.Errorf("[org: %s] failed to connect to agent on cluster %s, %v", orgId, request.ClusterName, err)
@@ -101,10 +102,11 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 	}
 
 	agentConfig := &agent.Config{
-		Address: request.AgentEndpoint,
-		CaCert:  caData,
-		Key:     clientKey,
-		Cert:    clientCrt,
+		ClusterName: request.ClusterName,
+		Address:     request.AgentEndpoint,
+		CaCert:      caData,
+		Key:         clientKey,
+		Cert:        clientCrt,
 	}
 
 	if err := s.agentHandeler.UpdateAgent(orgId, request.ClusterID, agentConfig); err != nil {
