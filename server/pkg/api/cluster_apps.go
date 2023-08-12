@@ -78,12 +78,12 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 			StatusMessage: "failed to get cluster application from agent"}, nil
 	}
 
-	agentDeails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
+	agentDetails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
 
 	return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage: "successfully fetched the data from agent",
 		AppConfigs:    mapAgentAppsToServerResp(resp.AppData),
-		ClusterName:   agentDeails.ClusterName}, nil
+		ClusterName:   agentDetails.ClusterName}, nil
 }
 
 func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *serverpb.GetClusterAppLaunchConfigsRequest) (
@@ -112,12 +112,12 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 			StatusMessage: "failed to get cluster application launches from agent"}, err
 	}
 
-	agentDeails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
+	agentDetails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
 
 	return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage:   "successfully fetched the data from agent",
 		AppLaunchConfig: mapAgentAppLauncesToServerResp(resp.LaunchConfigList),
-		ClusterName:     agentDeails.ClusterName}, nil
+		ClusterName:     agentDetails.ClusterName}, nil
 }
 
 func (s *Server) GetClusterApp(ctx context.Context, request *serverpb.GetClusterAppRequest) (
