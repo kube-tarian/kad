@@ -1,6 +1,7 @@
 package captenstore
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"strings"
@@ -102,13 +103,14 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&config.Icon, &config.InstallStatus,
 	) {
 		configCopy := config
-		overrideValuesCopy := overrideValues
-		launchUiValuesCopy := launchUiValues
+		overrideValuesCopy, _ := base64.StdEncoding.DecodeString(overrideValues)
+		launchUiValuesCopy, _ := base64.StdEncoding.DecodeString(launchUiValues)
 		a := &agentpb.SyncAppData{
 			Config: &configCopy,
 			Values: &agentpb.AppValues{
-				OverrideValues: []byte(overrideValuesCopy),
-				LaunchUIValues: []byte(launchUiValuesCopy)},
+				OverrideValues: overrideValuesCopy,
+				LaunchUIValues: launchUiValuesCopy,
+			},
 		}
 		ret = append(ret, a)
 	}
@@ -124,13 +126,15 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 	params := []string{}
 
 	if config.Values != nil && len(config.Values.OverrideValues) > 0 {
+		encoded := base64.StdEncoding.EncodeToString(config.Values.OverrideValues)
 		params = append(params,
-			fmt.Sprintf("%s = '%s'", overrideValues, string(config.Values.OverrideValues)))
+			fmt.Sprintf("%s = '%s'", overrideValues, encoded))
 	}
 
 	if config.Values != nil && len(config.Values.LaunchUIValues) > 0 {
+		encoded := base64.StdEncoding.EncodeToString(config.Values.LaunchUIValues)
 		params = append(params,
-			fmt.Sprintf("%s = '%s'", launchUiValues, string(config.Values.LaunchUIValues)))
+			fmt.Sprintf("%s = '%s'", launchUiValues, encoded))
 	}
 
 	if config.Config.CreateNamespace {
