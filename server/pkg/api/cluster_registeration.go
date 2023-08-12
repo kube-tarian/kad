@@ -50,10 +50,10 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		}, nil
 	}
 
-	err := credential.PutClusterCerts(ctx, orgId, request.ClusterName,
+	err := credential.PutClusterCerts(ctx, orgId, clusterID,
 		caData, clientKey, clientCrt)
 	if err != nil {
-		s.log.Errorf("[org: %s] failed to store cert in vault for cluster %s, %v", orgId, request.ClusterName, err)
+		s.log.Errorf("[org: %s] failed to store cert in vault for cluster %s, %v", orgId, clusterID, err)
 		return &serverpb.NewClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed register cluster",
@@ -117,10 +117,10 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	err := credential.PutClusterCerts(ctx, orgId, request.ClusterName,
+	err := credential.PutClusterCerts(ctx, orgId, request.ClusterID,
 		caData, clientKey, clientCrt)
 	if err != nil {
-		s.log.Errorf("[org: %s] failed to update cert in vault for cluster %s, %v", orgId, request.ClusterName, err)
+		s.log.Errorf("[org: %s] failed to update cert in vault for cluster %s, %v", orgId, request.ClusterID, err)
 		return &serverpb.UpdateClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed update register cluster",
