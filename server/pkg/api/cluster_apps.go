@@ -112,9 +112,12 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 			StatusMessage: "failed to get cluster application launches from agent"}, err
 	}
 
+	agentDeails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
+
 	return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage:   "successfully fetched the data from agent",
-		AppLaunchConfig: mapAgentAppLauncesToServerResp(resp.LaunchConfigList)}, nil
+		AppLaunchConfig: mapAgentAppLauncesToServerResp(resp.LaunchConfigList),
+		ClusterName:     agentDeails.ClusterName}, nil
 }
 
 func (s *Server) GetClusterApp(ctx context.Context, request *serverpb.GetClusterAppRequest) (
