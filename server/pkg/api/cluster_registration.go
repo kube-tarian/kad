@@ -36,10 +36,11 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 	}
 
 	agentConfig := &agent.Config{
-		Address: request.AgentEndpoint,
-		CaCert:  caData,
-		Key:     clientKey,
-		Cert:    clientCrt,
+		ClusterName: request.ClusterName,
+		Address:     request.AgentEndpoint,
+		CaCert:      caData,
+		Key:         clientKey,
+		Cert:        clientCrt,
 	}
 	if err := s.agentHandeler.AddAgent(orgId, clusterID, agentConfig); err != nil {
 		s.log.Errorf("[org: %s] failed to connect to agent on cluster %s, %v", orgId, request.ClusterName, err)
@@ -49,10 +50,10 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		}, nil
 	}
 
-	err := credential.PutClusterCerts(ctx, orgId, request.ClusterName,
+	err := credential.PutClusterCerts(ctx, orgId, clusterID,
 		caData, clientKey, clientCrt)
 	if err != nil {
-		s.log.Errorf("[org: %s] failed to store cert in vault for cluster %s, %v", orgId, request.ClusterName, err)
+		s.log.Errorf("[org: %s] failed to store cert in vault for cluster %s, %v", orgId, clusterID, err)
 		return &serverpb.NewClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed register cluster",
@@ -101,10 +102,11 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 	}
 
 	agentConfig := &agent.Config{
-		Address: request.AgentEndpoint,
-		CaCert:  caData,
-		Key:     clientKey,
-		Cert:    clientCrt,
+		ClusterName: request.ClusterName,
+		Address:     request.AgentEndpoint,
+		CaCert:      caData,
+		Key:         clientKey,
+		Cert:        clientCrt,
 	}
 
 	if err := s.agentHandeler.UpdateAgent(orgId, request.ClusterID, agentConfig); err != nil {
@@ -115,10 +117,10 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	err := credential.PutClusterCerts(ctx, orgId, request.ClusterName,
+	err := credential.PutClusterCerts(ctx, orgId, request.ClusterID,
 		caData, clientKey, clientCrt)
 	if err != nil {
-		s.log.Errorf("[org: %s] failed to update cert in vault for cluster %s, %v", orgId, request.ClusterName, err)
+		s.log.Errorf("[org: %s] failed to update cert in vault for cluster %s, %v", orgId, request.ClusterID, err)
 		return &serverpb.UpdateClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed update register cluster",

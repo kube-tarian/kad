@@ -71,6 +71,17 @@ func (s *AgentHandler) GetAgent(orgId, clusterID string) (*Agent, error) {
 	return nil, fmt.Errorf("failed to get agent")
 }
 
+func (s *AgentHandler) GetAgentClusterDetail(orgId, clusterID string) *Config {
+	s.agentMutex.RLock()
+	defer s.agentMutex.RUnlock()
+	clusterKey := getClusterAgentKey(orgId, clusterID)
+	if agent, ok := s.agents[clusterKey]; ok && agent != nil {
+		return agent.cfg
+	}
+
+	return &Config{}
+}
+
 func (s *AgentHandler) getAgent(orgId, clusterID string) *Agent {
 	s.agentMutex.RLock()
 	defer s.agentMutex.RUnlock()
@@ -106,12 +117,15 @@ func (s *AgentHandler) Close() {
 
 func (s *AgentHandler) getAgentConfig(orgId, clusterID string) (*Config, error) {
 	agentCfg := &Config{}
-	endpoint, err := s.serverStore.GetClusterEndpoint(clusterID)
+
+	clusterDetail, err := s.serverStore.GetClusterDetails(clusterID)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to get cluster")
 	}
 
-	agentCfg.Address = endpoint
+	agentCfg.Address = clusterDetail.Endpoint
+	agentCfg.ClusterName = clusterDetail.ClusterName
+
 	certData, err := credential.GetClusterCerts(context.TODO(), orgId, clusterID)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed get cert from vault")
