@@ -79,7 +79,7 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 	}
 
 	agentDetails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
-
+	s.log.Infof("[org: %s] Fetched %s installed apps in the cluster %s", orgId, len(resp.AppData), request.ClusterID)
 	return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage: "successfully fetched the data from agent",
 		AppConfigs:    mapAgentAppsToServerResp(resp.AppData),
@@ -113,7 +113,7 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 	}
 
 	agentDetails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
-
+	s.log.Infof("[org: %s] Fetched %s app launch UIs in the cluster %s", orgId, len(resp.LaunchConfigList), request.ClusterID)
 	return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage:   "successfully fetched the data from agent",
 		AppLaunchConfig: mapAgentAppLauncesToServerResp(resp.LaunchConfigList),
