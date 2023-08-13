@@ -232,3 +232,4 @@ message StoreAppValues {
   string overrideValues = 1;
   string launchUIValues = 2;
 }
+
