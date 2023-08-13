@@ -19,6 +19,7 @@ type ServerStore interface {
 	DeleteAppInStore(name, version string) error
 	GetAppFromStore(name, version string) (*types.AppConfig, error)
 	GetAppsFromStore() (*[]types.AppConfig, error)
+	GetStoreAppValues(name, version string) (*types.AppConfig, error)
 }
 
 func NewStore(db string) (ServerStore, error) {

@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 
+	"github.com/kube-tarian/kad/server/pkg/agent"
+	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/types"
 )
@@ -199,4 +201,104 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 		StatusMessage: "app config's are sucessfuly fetched from store",
 		AppConfigs:    appConfigs,
 	}, nil
+}
+
+func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetStoreAppValuesRequest) (
+	*serverpb.GetStoreAppValuesResponse, error) {
+	if request.AppName == "" || request.Version == "" {
+		s.log.Errorf("failed to get store app values, %v", "App name/version is missing")
+		return &serverpb.GetStoreAppValuesResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to get store app values, app name/version is missing",
+		}, nil
+	}
+	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
+	if err != nil {
+		s.log.Errorf("failed to get store app values, %v", err)
+		return &serverpb.GetStoreAppValuesResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to get store app values",
+		}, nil
+	}
+
+	appConfig := &serverpb.StoreAppConfig{
+		AppName:             config.Name,
+		Version:             config.Version,
+		Category:            config.Category,
+		Description:         config.Description,
+		ChartName:           config.ChartName,
+		RepoName:            config.RepoName,
+		RepoURL:             config.RepoURL,
+		Namespace:           config.Namespace,
+		CreateNamespace:     config.CreateNamespace,
+		PrivilegedNamespace: config.PrivilegedNamespace,
+		Icon:                config.Icon,
+		LaunchURL:           config.LaunchUIURL,
+		LaunchRedirectURL:   config.LaunchUIRedirectURL,
+		ReleaseName:         config.ReleaseName,
+	}
+
+	return &serverpb.GetStoreAppValuesResponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "store app values sucessfuly fetched",
+		AppConfig:     appConfig,
+	}, nil
+
+}
+
+func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeployStoreAppRequest) (
+	*serverpb.DeployStoreAppResponse, error) {
+	if request.AppConfig.AppName == "" || request.AppConfig.Version == "" {
+		s.log.Errorf("failed to get store app values, %v", "App name/version is missing")
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to get store app values, app name/version is missing",
+		}, nil
+	}
+
+	orgId := ""
+	clusterName := ""
+	agnetHandler := agent.NewAgentHandler(s.log, s.serverStore)
+	agent, err := agnetHandler.GetAgent(orgId, clusterName)
+	if err != nil {
+		s.log.Errorf("failed to initialize agent, %v", err)
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to deploy the app",
+		}, nil
+	}
+
+	req := &agentpb.InstallAppRequest{
+		AppConfig: &agentpb.AppConfig{
+			AppName:             request.AppConfig.AppName,
+			Version:             request.AppConfig.Version,
+			ReleaseName:         request.AppConfig.ReleaseName,
+			Category:            request.AppConfig.Category,
+			Description:         request.AppConfig.Description,
+			ChartName:           request.AppConfig.ChartName,
+			RepoName:            request.AppConfig.RepoName,
+			RepoURL:             request.AppConfig.RepoURL,
+			Namespace:           request.AppConfig.Namespace,
+			CreateNamespace:     request.AppConfig.CreateNamespace,
+			PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
+			Icon:                []byte(request.AppConfig.Icon),
+			LaunchURL:           request.AppConfig.LaunchURL,
+			LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
+		},
+	}
+
+	_, err = agent.GetClient().InstallApp(ctx, req)
+	if err != nil {
+		s.log.Errorf("failed to deploy app, %v", err)
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to deploy the app",
+		}, nil
+	}
+
+	return &serverpb.DeployStoreAppResponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "app is successfully deployed",
+	}, nil
+
 }

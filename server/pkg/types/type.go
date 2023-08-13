@@ -70,3 +70,13 @@ type AppConfig struct {
 	LaunchUIValues      string    `cql:"launch_ui_values" json:"launch_ui_values"`
 	OverrideValues      string    `cql:"override_values" json:"override_values"`
 }
+
+type AppInstallRequest struct {
+	PluginName  string `json:"plugin_name"`
+	RepoName    string `json:"repo_name"`
+	RepoUrl     string `json:"repo_url"`
+	ChartName   string `json:"chart_name"`
+	Namespace   string `json:"namespace"`
+	ReleaseName string `json:"release_name"`
+	Timeout     int    `json:"timeout"`
+}
