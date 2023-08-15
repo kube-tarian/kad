@@ -23,7 +23,6 @@ func mapAgentAppsToServerResp(appDataList []*agentpb.AppData) []*serverpb.Cluste
 		clusterAppConfig.PrivilegedNamespace = appConfig.Config.PrivilegedNamespace
 		clusterAppConfig.Icon = appConfig.Config.Icon
 		clusterAppConfig.LaunchURL = appConfig.Config.LaunchURL
-		clusterAppConfig.LaunchRedirectURL = appConfig.Config.LaunchRedirectURL
 		clusterAppConfig.InstallStatus = appConfig.Config.InstallStatus
 		clusterAppConfig.RuntimeStatus = ""
 
@@ -41,9 +40,8 @@ func mapAgentAppLauncesToServerResp(appLaunchCfgs []*agentpb.AppLaunchConfig) []
 		var launchCfg serverpb.AppLaunchConfig
 		launchCfg.ReleaseName = cfg.ReleaseName
 		launchCfg.Category = cfg.Category
-		launchCfg.Description = cfg.Description
+		launchCfg.LaunchUIDescription = cfg.Description
 		launchCfg.Icon = cfg.Icon
-		launchCfg.LaunchRedirectURL = cfg.LaunchRedirectURL
 		launchCfg.LaunchURL = cfg.LaunchURL
 
 		svrAppLaunchCfg[index] = &launchCfg
@@ -79,12 +77,10 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 			StatusMessage: "failed to get cluster application from agent"}, nil
 	}
 
-	agentDetails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
 	s.log.Infof("[org: %s] Fetched %d installed apps from the cluster %s", orgId, len(resp.AppData), request.ClusterID)
 	return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage: "successfully fetched the data from agent",
-		AppConfigs:    mapAgentAppsToServerResp(resp.AppData),
-		ClusterName:   agentDetails.ClusterName}, nil
+		AppConfigs:    mapAgentAppsToServerResp(resp.AppData)}, nil
 }
 
 func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *serverpb.GetClusterAppLaunchConfigsRequest) (
@@ -114,12 +110,10 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 			StatusMessage: "failed to get cluster application launches from agent"}, err
 	}
 
-	agentDetails := s.agentHandeler.GetAgentClusterDetail(orgId, request.ClusterID)
 	s.log.Infof("[org: %s] Fetched %d app launch UIs from the cluster %s", orgId, len(resp.LaunchConfigList), request.ClusterID)
 	return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage:   "successfully fetched the data from agent",
-		AppLaunchConfig: mapAgentAppLauncesToServerResp(resp.LaunchConfigList),
-		ClusterName:     agentDetails.ClusterName}, nil
+		AppLaunchConfig: mapAgentAppLauncesToServerResp(resp.LaunchConfigList)}, nil
 }
 
 func (s *Server) GetClusterApp(ctx context.Context, request *serverpb.GetClusterAppRequest) (
