@@ -35,6 +35,7 @@ const (
 	Agent_SyncApp_FullMethodName               = "/agentpb.Agent/SyncApp"
 	Agent_GetClusterApps_FullMethodName        = "/agentpb.Agent/GetClusterApps"
 	Agent_GetClusterAppLaunches_FullMethodName = "/agentpb.Agent/GetClusterAppLaunches"
+	Agent_ConfigureAppSSO_FullMethodName       = "/agentpb.Agent/ConfigureAppSSO"
 	Agent_GetClusterAppConfig_FullMethodName   = "/agentpb.Agent/GetClusterAppConfig"
 	Agent_GetClusterAppValues_FullMethodName   = "/agentpb.Agent/GetClusterAppValues"
 )
@@ -59,6 +60,7 @@ type AgentClient interface {
 	SyncApp(ctx context.Context, in *SyncAppRequest, opts ...grpc.CallOption) (*SyncAppResponse, error)
 	GetClusterApps(ctx context.Context, in *GetClusterAppsRequest, opts ...grpc.CallOption) (*GetClusterAppsResponse, error)
 	GetClusterAppLaunches(ctx context.Context, in *GetClusterAppLaunchesRequest, opts ...grpc.CallOption) (*GetClusterAppLaunchesResponse, error)
+	ConfigureAppSSO(ctx context.Context, in *ConfigureAppSSORequest, opts ...grpc.CallOption) (*ConfigureAppSSOResponse, error)
 	GetClusterAppConfig(ctx context.Context, in *GetClusterAppConfigRequest, opts ...grpc.CallOption) (*GetClusterAppConfigResponse, error)
 	GetClusterAppValues(ctx context.Context, in *GetClusterAppValuesRequest, opts ...grpc.CallOption) (*GetClusterAppValuesResponse, error)
 }
@@ -215,6 +217,15 @@ func (c *agentClient) GetClusterAppLaunches(ctx context.Context, in *GetClusterA
 	return out, nil
 }
 
+func (c *agentClient) ConfigureAppSSO(ctx context.Context, in *ConfigureAppSSORequest, opts ...grpc.CallOption) (*ConfigureAppSSOResponse, error) {
+	out := new(ConfigureAppSSOResponse)
+	err := c.cc.Invoke(ctx, Agent_ConfigureAppSSO_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *agentClient) GetClusterAppConfig(ctx context.Context, in *GetClusterAppConfigRequest, opts ...grpc.CallOption) (*GetClusterAppConfigResponse, error) {
 	out := new(GetClusterAppConfigResponse)
 	err := c.cc.Invoke(ctx, Agent_GetClusterAppConfig_FullMethodName, in, out, opts...)
@@ -253,6 +264,7 @@ type AgentServer interface {
 	SyncApp(context.Context, *SyncAppRequest) (*SyncAppResponse, error)
 	GetClusterApps(context.Context, *GetClusterAppsRequest) (*GetClusterAppsResponse, error)
 	GetClusterAppLaunches(context.Context, *GetClusterAppLaunchesRequest) (*GetClusterAppLaunchesResponse, error)
+	ConfigureAppSSO(context.Context, *ConfigureAppSSORequest) (*ConfigureAppSSOResponse, error)
 	GetClusterAppConfig(context.Context, *GetClusterAppConfigRequest) (*GetClusterAppConfigResponse, error)
 	GetClusterAppValues(context.Context, *GetClusterAppValuesRequest) (*GetClusterAppValuesResponse, error)
 	mustEmbedUnimplementedAgentServer()
@@ -309,6 +321,9 @@ func (UnimplementedAgentServer) GetClusterApps(context.Context, *GetClusterAppsR
 }
 func (UnimplementedAgentServer) GetClusterAppLaunches(context.Context, *GetClusterAppLaunchesRequest) (*GetClusterAppLaunchesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClusterAppLaunches not implemented")
+}
+func (UnimplementedAgentServer) ConfigureAppSSO(context.Context, *ConfigureAppSSORequest) (*ConfigureAppSSOResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfigureAppSSO not implemented")
 }
 func (UnimplementedAgentServer) GetClusterAppConfig(context.Context, *GetClusterAppConfigRequest) (*GetClusterAppConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClusterAppConfig not implemented")
@@ -617,6 +632,24 @@ func _Agent_GetClusterAppLaunches_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Agent_ConfigureAppSSO_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigureAppSSORequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).ConfigureAppSSO(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_ConfigureAppSSO_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).ConfigureAppSSO(ctx, req.(*ConfigureAppSSORequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Agent_GetClusterAppConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetClusterAppConfigRequest)
 	if err := dec(in); err != nil {
@@ -723,6 +756,10 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetClusterAppLaunches",
 			Handler:    _Agent_GetClusterAppLaunches_Handler,
+		},
+		{
+			MethodName: "ConfigureAppSSO",
+			Handler:    _Agent_ConfigureAppSSO_Handler,
 		},
 		{
 			MethodName: "GetClusterAppConfig",

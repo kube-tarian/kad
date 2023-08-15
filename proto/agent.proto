@@ -33,6 +33,8 @@ service Agent {
   rpc GetClusterApps (GetClusterAppsRequest) returns (GetClusterAppsResponse) {}
   rpc GetClusterAppLaunches (GetClusterAppLaunchesRequest) returns (GetClusterAppLaunchesResponse) {}
 
+  rpc ConfigureAppSSO(ConfigureAppSSORequest) returns (ConfigureAppSSOResponse) {}
+
   rpc GetClusterAppConfig (GetClusterAppConfigRequest) returns (GetClusterAppConfigResponse) {}
   rpc GetClusterAppValues (GetClusterAppValuesRequest) returns (GetClusterAppValuesResponse) {}
 }
@@ -163,6 +165,18 @@ message GetClusterAppLaunchesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   repeated AppLaunchConfig launchConfigList = 3;
+}
+
+message ConfigureAppSSORequest {
+  string releaseName = 1;  
+  string clientId = 2;
+  string clientSecret = 3;
+  string oAuthBaseURL = 4;
+}
+
+message ConfigureAppSSOResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;  
 }
 
 message GetClusterAppConfigRequest {
