@@ -27,7 +27,7 @@ const (
 	appName, description, category       = "app_name", "description", "category"
 	chartName, repoName, repoUrl         = "chart_name", "repo_name", "repo_url"
 	namespace, releaseName, version      = "namespace", "release_name", "version"
-	launchUrl, launchRedirectUrl         = "launch_url", "launch_redirect_url"
+	launchUrl                            = "launch_url"
 	createNamespace, privilegedNamespace = "create_namespace", "privileged_namespace"
 	overrideValues, launchUiValues       = "override_values", "launch_ui_values"
 	icon, installStatus                  = "icon", "install_status"
@@ -38,7 +38,7 @@ var (
 		appName, description, category,
 		chartName, repoName, repoUrl,
 		namespace, releaseName, version,
-		launchUrl, launchRedirectUrl,
+		launchUrl,
 		createNamespace, privilegedNamespace,
 		overrideValues, launchUiValues,
 		icon, installStatus,
@@ -69,7 +69,7 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 		&config.AppName, &config.Description, &config.Category,
 		&config.ChartName, &config.RepoName, &config.RepoURL,
 		&config.Namespace, &config.ReleaseName, &config.Version,
-		&config.LaunchURL, &config.LaunchRedirectURL,
+		&config.LaunchURL,
 		&config.CreateNamespace, &config.PrivilegedNamespace,
 		&overrideValues, &launchUiValues,
 		&config.Icon, &config.InstallStatus,
@@ -97,7 +97,7 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&config.AppName, &config.Description, &config.Category,
 		&config.ChartName, &config.RepoName, &config.RepoURL,
 		&config.Namespace, &config.ReleaseName, &config.Version,
-		&config.LaunchURL, &config.LaunchRedirectURL,
+		&config.LaunchURL,
 		&config.CreateNamespace, &config.PrivilegedNamespace,
 		&overrideValues, &launchUiValues,
 		&config.Icon, &config.InstallStatus,
@@ -149,10 +149,6 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 	if config.Config.LaunchURL != "" {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", launchUrl, config.Config.LaunchURL))
-	}
-	if config.Config.LaunchRedirectURL != "" {
-		params = append(params,
-			fmt.Sprintf("%s = '%s'", launchRedirectUrl, config.Config.LaunchRedirectURL))
 	}
 
 	if config.Config.AppName != "" {

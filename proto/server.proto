@@ -94,8 +94,7 @@ message GetClusterAppsRequest {
 message GetClusterAppsResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  string clusterName = 3;
-  repeated ClusterAppConfig appConfigs = 4;
+  repeated ClusterAppConfig appConfigs = 3;
 }
 
 message GetClusterAppRequest {
@@ -116,8 +115,7 @@ message GetClusterAppLaunchConfigsRequest {
 message GetClusterAppLaunchConfigsResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  string clusterName = 3;
-  repeated AppLaunchConfig appLaunchConfig = 4;
+  repeated AppLaunchConfig appLaunchConfig = 3;
 }
 
 message ClusterInfo {
@@ -131,10 +129,9 @@ message ClusterInfo {
 message AppLaunchConfig {
   string releaseName = 1;
   string category = 2;
-  string description = 3;
+  string launchUIDescription = 3;
   bytes icon = 4;
   string launchURL = 5;
-  string launchRedirectURL = 6;
 }
 
 message ClusterAttribute {
@@ -156,7 +153,7 @@ message ClusterAppConfig {
   bool privilegedNamespace = 11;
   bytes icon = 12;
   string launchURL = 13;
-  string launchRedirectURL = 14;
+  string launchUIDescription = 14;
   string installStatus = 15;
   string runtimeStatus = 16;
 }
@@ -225,7 +222,7 @@ message StoreAppConfig {
   bool privilegedNamespace = 11;
   string icon = 12;
   string launchURL = 13;
-  string launchRedirectURL = 14;
+  string launchUIDescription = 14;
 }
 
 message StoreAppValues {
