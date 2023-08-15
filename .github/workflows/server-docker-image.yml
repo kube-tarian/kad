@@ -42,7 +42,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
+          username: jebjohns
           password: ${{ secrets.GITHUB_TOKEN }}
     
       -
