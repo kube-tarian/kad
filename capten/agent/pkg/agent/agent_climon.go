@@ -56,8 +56,8 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 		PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
 		Icon:                string(request.AppConfig.Icon),
 		LaunchURL:           request.AppConfig.LaunchURL,
-		LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
-		ClusterName:         "inbuilt",
+		// LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
+		ClusterName: "inbuilt",
 	}
 	run, err := worker.SendInstallAppEvent(ctx, "install", config)
 	if err != nil {

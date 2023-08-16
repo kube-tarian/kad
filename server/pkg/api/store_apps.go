@@ -230,8 +230,8 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 		PrivilegedNamespace: config.PrivilegedNamespace,
 		Icon:                config.Icon,
 		LaunchURL:           config.LaunchUIURL,
-		LaunchRedirectURL:   config.LaunchUIRedirectURL,
-		ReleaseName:         config.ReleaseName,
+		// LaunchRedirectURL:   config.LaunchUIRedirectURL,
+		ReleaseName: config.ReleaseName,
 	}
 
 	return &serverpb.GetStoreAppValuesResponse{
@@ -279,7 +279,7 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
 			Icon:                []byte(request.AppConfig.Icon),
 			LaunchURL:           request.AppConfig.LaunchURL,
-			LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
+			// LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
 		},
 	}
 
