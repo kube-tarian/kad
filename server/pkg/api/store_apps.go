@@ -34,7 +34,6 @@ func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppR
 		PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
 		Icon:                request.AppConfig.Icon,
 		LaunchURL:           request.AppConfig.LaunchURL,
-		LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
 		OverrideValues:      request.AppValues.OverrideValues,
 		LaunchUIValues:      request.AppValues.LaunchUIValues,
 	}
@@ -77,7 +76,6 @@ func (s *Server) UpdateStoreApp(ctx context.Context, request *serverpb.UpdateSto
 		PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
 		Icon:                request.AppConfig.Icon,
 		LaunchURL:           request.AppConfig.LaunchURL,
-		LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
 		OverrideValues:      request.AppValues.OverrideValues,
 		LaunchUIValues:      request.AppValues.LaunchUIValues,
 	}
@@ -152,7 +150,6 @@ func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppR
 		PrivilegedNamespace: config.PrivilegedNamespace,
 		Icon:                config.Icon,
 		LaunchURL:           config.LaunchUIURL,
-		LaunchRedirectURL:   config.LaunchUIRedirectURL,
 		ReleaseName:         config.ReleaseName,
 	}
 
@@ -191,7 +188,6 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 			PrivilegedNamespace: config.PrivilegedNamespace,
 			Icon:                config.Icon,
 			LaunchURL:           config.LaunchUIURL,
-			LaunchRedirectURL:   config.LaunchUIRedirectURL,
 			ReleaseName:         config.ReleaseName,
 		})
 	}
