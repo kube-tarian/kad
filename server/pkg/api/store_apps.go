@@ -256,7 +256,7 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		}, nil
 	}
 
-	orgId := ""
+	orgId := "dsd"
 	clusterName := ""
 	agnetHandler := agent.NewAgentHandler(s.log, s.serverStore)
 	agent, err := agnetHandler.GetAgent(orgId, clusterName)
