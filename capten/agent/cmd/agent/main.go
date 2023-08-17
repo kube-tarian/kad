@@ -44,7 +44,7 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(s.UnaryServerInterceptor))
 	agentpb.RegisterAgentServer(grpcServer, s)
 	log.Infof("Agent listening at %v", listener.Addr())
 	reflection.Register(grpcServer)
