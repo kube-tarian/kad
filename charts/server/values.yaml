@@ -24,6 +24,10 @@ astra:
   entityName: astra
   credIdentifier: auth-token
 
+ory:
+  rootUser: "capten"
+  entityName: ory
+
 env:
   logLevel: info
   database: astra
