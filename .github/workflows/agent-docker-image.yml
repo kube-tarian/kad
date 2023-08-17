@@ -67,7 +67,7 @@ jobs:
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.run_id }}
           labels: ${{ steps.meta.outputs.labels }}
          
-         push: true
+          push: true
             
       - name: Install cosign
         uses: sigstore/cosign-installer@main
