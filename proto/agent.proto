@@ -228,7 +228,7 @@ message AppConfig {
   bool privilegedNamespace = 11;
   bytes icon = 12;
   string launchURL = 13;
-  string launchRedirectURL = 14;
+  string launchUIDescription = 14;
   string installStatus = 15;
 }
 
@@ -243,5 +243,5 @@ message AppLaunchConfig {
   string description = 3;
   bytes icon = 4;
   string launchURL = 5;
-  string launchRedirectURL = 6;
+  string launchUIDescription = 6;
 }

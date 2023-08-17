@@ -65,6 +65,10 @@ spec:
               value: "{{ .Values.cassandra.entityName }}"
             - name: CASSANDRA_DB_NAME
               value: "{{ .Values.cassandra.dbName }}"
+            - name: ORY_ENTITY_NAME
+              value: {{ .Values.ory.entityName }}
+            - name: CRED_IDENTITY
+              value: {{ .Values.ory.rootUser }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

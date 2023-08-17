@@ -7,6 +7,7 @@ import (
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/server/pkg/credential"
+	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"github.com/kube-tarian/kad/server/pkg/store"
 	"github.com/pkg/errors"
 )
@@ -16,10 +17,11 @@ type AgentHandler struct {
 	agentMutex  sync.RWMutex
 	agents      map[string]*Agent
 	serverStore store.ServerStore
+	oryClient   oryclient.OryClient
 }
 
-func NewAgentHandler(log logging.Logger, serverStore store.ServerStore) *AgentHandler {
-	return &AgentHandler{log: log, serverStore: serverStore, agents: map[string]*Agent{}}
+func NewAgentHandler(log logging.Logger, serverStore store.ServerStore, oryClient oryclient.OryClient) *AgentHandler {
+	return &AgentHandler{log: log, serverStore: serverStore, agents: map[string]*Agent{}, oryClient: oryClient}
 }
 
 func (s *AgentHandler) AddAgent(orgId, clusterID string, agentCfg *Config) error {
@@ -28,7 +30,7 @@ func (s *AgentHandler) AddAgent(orgId, clusterID string, agentCfg *Config) error
 		return nil
 	}
 
-	agent, err := NewAgent(s.log, agentCfg)
+	agent, err := NewAgent(s.log, agentCfg, s.oryClient)
 	if err != nil {
 		return err
 	}

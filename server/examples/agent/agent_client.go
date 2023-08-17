@@ -8,6 +8,7 @@ import (
 	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/server/pkg/agent"
+	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 )
 
@@ -17,8 +18,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to load agent config: ", err)
 	}
-
-	ac, err := agent.NewAgent(log, cfg)
+	oryclient, err := oryclient.NewOryClient(log)
+	if err != nil {
+		log.Fatal("OryClient initialization failed", err)
+	}
+	ac, err := agent.NewAgent(log, cfg, oryclient)
 	if err != nil {
 		log.Fatalf("failed to connect to agent: ", err)
 		return
