@@ -7,12 +7,7 @@ on:
       - 'charts/**'
     branches:
       - 'main'
-    tags:
-      - 'v*.*.*'
-  pull_request:
-    branches:
-      - 'main'
-
+      
 env:
   # Use docker.io for Docker Hub if empty
   REGISTRY: ghcr.io

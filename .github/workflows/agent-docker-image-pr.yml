@@ -1,14 +1,6 @@
 name: Agent Docker Image CI - PR
 
 on:
-  push:
-    paths-ignore:
-      - '**.md'
-      - 'charts/**'
-    branches:
-      - 'main'
-    tags:
-      - 'v*.*.*'
   pull_request:
     branches:
       - 'main'
