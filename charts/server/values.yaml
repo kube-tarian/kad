@@ -32,8 +32,8 @@ ory:
   entityName: ory
 
 oauth:
-  entityName: "CAPTEN_ENTITY"
-  identifier: "CAPTEN_IDENTIFIER"
+  entityName: "service-reg"
+  identifier: "service-reg-identifier"
 
 env:
   logLevel: info

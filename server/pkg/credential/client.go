@@ -10,8 +10,8 @@ import (
 
 const (
 	clusterCertEntity = "client-cert"
-	iamIdentifier     = "iam-identifier"
-	iamEntityName     = "iam-entity"
+	oauthIdentifier   = "service-reg-identifier"
+	oauthEntityName   = "service-reg"
 	iamClientKey      = "IAM_CLIENTID"
 	iamSecretKey      = "IAM_SECRET"
 )
@@ -110,7 +110,7 @@ func PutIamOauthCredential(ctx context.Context, clientid, secret string) error {
 	credData[iamClientKey] = clientid
 	credData[iamSecretKey] = secret
 
-	err = credWriter.PutCredential(ctx, "generic", iamEntityName, iamIdentifier, credData)
+	err = credWriter.PutCredential(ctx, "generic", oauthEntityName, oauthIdentifier, credData)
 	if err != nil {
 		return errors.WithMessage(err, "error while putting IAM credentials into the vault")
 	}
@@ -118,19 +118,19 @@ func PutIamOauthCredential(ctx context.Context, clientid, secret string) error {
 	return nil
 }
 
-func GetIamOauthCredential(ctx context.Context) (clientid, secret string, err error) {
+func GetOauthCredentialFromVault(ctx context.Context, ClientKey, SecretKey string) (clientid, secret string, err error) {
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
 		return "", "", errors.WithMessage(err, "error in initializing credential reader")
 	}
 
-	cred, err := credReader.GetCredential(ctx, "generic", iamEntityName, iamIdentifier)
+	cred, err := credReader.GetCredential(ctx, "generic", oauthEntityName, oauthIdentifier)
 	if err != nil {
-		return "", "", errors.WithMessagef(err, "error in reading credential for %s/%s", iamEntityName, iamIdentifier)
+		return "", "", errors.WithMessagef(err, "error in reading credential for %s/%s", oauthEntityName, oauthIdentifier)
 	}
 
-	clientid, ok1 := cred[iamClientKey]
-	secret, ok2 := cred[iamSecretKey]
+	clientid, ok1 := cred[ClientKey]
+	secret, ok2 := cred[SecretKey]
 
 	if !ok1 {
 		return "", "", errors.Errorf("credential with %s key is not present in generic credential type", iamClientKey)

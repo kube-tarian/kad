@@ -15,6 +15,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	iamClientKey = "IAM_CLIENTID"
+	iamSecretKey = "IAM_SECRET"
+)
+
 // Config represents the configuration settings required for
 // fetching ory entities from the vault
 // also for integration with ORY and create a OryApiClient.
@@ -135,8 +140,8 @@ func (c *Client) GetOryTokenUrl() string {
 	tokenUrl := c.oryURL + "/oauth2/token"
 	return tokenUrl
 }
-func (c *Client) GetOauthToken(ctx context.Context) (context.Context, error) {
-	clientid, secret, err := credential.GetIamOauthCredential(ctx)
+func (c *Client) GetCaptenOauthToken(ctx context.Context) (context.Context, error) {
+	clientid, secret, err := credential.GetOauthCredentialFromVault(ctx, iamClientKey, iamSecretKey)
 	if err != nil {
 		c.log.Errorf("error while getting clientid and secret from vault: %v", err.Error())
 		return ctx, err
@@ -163,7 +168,7 @@ func (c *Client) GetOauthToken(ctx context.Context) (context.Context, error) {
 }
 
 func (c *Client) UnaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-	newCtx, err := c.GetOauthToken(ctx)
+	newCtx, err := c.GetCaptenOauthToken(ctx)
 	if err != nil {
 		return err
 	}
