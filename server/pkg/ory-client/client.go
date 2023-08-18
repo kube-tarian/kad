@@ -74,6 +74,14 @@ func getOryEnv() (*Config, error) {
 	return cfg, nil
 }
 
+func getTokenEnv() (*TokenConfig, error) {
+	cfg := &TokenConfig{}
+	if err := envconfig.Process("", cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
+
 // NewOrySdk creates a oryAPIClient using the oryURL
 // and returns it
 func NewOrySdk(log logging.Logger, oryURL string) *ory.APIClient {
