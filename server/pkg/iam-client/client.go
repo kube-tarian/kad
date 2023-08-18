@@ -48,6 +48,13 @@ func (iam *IAM) GetSecrets(ctx context.Context, clientName, redirectURL string) 
 }
 
 func (iam *IAM) RegisterWithIam() error {
+	// each time whenever server starts it creates the client
+	_, _, err := credential.GetIamOauthCredential(context.Background())
+	if err == nil {
+		iam.log.Info("Registration successful, re-using older registration..")
+		return nil
+	}
+
 	conn, err := grpc.Dial(iam.URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
