@@ -34,6 +34,8 @@ ory:
 oauth:
   entityName: "service-reg"
   identifier: "service-reg-identifier"
+  clientKey: "CAPTEN_CLIENTID"
+  clientSecret: "CAPTEN_CLIENTSECRET"
 
 env:
   logLevel: info

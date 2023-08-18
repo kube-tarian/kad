@@ -4,10 +4,12 @@ import (
 	"context"
 	"strings"
 
+	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/server/pkg/credential"
 	ory "github.com/ory/client-go"
+	"github.com/pkg/errors"
 	"golang.org/x/oauth2/clientcredentials"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -34,6 +36,8 @@ type Config struct {
 type TokenConfig struct {
 	CaptenServiceEntity  string `envconfig:"CAPTEN_SERVER_ENTITY" required:"true"`
 	CaptenServiceIdenity string `envconfig:"CAPTEN_SERVER_IDENTIFIER" required:"true"`
+	CaptenClientKey      string `envconfig:"CAPTEN_CLIENT_KEY" required:"true"`
+	CaptenClientSecret   string `envconfig:"CAPTEN_CLIENT_SECRET" required:"true"`
 }
 
 type Client struct {
@@ -140,8 +144,8 @@ func (c *Client) GetOryTokenUrl() string {
 	tokenUrl := c.oryURL + "/oauth2/token"
 	return tokenUrl
 }
-func (c *Client) GetCaptenOauthToken(ctx context.Context) (context.Context, error) {
-	clientid, secret, err := credential.GetOauthCredentialFromVault(ctx, iamClientKey, iamSecretKey)
+func (c *Client) GetCaptenOauthToken(ctx context.Context, ClientKey, SecretKey string) (context.Context, error) {
+	clientid, secret, err := credential.GetOauthCredentialFromVault(ctx, ClientKey, SecretKey)
 	if err != nil {
 		c.log.Errorf("error while getting clientid and secret from vault: %v", err.Error())
 		return ctx, err
@@ -168,9 +172,61 @@ func (c *Client) GetCaptenOauthToken(ctx context.Context) (context.Context, erro
 }
 
 func (c *Client) UnaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-	newCtx, err := c.GetCaptenOauthToken(ctx)
+	newCtx, err := c.GetCaptenOauthToken(ctx, iamClientKey, iamSecretKey)
 	if err != nil {
 		return err
 	}
 	return invoker(newCtx, method, req, reply, cc, opts...)
+}
+
+func (c *Client) GetCaptenServiceRegOauthToken() (*string, error) {
+	cfg, err := getTokenEnv()
+	if err != nil {
+		return nil, err
+	}
+	data, err := GetFromVault(context.Background(), cfg.CaptenServiceEntity, cfg.CaptenServiceIdenity)
+	if err != nil {
+		return nil, err
+	}
+
+	clientid, ok := data[cfg.CaptenClientKey]
+	if !ok {
+		return nil, errors.New("capten service client id not found in vault data")
+	}
+
+	clientSecret, ok := data[cfg.CaptenClientSecret]
+	if !ok {
+		return nil, errors.New("capten service client secret not found in vault data")
+	}
+
+	ctxWithToken, err := c.GetCaptenOauthToken(context.Background(), clientid, clientSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract the token from the context
+	md, ok := metadata.FromOutgoingContext(ctxWithToken)
+	if !ok {
+		return nil, errors.New("failed to extract metadata from context")
+	}
+
+	token, ok := md["oauth_token"]
+	if !ok || len(token) == 0 {
+		return nil, errors.New("oauth_token not found in context metadata")
+	}
+
+	return &token[0], nil
+}
+
+func GetFromVault(ctx context.Context, en, iden string) (map[string]string, error) {
+	credReader, err := credentials.NewCredentialReader(ctx)
+	if err != nil {
+		err = errors.WithMessage(err, "error in initializing credential reader")
+		return nil, err
+	}
+	cred, err := credReader.GetCredential(ctx, "generic", en, iden)
+	if err != nil {
+		return nil, err
+	}
+	return cred, nil
 }
