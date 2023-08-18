@@ -20,6 +20,9 @@ cassandra:
   entityName: cassandra
   dbName: capten-server
 
+iam:
+  address: http://iam:9091
+
 astra:
   entityName: astra
   credIdentifier: auth-token

@@ -12,8 +12,7 @@ import (
 )
 
 type Config struct {
-	IamEntityName        string `envconfig:"IAM_ENTITY_NAME" required:"true"`
-	CredentialIdentifier string `envconfig:"IAM_CRED_IDENTITY" required:"true"`
+	IamURL string `envconfig:"IAM_URL" required:"true"`
 }
 
 func RegisterWithIam(log logging.Logger) error {
@@ -21,12 +20,8 @@ func RegisterWithIam(log logging.Logger) error {
 	if err != nil {
 		return err
 	}
-	serviceCredential, err := credential.GetServiceUserCredential(context.Background(),
-		cfg.IamEntityName, cfg.CredentialIdentifier)
-	if err != nil {
-		return err
-	}
-	iamURL := serviceCredential.AdditionalData["IAM_URL"]
+
+	iamURL := cfg.IamURL
 	conn, err := grpc.Dial(iamURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
