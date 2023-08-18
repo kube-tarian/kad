@@ -22,7 +22,7 @@ jobs:
     env:
       REGISTRY: ghcr.io
       GH_URL: https://github.com
-       IMAGE: ${{ github.repository }}/server
+      IMAGE: ${{ github.repository }}/server
     steps:
       - name: Checkout GitHub Action
         uses: actions/checkout@v3
