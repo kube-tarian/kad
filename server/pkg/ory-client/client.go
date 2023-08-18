@@ -23,6 +23,14 @@ type Config struct {
 	CredentialIdentifier string `envconfig:"CRED_IDENTITY" required:"true"`
 }
 
+// TokenConfig represents the configuration settings required for
+// fetching the client id and secret from the vault
+// also for fetching oauth token from IAM
+type TokenConfig struct {
+	CaptenServiceEntity  string `envconfig:"CAPTEN_SERVER_ENTITY" required:"true"`
+	CaptenServiceIdenity string `envconfig:"CAPTEN_SERVER_IDENTIFIER" required:"true"`
+}
+
 type Client struct {
 	oryPAT string
 	conn   *ory.APIClient
