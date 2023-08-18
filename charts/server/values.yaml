@@ -28,6 +28,10 @@ ory:
   rootUser: "capten"
   entityName: ory
 
+oauth:
+  entityName: "CAPTEN_ENTITY"
+  identifier: "CAPTEN_IDENTIFIER"
+
 env:
   logLevel: info
   database: astra
