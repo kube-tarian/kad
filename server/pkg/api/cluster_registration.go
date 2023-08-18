@@ -70,6 +70,36 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		}, nil
 	}
 
+	// Get installed clusterApps/LaunchUI. check if launchUI config is there then do all these.
+	// Call the IAM module to get the client ID and secret for that APP.
+	// Store the secrets on Agent Vault.
+	// trigger configureAgentSSO.
+	// Do all these on clusterUpdate, Cleanup all on the cluster Delete.?
+	// during App addon we need to perform these actions.
+	// Usually this process takes longer so UI need to enhance to show this behavior..
+	a, err := s.agentHandeler.GetAgent(orgId, clusterID)
+	if err != nil {
+		s.log.Error("failed to connect to agent", err)
+		return &serverpb.NewClusterRegistrationResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to connect to agent"}, nil
+	}
+
+	resp, err := a.GetClient().GetClusterApps(ctx, &agentpb.GetClusterAppsRequest{})
+	if err != nil || resp.Status != 0 {
+		s.log.Error("failed to get cluster application from agent", err)
+		return &serverpb.NewClusterRegistrationResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to get cluster application from agent"}, nil
+	}
+
+	for _, app := range resp.AppData {
+		err := s.configureSSOForApp(ctx, orgId, clusterID, app)
+		if err != nil {
+			s.log.Error("failed to configureSSO %s, err :%v", app.Config.AppName, err)
+			return &serverpb.NewClusterRegistrationResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
+				StatusMessage: "failed to configureSSO"}, nil
+		}
+	}
+
 	s.log.Infof("[org: %s] New cluster registration successful for %s cluster", orgId, request.ClusterName)
 	return &serverpb.NewClusterRegistrationResponse{
 		Status:        serverpb.StatusCode_OK,

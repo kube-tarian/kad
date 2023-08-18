@@ -11,47 +11,86 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-type Config struct {
+type FetchSecret interface {
+	GetSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error)
+	GetURL() string
+}
+
+type IAM struct {
+	URL                  string
+	log                  logging.Logger
 	IamEntityName        string `envconfig:"IAM_ENTITY_NAME" required:"true"`
 	CredentialIdentifier string `envconfig:"IAM_CRED_IDENTITY" required:"true"`
 }
 
-func RegisterWithIam(log logging.Logger) error {
-	cfg, err := getIamEnv()
+func (iam *IAM) GetURL() string {
+	return iam.URL
+}
+
+func (iam *IAM) GetSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error) {
+	conn, err := grpc.Dial(iam.URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return err
+		return "", "", err
 	}
-	serviceCredential, err := credential.GetServiceUserCredential(context.Background(),
-		cfg.IamEntityName, cfg.CredentialIdentifier)
-	if err != nil {
-		return err
-	}
-	iamURL := serviceCredential.AdditionalData["IAM_URL"]
-	conn, err := grpc.Dial(iamURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return err
-	}
+
+	defer conn.Close()
+
 	iamclient := iampb.NewOauthServiceClient(conn)
-	log.Info("Registering capten as client in ory through...")
+
+	res, err := iamclient.CreateOauthClient(context.Background(), &iampb.OauthClientRequest{
+		ClientName: clientName, RedirectUris: []string{redirectURL},
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	return res.ClientId, res.ClientSecret, nil
+}
+
+func (iam *IAM) RegisterWithIam() error {
+	conn, err := grpc.Dial(iam.URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return err
+	}
+
+	defer conn.Close()
+
+	iamclient := iampb.NewOauthServiceClient(conn)
+
+	iam.log.Info("Registering capten as client in ory through...")
+
 	oauthClientReq := &iampb.OauthClientRequest{
 		ClientName:   "CaptenServer",
 		RedirectUris: []string{"www.dummyurl.com"},
 	}
+
 	res, err := iamclient.CreateOauthClient(context.Background(), oauthClientReq)
 	if err != nil {
 		return err
 	}
+
 	err = credential.PutIamOauthCredential(context.Background(), res.ClientId, res.ClientSecret)
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func getIamEnv() (*Config, error) {
-	cfg := &Config{}
-	if err := envconfig.Process("", cfg); err != nil {
+func New(log logging.Logger) (*IAM, error) {
+	iam := &IAM{}
+	if err := envconfig.Process("", iam); err != nil {
 		return nil, err
 	}
-	return cfg, nil
+
+	iam.log = log
+
+	serviceCredential, err := credential.GetServiceUserCredential(context.Background(),
+		iam.IamEntityName, iam.CredentialIdentifier)
+	if err != nil {
+		return nil, err
+	}
+
+	iam.URL = serviceCredential.AdditionalData["IAM_URL"]
+	return iam, nil
 }
