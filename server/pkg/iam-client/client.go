@@ -28,11 +28,10 @@ func RegisterWithIam(log logging.Logger) error {
 	}
 	iamclient := iampb.NewOauthServiceClient(conn)
 	log.Info("Registering capten as client in ory through...")
-	oauthClientReq := &iampb.OauthClientRequest{
-		ClientName:   "CaptenServer",
-		RedirectUris: []string{"www.dummyurl.com"},
+	oauthClientReq := &iampb.CreateClientCredentialsClientRequest{
+		ClientName: "CaptenServer",
 	}
-	res, err := iamclient.CreateOauthClient(context.Background(), oauthClientReq)
+	res, err := iamclient.CreateClientCredentialsClient(context.Background(), oauthClientReq)
 	if err != nil {
 		return err
 	}
