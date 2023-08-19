@@ -13,6 +13,7 @@ import (
 
 const (
 	organizationIDAttribute = "organizationid"
+	clusterIDAttribute      = "organizationid"
 )
 
 type Server struct {

@@ -230,8 +230,7 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 		PrivilegedNamespace: config.PrivilegedNamespace,
 		Icon:                config.Icon,
 		LaunchURL:           config.LaunchUIURL,
-		// LaunchRedirectURL:   config.LaunchUIRedirectURL,
-		ReleaseName: config.ReleaseName,
+		ReleaseName:         config.ReleaseName,
 	}
 
 	return &serverpb.GetStoreAppValuesResponse{
@@ -252,8 +251,25 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		}, nil
 	}
 
-	orgId := "996162a1-1df7-44b7-8347-1cb1acc70688"
-	clusterId := "32e49adc-3c3f-11ee-84d2-1e155663be11"
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if orgId == "" {
+		s.log.Errorf("organization ID is missing in the request")
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Organization Id is missing",
+		}, nil
+	}
+	clusterId := metadataMap[clusterIDAttribute]
+	if orgId == "" {
+		s.log.Errorf("cluster Id is missing in the request")
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "cluster Id is missing",
+		}, nil
+
+	}
+
 	agnetHandler := agent.NewAgentHandler(s.log, s.serverStore, s.oryClient)
 	agent, err := agnetHandler.GetAgent(orgId, clusterId)
 	if err != nil {
@@ -279,7 +295,6 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
 			Icon:                []byte(request.AppConfig.Icon),
 			LaunchURL:           request.AppConfig.LaunchURL,
-			// LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
 		},
 	}
 
