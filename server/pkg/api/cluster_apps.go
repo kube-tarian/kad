@@ -121,53 +121,27 @@ func (s *Server) GetClusterApp(ctx context.Context, request *serverpb.GetCluster
 	return &serverpb.GetClusterAppResponse{}, nil
 }
 
-func (s *Server) configureSSOForApp(ctx context.Context, orgId, clusterID string, app *agentpb.AppData) error {
-
-	a, err := s.agentHandeler.GetAgent(orgId, clusterID)
-	if err != nil {
-		s.log.Error("failed to connect to agent", err)
-		return err
-	}
-
+func (s *Server) configureSSOForApp(ctx context.Context, agentClient agentpb.AgentClient, app *agentpb.AppLaunchConfig) error {
 	iamURL := s.iam.GetURL()
 
-	// How to identify if the same app already configured,
-	// during new apps registration of sso, we need to do avoid re-configuring already configured ones.
-	// app.Config.InstallStatus Can we make use or some other property needs to be set?
-	if app.Config.LaunchURL == "" {
+	if app.LaunchURL == "" {
 		return nil
 	}
 
-	// Invoke IAM module and get the creds.
-	// What should be the client Name unique??
-	clientID, clientSecret, err := s.iam.GetSecrets(ctx, app.Config.AppName, app.Config.LaunchURL)
+	clientID, clientSecret, err := s.iam.RegisterAppClientSecrets(ctx, app.ReleaseName, app.LaunchURL)
 	if err != nil {
-		s.log.Error("failed to get secrets from IAM for %s, err :%v", app.Config.AppName, err)
-		return err
-	}
-	// make agent specific? What values need to be populated for this.
-	// update value post discussion.
-	storeCredResp, err := a.GetClient().StoreCredential(ctx, &agentpb.StoreCredentialRequest{
-		CredEntityName: "",
-		CredentialType: "",
-		CredIdentifier: "",
-		Credential:     map[string]string{},
-	})
-
-	if err != nil || storeCredResp.Status != 0 {
-		s.log.Error("failed to storeCreds for %s, err :%v", app.Config.AppName, err)
 		return err
 	}
 
-	ssoResp, err := a.GetClient().ConfigureAppSSO(ctx, &agentpb.ConfigureAppSSORequest{
-		ReleaseName:  app.Config.ReleaseName,
+	// assume the agent store the creds as part of this.
+	ssoResp, err := agentClient.ConfigureAppSSO(ctx, &agentpb.ConfigureAppSSORequest{
+		ReleaseName:  app.ReleaseName,
 		ClientId:     clientID,
 		ClientSecret: clientSecret,
 		OAuthBaseURL: iamURL,
 	})
 
 	if err != nil || ssoResp.Status != 0 {
-		s.log.Error("failed to ConfigureAppSSO for %s, err :%v", app.Config.AppName, err)
 		return err
 	}
 

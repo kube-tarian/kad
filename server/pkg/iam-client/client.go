@@ -12,7 +12,7 @@ import (
 )
 
 type FetchSecret interface {
-	GetSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error)
+	RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error)
 	GetURL() string
 }
 
@@ -27,7 +27,7 @@ func (iam *IAM) GetURL() string {
 	return iam.URL
 }
 
-func (iam *IAM) GetSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error) {
+func (iam *IAM) RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error) {
 	conn, err := grpc.Dial(iam.URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return "", "", err

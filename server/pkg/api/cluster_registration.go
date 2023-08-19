@@ -84,17 +84,17 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 			StatusMessage: "failed to connect to agent"}, nil
 	}
 
-	resp, err := a.GetClient().GetClusterApps(ctx, &agentpb.GetClusterAppsRequest{})
+	resp, err := a.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
 	if err != nil || resp.Status != 0 {
-		s.log.Error("failed to get cluster application from agent", err)
+		s.log.Error("failed to get cluster app launches from agent", err)
 		return &serverpb.NewClusterRegistrationResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to get cluster application from agent"}, nil
 	}
 
-	for _, app := range resp.AppData {
-		err := s.configureSSOForApp(ctx, orgId, clusterID, app)
+	for _, app := range resp.LaunchConfigList {
+		err := s.configureSSOForApp(ctx, a.GetClient(), app)
 		if err != nil {
-			s.log.Error("failed to configureSSO %s, err :%v", app.Config.AppName, err)
+			s.log.Error("failed to configureSSO for org: %s, cluster: %s err :%v", orgId, clusterID, err)
 			return &serverpb.NewClusterRegistrationResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
 				StatusMessage: "failed to configureSSO"}, nil
 		}
