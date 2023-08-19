@@ -69,6 +69,16 @@ spec:
               value: {{ .Values.ory.entityName }}
             - name: CRED_IDENTITY
               value: {{ .Values.ory.rootUser }}
+            - name: CAPTEN_SERVER_ENTITY
+              value: {{.Values.oauth.entityName}}
+            - name: CAPTEN_SERVER_IDENTIFIER
+              value: {{.Values.oauth.identifier}}
+            - name: IAM_URL
+              value: {{.Values.iam.address}}
+            - name: CAPTEN_CLIENT_KEY
+              value: {{.Values.oauth.clientKey}}
+            - name: CAPTEN_CLIENT_SECRET
+              value: {{.Values.oauth.clientSecret}}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

@@ -29,8 +29,25 @@ message OauthClientRequest {
     string refresh_token = 2;
   }
 
+  message ValidateOauthTokenRequest {
+    string oauth_token =1;
+  }
+
+  message ValidateOauthTokenResponse {
+    string valid = 1;
+  }
+  message CreateClientCredentialsClientRequest {
+  string client_name = 1;
+  }
+  message CreateClientCredentialsClientResponse {
+  string client_id = 1;
+  string client_secret = 2;
+  }
+
+
   service OauthService {
     rpc CreateOauthClient(OauthClientRequest) returns (OauthClientResponse);
     rpc GetOauthToken(OauthTokenRequest) returns (OauthTokenResponse);
-
+    rpc ValidateOauthToken(ValidateOauthTokenRequest) returns (ValidateOauthTokenResponse);
+    rpc CreateClientCredentialsClient(CreateClientCredentialsClientRequest) returns (CreateClientCredentialsClientResponse);
   }

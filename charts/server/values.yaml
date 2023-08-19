@@ -20,6 +20,9 @@ cassandra:
   entityName: cassandra
   dbName: capten-server
 
+iam:
+  address: http://iam:9091
+
 astra:
   entityName: astra
   credIdentifier: auth-token
@@ -27,6 +30,12 @@ astra:
 ory:
   rootUser: "capten"
   entityName: ory
+
+oauth:
+  entityName: "service-reg"
+  identifier: "service-reg-identifier"
+  clientKey: "CAPTEN_CLIENTID"
+  clientSecret: "CAPTEN_CLIENTSECRET"
 
 env:
   logLevel: info
