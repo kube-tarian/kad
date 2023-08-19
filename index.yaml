@@ -3,6 +3,16 @@ entries:
   kad:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2023-08-19T18:35:22.980864438Z"
+    description: A Helm chart for Kubernetes
+    digest: c0baf3b93f9a45ab661e03c668e5ae38d135913466485713ec16be109f3b88db
+    name: kad
+    type: application
+    urls:
+    - https://github.com/kube-tarian/kad/releases/download/kad-0.2.2/kad-0.2.2.tgz
+    version: 0.2.2
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2023-08-13T17:36:58.029675052Z"
     description: A Helm chart for Kubernetes
     digest: 8dab198c003f9e8d21d38be1ef6cccba949cbe2b125eab3e511f4ec1e66f1038
@@ -184,6 +194,16 @@ entries:
   server:
   - apiVersion: v2
     appVersion: 1.16.0
+    created: "2023-08-19T18:35:23.096552757Z"
+    description: A Helm chart for Kubernetes
+    digest: 651fb1ad7e446fdb4822058bb5b59562abf99f79c13672fa29605ccca7fa0589
+    name: server
+    type: application
+    urls:
+    - https://github.com/kube-tarian/kad/releases/download/server-0.1.16/server-0.1.16.tgz
+    version: 0.1.16
+  - apiVersion: v2
+    appVersion: 1.16.0
     created: "2023-08-19T17:46:09.003277778Z"
     description: A Helm chart for Kubernetes
     digest: 03363d0b183225de07e12d4940736f7854083860fe4b9cc47cda531179fe411e
@@ -323,4 +343,4 @@ entries:
     urls:
     - https://github.com/kube-tarian/kad/releases/download/vaultservice-0.1.0/vaultservice-0.1.0.tgz
     version: 0.1.0
-generated: "2023-08-19T17:46:09.003527177Z"
+generated: "2023-08-19T18:35:23.096913062Z"
