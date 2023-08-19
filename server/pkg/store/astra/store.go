@@ -124,6 +124,7 @@ func appStoreConfig(handler *AstraServerStore, session *client.StargateClient) e
 			if err := handler.AddOrUpdateApp(storeAppConfig); err != nil {
 				return fmt.Errorf("failed to add app config to store, %v", err)
 			}
+
 		}
 	}
 
