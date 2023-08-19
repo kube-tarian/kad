@@ -70,7 +70,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Registering Roles and Actions in IAM failed", err)
 	}
-	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient, iam)
+	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient, IC)
 	if err != nil {
 		log.Fatal("grpc server initialization failed", err)
 	}

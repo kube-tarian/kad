@@ -25,6 +25,7 @@ type Config struct {
 }
 
 type Client struct {
+	iamURL    string
 	oryClient oryclient.OryClient
 	log       logging.Logger
 	oryURL    string
@@ -43,27 +44,25 @@ func NewClient(ory oryclient.OryClient, log logging.Logger) (*Client, error) {
 	}
 	oryPAT := serviceCredential.AdditionalData["ORY_PAT"]
 	oryURL := serviceCredential.AdditionalData["ORY_URL"]
+
+	iamCfg, err := getIamEnv()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Client{
 		oryClient: ory,
 		log:       log,
 		oryURL:    oryURL,
 		oryPAT:    oryPAT,
+		iamURL:    iamCfg.IamURL,
 	}, nil
 }
 func (c *Client) RegisterWithIam() error {
-	cfg, err := getIamEnv()
+	conn, err := grpc.Dial(c.iamURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
-
-	iamURL := cfg.IamURL
-	conn, err := grpc.Dial(iamURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return err
-	}
-
-	defer conn.Close()
-
 	iamclient := iampb.NewOauthServiceClient(conn)
 	c.log.Info("Registering capten as client in ory through...")
 	oauthClientReq := &iampb.CreateClientCredentialsClientRequest{
@@ -73,43 +72,50 @@ func (c *Client) RegisterWithIam() error {
 	if err != nil {
 		return err
 	}
-
 	err = credential.PutIamOauthCredential(context.Background(), res.ClientId, res.ClientSecret)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
-func New(log logging.Logger) (*IAM, error) {
-	iam := &IAM{}
-	if err := envconfig.Process("", iam); err != nil {
+func getIamEnv() (*Config, error) {
+	cfg := &Config{}
+	if err := envconfig.Process("", cfg); err != nil {
 		return nil, err
 	}
+	return cfg, nil
+}
 
-	iam.log = log
+func (c *Client) GetURL() string {
+	return c.oryURL
+}
 
-	serviceCredential, err := credential.GetServiceUserCredential(context.Background(),
-		iam.IamEntityName, iam.CredentialIdentifier)
+func (c *Client) RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error) {
+
+	conn, err := grpc.Dial(c.iamURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
 
-	iam.URL = serviceCredential.AdditionalData["IAM_URL"]
-	return iam, nil
+	defer conn.Close()
+
+	iamclient := iampb.NewOauthServiceClient(conn)
+
+	res, err := iamclient.CreateOauthClient(context.Background(), &iampb.OauthClientRequest{
+		ClientName: clientName, RedirectUris: []string{redirectURL},
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	return res.ClientId, res.ClientSecret, nil
 }
 
 // at the line cm.WithIamYamlPath("provide the yaml location here"),
 // the roles and actions should be added to ConfigMap
 // the the location should be provided
 func (c *Client) RegisterRolesActions() error {
-	cfg, err := getIamEnv()
-	if err != nil {
-		return err
-	}
-
-	iamURL := cfg.IamURL
 	grpcOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
@@ -117,7 +123,7 @@ func (c *Client) RegisterRolesActions() error {
 	// the order of calling the options should be same as given in example
 	iamConn := cm.NewIamConn(
 		cm.WithGrpcDialOption(grpcOpts...),
-		cm.WithIamAddress(iamURL),
+		cm.WithIamAddress(c.iamURL),
 		// TODO: here need to add the roles and actions yaml location
 		cm.WithIamYamlPath("provide the yaml location here"),
 	)
