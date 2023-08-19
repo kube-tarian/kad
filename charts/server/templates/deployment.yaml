@@ -79,6 +79,8 @@ spec:
               value: {{.Values.oauth.clientKey}}
             - name: CAPTEN_CLIENT_SECRET
               value: {{.Values.oauth.clientSecret}}
+            - name: AUTH_ENABLED
+              value: "{{ .Values.env.authEnabled }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

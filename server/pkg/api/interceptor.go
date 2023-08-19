@@ -12,7 +12,7 @@ import (
 // If the token retrieval is successful, it then tries to authorize the token using the ORY client interface.
 // If either step fails, the interceptor logs the error and returns it, halting the RPC.
 // If both steps are successful, the interceptor invokes the provided handler with the updated context and request.
-func (s Server) UnaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (s Server) AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	accessToken, err := s.oryClient.GetSessionTokenFromContext(ctx)
 	if err != nil {
 		s.log.Debugf("error occured while fetching the token from the context. Error - %s", err.Error())

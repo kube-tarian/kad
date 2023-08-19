@@ -81,7 +81,13 @@ func main() {
 		log.Fatal("failed to listen: ", err)
 	}
 
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(rpcServer.UnaryInterceptor))
+	var grpcServer *grpc.Server
+	if cfg.AuthEnabled {
+		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(rpcServer.AuthInterceptor))
+	} else {
+		grpcServer = grpc.NewServer()
+	}
+
 	serverpb.RegisterServerServer(grpcServer, rpcServer)
 	log.Info("Server listening at ", listener.Addr())
 	reflection.Register(grpcServer)
