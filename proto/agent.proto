@@ -98,6 +98,7 @@ message ApplicationInstallRequest {
   uint32 timeout = 7;
   string version = 8;
   string cluster_name = 9;
+  string values_yaml = 10;
 }
 
 message ApplicationDeleteRequest {

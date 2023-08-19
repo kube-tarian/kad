@@ -12,6 +12,7 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/pkg/errors"
 
+	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -32,9 +33,9 @@ type Agent struct {
 	log        logging.Logger
 }
 
-func NewAgent(log logging.Logger, cfg *Config) (*Agent, error) {
+func NewAgent(log logging.Logger, cfg *Config, oryclient oryclient.OryClient) (*Agent, error) {
 	log.Infof("connecting to agent %s", cfg.Address)
-	conn, err := getConnection(cfg)
+	conn, err := getConnection(cfg, oryclient)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to connect to agent")
 	}
@@ -56,24 +57,27 @@ func NewAgent(log logging.Logger, cfg *Config) (*Agent, error) {
 	}, nil
 }
 
-func getConnection(cfg *Config) (*grpc.ClientConn, error) {
+func getConnection(cfg *Config, client oryclient.OryClient) (*grpc.ClientConn, error) {
 	address, port, tls, err := parseAgentConnectionConfig(cfg.Address)
 	if err != nil {
 		return nil, err
 	}
 
+	dialOptions := []grpc.DialOption{
+		grpc.WithUnaryInterceptor(client.UnaryInterceptor),
+	}
+
 	if !tls {
-		return grpc.Dial(fmt.Sprintf("%s:%s", address, port),
-			grpc.WithTransportCredentials(insecure.NewCredentials()))
+		dialOptions = append(dialOptions, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		tlsCreds, err := loadTLSCredentials(cfg)
+		if err != nil {
+			return nil, err
+		}
+		dialOptions = append(dialOptions, grpc.WithTransportCredentials(tlsCreds))
 	}
 
-	tlsCreds, err := loadTLSCredentials(cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return grpc.Dial(fmt.Sprintf("%s:%s", address, port),
-		grpc.WithTransportCredentials(tlsCreds))
+	return grpc.Dial(fmt.Sprintf("%s:%s", address, port), dialOptions...)
 }
 
 func (a *Agent) GetClient() agentpb.AgentClient {

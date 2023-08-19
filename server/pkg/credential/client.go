@@ -10,6 +10,10 @@ import (
 
 const (
 	clusterCertEntity = "client-cert"
+	iamIdentifier     = "iam-identifier"
+	iamEntityName     = "iam-entity"
+	iamClientKey      = "IAM_CLIENTID"
+	iamSecretKey      = "IAM_SECRET"
 )
 
 func GetServiceUserCredential(ctx context.Context, svcEntity, userName string) (cred credentials.ServiceCredential, err error) {
@@ -18,7 +22,6 @@ func GetServiceUserCredential(ctx context.Context, svcEntity, userName string) (
 		err = errors.WithMessage(err, "error in initializing credential reader")
 		return
 	}
-
 	cred, err = credReader.GetServiceUserCredential(context.Background(), svcEntity, userName)
 	if err != nil {
 		err = errors.WithMessagef(err, "error in reading credential for %s/%s", svcEntity, userName)
@@ -91,4 +94,51 @@ func DeleteClusterCerts(ctx context.Context, orgID, clusterName string) (err err
 
 func getClusterCertIndentifier(orgID, clusterName string) string {
 	return fmt.Sprintf("%s:%s", orgID, clusterName)
+}
+
+func PutIamOauthCredential(ctx context.Context, clientid, secret string) error {
+	if clientid == "" || secret == "" {
+		return errors.New("either clientid or secret is missing, both are required")
+	}
+
+	credWriter, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		return errors.WithMessage(err, "error in initializing credential admin")
+	}
+
+	credData := make(map[string]string)
+	credData[iamClientKey] = clientid
+	credData[iamSecretKey] = secret
+
+	err = credWriter.PutCredential(ctx, "generic", iamEntityName, iamIdentifier, credData)
+	if err != nil {
+		return errors.WithMessage(err, "error while putting IAM credentials into the vault")
+	}
+
+	return nil
+}
+
+func GetIamOauthCredential(ctx context.Context) (clientid, secret string, err error) {
+	credReader, err := credentials.NewCredentialReader(ctx)
+	if err != nil {
+		return "", "", errors.WithMessage(err, "error in initializing credential reader")
+	}
+
+	cred, err := credReader.GetCredential(ctx, "generic", iamEntityName, iamIdentifier)
+	if err != nil {
+		return "", "", errors.WithMessagef(err, "error in reading credential for %s/%s", iamEntityName, iamIdentifier)
+	}
+
+	clientid, ok1 := cred[iamClientKey]
+	secret, ok2 := cred[iamSecretKey]
+
+	if !ok1 {
+		return "", "", errors.Errorf("credential with %s key is not present in generic credential type", iamClientKey)
+	}
+
+	if !ok2 {
+		return "", "", errors.Errorf("credential with %s key is not present in generic credential type", iamSecretKey)
+	}
+
+	return clientid, secret, nil
 }

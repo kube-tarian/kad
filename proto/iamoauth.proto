@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package OauthService;
+
+option go_package = "gitlab.com/tariandev_intelops/iam/oauthproto";
+
+
+message OauthClientRequest {
+    string client_name = 1;
+    repeated string redirect_uris = 2;
+    repeated string grant_types = 3;
+    repeated string response_types = 4;
+    string token_endpoint_auth_method = 5;
+     string scope = 6;
+  }
+
+  message OauthClientResponse {
+    string client_id = 1;
+    string client_secret = 2;
+  }
+
+  message OauthTokenRequest {
+    string client_id =1;
+    string client_secret=2;
+  }
+
+  message OauthTokenResponse {
+    string oauth_token =1;
+    string refresh_token = 2;
+  }
+
+  service OauthService {
+    rpc CreateOauthClient(OauthClientRequest) returns (OauthClientResponse);
+    rpc GetOauthToken(OauthTokenRequest) returns (OauthTokenResponse);
+
+  }
