@@ -28,12 +28,7 @@ var (
 	}
 )
 
-type AppStoreConfig struct {
-	CreateStoreApps []string `yaml:"CreateStoreApps"`
-	UpdateStoreApps []string `yaml:"UpdateStoreApps"`
-}
-
-type AppConfig struct {
+type StoreAppConfig struct {
 	Name                string                 `yaml:"Name"`
 	ChartName           string                 `yaml:"ChartName"`
 	Category            string                 `yaml:"Category"`
@@ -49,5 +44,5 @@ type AppConfig struct {
 	OverrideValues      map[string]interface{} `yaml:"OverrideValues"`
 	LaunchUIValues      map[string]interface{} `yaml:"LaunchUIValues"`
 	LaunchURL           string                 `yaml:"LaunchURL"`
-	LaunchRedirectURL   string                 `yaml:"LaunchRedirectURL"`
+	LaunchUIDescription string                 `yaml:"LaunchUIDescription"`
 }

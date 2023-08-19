@@ -23,7 +23,6 @@ service Server {
   rpc GetStoreApps (GetStoreAppsRequest) returns (GetStoreAppsResponse) {}
   rpc GetStoreAppValues(GetStoreAppValuesRequest) returns (GetStoreAppValuesResponse) {}
   rpc DeployStoreApp(DeployStoreAppRequest) returns (DeployStoreAppResponse) {}
-
 }
 
 enum StatusCode {
@@ -217,13 +216,13 @@ message GetStoreAppValuesRequest {
   string version = 2;
 }
 
-message GetStoreAppValuesResponse{
+message GetStoreAppValuesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   StoreAppConfig appConfig = 3;
 }
 
-message DeployStoreAppRequest{
+message DeployStoreAppRequest {
   StoreAppConfig appConfig = 1;
 }
 
@@ -247,6 +246,7 @@ message StoreAppConfig {
   string icon = 12;
   string launchURL = 13;
   string launchUIDescription = 14;
+  bool defualtApp = 15;
 }
 
 message StoreAppValues {

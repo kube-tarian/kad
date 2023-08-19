@@ -1,0 +1,6 @@
+enabledApps:
+- falco
+- loki
+
+disabledApps:
+- signoz

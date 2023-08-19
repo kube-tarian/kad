@@ -20,6 +20,7 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/handler"
 	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
+	storeapps "github.com/kube-tarian/kad/server/pkg/store-apps"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/store"
@@ -34,11 +35,9 @@ func main() {
 		log.Fatal("failed to load service congfig", err)
 	}
 
-	if cfg.ServiceRegister {
-		err = iamclient.RegisterService(log)
-		if err != nil {
-			log.Fatalf("%v", err)
-		}
+	err = iamclient.RegisterService(log)
+	if err != nil {
+		log.Fatalf("%v", err)
 	}
 
 	swagger, err := api.GetSwagger()
@@ -54,6 +53,11 @@ func main() {
 	err = serverStore.InitializeDb()
 	if err != nil {
 		log.Fatal("failed to initialize %s db, %w", cfg.Database, err)
+	}
+
+	err = storeapps.SyncStoreApps(log, serverStore)
+	if err != nil {
+		log.Fatalf("%v", err)
 	}
 
 	oryclient, err := oryclient.NewOryClient(log)

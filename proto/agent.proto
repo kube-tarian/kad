@@ -38,8 +38,7 @@ service Agent {
   rpc GetClusterAppConfig (GetClusterAppConfigRequest) returns (GetClusterAppConfigResponse) {}
   rpc GetClusterAppValues (GetClusterAppValuesRequest) returns (GetClusterAppValuesResponse) {}
 
-  rpc InstallApp (InstallAppRequest) returns (JobResponse) {}
-
+  rpc InstallApp (InstallAppRequest) returns (InstallAppResponse) {}
 }
 
 enum StatusCode {
@@ -203,6 +202,16 @@ message GetClusterAppValuesResponse {
   AppValues values = 3;
 }
 
+message InstallAppRequest {
+  AppConfig appConfig =1;
+}
+
+message InstallAppResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  JobResponse jobResponse = 3;
+}
+
 message SyncAppData {
   AppConfig config = 1;
   AppValues values = 2;
@@ -248,9 +257,7 @@ message AppLaunchConfig {
   string description = 3;
   bytes icon = 4;
   string launchURL = 5;
-  string launchRedirectURL = 6;
+  string launchUIDescription = 6;
 }
 
-message InstallAppRequest{
-  AppConfig appConfig =1;
-}
+

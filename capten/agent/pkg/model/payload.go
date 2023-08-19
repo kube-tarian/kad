@@ -32,7 +32,6 @@ type Request struct {
 }
 
 type AppConfig struct {
-	ClusterName         string `json:"ClusterName,omitempty"`
 	AppName             string `json:"AppName,omitempty"`
 	Version             string `json:"Version,omitempty"`
 	Category            string `json:"Category,omitempty"`
@@ -46,5 +45,5 @@ type AppConfig struct {
 	PrivilegedNamespace bool   `json:"PrivilegedNamespace"`
 	Icon                string `json:"Icon,omitempty"`
 	LaunchURL           string `json:"LaunchURL,omitempty"`
-	LaunchRedirectURL   string `json:"LaunchRedirectURL,omitempty"`
+	LaunchUIDescription string `json:"LaunchUIDescription,omitempty"`
 }
