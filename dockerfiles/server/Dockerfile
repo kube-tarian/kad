@@ -8,8 +8,8 @@ RUN CGO_ENABLED=0 go build -o ./build/server cmd/server/main.go
 
 FROM alpine:3.16
 RUN apk add --no-cache libc6-compat
-COPY --from=builder ./server/storeconfig storeconfig
 COPY --from=builder ./build/server server
+COPY --from=builder ./server/storeconfig storeconfig
 
 USER 65532:65532
 ENTRYPOINT ["./server"]
