@@ -67,8 +67,8 @@ spec:
               value: "{{ .Values.cassandra.dbName }}"
             - name: ORY_ENTITY_NAME
               value: {{ .Values.ory.entityName }}
-            - name: CRED_IDENTITY
-              value: {{ .Values.ory.rootUser }}
+            - name: ORY_CRED_IDENTIFIER
+              value: {{ .Values.ory.credIdentifier }}
             - name: CAPTEN_SERVER_ENTITY
               value: {{.Values.oauth.entityName}}
             - name: CAPTEN_SERVER_IDENTIFIER
