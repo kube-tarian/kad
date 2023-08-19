@@ -13,7 +13,7 @@ import (
 
 const (
 	organizationIDAttribute = "organizationid"
-	clusterIDAttribute      = "organizationid"
+	clusterIDAttribute      = "clusterid"
 )
 
 type Server struct {

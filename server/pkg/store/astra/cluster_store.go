@@ -56,7 +56,7 @@ func (a *AstraServerStore) GetClusterDetails(clusterID string) (*types.ClusterDe
 	q := &pb.Query{
 		Cql: fmt.Sprintf(getClusterDetailsQuery, a.keyspace, clusterID),
 	}
-	fmt.Println("Query =>  ", q)
+
 	response, err := a.c.Session().ExecuteQuery(q)
 	if err != nil {
 		return nil, err

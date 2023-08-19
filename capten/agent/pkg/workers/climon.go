@@ -139,7 +139,6 @@ func (c *Climon) SendInstallAppEvent(ctx context.Context, action string, payload
 		return nil, err
 	}
 
-	log.Printf("payload : %v", string(payloadJSON))
 	we, err := c.client.TemporalClient.ExecuteWorkflow(context.Background(), options, DeployWorkflowName, action, json.RawMessage(payloadJSON))
 	if err != nil {
 		log.Println("error starting workflow", err)
