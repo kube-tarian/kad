@@ -8,7 +8,7 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/activities"
 	"github.com/kube-tarian/kad/capten/model"
-	"go.temporal.io/sdk/internal"
+	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
@@ -18,12 +18,11 @@ func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (mod
 	logger := logging.NewLogger()
 
 	ao := workflow.ActivityOptions{
-		ScheduleToCloseTimeout: 600 * time.Second, // 10 minutes to close out the activity.
-		// just try the workflow executin once.
-		RetryPolicy: &internal.RetryPolicy{MaximumAttempts: 1},
+		ScheduleToCloseTimeout: 600 * time.Second,
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, ao)
+	ctx = workflow.WithRetryPolicy(ctx, temporal.RetryPolicy{MaximumAttempts: 1})
 
 	execution := workflow.GetInfo(ctx).WorkflowExecution
 	logger.Infof("execution: %+v\n", execution)
