@@ -51,6 +51,8 @@ type OryClient interface {
 	GetSessionTokenFromContext(ctx context.Context) (string, error)
 	Authorize(ctx context.Context, accessToken string) (context.Context, error)
 	UnaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error
+	GetCaptenServiceRegOauthToken() (*string, error)
+	GetOryEnv() (*Config, error)
 }
 
 // NewOryClient returns a OryClient interface
@@ -75,6 +77,13 @@ func NewOryClient(log logging.Logger) (OryClient, error) {
 	}, nil
 }
 
+func (c *Client) GetOryEnv() (*Config, error) {
+	cfg := &Config{}
+	if err := envconfig.Process("", cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
 func getOryEnv() (*Config, error) {
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
@@ -82,7 +91,6 @@ func getOryEnv() (*Config, error) {
 	}
 	return cfg, nil
 }
-
 func getTokenEnv() (*TokenConfig, error) {
 	cfg := &TokenConfig{}
 	if err := envconfig.Process("", cfg); err != nil {
