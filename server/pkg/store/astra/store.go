@@ -78,7 +78,7 @@ func appStoreConfig(handler *AstraServerStore, session *client.StargateClient) e
 		}
 
 		for _, v := range append(config.CreateStoreApps, config.UpdateStoreApps...) {
-			appData, err := os.ReadFile(cfg.AppStorConfig + "/" + v)
+			appData, err := os.ReadFile(cfg.AppStorConfig + "/" + v + ".yaml")
 			if err != nil {
 				return fmt.Errorf("failed to read app store config file: %w. App name - %s", err, v)
 			}
