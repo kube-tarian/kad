@@ -254,7 +254,7 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 
 	orgId := "996162a1-1df7-44b7-8347-1cb1acc70688"
 	clusterId := "32e49adc-3c3f-11ee-84d2-1e155663be11"
-	agnetHandler := agent.NewAgentHandler(s.log, s.serverStore)
+	agnetHandler := agent.NewAgentHandler(s.log, s.serverStore, s.oryClient)
 	agent, err := agnetHandler.GetAgent(orgId, clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
