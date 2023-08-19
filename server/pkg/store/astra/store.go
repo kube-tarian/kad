@@ -1,6 +1,7 @@
 package astra
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -105,11 +106,20 @@ func appStoreConfig(handler *AstraServerStore, session *client.StargateClient) e
 				CreateNamespace:     appConfig.CreateNamespace,
 				PrivilegedNamespace: appConfig.PrivilegedNamespace,
 				Icon:                appConfig.Icon,
-				OverrideValues:      string(appConfig.OverrideValues),
-				LaunchUIValues:      string(appConfig.LaunchUIValues),
 				LaunchURL:           appConfig.LaunchURL,
 				LaunchRedirectURL:   appConfig.LaunchRedirectURL,
 			}
+
+			overrideValuesJSON, err := json.Marshal(appConfig.OverrideValues)
+			if err != nil {
+				return fmt.Errorf("failed to marshall app store config file: %w. App name - %s", err, v)
+			}
+			storeAppConfig.OverrideValues = string(overrideValuesJSON)
+			launchUIValues, err := json.Marshal(appConfig.LaunchUIValues)
+			if err != nil {
+				return fmt.Errorf("failed to marshall app store config file: %w. App name - %s", err, v)
+			}
+			storeAppConfig.LaunchUIValues = string(launchUIValues)
 
 			if err := handler.AddOrUpdateApp(storeAppConfig); err != nil {
 				return fmt.Errorf("failed to add app config to store, %v", err)
