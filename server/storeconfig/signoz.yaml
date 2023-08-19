@@ -1,0 +1,33 @@
+Name: "signoz"
+ChartName: "tools/signoz"
+Category: "Observability"
+Description: ""
+RepoName: "tools"
+RepoURL: "https://kube-tarian.github.io/helmrepo-supporting-tools"
+Namespace: "observability"
+ReleaseName: "signoz"
+Version: "0.0.1"
+CreateNamespace: true
+OverrideValues:
+  frontend:
+    ingress:
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod-cluster
+        kubernetes.io/force-ssl-redirect: "true"
+        kubernetes.io/ssl-redirect: "true"
+        kubernetes.io/tls-acme: "true"
+      enabled": true
+      hosts:
+      - host: "signoz.{{.DomainName}}"
+        paths:
+        - path: /
+          pathType: ImplementationSpecific
+          port: 3301
+      tls:
+      - hosts:
+        - "signoz.{{.DomainName}}"
+        secretName: cert-signoz
+  otelCollector:
+    ingressRoute:
+      enabled: true
+      host: "otelcollector.{{.DomainName}}" 

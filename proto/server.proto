@@ -21,6 +21,9 @@ service Server {
   rpc DeleteStoreApp (DeleteStoreAppRequest) returns (DeleteStoreAppResponse){}
   rpc GetStoreApp (GetStoreAppRequest) returns (GetStoreAppResponse) {}
   rpc GetStoreApps (GetStoreAppsRequest) returns (GetStoreAppsResponse) {}
+  rpc GetStoreAppValues(GetStoreAppValuesRequest) returns (GetStoreAppValuesResponse) {}
+  rpc DeployStoreApp(DeployStoreAppRequest) returns (DeployStoreAppResponse) {}
+
 }
 
 enum StatusCode {
@@ -209,6 +212,26 @@ message GetStoreAppsResponse {
   repeated StoreAppConfig appConfigs = 3;
 }
 
+message GetStoreAppValuesRequest {
+  string appName = 1;
+  string version = 2;
+}
+
+message GetStoreAppValuesResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+  StoreAppConfig appConfig = 3;
+}
+
+message DeployStoreAppRequest{
+  StoreAppConfig appConfig = 1;
+}
+
+message DeployStoreAppResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
 message StoreAppConfig {
   string releaseName = 1;
   string appName = 2;
@@ -230,3 +253,4 @@ message StoreAppValues {
   string overrideValues = 1;
   string launchUIValues = 2;
 }
+
