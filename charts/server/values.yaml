@@ -12,7 +12,7 @@ image:
 vault:
   address: http://vault:8200
   role: vault-role-capten-server
-  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-read,vault-policy-generic-cred-read"
+  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-read,vault-policy-generic-cred-admin"
 
 cassandra:
   dbAddresses: cassandra.cassandra.svc.cluster.local
@@ -21,14 +21,14 @@ cassandra:
   dbName: capten-server
 
 iam:
-  address: http://iam:9091
+  address: iam:9091
 
 astra:
   entityName: astra
   credIdentifier: auth-token
 
 ory:
-  rootUser: "capten"
+  credIdentifier: capten
   entityName: ory
 
 oauth:

@@ -34,6 +34,13 @@ func main() {
 		log.Fatal("failed to load service congfig", err)
 	}
 
+	if cfg.ServiceRegister {
+		err = iamclient.RegisterService(log)
+		if err != nil {
+			log.Fatalf("%v", err)
+		}
+	}
+
 	swagger, err := api.GetSwagger()
 	if err != nil {
 		log.Fatal("Failed to get the swagger", err)
@@ -58,18 +65,7 @@ func main() {
 	if err != nil {
 		log.Fatal("APIHandler initialization failed", err)
 	}
-	IC, err := iamclient.NewClient(oryclient, log)
-	if err != nil {
-		log.Fatal("Error occured while created IAM client", err)
-	}
-	err = IC.RegisterWithIam()
-	if err != nil {
-		log.Fatal("Registering capten server as oauth client through IAM failed", err)
-	}
-	err = IC.RegisterRolesActions()
-	if err != nil {
-		log.Fatal("Registering Roles and Actions in IAM failed", err)
-	}
+
 	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient)
 	if err != nil {
 		log.Fatal("grpc server initialization failed", err)

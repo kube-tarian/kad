@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: vault-role-capten-server
+  name: {{ .Values.vault.role | quote }}
 data:
-  roleName: vault-role-capten-server
+  roleName: {{ .Values.vault.role | quote }}
   policyNames: {{ .Values.vault.policyNames | quote }}
   servieAccounts: {{ include "server.serviceAccountName" . }}
   servieAccountNameSpaces: {{ .Release.Namespace }}

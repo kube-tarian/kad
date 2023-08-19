@@ -12,6 +12,7 @@ type ServiceConfig struct {
 	Database           string `envconfig:"DATABASE" default:"astra"`
 	AppStorConfig      string `envconfig:"APP_STORE_CONFIG" default:"./storeconfig"`
 	ReadAppStoreConfig bool   `envconfig:"READ_APP_STORE_CONFIG" default:"true"`
+  ServiceRegister bool   `envconfig:"SERVICE_REGISTER" default:"false"`
 }
 
 func GetServiceConfig() (ServiceConfig, error) {

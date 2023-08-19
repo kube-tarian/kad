@@ -27,7 +27,7 @@ const (
 // also for integration with ORY and create a OryApiClient.
 type Config struct {
 	OryEntityName        string `envconfig:"ORY_ENTITY_NAME" required:"true"`
-	CredentialIdentifier string `envconfig:"CRED_IDENTITY" required:"true"`
+	CredentialIdentifier string `envconfig:"ORY_CRED_IDENTIFIER" required:"true"`
 }
 
 // TokenConfig represents the configuration settings required for
