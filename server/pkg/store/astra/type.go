@@ -8,6 +8,10 @@ const (
 	createAppConfigTableQuery       = "CREATE TABLE IF NOT EXISTS %s.app_config(id TEXT, created_time timestamp, last_updated_time timestamp, last_updated_user TEXT, name TEXT, chart_name TEXT, repo_name TEXT, release_name TEXT, repo_url TEXT, namespace TEXT, version TEXT, create_namespace BOOLEAN, privileged_namespace BOOLEAN, launch_ui_url TEXT, launch_ui_redirect_url TEXT, category TEXT, icon TEXT, description TEXT, launch_ui_values TEXT, override_values TEXT, PRIMARY KEY (name, version));"
 )
 
+const (
+	appStoreConfigFileName string = "storeconfig.yaml"
+)
+
 var (
 	UuidSetSpec = &pb.TypeSpec{
 		Spec: &pb.TypeSpec_Set_{
@@ -21,3 +25,8 @@ var (
 		},
 	}
 )
+
+type AppStoreConfig struct {
+	CreateStoreApps []string `yaml:"CreateStoreApps"`
+	UpdateStoreApps []string `yaml:"UpdateStoreApps"`
+}

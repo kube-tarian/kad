@@ -2,7 +2,6 @@ package astra
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,9 +24,6 @@ func (a *AstraServerStore) AddOrUpdateApp(config *types.StoreAppConfig) error {
 	if err != nil {
 		return fmt.Errorf("failed to check app config existance : %w", err)
 	}
-
-	fmt.Println("inside AddOrUpdateApp")
-	log.Print("inside AddOrUpdateApp")
 
 	var query *pb.Query
 	if appExists {
