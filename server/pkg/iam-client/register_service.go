@@ -19,7 +19,7 @@ func RegisterService(log logging.Logger) error {
 		return err
 	}
 
-	if cfg.ServiceRegister {
+	if !cfg.ServiceRegister {
 		log.Infof("service registration disabled")
 		return nil
 	}

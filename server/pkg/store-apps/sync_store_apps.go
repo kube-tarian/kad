@@ -15,7 +15,7 @@ import (
 
 type Config struct {
 	AppStoreAppConfigPath string `envconfig:"APP_STORE_APP_CONFIG_PATH" default:"/store-apps/conf"`
-	ReadAppStoreConfig    bool   `envconfig:"READ_APP_STORE_CONFIG" default:"true"`
+	SyncAppStore          bool   `envconfig:"SYNC_APP_STORE" default:"false"`
 	AppStoreConfigFile    string `envconfig:"APP_STORE_CONFIG_FILE" default:"/store-apps/app_list.yaml"`
 }
 
@@ -30,7 +30,7 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 		return err
 	}
 
-	if !cfg.ReadAppStoreConfig {
+	if !cfg.SyncAppStore {
 		log.Info("app store config synch disabled")
 		return nil
 	}
