@@ -83,16 +83,35 @@ func appStoreConfig(handler *AstraServerStore, session *client.StargateClient) e
 				return fmt.Errorf("failed to read app store config file: %w. App name - %s", err, v)
 			}
 
-			var appConfig types.StoreAppConfig
+			var appConfig AppConfig
 			if err := yaml.Unmarshal(appData, &appConfig); err != nil {
 				return fmt.Errorf("failed to unmarshall app store config file: %w. App name - %s", err, v)
 			}
 
-			if appConfig.AppName == "" || appConfig.Version == "" {
+			if appConfig.Name == "" || appConfig.Version == "" {
 				return fmt.Errorf("failed to add app config to store, %v", "App name/version is missing")
 			}
 
-			if err := handler.AddOrUpdateApp(&appConfig); err != nil {
+			storeAppConfig := &types.StoreAppConfig{
+				AppName:             appConfig.Name,
+				Version:             appConfig.Version,
+				Category:            appConfig.Category,
+				Description:         appConfig.Description,
+				ChartName:           appConfig.ChartName,
+				RepoName:            appConfig.RepoName,
+				ReleaseName:         appConfig.ReleaseName,
+				RepoURL:             appConfig.RepoURL,
+				Namespace:           appConfig.Namespace,
+				CreateNamespace:     appConfig.CreateNamespace,
+				PrivilegedNamespace: appConfig.PrivilegedNamespace,
+				Icon:                appConfig.Icon,
+				OverrideValues:      string(appConfig.OverrideValues),
+				LaunchUIValues:      string(appConfig.LaunchUIValues),
+				LaunchURL:           appConfig.LaunchURL,
+				LaunchRedirectURL:   appConfig.LaunchRedirectURL,
+			}
+
+			if err := handler.AddOrUpdateApp(storeAppConfig); err != nil {
 				return fmt.Errorf("failed to add app config to store, %v", err)
 			}
 		}

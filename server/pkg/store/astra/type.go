@@ -1,6 +1,10 @@
 package astra
 
-import pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
+import (
+	"encoding/json"
+
+	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
+)
 
 const (
 	createKeyspaceQuery             = "CREATE KEYSPACE IF NOT EXISTS %s WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor' : 1};"
@@ -29,4 +33,23 @@ var (
 type AppStoreConfig struct {
 	CreateStoreApps []string `yaml:"CreateStoreApps"`
 	UpdateStoreApps []string `yaml:"UpdateStoreApps"`
+}
+
+type AppConfig struct {
+	Name                string          `yaml:"Name"`
+	ChartName           string          `yaml:"ChartName"`
+	Category            string          `yaml:"Category"`
+	Description         string          `yaml:"Description"`
+	RepoName            string          `yaml:"RepoName"`
+	RepoURL             string          `yaml:"RepoURL"`
+	Namespace           string          `yaml:"Namespace"`
+	ReleaseName         string          `yaml:"ReleaseName"`
+	Version             string          `yaml:"Version"`
+	Icon                string          `yaml:"Icon"`
+	CreateNamespace     bool            `yaml:"CreateNamespace"`
+	PrivilegedNamespace bool            `yaml:"PrivilegedNamespace"`
+	OverrideValues      json.RawMessage `yaml:"OverrideValues"`
+	LaunchUIValues      json.RawMessage `yaml:"LaunchUIValues"`
+	LaunchURL           string          `yaml:"LaunchURL"`
+	LaunchRedirectURL   string          `yaml:"LaunchRedirectURL"`
 }
