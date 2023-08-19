@@ -58,12 +58,18 @@ func main() {
 	if err != nil {
 		log.Fatal("APIHandler initialization failed", err)
 	}
-
-	err = iamclient.RegisterWithIam(log)
+	IC, err := iamclient.NewClient(oryclient, log)
+	if err != nil {
+		log.Fatal("Error occured while created IAM client", err)
+	}
+	err = IC.RegisterWithIam()
 	if err != nil {
 		log.Fatal("Registering capten server as oauth client through IAM failed", err)
 	}
-
+	err = IC.RegisterRolesActions()
+	if err != nil {
+		log.Fatal("Registering Roles and Actions in IAM failed", err)
+	}
 	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient)
 	if err != nil {
 		log.Fatal("grpc server initialization failed", err)
