@@ -156,6 +156,7 @@ message ClusterAppConfig {
   string launchUIDescription = 14;
   string installStatus = 15;
   string runtimeStatus = 16;
+  bool defualtApp = 17;
 }
 
 message AddStoreAppRequest {
