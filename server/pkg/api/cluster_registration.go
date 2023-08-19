@@ -85,7 +85,7 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 	}
 
 	for _, app := range resp.LaunchConfigList {
-		err := s.configureSSOForApp(ctx, a.GetClient(), app)
+		err := s.configureSSOForApp(ctx, clusterID, a.GetClient(), app)
 		if err != nil {
 			s.log.Error("failed to configureSSO for org: %s, cluster: %s err :%v", orgId, clusterID, err)
 			return &serverpb.NewClusterRegistrationResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,

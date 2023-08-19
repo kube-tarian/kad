@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
@@ -121,21 +122,24 @@ func (s *Server) GetClusterApp(ctx context.Context, request *serverpb.GetCluster
 	return &serverpb.GetClusterAppResponse{}, nil
 }
 
-func (s *Server) configureSSOForApp(ctx context.Context, agentClient agentpb.AgentClient, app *agentpb.AppLaunchConfig) error {
+func (s *Server) configureSSOForApp(ctx context.Context, clusterID string, agentClient agentpb.AgentClient, app *agentpb.AppLaunchConfig) error {
 	iamURL := s.iam.GetURL()
 
 	if app.LaunchURL == "" {
 		return nil
 	}
 
-	clientID, clientSecret, err := s.iam.RegisterAppClientSecrets(ctx, app.ReleaseName, app.LaunchURL)
+	// get unique appName
+	appName := fmt.Sprintf("%s-%s", clusterID, app.ReleaseName)
+
+	clientID, clientSecret, err := s.iam.RegisterAppClientSecrets(ctx, appName, app.LaunchURL)
 	if err != nil {
 		return err
 	}
 
 	// assume the agent store the creds as part of this.
 	ssoResp, err := agentClient.ConfigureAppSSO(ctx, &agentpb.ConfigureAppSSORequest{
-		ReleaseName:  app.ReleaseName,
+		ReleaseName:  appName,
 		ClientId:     clientID,
 		ClientSecret: clientSecret,
 		OAuthBaseURL: iamURL,
