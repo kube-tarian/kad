@@ -38,8 +38,8 @@ func (a *Agent) ClimonAppDelete(ctx context.Context, request *agentpb.ClimonDele
 	return prepareJobResponse(run, worker.GetWorkflowName()), err
 }
 
-func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppRequest) (*agentpb.JobResponse, error) {
-	a.log.Infof("Recieved App Install event %+v", request)
+func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppRequest) (*agentpb.InstallAppResponse, error) {
+	a.log.Infof("Recieved App Install request %+v", request)
 	worker := workers.NewClimon(a.tc, a.log)
 
 	config := &model.AppConfig{
@@ -56,13 +56,19 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 		PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
 		Icon:                string(request.AppConfig.Icon),
 		LaunchURL:           request.AppConfig.LaunchURL,
-		// LaunchRedirectURL:   request.AppConfig.LaunchRedirectURL,
-		ClusterName: "inbuilt",
+		LaunchUIDescription: request.AppConfig.LaunchUIDescription,
 	}
 	run, err := worker.SendInstallAppEvent(ctx, "install", config)
 	if err != nil {
-		return &agentpb.JobResponse{}, err
+		return &agentpb.InstallAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Internall error in create install app job",
+		}, err
 	}
 
-	return prepareJobResponse(run, worker.GetWorkflowName()), err
+	return &agentpb.InstallAppResponse{
+		Status:        agentpb.StatusCode_OK,
+		StatusMessage: "success",
+		JobResponse:   &agentpb.JobResponse{Id: run.GetID(), RunID: run.GetRunID(), WorkflowName: worker.GetWorkflowName()},
+	}, nil
 }

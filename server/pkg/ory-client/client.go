@@ -52,15 +52,17 @@ type OryClient interface {
 	Authorize(ctx context.Context, accessToken string) (context.Context, error)
 	UnaryInterceptor(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error
 	GetCaptenServiceRegOauthToken() (*string, error)
-	GetOryEnv() (*Config, error)
+	GetURL() string
+	GetPAT() string
 }
 
 // NewOryClient returns a OryClient interface
 func NewOryClient(log logging.Logger) (OryClient, error) {
-	cfg, err := getOryEnv()
-	if err != nil {
+	cfg := &Config{}
+	if err := envconfig.Process("", cfg); err != nil {
 		return nil, err
 	}
+
 	serviceCredential, err := credential.GetServiceUserCredential(context.Background(),
 		cfg.OryEntityName, cfg.CredentialIdentifier)
 	if err != nil {
@@ -77,20 +79,14 @@ func NewOryClient(log logging.Logger) (OryClient, error) {
 	}, nil
 }
 
-func (c *Client) GetOryEnv() (*Config, error) {
-	cfg := &Config{}
-	if err := envconfig.Process("", cfg); err != nil {
-		return nil, err
-	}
-	return cfg, nil
+func (c *Client) GetURL() string {
+	return c.oryURL
 }
-func getOryEnv() (*Config, error) {
-	cfg := &Config{}
-	if err := envconfig.Process("", cfg); err != nil {
-		return nil, err
-	}
-	return cfg, nil
+
+func (c *Client) GetPAT() string {
+	return c.oryPAT
 }
+
 func getTokenEnv() (*TokenConfig, error) {
 	cfg := &TokenConfig{}
 	if err := envconfig.Process("", cfg); err != nil {

@@ -2,17 +2,34 @@ package iamclient
 
 import (
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"github.com/pkg/errors"
 )
 
+type Config struct {
+	IAMURL          string `envconfig:"IAM_URL" required:"true"`
+	ServiceRegister bool   `envconfig:"SERVICE_REGISTER" default:"false"`
+	ServiceName     string `envconfig:"SERVICE_NAME" default:"capten-server"`
+}
+
 func RegisterService(log logging.Logger) error {
+	cfg := Config{}
+	if err := envconfig.Process("", &cfg); err != nil {
+		return err
+	}
+
+	if cfg.ServiceRegister {
+		log.Infof("service registration disabled")
+		return nil
+	}
+
 	oryclient, err := oryclient.NewOryClient(log)
 	if err != nil {
 		return errors.WithMessage(err, "OryClient initialization failed")
 	}
 
-	IC, err := NewClient(oryclient, log)
+	IC, err := NewClient(log, oryclient, cfg)
 	if err != nil {
 		return errors.WithMessage(err, "Error occured while created IAM client")
 	}
