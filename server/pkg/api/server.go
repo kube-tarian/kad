@@ -26,7 +26,7 @@ type Server struct {
 	iam           iamclient.SecretManager
 }
 
-func NewServer(log logging.Logger, serverStore store.ServerStore, oryClient oryclient.OryClient, iam iamclient.FetchSecret) (*Server, error) {
+func NewServer(log logging.Logger, serverStore store.ServerStore, oryClient oryclient.OryClient, iam iamclient.SecretManager) (*Server, error) {
 	return &Server{
 		serverStore:   serverStore,
 		agentHandeler: agent.NewAgentHandler(log, serverStore, oryClient),

@@ -13,13 +13,13 @@ type Config struct {
 	ServiceName     string `envconfig:"SERVICE_NAME" default:"capten-server"`
 }
 
-func NewConfig() (*Config, error) {
+func NewConfig() (Config, error) {
 	cfg := Config{}
 	if err := envconfig.Process("", &cfg); err != nil {
-		return nil, err
+		return cfg, err
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }
 
 func RegisterService(log logging.Logger) error {

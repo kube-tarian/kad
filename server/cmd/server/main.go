@@ -75,7 +75,7 @@ func main() {
 		log.Fatal("faield to get the iam config", err)
 	}
 
-	iamClient, err := iamclient.NewClient(log, oryclient, *iamCfg)
+	iamClient, err := iamclient.NewClient(log, oryclient, iamCfg)
 	if err != nil {
 		log.Fatal("faield to initialize the iam client", err)
 	}
