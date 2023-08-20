@@ -10,7 +10,7 @@ import (
 
 type ServerStore interface {
 	InitializeDb() error
-	GetClusterDetails(clusterID string) (*types.ClusterDetail, error)
+	GetClusterDetails(clusterID string) (*types.ClusterDetails, error)
 	GetClusters(orgID string) ([]types.ClusterDetails, error)
 	AddCluster(orgID, clusterID, clusterName, endpoint string) error
 	UpdateCluster(orgID, clusterID, clusterName, endpoint string) error

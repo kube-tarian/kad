@@ -24,7 +24,7 @@ func (a *APIHandler) PostAgentDeploy(c *gin.Context) {
 		return
 	}
 
-	agent, err := a.agentHandler.GetAgent("", "")
+	agent, err := a.agentHandler.GetAgent("")
 	if err != nil {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
@@ -69,7 +69,7 @@ func (a *APIHandler) DeleteAgentDeploy(c *gin.Context) {
 		return
 	}
 
-	agent, err := a.agentHandler.GetAgent("", "")
+	agent, err := a.agentHandler.GetAgent("")
 	if err != nil {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
