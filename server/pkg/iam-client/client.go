@@ -14,6 +14,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type SecretManager interface {
+	RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error)
+	GetURL() string
+}
+
 type Client struct {
 	oryClient oryclient.OryClient
 	log       logging.Logger
@@ -86,4 +91,29 @@ func (c *Client) RegisterRolesActions() error {
 		return err
 	}
 	return nil
+}
+
+func (c *Client) GetURL() string {
+	return c.oryClient.GetURL()
+}
+
+func (c *Client) RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error) {
+
+	conn, err := grpc.Dial(c.cfg.IAMURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return "", "", err
+	}
+
+	defer conn.Close()
+
+	iamclient := iampb.NewOauthServiceClient(conn)
+
+	res, err := iamclient.CreateOauthClient(context.Background(), &iampb.OauthClientRequest{
+		ClientName: clientName, RedirectUris: []string{redirectURL},
+	})
+	if err != nil {
+		return "", "", err
+	}
+
+	return res.ClientId, res.ClientSecret, nil
 }

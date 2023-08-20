@@ -70,7 +70,16 @@ func main() {
 		log.Fatal("APIHandler initialization failed", err)
 	}
 
-	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient)
+	iamCfg, err := iamclient.NewConfig()
+	if err != nil {
+		log.Fatal("faield to get the iam config", err)
+	}
+
+	iamClient, err := iamclient.NewClient(log, oryclient, iamCfg)
+	if err != nil {
+		log.Fatal("faield to initialize the iam client", err)
+	}
+	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient, iamClient)
 	if err != nil {
 		log.Fatal("grpc server initialization failed", err)
 	}
