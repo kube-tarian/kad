@@ -79,7 +79,7 @@ func main() {
 	if err != nil {
 		log.Fatal("faield to initialize the iam client", err)
 	}
-	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient, iamClient)
+	rpcServer, err := rpcapi.NewServer(log, cfg, serverStore, oryclient, iamClient)
 	if err != nil {
 		log.Fatal("grpc server initialization failed", err)
 	}
