@@ -35,7 +35,6 @@ securityContext: {}
 
 env:
   logLevel: info
-  authEnabled: false
 
 service:
   type: ClusterIP
@@ -61,6 +60,10 @@ ingressroute:
 
 cert:
   secretName: "kad-agent-cert"
+
+extraEnv:
+  - name: AUTH_ENABLED
+    value: false
 
 ingress:
   enabled: false
