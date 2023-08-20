@@ -45,7 +45,7 @@ func (a *APIHandler) PostAgentEndpoint(c *gin.Context) {
 		return
 	}
 
-	err = credential.PutClusterCerts(c, customerId, customerId,
+	err = credential.PutClusterCerts(c, customerId,
 		fileContentsMap[types.ClientCertChainFileName],
 		fileContentsMap[types.ClientKeyFileName],
 		fileContentsMap[types.ClientCertFileName],

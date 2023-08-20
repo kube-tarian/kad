@@ -38,7 +38,7 @@ func TestAPIHandler_Close(t *testing.T) {
 			a := &APIHandler{
 				agentHandler: agent.NewAgentHandler(logging.NewLogger(), nil, nil),
 			}
-			a.agentHandler.RemoveAgent(tt.args.customerId, "")
+			a.agentHandler.RemoveAgent(tt.args.customerId)
 		})
 	}
 }
@@ -83,7 +83,7 @@ func TestAPIHandler_ConnectClient(t *testing.T) {
 			a := &APIHandler{
 				agentHandler: agent.NewAgentHandler(logging.NewLogger(), nil, nil),
 			}
-			if _, err := a.agentHandler.GetAgent(tt.args.customerId, ""); (err != nil) != tt.wantErr {
+			if _, err := a.agentHandler.GetAgent(tt.args.customerId); (err != nil) != tt.wantErr {
 				t.Errorf("ConnectClient() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -278,7 +278,7 @@ func TestAPIHandler_GetClient(t *testing.T) {
 			a := &APIHandler{
 				agentHandler: agent.NewAgentHandler(logging.NewLogger(), nil, nil),
 			}
-			if got, err := a.agentHandler.GetAgent(tt.args.customerId, ""); err != nil && !reflect.DeepEqual(got, tt.want) {
+			if got, err := a.agentHandler.GetAgent(tt.args.customerId); err != nil && !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetClient() = %v, want %v", got, tt.want)
 			}
 		})

@@ -2,7 +2,6 @@ package credential
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/intelops/go-common/credentials"
 	"github.com/pkg/errors"
@@ -29,17 +28,16 @@ func GetServiceUserCredential(ctx context.Context, svcEntity, userName string) (
 	return
 }
 
-func GetClusterCerts(ctx context.Context, orgID, clusterName string) (cred credentials.CertificateData, err error) {
+func GetClusterCerts(ctx context.Context, clusterID string) (cred credentials.CertificateData, err error) {
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
 		err = errors.WithMessage(err, "error in initializing credential reader")
 		return
 	}
 
-	certIndetifier := getClusterCertIndentifier(orgID, clusterName)
-	cred, err = credReader.GetCertificateData(context.Background(), clusterCertEntity, certIndetifier)
+	cred, err = credReader.GetCertificateData(context.Background(), clusterCertEntity, clusterID)
 	if err != nil {
-		err = errors.WithMessagef(err, "error in reading cert for %s/%s", clusterCertEntity, certIndetifier)
+		err = errors.WithMessagef(err, "error in reading cert for %s/%s", clusterCertEntity, clusterID)
 	}
 	return
 }
@@ -58,42 +56,36 @@ func GetGenericCredential(ctx context.Context, entityName, credIndentifer string
 	return
 }
 
-func PutClusterCerts(ctx context.Context, orgID, clusterName, clientCAChainData, clientKeyData, clientCertData string) error {
+func PutClusterCerts(ctx context.Context, clusterID, clientCAChainData, clientKeyData, clientCertData string) error {
 	credReader, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		return errors.WithMessage(err, "error in initializing credential admin")
 	}
 
-	certIndetifier := getClusterCertIndentifier(orgID, clusterName)
-	err = credReader.PutCertificateData(context.Background(), clusterCertEntity, certIndetifier,
+	err = credReader.PutCertificateData(context.Background(), clusterCertEntity, clusterID,
 		credentials.CertificateData{
 			CACert: clientCAChainData,
 			Key:    clientKeyData,
 			Cert:   clientCertData,
 		})
 	if err != nil {
-		return errors.WithMessagef(err, "error in put cert for %s/%s", clusterCertEntity, certIndetifier)
+		return errors.WithMessagef(err, "error in put cert for %s/%s", clusterCertEntity, clusterID)
 	}
 	return nil
 }
 
-func DeleteClusterCerts(ctx context.Context, orgID, clusterName string) (err error) {
+func DeleteClusterCerts(ctx context.Context, clusterID string) (err error) {
 	credReader, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		err = errors.WithMessage(err, "error in initializing credential admin")
 		return
 	}
 
-	certIndetifier := getClusterCertIndentifier(orgID, clusterName)
-	err = credReader.DeleteCertificateData(context.Background(), clusterCertEntity, certIndetifier)
+	err = credReader.DeleteCertificateData(context.Background(), clusterCertEntity, clusterID)
 	if err != nil {
-		err = errors.WithMessagef(err, "error in delete cert for %s/%s", clusterCertEntity, certIndetifier)
+		err = errors.WithMessagef(err, "error in delete cert for %s/%s", clusterCertEntity, clusterID)
 	}
 	return
-}
-
-func getClusterCertIndentifier(orgID, clusterName string) string {
-	return fmt.Sprintf("%s:%s", orgID, clusterName)
 }
 
 func PutIamOauthCredential(ctx context.Context, clientid, secret string) error {

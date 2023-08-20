@@ -12,7 +12,7 @@ const (
 	insertClusterQuery     = "INSERT INTO %s.capten_clusters (cluster_id, org_id, cluster_name, endpoint) VALUES (%s, %s, '%s', '%s');"
 	updateClusterQuery     = "UPDATE %s.capten_clusters SET cluster_name='%s', endpoint='%s' WHERE cluster_id=%s AND org_id=%s;"
 	deleteClusterQuery     = "DELETE FROM %s.capten_clusters WHERE cluster_id=%s AND org_id=%s;"
-	getClusterDetailsQuery = "SELECT cluster_name, endpoint FROM %s.capten_clusters WHERE cluster_id=%s;"
+	getClusterDetailsQuery = "SELECT org_id, cluster_id, cluster_name, endpoint FROM %s.capten_clusters WHERE cluster_id=%s;"
 	getClustersForOrgQuery = "SELECT org_id, cluster_id, cluster_name, endpoint FROM %s.capten_clusters WHERE org_id=%s ALLOW FILTERING;"
 )
 
@@ -52,7 +52,7 @@ func (a *AstraServerStore) DeleteCluster(orgID, clusterID string) error {
 	return nil
 }
 
-func (a *AstraServerStore) GetClusterDetails(clusterID string) (*types.ClusterDetail, error) {
+func (a *AstraServerStore) GetClusterDetails(clusterID string) (*types.ClusterDetails, error) {
 	q := &pb.Query{
 		Cql: fmt.Sprintf(getClusterDetailsQuery, a.keyspace, clusterID),
 	}
@@ -67,17 +67,29 @@ func (a *AstraServerStore) GetClusterDetails(clusterID string) (*types.ClusterDe
 		return nil, fmt.Errorf("cluster: %s not found", clusterID)
 	}
 
-	clusterName, err := client.ToString(result.Rows[0].Values[0])
+	cqlOrgID, err := client.ToUUID(result.Rows[0].Values[0])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get orgID: %w", err)
+	}
+
+	cqlClusterID, err := client.ToUUID(result.Rows[0].Values[1])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get clusterID: %w", err)
+	}
+
+	clusterName, err := client.ToString(result.Rows[0].Values[2])
 	if err != nil {
 		return nil, fmt.Errorf("cluster: %s unable to convert clusterName to string", clusterID)
 	}
 
-	clusterEndpoint, err := client.ToString(result.Rows[0].Values[1])
+	clusterEndpoint, err := client.ToString(result.Rows[0].Values[3])
 	if err != nil {
 		return nil, fmt.Errorf("cluster: %s unable to convert endpoint to string", clusterID)
 	}
 
-	return &types.ClusterDetail{ClusterName: clusterName, Endpoint: clusterEndpoint}, nil
+	return &types.ClusterDetails{
+		ClusterID: cqlClusterID.String(), OrgID: cqlOrgID.String(),
+		ClusterName: clusterName, Endpoint: clusterEndpoint}, nil
 }
 
 func (a *AstraServerStore) GetClusters(orgID string) ([]types.ClusterDetails, error) {
@@ -115,9 +127,9 @@ func (a *AstraServerStore) GetClusters(orgID string) ([]types.ClusterDetails, er
 
 		clusterDetails = append(clusterDetails,
 			types.ClusterDetails{
-				OrgID:         cqlOrgID.String(),
-				ClusterID:     cqlClusterID.String(),
-				ClusterDetail: types.ClusterDetail{ClusterName: cqlClusterName, Endpoint: cqlEndpoint},
+				OrgID:       cqlOrgID.String(),
+				ClusterID:   cqlClusterID.String(),
+				ClusterName: cqlClusterName, Endpoint: cqlEndpoint,
 			})
 	}
 

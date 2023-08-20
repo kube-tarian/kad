@@ -18,15 +18,11 @@ type AgentInfo struct {
 	Key      string
 }
 
-type ClusterDetail struct {
-	ClusterName string
-	Endpoint    string
-}
-
 type ClusterDetails struct {
-	ClusterDetail
-	OrgID     string
-	ClusterID string
+	ClusterID   string
+	Endpoint    string
+	OrgID       string
+	ClusterName string
 }
 
 type StoreAppConfig struct {
