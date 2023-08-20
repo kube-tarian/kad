@@ -131,6 +131,6 @@ func (s *AgentHandler) getAgentConfig(clusterID string) (*Config, error) {
 	agentCfg.CaCert = certData.CACert
 	agentCfg.Key = certData.Key
 	agentCfg.Cert = certData.Cert
-	s.log.Info("loaded agent certs for cluster %s", clusterID)
+	s.log.Infof("loaded agent certs for cluster %s", clusterID)
 	return agentCfg, err
 }

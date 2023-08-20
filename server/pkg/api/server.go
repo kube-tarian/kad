@@ -5,6 +5,7 @@ import (
 
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/agent"
+	"github.com/kube-tarian/kad/server/pkg/config"
 	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
@@ -24,15 +25,18 @@ type Server struct {
 	log           logging.Logger
 	oryClient     oryclient.OryClient
 	iam           iamclient.SecretManager
+	cfg           config.ServiceConfig
 }
 
-func NewServer(log logging.Logger, serverStore store.ServerStore, oryClient oryclient.OryClient, iam iamclient.SecretManager) (*Server, error) {
+func NewServer(log logging.Logger, cfg config.ServiceConfig, serverStore store.ServerStore,
+	oryClient oryclient.OryClient, iam iamclient.SecretManager) (*Server, error) {
 	return &Server{
 		serverStore:   serverStore,
 		agentHandeler: agent.NewAgentHandler(log, serverStore, oryClient),
 		log:           log,
 		oryClient:     oryClient,
 		iam:           iam,
+		cfg:           cfg,
 	}, nil
 }
 
