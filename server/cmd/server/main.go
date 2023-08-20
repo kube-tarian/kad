@@ -92,8 +92,10 @@ func main() {
 
 	var grpcServer *grpc.Server
 	if cfg.AuthEnabled {
+		log.Info("Server Authentication enabled")
 		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(rpcServer.AuthInterceptor))
 	} else {
+		log.Info("Server Authentication disabled")
 		grpcServer = grpc.NewServer()
 	}
 

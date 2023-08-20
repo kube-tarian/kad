@@ -43,7 +43,7 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		Key:         clientKey,
 		Cert:        clientCrt,
 	}
-	if err := s.agentHandeler.AddAgent(orgId, clusterID, agentConfig); err != nil {
+	if err := s.agentHandeler.AddAgent(clusterID, agentConfig); err != nil {
 		s.log.Errorf("[org: %s] failed to connect to agent on cluster %s, %v", orgId, request.ClusterName, err)
 		return &serverpb.NewClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -51,7 +51,7 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		}, nil
 	}
 
-	err := credential.PutClusterCerts(ctx, orgId, clusterID,
+	err := credential.PutClusterCerts(ctx, clusterID,
 		caData, clientKey, clientCrt)
 	if err != nil {
 		s.log.Errorf("[org: %s] failed to store cert in vault for cluster %s, %v", orgId, clusterID, err)
@@ -93,7 +93,8 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 		}
 	}
 
-	s.log.Infof("[org: %s] New cluster registration successful for %s cluster", orgId, request.ClusterName)
+	s.log.Infof("[org: %s] New cluster registration successful for %s/%s cluster", orgId, request.ClusterName, clusterID)
+
 	return &serverpb.NewClusterRegistrationResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "register cluster success",
@@ -133,7 +134,7 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 		Cert:        clientCrt,
 	}
 
-	if err := s.agentHandeler.UpdateAgent(orgId, request.ClusterID, agentConfig); err != nil {
+	if err := s.agentHandeler.UpdateAgent(request.ClusterID, agentConfig); err != nil {
 		s.log.Errorf("[org: %s] failed to connect to agent on cluster %s, %v", orgId, request.ClusterName, err)
 		return &serverpb.UpdateClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -141,7 +142,7 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	err := credential.PutClusterCerts(ctx, orgId, request.ClusterID,
+	err := credential.PutClusterCerts(ctx, request.ClusterID,
 		caData, clientKey, clientCrt)
 	if err != nil {
 		s.log.Errorf("[org: %s] failed to update cert in vault for cluster %s, %v", orgId, request.ClusterID, err)
@@ -160,7 +161,7 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	s.log.Infof("[org: %s] Update cluster registration successful for %s cluster", orgId, request.ClusterName)
+	s.log.Infof("[org: %s] Update cluster registration successful for %s/%s cluster", orgId, request.ClusterName, request.ClusterID)
 	return &serverpb.UpdateClusterRegistrationResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "cluster register update success",
@@ -180,8 +181,8 @@ func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverp
 	}
 
 	s.log.Infof("[org: %s] Delete cluster registration request for cluster %s recieved", orgId, request.ClusterID)
-	s.agentHandeler.RemoveAgent(orgId, request.ClusterID)
-	err := credential.DeleteClusterCerts(ctx, orgId, request.ClusterID)
+	s.agentHandeler.RemoveAgent(request.ClusterID)
+	err := credential.DeleteClusterCerts(ctx, request.ClusterID)
 	if err != nil {
 		s.log.Errorf("[org: %s] failed to delete cert in vault for cluster %s, %v", orgId, request.ClusterID, err)
 		return &serverpb.DeleteClusterRegistrationResponse{
@@ -230,7 +231,7 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 
 	var data []*serverpb.ClusterInfo
 	for _, cluster := range clusterDetails {
-		a, err := s.agentHandeler.GetAgent(orgId, cluster.ClusterID)
+		a, err := s.agentHandeler.GetAgent(cluster.ClusterID)
 		if err != nil {
 			s.log.Errorf("failed to connect to agent for cluster %s, %v", cluster.ClusterID, err)
 			continue
@@ -282,7 +283,7 @@ func (s *Server) GetCluster(ctx context.Context, request *serverpb.GetClusterReq
 		}, err
 	}
 
-	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
+	a, err := s.agentHandeler.GetAgent(request.ClusterID)
 	if err != nil {
 		s.log.Error("failed to connect to agent", err)
 		return &serverpb.GetClusterResponse{
