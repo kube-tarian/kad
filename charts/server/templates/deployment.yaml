@@ -67,8 +67,8 @@ spec:
               value: "{{ .Values.cassandra.dbName }}"
             - name: ORY_ENTITY_NAME
               value: {{ .Values.ory.entityName }}
-            - name: CRED_IDENTITY
-              value: {{ .Values.ory.rootUser }}
+            - name: ORY_CRED_IDENTIFIER
+              value: {{ .Values.ory.credIdentifier }}
             - name: CAPTEN_SERVER_ENTITY
               value: {{.Values.oauth.entityName}}
             - name: CAPTEN_SERVER_IDENTIFIER
@@ -79,6 +79,8 @@ spec:
               value: {{.Values.oauth.clientKey}}
             - name: CAPTEN_CLIENT_SECRET
               value: {{.Values.oauth.clientSecret}}
+            - name: AUTH_ENABLED
+              value: "{{ .Values.env.authEnabled }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

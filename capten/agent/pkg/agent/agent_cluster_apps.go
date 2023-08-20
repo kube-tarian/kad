@@ -76,7 +76,7 @@ func (a *Agent) GetClusterAppLaunches(ctx context.Context, request *agentpb.GetC
 		cfgs = append(cfgs, &agentpb.AppLaunchConfig{
 			ReleaseName: r.GetConfig().GetReleaseName(),
 			Category:    r.GetConfig().GetCategory(),
-			Description: r.GetConfig().GetDescription(),
+			Description: r.GetConfig().GetLaunchUIDescription(),
 			Icon:        r.GetConfig().GetIcon(),
 			LaunchURL:   r.GetConfig().GetLaunchURL(),
 		})

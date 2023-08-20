@@ -42,8 +42,8 @@ type StoreAppConfig struct {
 	CreateNamespace     bool   `json:"createNamespace"`
 	PrivilegedNamespace bool   `json:"privilegedNamespace"`
 	Icon                string `json:"icon,omitempty"`
-	LaunchURL           string `json:"launchURL,omitempty"`
-	LaunchRedirectURL   string `json:"launchRedirectURL,omitempty"`
+	LaunchURL           string `yaml:"LaunchURL,omitempty"`
+	LaunchUIDescription string `yaml:"LaunchUIDescription,omitempty"`
 	OverrideValues      string `json:"overrideValues,omitempty"`
 	LaunchUIValues      string `json:"launchUIValues,omitempty"`
 }
@@ -63,10 +63,20 @@ type AppConfig struct {
 	CreateNamespace     bool      `cql:"create_namespace" json:"create_namespace"`
 	PrivilegedNamespace bool      `cql:"privileged_namespace" json:"privileged_namespace"`
 	LaunchUIURL         string    `cql:"launch_ui_url" json:"launch_ui_url"`
-	LaunchUIRedirectURL string    `cql:"launch_ui_redirect_url" json:"launch_ui_redirect_url"`
+	LaunchUIDescription string    `cql:"launch_ui_redirect_url" json:"launch_ui_redirect_url"`
 	Category            string    `cql:"category" json:"category"`
 	Icon                string    `cql:"icon" json:"icon"`
 	Description         string    `cql:"description" json:"description"`
 	LaunchUIValues      string    `cql:"launch_ui_values" json:"launch_ui_values"`
 	OverrideValues      string    `cql:"override_values" json:"override_values"`
+}
+
+type AppInstallRequest struct {
+	PluginName  string `json:"plugin_name"`
+	RepoName    string `json:"repo_name"`
+	RepoUrl     string `json:"repo_url"`
+	ChartName   string `json:"chart_name"`
+	Namespace   string `json:"namespace"`
+	ReleaseName string `json:"release_name"`
+	Timeout     int    `json:"timeout"`
 }

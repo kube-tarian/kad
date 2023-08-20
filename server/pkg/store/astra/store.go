@@ -31,6 +31,7 @@ func (a *AstraServerStore) initClient() error {
 func (a *AstraServerStore) InitializeDb() error {
 	initDbQueries := []string{
 		fmt.Sprintf(createClusterEndpointTableQuery, a.keyspace),
+		fmt.Sprintf(createAppConfigTableQuery, a.keyspace),
 	}
 
 	for _, query := range initDbQueries {
@@ -43,6 +44,5 @@ func (a *AstraServerStore) InitializeDb() error {
 			return fmt.Errorf("failed to initialise db: %w", err)
 		}
 	}
-
 	return nil
 }

@@ -14,6 +14,7 @@ import (
 
 const (
 	organizationIDAttribute = "organizationid"
+	clusterIDAttribute      = "clusterid"
 )
 
 type Server struct {
@@ -22,7 +23,7 @@ type Server struct {
 	agentHandeler *agent.AgentHandler
 	log           logging.Logger
 	oryClient     oryclient.OryClient
-	iam           iamclient.FetchSecret
+	iam           iamclient.SecretManager
 }
 
 func NewServer(log logging.Logger, serverStore store.ServerStore, oryClient oryclient.OryClient, iam iamclient.FetchSecret) (*Server, error) {

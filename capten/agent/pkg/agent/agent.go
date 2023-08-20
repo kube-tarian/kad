@@ -89,7 +89,7 @@ func prepareJobResponse(run client.WorkflowRun, name string) *agentpb.JobRespons
 	return &agentpb.JobResponse{}
 }
 
-func (a *Agent) UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (a *Agent) AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	tk, oryUrl, oryPat, err := a.extractDetailsFromContext(ctx)
 	if err != nil {
 		a.log.Errorf("error occured while extracting oauth token, oryurl, and ory pat token error: %v", err.Error())

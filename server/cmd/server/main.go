@@ -20,6 +20,7 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/handler"
 	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
+	storeapps "github.com/kube-tarian/kad/server/pkg/store-apps"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/store"
@@ -32,6 +33,11 @@ func main() {
 	cfg, err := config.GetServiceConfig()
 	if err != nil {
 		log.Fatal("failed to load service congfig", err)
+	}
+
+	err = iamclient.RegisterService(log)
+	if err != nil {
+		log.Fatalf("%v", err)
 	}
 
 	swagger, err := api.GetSwagger()
@@ -49,6 +55,11 @@ func main() {
 		log.Fatal("failed to initialize %s db, %w", cfg.Database, err)
 	}
 
+	err = storeapps.SyncStoreApps(log, serverStore)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
 	oryclient, err := oryclient.NewOryClient(log)
 	if err != nil {
 		log.Fatal("OryClient initialization failed", err)
@@ -58,19 +69,17 @@ func main() {
 	if err != nil {
 		log.Fatal("APIHandler initialization failed", err)
 	}
-	IC, err := iamclient.NewClient(oryclient, log)
+
+	iamCfg, err := iamclient.NewConfig()
 	if err != nil {
-		log.Fatal("Error occured while created IAM client", err)
+		log.Fatal("faield to get the iam config", err)
 	}
-	err = IC.RegisterWithIam()
+
+	iamClient, err := iamclient.NewClient(log, oryclient, *iamCfg)
 	if err != nil {
-		log.Fatal("Registering capten server as oauth client through IAM failed", err)
+		log.Fatal("faield to initialize the iam client", err)
 	}
-	err = IC.RegisterRolesActions()
-	if err != nil {
-		log.Fatal("Registering Roles and Actions in IAM failed", err)
-	}
-	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient, IC)
+	rpcServer, err := rpcapi.NewServer(log, serverStore, oryclient, iamClient)
 	if err != nil {
 		log.Fatal("grpc server initialization failed", err)
 	}
@@ -81,7 +90,13 @@ func main() {
 		log.Fatal("failed to listen: ", err)
 	}
 
-	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(rpcServer.UnaryInterceptor))
+	var grpcServer *grpc.Server
+	if cfg.AuthEnabled {
+		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(rpcServer.AuthInterceptor))
+	} else {
+		grpcServer = grpc.NewServer()
+	}
+
 	serverpb.RegisterServerServer(grpcServer, rpcServer)
 	log.Info("Server listening at ", listener.Addr())
 	reflection.Register(grpcServer)

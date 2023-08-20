@@ -5,7 +5,6 @@ import (
 
 	cm "github.com/intelops/go-common/iam"
 	"github.com/intelops/go-common/logging"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/server/pkg/credential"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	iampb "github.com/kube-tarian/kad/server/pkg/pb/iampb"
@@ -15,58 +14,34 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-type FetchSecret interface {
+type SecretManager interface {
 	RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error)
 	GetURL() string
 }
 
-type Config struct {
-	IamURL string `envconfig:"IAM_URL" required:"true"`
-}
-
 type Client struct {
-	iamURL    string
 	oryClient oryclient.OryClient
 	log       logging.Logger
-	oryURL    string
-	oryPAT    string
+	cfg       Config
 }
 
-func NewClient(ory oryclient.OryClient, log logging.Logger) (*Client, error) {
-	cfg, err := ory.GetOryEnv()
-	if err != nil {
-		return nil, err
-	}
-	serviceCredential, err := credential.GetServiceUserCredential(context.Background(),
-		cfg.OryEntityName, cfg.CredentialIdentifier)
-	if err != nil {
-		return nil, err
-	}
-	oryPAT := serviceCredential.AdditionalData["ORY_PAT"]
-	oryURL := serviceCredential.AdditionalData["ORY_URL"]
-
-	iamCfg, err := getIamEnv()
-	if err != nil {
-		return nil, err
-	}
-
+func NewClient(log logging.Logger, ory oryclient.OryClient, cfg Config) (*Client, error) {
 	return &Client{
 		oryClient: ory,
 		log:       log,
-		oryURL:    oryURL,
-		oryPAT:    oryPAT,
-		iamURL:    iamCfg.IamURL,
+		cfg:       cfg,
 	}, nil
 }
+
 func (c *Client) RegisterWithIam() error {
-	conn, err := grpc.Dial(c.iamURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(c.cfg.IAMURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
 	iamclient := iampb.NewOauthServiceClient(conn)
-	c.log.Info("Registering capten as client in ory through...")
+
 	oauthClientReq := &iampb.CreateClientCredentialsClientRequest{
-		ClientName: "CaptenServer",
+		ClientName: c.cfg.ServiceName,
 	}
 	res, err := iamclient.CreateClientCredentialsClient(context.Background(), oauthClientReq)
 	if err != nil {
@@ -79,21 +54,52 @@ func (c *Client) RegisterWithIam() error {
 	return nil
 }
 
-func getIamEnv() (*Config, error) {
-	cfg := &Config{}
-	if err := envconfig.Process("", cfg); err != nil {
-		return nil, err
+// at the line cm.WithIamYamlPath("provide the yaml location here"),
+// the roles and actions should be added to ConfigMap
+// the the location should be provided
+func (c *Client) RegisterRolesActions() error {
+	grpcOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
-	return cfg, nil
+	// Create an instance of IamConn with desired options
+	// the order of calling the options should be same as given in example
+	iamConn := cm.NewIamConn(
+		cm.WithGrpcDialOption(grpcOpts...),
+		cm.WithIamAddress(c.cfg.IAMURL),
+		// TODO: here need to add the roles and actions yaml location
+		cm.WithIamYamlPath("provide the yaml location here"),
+	)
+	ctx := context.Background()
+	tkn, err := c.oryClient.GetCaptenServiceRegOauthToken()
+	if err != nil {
+		err = errors.WithMessage(err, "error getting capten service reg oauth token")
+		return err
+	}
+	if tkn == nil {
+		return errors.New("capten service reg oauth token is nil")
+	}
+	md := metadata.Pairs(
+		"oauth_token", *tkn,
+		"ory_url", c.oryClient.GetURL(),
+		"ory_pat", c.oryClient.GetPAT(),
+	)
+	newCtx := metadata.NewOutgoingContext(ctx, md)
+	// Update action roles
+	err = iamConn.UpdateActionRoles(newCtx)
+	if err != nil {
+		c.log.Errorf("Failed to update action roles: %v", err)
+		return err
+	}
+	return nil
 }
 
 func (c *Client) GetURL() string {
-	return c.oryURL
+	return c.oryClient.GetURL()
 }
 
 func (c *Client) RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error) {
 
-	conn, err := grpc.Dial(c.iamURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.Dial(c.cfg.IAMURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return "", "", err
 	}
@@ -110,43 +116,4 @@ func (c *Client) RegisterAppClientSecrets(ctx context.Context, clientName, redir
 	}
 
 	return res.ClientId, res.ClientSecret, nil
-}
-
-// at the line cm.WithIamYamlPath("provide the yaml location here"),
-// the roles and actions should be added to ConfigMap
-// the the location should be provided
-func (c *Client) RegisterRolesActions() error {
-	grpcOpts := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	}
-	// Create an instance of IamConn with desired options
-	// the order of calling the options should be same as given in example
-	iamConn := cm.NewIamConn(
-		cm.WithGrpcDialOption(grpcOpts...),
-		cm.WithIamAddress(c.iamURL),
-		// TODO: here need to add the roles and actions yaml location
-		cm.WithIamYamlPath("provide the yaml location here"),
-	)
-	ctx := context.Background()
-	tkn, err := c.oryClient.GetCaptenServiceRegOauthToken()
-	if err != nil {
-		err = errors.WithMessage(err, "error getting capten service reg oauth token")
-		return err
-	}
-	if tkn == nil {
-		return errors.New("capten service reg oauth token is nil")
-	}
-	md := metadata.Pairs(
-		"oauth_token", *tkn,
-		"ory_url", c.oryURL,
-		"ory_pat", c.oryPAT,
-	)
-	newCtx := metadata.NewOutgoingContext(ctx, md)
-	// Update action roles
-	err = iamConn.UpdateActionRoles(newCtx)
-	if err != nil {
-		c.log.Errorf("Failed to update action roles: %v", err)
-		return err
-	}
-	return nil
 }

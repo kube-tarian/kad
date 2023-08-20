@@ -29,12 +29,12 @@ func (a *AstraServerStore) AddOrUpdateApp(config *types.StoreAppConfig) error {
 	if appExists {
 		query = &pb.Query{
 			Cql: fmt.Sprintf(updateAppConfigQuery,
-				a.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), config.AppName, config.Version),
+				a.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchUIDescription, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), config.AppName, config.Version),
 		}
 	} else {
 		query = &pb.Query{
 			Cql: fmt.Sprintf(createAppConfigQuery,
-				a.keyspace, config.AppName, config.ChartName, config.RepoName, config.ReleaseName, config.RepoURL, config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchRedirectURL, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), uuid.New().String()),
+				a.keyspace, config.AppName, config.ChartName, config.RepoName, config.ReleaseName, config.RepoURL, config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchUIDescription, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, time.Now().Format("2006-01-02 15:04:05"), uuid.New().String()),
 		}
 	}
 
@@ -156,7 +156,7 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get launch ui url: %w", err)
 	}
-	cqlLaunchUiRedirectUrl, err := client.ToString(row.Values[9])
+	cqlLaunchUiDescription, err := client.ToString(row.Values[9])
 	if err != nil {
 		return nil, fmt.Errorf("failed to get launch ui redirect url: %w", err)
 	}
@@ -195,7 +195,7 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 		CreateNamespace:     cqlCreateNamespace,
 		PrivilegedNamespace: cqlPrivilegedNamespace,
 		LaunchUIURL:         cqlLaunchUiUrl,
-		LaunchUIRedirectURL: cqlLaunchUiRedirectUrl,
+		LaunchUIDescription: cqlLaunchUiDescription,
 		Category:            cqlCategory,
 		Icon:                cqlIcon,
 		Description:         cqlDescription,
@@ -223,4 +223,29 @@ func (a *AstraServerStore) isAppExistsInStore(name, version string) (bool, error
 	}
 
 	return false, nil
+}
+
+func (a *AstraServerStore) GetStoreAppValues(name, version string) (*types.AppConfig, error) {
+	selectQuery := &pb.Query{
+		Cql: fmt.Sprintf(getAppConfigQuery,
+			a.keyspace, name, version),
+	}
+
+	response, err := a.c.Session().ExecuteQuery(selectQuery)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch app store values: %w", err)
+	}
+
+	result := response.GetResultSet()
+
+	if len(result.Rows) == 0 {
+		return nil, fmt.Errorf("app %s not found", name)
+	}
+
+	config, err := toAppConfig(result.Rows[0])
+	if err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }
