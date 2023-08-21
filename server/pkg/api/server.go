@@ -24,15 +24,15 @@ type Server struct {
 	agentHandeler *agent.AgentHandler
 	log           logging.Logger
 	oryClient     oryclient.OryClient
-	iam           iamclient.SecretManager
+	iam           iamclient.IAMRegister
 	cfg           config.ServiceConfig
 }
 
 func NewServer(log logging.Logger, cfg config.ServiceConfig, serverStore store.ServerStore,
-	oryClient oryclient.OryClient, iam iamclient.SecretManager) (*Server, error) {
+	oryClient oryclient.OryClient, iam iamclient.IAMRegister) (*Server, error) {
 	return &Server{
 		serverStore:   serverStore,
-		agentHandeler: agent.NewAgentHandler(log, serverStore, oryClient),
+		agentHandeler: agent.NewAgentHandler(log, cfg, serverStore, oryClient),
 		log:           log,
 		oryClient:     oryClient,
 		iam:           iam,

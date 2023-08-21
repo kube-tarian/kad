@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/server/pkg/config"
 	"github.com/kube-tarian/kad/server/pkg/credential"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"github.com/kube-tarian/kad/server/pkg/store"
@@ -14,14 +15,16 @@ import (
 
 type AgentHandler struct {
 	log         logging.Logger
+	cfg         config.ServiceConfig
 	agentMutex  sync.RWMutex
 	agents      map[string]*Agent
 	serverStore store.ServerStore
 	oryClient   oryclient.OryClient
 }
 
-func NewAgentHandler(log logging.Logger, serverStore store.ServerStore, oryClient oryclient.OryClient) *AgentHandler {
-	return &AgentHandler{log: log, serverStore: serverStore, agents: map[string]*Agent{}, oryClient: oryClient}
+func NewAgentHandler(log logging.Logger, cfg config.ServiceConfig,
+	serverStore store.ServerStore, oryClient oryclient.OryClient) *AgentHandler {
+	return &AgentHandler{log: log, cfg: cfg, serverStore: serverStore, agents: map[string]*Agent{}, oryClient: oryClient}
 }
 
 func (s *AgentHandler) AddAgent(clusterID string, agentCfg *Config) error {
@@ -29,6 +32,8 @@ func (s *AgentHandler) AddAgent(clusterID string, agentCfg *Config) error {
 		return nil
 	}
 
+	agentCfg.ServicName = s.cfg.ServiceName
+	agentCfg.AuthEnabled = s.cfg.AuthEnabled
 	agent, err := NewAgent(s.log, agentCfg, s.oryClient)
 	if err != nil {
 		return err
