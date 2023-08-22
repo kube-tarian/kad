@@ -63,7 +63,7 @@ func (c *Client) RegisterRolesActions() error {
 	iamConn := cm.NewIamConn(
 		cm.WithGrpcDialOption(grpcOpts...),
 		cm.WithIamAddress(c.cfg.IAMURL),
-		cm.WithIamYamlPath("provide the yaml location here"),
+		cm.WithIamYamlPath(c.cfg.ServiceRolesConfigFilePath),
 	)
 
 	ctx := context.Background()
