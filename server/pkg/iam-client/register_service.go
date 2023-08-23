@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	IAMURL          string `envconfig:"IAM_URL" required:"true"`
-	ServiceRegister bool   `envconfig:"SERVICE_REGISTER" default:"false"`
-	ServiceName     string `envconfig:"SERVICE_NAME" default:"capten-server"`
+	IAMURL                     string `envconfig:"IAM_URL" required:"true"`
+	ServiceRegister            bool   `envconfig:"SERVICE_REGISTER" default:"false"`
+	ServiceName                string `envconfig:"SERVICE_NAME" default:"capten-server"`
+	ServiceRolesConfigFilePath string `envconfig:"SERVICE_ROLES_CONFIG_FILE_PATH" default:"/data/service-config/roles.yaml"`
 }
 
 func NewConfig() (Config, error) {
@@ -47,5 +48,6 @@ func RegisterService(log logging.Logger) error {
 	if err != nil {
 		return errors.WithMessage(err, "Registering Roles and Actions in IAM failed")
 	}
+	log.Infof("service registration successful")
 	return nil
 }
