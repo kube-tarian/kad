@@ -147,8 +147,9 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID strin
 		})
 
 		s.log.Info("SSO RESPONSE: %v, %v", ssoResp, err)
+		s.log.Info("sSO, num:%v, enum:%v,string:%v", ssoResp.Status.Number(), ssoResp.Status.Enum(), ssoResp.GetStatus())
 
-		if err != nil || ssoResp.Status != 0 {
+		if err != nil || *ssoResp.Status.Enum() != 0 {
 			return errors.WithMessagef(err, "failed to configure sso for app  %s on cluster %s", app.ReleaseName, clusterID)
 		}
 	}
