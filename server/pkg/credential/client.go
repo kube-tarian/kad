@@ -10,8 +10,8 @@ import (
 const (
 	clusterCertEntity            = "client-cert"
 	serviceClientOAuthEntityName = "service-client-oauth"
-	oauthClientIdKey             = "CLIENT-ID"
-	oauthClientSecretKey         = "CLIENT-SECRET"
+	oauthClientIdKey             = "CLIENT_ID"
+	oauthClientSecretKey         = "CLIENT_SECRET"
 )
 
 func GetServiceUserCredential(ctx context.Context, svcEntity, userName string) (cred credentials.ServiceCredential, err error) {

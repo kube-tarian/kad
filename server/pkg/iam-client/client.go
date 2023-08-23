@@ -56,6 +56,7 @@ func (c *Client) RegisterService() error {
 }
 
 func (c *Client) RegisterRolesActions() error {
+
 	grpcOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
@@ -72,13 +73,9 @@ func (c *Client) RegisterRolesActions() error {
 		return errors.WithMessage(err, "error while getting service oauth token")
 	}
 
-	md := metadata.Pairs(
-		"oauth_token", oauthCred.AccessToken,
-		"ory_url", c.oryClient.GetURL(),
-		"ory_pat", c.oryClient.GetPAT(),
-	)
+	newCtx := metadata.AppendToOutgoingContext(context.Background(),
+		"oauth_token", oauthCred.AccessToken, "ory_url", c.oryClient.GetURL(), "ory_pat", c.oryClient.GetPAT())
 
-	newCtx := metadata.NewOutgoingContext(ctx, md)
 	err = iamConn.UpdateActionRoles(newCtx)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to update action roles")

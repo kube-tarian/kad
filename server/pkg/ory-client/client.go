@@ -117,12 +117,11 @@ func (c *Client) Authorize(ctx context.Context, accessToken string) (context.Con
 }
 
 func (c *Client) GetServiceOauthCredential(ctx context.Context, serviceName string) (*OauthAccessCredential, error) {
+
 	clientId, clientSecret, err := credential.GetServiceOauthCredential(ctx, serviceName)
 	if err != nil {
 		return nil, err
 	}
-	c.log.Debugf("Client ID: %s, Client Secret: %s", clientId, clientSecret)
-	c.log.Debugf("Token URL: %s", c.GetOryTokenUrl())
 
 	conf := &clientcredentials.Config{
 		ClientID:     clientId,
