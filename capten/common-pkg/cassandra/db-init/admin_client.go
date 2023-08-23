@@ -11,7 +11,15 @@ import (
 )
 
 const (
-	createKeyspaceSchemaChangeCQL         = `CREATE KEYSPACE IF NOT EXISTS schema_change WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : %s } AND DURABLE_WRITES = true`
+	createKeyspaceSchemaChangeCQL = `
+  CREATE KEYSPACE IF NOT EXISTS schema_change
+  WITH REPLICATION = {
+    'class': 'NetworkTopologyStrategy',
+    'datacenter1': %s
+  }
+  AND DURABLE_WRITES = true`
+
+//	createKeyspaceSchemaChangeCQL         = `CREATE KEYSPACE IF NOT EXISTS schema_change WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : %s } AND DURABLE_WRITES = true`
 	createTableKeyspaceLockCQL            = "CREATE TABLE IF NOT EXISTS schema_change.lock(keyspace_to_lock text, started_at timestamp, PRIMARY KEY(keyspace_to_lock)) WITH default_time_to_live = 300"
 	createKeyspaceCQL                     = `CREATE KEYSPACE IF NOT EXISTS %s WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : %s } AND DURABLE_WRITES = true`
 	createUser                            = "CREATE USER %s WITH PASSWORD '%s' NOSUPERUSER;"
