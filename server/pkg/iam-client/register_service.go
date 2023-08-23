@@ -38,17 +38,12 @@ func RegisterService(log logging.Logger) error {
 		return errors.WithMessage(err, "OryClient initialization failed")
 	}
 
-	IC, err := NewClient(log, oryclient, cfg)
+	iamClient, err := NewClient(log, oryclient, cfg)
 	if err != nil {
 		return errors.WithMessage(err, "Error occured while created IAM client")
 	}
 
-	err = IC.RegisterWithIam()
-	if err != nil {
-		return errors.WithMessage(err, "Registering capten server as oauth client failed")
-	}
-
-	err = IC.RegisterRolesActions()
+	err = iamClient.RegisterRolesActions()
 	if err != nil {
 		return errors.WithMessage(err, "Registering Roles and Actions in IAM failed")
 	}

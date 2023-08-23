@@ -142,7 +142,7 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID strin
 			ReleaseName:  app.ReleaseName,
 			ClientId:     clientID,
 			ClientSecret: clientSecret,
-			OAuthBaseURL: s.iam.GetURL(),
+			OAuthBaseURL: s.iam.GetOAuthURL(),
 		})
 
 		if err != nil || ssoResp.Status != 0 {
