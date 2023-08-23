@@ -8,11 +8,10 @@ import (
 )
 
 const (
-	clusterCertEntity = "client-cert"
-	oauthIdentifier   = "service-reg-identifier"
-	oauthEntityName   = "service-reg"
-	iamClientKey      = "IAM_CLIENTID"
-	iamSecretKey      = "IAM_SECRET"
+	clusterCertEntity            = "client-cert"
+	serviceClientOAuthEntityName = "service-client-oauth"
+	oauthClientIdKey             = "CLIENT_ID"
+	oauthClientSecretKey         = "CLIENT_SECRET"
 )
 
 func GetServiceUserCredential(ctx context.Context, svcEntity, userName string) (cred credentials.ServiceCredential, err error) {
@@ -88,49 +87,47 @@ func DeleteClusterCerts(ctx context.Context, clusterID string) (err error) {
 	return
 }
 
-func PutIamOauthCredential(ctx context.Context, clientid, secret string) error {
-	if clientid == "" || secret == "" {
-		return errors.New("either clientid or secret is missing, both are required")
-	}
-
+func StoreServiceOauthCredential(ctx context.Context, serviceName, clientId, clientSecret string) error {
 	credWriter, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		return errors.WithMessage(err, "error in initializing credential admin")
 	}
 
-	credData := make(map[string]string)
-	credData[iamClientKey] = clientid
-	credData[iamSecretKey] = secret
-
-	err = credWriter.PutCredential(ctx, "generic", oauthEntityName, oauthIdentifier, credData)
-	if err != nil {
-		return errors.WithMessage(err, "error while putting IAM credentials into the vault")
+	cred := map[string]string{
+		oauthClientIdKey:     clientId,
+		oauthClientSecretKey: clientSecret,
 	}
 
+	err = credWriter.PutCredential(ctx, credentials.GenericCredentialType,
+		serviceClientOAuthEntityName, serviceName, cred)
+	if err != nil {
+		return errors.WithMessagef(err, "error while storing service oauth credential %s/%s into the vault",
+			serviceClientOAuthEntityName, serviceName)
+	}
 	return nil
 }
 
-func GetOauthCredentialFromVault(ctx context.Context, ClientKey, SecretKey string) (clientid, secret string, err error) {
+func GetServiceOauthCredential(ctx context.Context, serviceName string) (clientId, clientSecret string, err error) {
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
-		return "", "", errors.WithMessage(err, "error in initializing credential reader")
+		err = errors.WithMessage(err, "error in initializing credential reader")
+		return
 	}
 
-	cred, err := credReader.GetCredential(ctx, "generic", oauthEntityName, oauthIdentifier)
+	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
+		serviceClientOAuthEntityName, serviceName)
 	if err != nil {
-		return "", "", errors.WithMessagef(err, "error in reading credential for %s/%s", oauthEntityName, oauthIdentifier)
+		err = errors.WithMessagef(err, "error while reading service oauth credential %s/%s from the vault",
+			serviceClientOAuthEntityName, serviceName)
+		return
 	}
 
-	clientid, ok1 := cred[ClientKey]
-	secret, ok2 := cred[SecretKey]
-
-	if !ok1 {
-		return "", "", errors.Errorf("credential with %s key is not present in generic credential type", iamClientKey)
+	clientId = cred[oauthClientIdKey]
+	clientSecret = cred[oauthClientSecretKey]
+	if len(clientId) == 0 || len(clientSecret) == 0 {
+		err = errors.WithMessagef(err, "invalid service oauth credential %s/%s in the vault",
+			serviceClientOAuthEntityName, serviceName)
+		return
 	}
-
-	if !ok2 {
-		return "", "", errors.Errorf("credential with %s key is not present in generic credential type", iamSecretKey)
-	}
-
-	return clientid, secret, nil
+	return
 }

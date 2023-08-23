@@ -14,9 +14,9 @@ import (
 )
 
 type Config struct {
-	AppStoreAppConfigPath string `envconfig:"APP_STORE_APP_CONFIG_PATH" default:"/store-apps/conf"`
+	AppStoreAppConfigPath string `envconfig:"APP_STORE_APP_CONFIG_PATH" default:"/data/store-apps/conf"`
 	SyncAppStore          bool   `envconfig:"SYNC_APP_STORE" default:"false"`
-	AppStoreConfigFile    string `envconfig:"APP_STORE_CONFIG_FILE" default:"/store-apps/app_list.yaml"`
+	AppStoreConfigFile    string `envconfig:"APP_STORE_CONFIG_FILE" default:"/data/store-apps/app_list.yaml"`
 }
 
 type AppStoreConfig struct {
