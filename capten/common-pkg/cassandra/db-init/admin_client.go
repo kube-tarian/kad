@@ -12,10 +12,10 @@ import (
 
 const (
 	createKeyspaceSchemaChangeCQL = `
-  CREATE KEYSPACE IF NOT EXISTS schema_change
+  CREATE KEYSPACE schema_change IF NOT EXISTS 
   WITH REPLICATION = {
     'class': 'NetworkTopologyStrategy',
-    'datacenter1': 3
+    'datacenter1': 2
   }
   AND DURABLE_WRITES = true`
 
