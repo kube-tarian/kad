@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	IAMURL                     string `envconfig:"IAM_URL" required:"true"`
-	ServiceRegister            bool   `envconfig:"SERVICE_REGISTER" default:"false"`
+	ServiceRegister            bool   `envconfig:"SERVICE_REGISTER" default:"true"`
 	ServiceName                string `envconfig:"SERVICE_NAME" default:"capten-server"`
 	ServiceRolesConfigFilePath string `envconfig:"SERVICE_ROLES_CONFIG_FILE_PATH" default:"/data/service-config/roles.yaml"`
 }
