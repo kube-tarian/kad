@@ -127,7 +127,7 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID strin
 	}
 
 	resp, err := agentClient.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
-	if err != nil || resp.Status != 0 {
+	if err != nil || resp.Status.Number() != 0 {
 		return errors.WithMessagef(err, "failed to get cluster app launches from cluster %s", clusterID)
 	}
 
@@ -145,7 +145,7 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID strin
 			OAuthBaseURL: s.iam.GetOAuthURL(),
 		})
 
-		if err != nil || ssoResp.Status != 0 {
+		if err != nil || ssoResp.Status.Number() != 0 {
 			return errors.WithMessagef(err, "failed to configure sso for app  %s on cluster %s", app.ReleaseName, clusterID)
 		}
 	}
