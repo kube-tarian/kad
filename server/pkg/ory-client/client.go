@@ -121,6 +121,8 @@ func (c *Client) GetServiceOauthCredential(ctx context.Context, serviceName stri
 	if err != nil {
 		return nil, err
 	}
+	c.log.Debugf("Client ID: %s, Client Secret: %s", clientId, clientSecret)
+	c.log.Debugf("Token URL: %s", c.GetOryTokenUrl())
 
 	conf := &clientcredentials.Config{
 		ClientID:     clientId,
