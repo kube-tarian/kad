@@ -138,12 +138,15 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID strin
 			return errors.WithMessagef(err, "failed to register app %s on cluster %s with IAM", app.ReleaseName, clusterID)
 		}
 
+		s.log.Info("CLIENT ID AND SECRET: %v, %v", clientID, clientSecret)
 		ssoResp, err := agentClient.GetClient().ConfigureAppSSO(ctx, &agentpb.ConfigureAppSSORequest{
 			ReleaseName:  app.ReleaseName,
 			ClientId:     clientID,
 			ClientSecret: clientSecret,
 			OAuthBaseURL: s.iam.GetURL(),
 		})
+
+		s.log.Info("SSO RESPONSE: %v, %v", ssoResp, err)
 
 		if err != nil || ssoResp.Status != 0 {
 			return errors.WithMessagef(err, "failed to configure sso for app  %s on cluster %s", app.ReleaseName, clusterID)
