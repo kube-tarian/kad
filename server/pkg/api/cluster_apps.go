@@ -131,6 +131,7 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID strin
 		return errors.WithMessagef(err, "failed to get cluster app launches from cluster %s", clusterID)
 	}
 
+	s.log.Info("CHECK the config LIST: ", resp.LaunchConfigList, resp)
 	for _, app := range resp.LaunchConfigList {
 		appName := fmt.Sprintf("%s-%s", clusterID, app.ReleaseName)
 		clientID, clientSecret, err := s.iam.RegisterAppClientSecrets(ctx, appName, app.LaunchURL)
@@ -138,12 +139,16 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID strin
 			return errors.WithMessagef(err, "failed to register app %s on cluster %s with IAM", app.ReleaseName, clusterID)
 		}
 
+		s.log.Info("CHECK the IAM LIST: ", clientID, clientSecret)
+
 		ssoResp, err := agentClient.GetClient().ConfigureAppSSO(ctx, &agentpb.ConfigureAppSSORequest{
 			ReleaseName:  app.ReleaseName,
 			ClientId:     clientID,
 			ClientSecret: clientSecret,
 			OAuthBaseURL: s.iam.GetOAuthURL(),
 		})
+
+		s.log.Info("CHECK the ConfigureAppSSO LIST: ", ssoResp, ssoResp.Status.String())
 
 		if err != nil || ssoResp.Status.String() != successStatusMsg {
 			return errors.WithMessagef(err, "failed to configure sso for app  %s on cluster %s", app.ReleaseName, clusterID)
