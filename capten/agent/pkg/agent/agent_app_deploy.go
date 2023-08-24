@@ -51,6 +51,7 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 		Version:     request.AppConfig.Version,
 		ClusterName: "capten",
 		ValuesYaml:  string(request.OverrideValues),
+		Timeout:     5,
 	}
 
 	run, err := worker.SendEvent(ctx, "install", config)
