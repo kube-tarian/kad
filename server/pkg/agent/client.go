@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 )
 
 type Config struct {
@@ -24,6 +25,8 @@ type Config struct {
 	CaCert      string
 	Cert        string
 	Key         string
+	ServicName  string
+	AuthEnabled bool
 }
 
 type Agent struct {
@@ -33,9 +36,9 @@ type Agent struct {
 	log        logging.Logger
 }
 
-func NewAgent(log logging.Logger, cfg *Config, oryclient oryclient.OryClient) (*Agent, error) {
+func NewAgent(log logging.Logger, cfg *Config, oryClient oryclient.OryClient) (*Agent, error) {
 	log.Infof("connecting to agent %s", cfg.Address)
-	conn, err := getConnection(cfg, oryclient)
+	conn, err := getConnection(cfg, oryClient)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to connect to agent")
 	}
@@ -57,14 +60,16 @@ func NewAgent(log logging.Logger, cfg *Config, oryclient oryclient.OryClient) (*
 	}, nil
 }
 
-func getConnection(cfg *Config, client oryclient.OryClient) (*grpc.ClientConn, error) {
+func getConnection(cfg *Config, oryClient oryclient.OryClient) (*grpc.ClientConn, error) {
 	address, port, tls, err := parseAgentConnectionConfig(cfg.Address)
 	if err != nil {
 		return nil, err
 	}
 
-	dialOptions := []grpc.DialOption{
-		grpc.WithUnaryInterceptor(client.UnaryInterceptor),
+	dialOptions := []grpc.DialOption{}
+
+	if cfg.AuthEnabled {
+		dialOptions = append(dialOptions, grpc.WithUnaryInterceptor(authInterceptor(oryClient, cfg.ServicName)))
 	}
 
 	if !tls {
@@ -86,6 +91,30 @@ func (a *Agent) GetClient() agentpb.AgentClient {
 
 func (a *Agent) Close() {
 	a.connection.Close()
+}
+
+func authInterceptor(oryClient oryclient.OryClient, serviceName string) grpc.UnaryClientInterceptor {
+	return func(
+		ctx context.Context,
+		method string,
+		req, reply interface{},
+		cc *grpc.ClientConn,
+		invoker grpc.UnaryInvoker,
+		opts ...grpc.CallOption,
+	) error {
+		oauthCred, err := oryClient.GetServiceOauthCredential(ctx, serviceName)
+		if err != nil {
+			return err
+		}
+
+		md := metadata.Pairs(
+			"oauth_token", oauthCred.AccessToken,
+			"ory_url", oauthCred.OryURL,
+			"ory_pat", oauthCred.OryPAT,
+		)
+		newCtx := metadata.NewOutgoingContext(ctx, md)
+		return invoker(newCtx, method, req, reply, cc, opts...)
+	}
 }
 
 func loadTLSCredentials(config *Config) (credentials.TransportCredentials, error) {

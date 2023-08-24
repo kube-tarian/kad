@@ -22,7 +22,7 @@ func (a *APIHandler) PostAgentCluster(c *gin.Context) {
 		return
 	}
 
-	agent, err := a.agentHandler.GetAgent("", "")
+	agent, err := a.agentHandler.GetAgent("")
 	if err != nil {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return
@@ -53,7 +53,7 @@ func (a *APIHandler) DeleteAgentCluster(c *gin.Context) {
 		return
 	}
 
-	agent, err := a.agentHandler.GetAgent("", "")
+	agent, err := a.agentHandler.GetAgent("")
 	if err != nil {
 		a.setFailedResponse(c, fmt.Sprintf("unregistered customer %v", "1"), errors.New(""))
 		return

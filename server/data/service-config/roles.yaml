@@ -1,0 +1,28 @@
+version: 2
+servicename: "capten-server"  # Add your service name here
+servicedescription: "Server for managing Capten Clusters"  # Add your service description here
+
+actions: #Add your actions or permissions here
+  - name: "manage-cluster"
+    displayname: "manage-cluster"
+  - name: "view-cluster"
+    displayname: "view-cluster"
+  - name: "manage-apps"
+    displayname: "manage-apps"
+
+
+roles:
+  - name: "cluster-admin"
+    displayname: "cluster-admin"
+    description: "administration role for cluster management operations"
+    owner: "capten"
+    actions:
+      - "manage-cluster"
+      - "manage-apps"
+  - name: "cluster-user"
+    displayname: "cluster-user"
+    description: "read access for cluster data"
+    owner: "capten"
+    actions:
+      - "view-cluster"
+      - "manage-apps"

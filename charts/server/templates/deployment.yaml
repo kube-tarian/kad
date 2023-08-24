@@ -47,6 +47,10 @@ spec:
               value: "{{ .Values.service.grpcport }}"
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel }}
+            {{- range .Values.extraEnv }}
+            - name: {{ .name }}
+              value: "{{ .value }}"
+            {{- end }}
             - name: VAULT_ADDR
               value: {{ .Values.vault.address }}
             - name: VAULT_ROLE
@@ -79,8 +83,6 @@ spec:
               value: {{.Values.oauth.clientKey}}
             - name: CAPTEN_CLIENT_SECRET
               value: {{.Values.oauth.clientSecret}}
-            - name: AUTH_ENABLED
-              value: "{{ .Values.env.authEnabled }}"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

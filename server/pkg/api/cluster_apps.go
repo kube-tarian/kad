@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	"github.com/pkg/errors"
 )
 
 func mapAgentAppsToServerResp(appDataList []*agentpb.AppData) []*serverpb.ClusterAppConfig {
@@ -35,7 +37,6 @@ func mapAgentAppsToServerResp(appDataList []*agentpb.AppData) []*serverpb.Cluste
 
 func mapAgentAppLauncesToServerResp(appLaunchCfgs []*agentpb.AppLaunchConfig) []*serverpb.AppLaunchConfig {
 	svrAppLaunchCfg := make([]*serverpb.AppLaunchConfig, len(appLaunchCfgs))
-
 	for index, cfg := range appLaunchCfgs {
 		var launchCfg serverpb.AppLaunchConfig
 		launchCfg.ReleaseName = cfg.ReleaseName
@@ -43,10 +44,8 @@ func mapAgentAppLauncesToServerResp(appLaunchCfgs []*agentpb.AppLaunchConfig) []
 		launchCfg.LaunchUIDescription = cfg.Description
 		launchCfg.Icon = cfg.Icon
 		launchCfg.LaunchURL = cfg.LaunchURL
-
 		svrAppLaunchCfg[index] = &launchCfg
 	}
-
 	return svrAppLaunchCfg
 }
 
@@ -63,7 +62,7 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 	}
 	s.log.Infof("[org: %s] GetClusterApps request recieved for cluster %s", orgId, request.ClusterID)
 
-	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
+	a, err := s.agentHandeler.GetAgent(request.ClusterID)
 	if err != nil {
 		s.log.Error("failed to connect to agent", err)
 		return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
@@ -96,7 +95,7 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 	}
 
 	s.log.Infof("[org: %s] GetClusterAppLaunchConfigs request recieved for cluster %s", orgId, request.ClusterID)
-	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
+	a, err := s.agentHandeler.GetAgent(request.ClusterID)
 	if err != nil {
 		s.log.Error("failed to connect to agent", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
@@ -119,4 +118,36 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 func (s *Server) GetClusterApp(ctx context.Context, request *serverpb.GetClusterAppRequest) (
 	*serverpb.GetClusterAppResponse, error) {
 	return &serverpb.GetClusterAppResponse{}, nil
+}
+
+func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID string) error {
+	agentClient, err := s.agentHandeler.GetAgent(clusterID)
+	if err != nil {
+		return errors.WithMessagef(err, "failed to get agent for cluster %s", clusterID)
+	}
+
+	resp, err := agentClient.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
+	if err != nil || resp.Status != 0 {
+		return errors.WithMessagef(err, "failed to get cluster app launches from cluster %s", clusterID)
+	}
+
+	for _, app := range resp.LaunchConfigList {
+		appName := fmt.Sprintf("%s-%s", clusterID, app.ReleaseName)
+		clientID, clientSecret, err := s.iam.RegisterAppClientSecrets(ctx, appName, app.LaunchURL)
+		if err != nil {
+			return errors.WithMessagef(err, "failed to register app %s on cluster %s with IAM", app.ReleaseName, clusterID)
+		}
+
+		ssoResp, err := agentClient.GetClient().ConfigureAppSSO(ctx, &agentpb.ConfigureAppSSORequest{
+			ReleaseName:  app.ReleaseName,
+			ClientId:     clientID,
+			ClientSecret: clientSecret,
+			OAuthBaseURL: s.iam.GetOAuthURL(),
+		})
+
+		if err != nil || ssoResp.Status != 0 {
+			return errors.WithMessagef(err, "failed to configure sso for app  %s on cluster %s", app.ReleaseName, clusterID)
+		}
+	}
+	return nil
 }

@@ -40,7 +40,16 @@ oauth:
 env:
   logLevel: info
   database: astra
-  authEnabled: false
+
+extraEnv:
+  - name: AUTH_ENABLED
+    value: false
+  - name: SERVICE_REGISTER
+    value: false
+  - name: REGISTER_LAUNCH_APPS_CONFIG
+    value: false
+  - name: SYNC_APP_STORE
+    value: false
 
 imagePullSecrets: []
 nameOverride: ""

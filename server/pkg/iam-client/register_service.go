@@ -8,14 +8,24 @@ import (
 )
 
 type Config struct {
-	IAMURL          string `envconfig:"IAM_URL" required:"true"`
-	ServiceRegister bool   `envconfig:"SERVICE_REGISTER" default:"false"`
-	ServiceName     string `envconfig:"SERVICE_NAME" default:"capten-server"`
+	IAMURL                     string `envconfig:"IAM_URL" required:"true"`
+	ServiceRegister            bool   `envconfig:"SERVICE_REGISTER" default:"true"`
+	ServiceName                string `envconfig:"SERVICE_NAME" default:"capten-server"`
+	ServiceRolesConfigFilePath string `envconfig:"SERVICE_ROLES_CONFIG_FILE_PATH" default:"/data/service-config/roles.yaml"`
+}
+
+func NewConfig() (Config, error) {
+	cfg := Config{}
+	if err := envconfig.Process("", &cfg); err != nil {
+		return cfg, err
+	}
+
+	return cfg, nil
 }
 
 func RegisterService(log logging.Logger) error {
-	cfg := Config{}
-	if err := envconfig.Process("", &cfg); err != nil {
+	cfg, err := NewConfig()
+	if err != nil {
 		return err
 	}
 
@@ -29,19 +39,15 @@ func RegisterService(log logging.Logger) error {
 		return errors.WithMessage(err, "OryClient initialization failed")
 	}
 
-	IC, err := NewClient(log, oryclient, cfg)
+	iamClient, err := NewClient(log, oryclient, cfg)
 	if err != nil {
 		return errors.WithMessage(err, "Error occured while created IAM client")
 	}
 
-	err = IC.RegisterWithIam()
-	if err != nil {
-		return errors.WithMessage(err, "Registering capten server as oauth client failed")
-	}
-
-	err = IC.RegisterRolesActions()
+	err = iamClient.RegisterRolesActions()
 	if err != nil {
 		return errors.WithMessage(err, "Registering Roles and Actions in IAM failed")
 	}
+	log.Infof("service registration successful")
 	return nil
 }

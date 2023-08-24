@@ -14,6 +14,11 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
+type IAMRegister interface {
+	RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error)
+	GetOAuthURL() string
+}
+
 type Client struct {
 	oryClient oryclient.OryClient
 	log       logging.Logger
@@ -28,13 +33,13 @@ func NewClient(log logging.Logger, ory oryclient.OryClient, cfg Config) (*Client
 	}, nil
 }
 
-func (c *Client) RegisterWithIam() error {
+func (c *Client) RegisterService() error {
 	conn, err := grpc.Dial(c.cfg.IAMURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
-	iamclient := iampb.NewOauthServiceClient(conn)
 
+	iamclient := iampb.NewOauthServiceClient(conn)
 	oauthClientReq := &iampb.CreateClientCredentialsClientRequest{
 		ClientName: c.cfg.ServiceName,
 	}
@@ -42,48 +47,59 @@ func (c *Client) RegisterWithIam() error {
 	if err != nil {
 		return err
 	}
-	err = credential.PutIamOauthCredential(context.Background(), res.ClientId, res.ClientSecret)
+
+	err = credential.StoreServiceOauthCredential(context.Background(), c.cfg.ServiceName, res.ClientId, res.ClientSecret)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// at the line cm.WithIamYamlPath("provide the yaml location here"),
-// the roles and actions should be added to ConfigMap
-// the the location should be provided
 func (c *Client) RegisterRolesActions() error {
+
 	grpcOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
-	// Create an instance of IamConn with desired options
-	// the order of calling the options should be same as given in example
+
 	iamConn := cm.NewIamConn(
 		cm.WithGrpcDialOption(grpcOpts...),
 		cm.WithIamAddress(c.cfg.IAMURL),
-		// TODO: here need to add the roles and actions yaml location
-		cm.WithIamYamlPath("provide the yaml location here"),
+		cm.WithIamYamlPath(c.cfg.ServiceRolesConfigFilePath),
 	)
+
 	ctx := context.Background()
-	tkn, err := c.oryClient.GetCaptenServiceRegOauthToken()
+	oauthCred, err := c.oryClient.GetServiceOauthCredential(ctx, c.cfg.ServiceName)
 	if err != nil {
-		err = errors.WithMessage(err, "error getting capten service reg oauth token")
-		return err
+		return errors.WithMessage(err, "error while getting service oauth token")
 	}
-	if tkn == nil {
-		return errors.New("capten service reg oauth token is nil")
-	}
-	md := metadata.Pairs(
-		"oauth_token", *tkn,
-		"ory_url", c.oryClient.GetURL(),
-		"ory_pat", c.oryClient.GetPAT(),
-	)
-	newCtx := metadata.NewOutgoingContext(ctx, md)
-	// Update action roles
+
+	newCtx := metadata.AppendToOutgoingContext(context.Background(),
+		"oauth_token", oauthCred.AccessToken, "ory_url", c.oryClient.GetURL(), "ory_pat", c.oryClient.GetPAT())
+
 	err = iamConn.UpdateActionRoles(newCtx)
 	if err != nil {
-		c.log.Errorf("Failed to update action roles: %v", err)
-		return err
+		return errors.WithMessage(err, "Failed to update action roles")
 	}
 	return nil
+}
+
+func (c *Client) GetOAuthURL() string {
+	return c.oryClient.GetURL()
+}
+
+func (c *Client) RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error) {
+	conn, err := grpc.Dial(c.cfg.IAMURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return "", "", err
+	}
+	defer conn.Close()
+
+	iamclient := iampb.NewOauthServiceClient(conn)
+	res, err := iamclient.CreateOauthClient(context.Background(), &iampb.OauthClientRequest{
+		ClientName: clientName, RedirectUris: []string{redirectURL},
+	})
+	if err != nil {
+		return "", "", err
+	}
+	return res.ClientId, res.ClientSecret, nil
 }

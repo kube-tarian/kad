@@ -35,7 +35,6 @@ securityContext: {}
 
 env:
   logLevel: info
-  authEnabled: false
 
 service:
   type: ClusterIP
@@ -47,11 +46,11 @@ vault:
   policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin,vault-policy-generic-cred-admin"
 
 cassandra:
-  addresses: temporal-temporal-service:9042
+  addresses: capten-cass-capten-cass-service:9042
   userName: kadagent
   entityName: cassandra
   keyspace: capten
-  secretName: temporal-superuser
+  secretName: capten-cass-superuser
 
 ingressroute:
   enabled: true
@@ -61,6 +60,10 @@ ingressroute:
 
 cert:
   secretName: "kad-agent-cert"
+
+extraEnv:
+  - name: AUTH_ENABLED
+    value: false
 
 ingress:
   enabled: false

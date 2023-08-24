@@ -87,7 +87,7 @@ func DeleteClusterCerts(ctx context.Context, clusterID string) (err error) {
 	return
 }
 
-func StoreServiceOauthCredential(ctx context.Context, serviceName, clientId, clientSecret string) error {
+func StoreAppOauthCredential(ctx context.Context, serviceName, clientId, clientSecret string) error {
 	credWriter, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		return errors.WithMessage(err, "error in initializing credential admin")
@@ -107,7 +107,7 @@ func StoreServiceOauthCredential(ctx context.Context, serviceName, clientId, cli
 	return nil
 }
 
-func GetServiceOauthCredential(ctx context.Context, serviceName string) (clientId, clientSecret string, err error) {
+func GetAppOauthCredential(ctx context.Context, serviceName string) (clientId, clientSecret string, err error) {
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
 		err = errors.WithMessage(err, "error in initializing credential reader")

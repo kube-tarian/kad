@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 
-	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/types"
@@ -275,8 +274,7 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 
 	}
 
-	agnetHandler := agent.NewAgentHandler(s.log, s.serverStore, s.oryClient)
-	agent, err := agnetHandler.GetAgent(orgId, clusterId)
+	agent, err := s.agentHandeler.GetAgent(clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
 		return &serverpb.DeployStoreAppResponse{

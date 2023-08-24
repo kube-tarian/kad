@@ -33,11 +33,9 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
 	var tc *temporalclient.Client
 	var err error
 
-	if cfg.Mode == "local" {
-		tc, err = temporalclient.NewClient(log)
-		if err != nil {
-			return nil, err
-		}
+	tc, err = temporalclient.NewClient(log)
+	if err != nil {
+		return nil, err
 	}
 
 	as, err := captenstore.NewStore(log)

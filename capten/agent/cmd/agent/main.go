@@ -46,8 +46,10 @@ func main() {
 
 	var grpcServer *grpc.Server
 	if cfg.AuthEnabled {
+		log.Info("Agent Authentication enabled")
 		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(s.AuthInterceptor))
 	} else {
+		log.Info("Agent Authentication disabled")
 		grpcServer = grpc.NewServer()
 	}
 	agentpb.RegisterAgentServer(grpcServer, s)

@@ -7,8 +7,8 @@ import (
 	"html/template"
 	"reflect"
 
-	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/credential"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -33,8 +33,7 @@ func (a *Agent) ConfigureAppSSO(
 		}, nil
 	}
 
-	// save client secret in vault
-	if err := saveSsoCredentials(ctx, req.ClientId, req.ClientSecret); err != nil {
+	if err := credential.StoreAppOauthCredential(ctx, req.ReleaseName, req.ClientId, req.ClientSecret); err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentails for clientId: %s", req.ClientId)
 		a.log.Errorf("failed to store credentail for ClientId: %s, %v", req.ClientId, err)
 		return &agentpb.ConfigureAppSSOResponse{
@@ -115,18 +114,6 @@ func (a *Agent) ConfigureAppSSO(
 		StatusMessage: fmt.Sprintf("app deployment scheduled, runId: %v", run.GetRunID()),
 	}, nil
 
-}
-
-func saveSsoCredentials(ctx context.Context, clientId, secret string) error {
-	credAdmin, err := credentials.NewCredentialAdmin(ctx)
-	if err != nil {
-		return errors.WithMessage(err, "error in initializing credential admin")
-	}
-
-	return credAdmin.PutCredential(ctx, "config", "sso", clientId, map[string]string{
-		"clientId":     clientId,
-		"clientSecret": secret,
-	})
 }
 
 func replaceTemplateValues(templateData, values map[string]any) (transformedData map[string]any, err error) {

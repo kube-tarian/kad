@@ -9,6 +9,7 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/server/api"
 	"github.com/kube-tarian/kad/server/pkg/agent"
+	"github.com/kube-tarian/kad/server/pkg/config"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"github.com/kube-tarian/kad/server/pkg/store"
 )
@@ -26,7 +27,7 @@ var (
 func NewAPIHandler(log logging.Logger, serverStore store.ServerStore, oryClient oryclient.OryClient) (*APIHandler, error) {
 	return &APIHandler{
 		log:          log,
-		agentHandler: agent.NewAgentHandler(log, serverStore, oryClient),
+		agentHandler: agent.NewAgentHandler(log, config.ServiceConfig{}, serverStore, oryClient),
 	}, nil
 }
 
