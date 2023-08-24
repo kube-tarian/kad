@@ -16,7 +16,6 @@ import (
 const (
 	organizationIDAttribute = "organizationid"
 	clusterIDAttribute      = "clusterid"
-	successStatusMsg        = "OK"
 )
 
 type Server struct {
