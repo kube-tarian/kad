@@ -77,11 +77,14 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 		return nil, err
 	}
 
+	overrideValuesCopy, _ := base64.StdEncoding.DecodeString(overrideValues)
+	launchUiValuesCopy, _ := base64.StdEncoding.DecodeString(launchUiValues)
+
 	return &agentpb.SyncAppData{
 		Config: &config,
 		Values: &agentpb.AppValues{
-			OverrideValues: []byte(overrideValues),
-			LaunchUIValues: []byte(launchUiValues)},
+			OverrideValues: overrideValuesCopy,
+			LaunchUIValues: launchUiValuesCopy},
 	}, nil
 }
 
