@@ -300,6 +300,7 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			LaunchURL:           request.AppConfig.LaunchURL,
 			LaunchUIDescription: request.AppConfig.LaunchUIDescription,
 		},
+		OverrideValues: request.OverrideValues,
 	}
 
 	_, err = agent.GetClient().InstallApp(ctx, req)
