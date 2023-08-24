@@ -23,6 +23,7 @@ func (a *Agent) ConfigureAppSSO(
 			StatusMessage: "release name empty",
 		}, nil
 	}
+	a.log.Infof("Received request for ConfigureAppSSO, release_name: %s\n", req.ReleaseName)
 
 	appConfig, err := a.as.GetAppConfig(req.ReleaseName)
 	if err != nil {
@@ -35,7 +36,7 @@ func (a *Agent) ConfigureAppSSO(
 
 	if err := credential.StoreAppOauthCredential(ctx, req.ReleaseName, req.ClientId, req.ClientSecret); err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentails for clientId: %s", req.ClientId)
-		a.log.Errorf("failed to store credentail for ClientId: %s, %v", req.ClientId, err)
+		a.log.Errorf("failed to store credential for ClientId: %s, %v", req.ClientId, err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err saving SSO credentials in vault").Error(),
