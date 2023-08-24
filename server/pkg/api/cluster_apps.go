@@ -148,9 +148,14 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID strin
 			OAuthBaseURL: s.iam.GetOAuthURL(),
 		})
 
-		s.log.Info("CHECK the ConfigureAppSSO LIST: ", ssoResp, ssoResp.Status.String())
-
-		if err != nil || ssoResp.Status != agentpb.StatusCode_OK {
+		s.log.Info("CHECK the ConfigureAppSSO String: ", ssoResp.Status, ssoResp.Status.String())
+		s.log.Info("CHECK the ConfigureAppSSO Bool: ", ssoResp.Status != agentpb.StatusCode_OK)
+		s.log.Info("CHECK the ConfigureAppSSO Code: ", *ssoResp.Status.Enum() != agentpb.StatusCode_OK)
+		s.log.Info("CHECK the ConfigureAppSSO STATUS CODE: ", ssoResp.Status.String() != successStatusMsg)
+		//ssoResp.
+		fmt.Println("CODE", agentpb.StatusCode_OK, ssoResp.Status)
+		if err != nil || ssoResp.Status.String() != successStatusMsg {
+			fmt.Println("Inside CODE", agentpb.StatusCode_OK, ssoResp.Status)
 			return errors.WithMessagef(err, "failed to configure sso for app  %s on cluster %s", app.ReleaseName, clusterID)
 		}
 	}
