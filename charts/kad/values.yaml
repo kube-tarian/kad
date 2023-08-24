@@ -6,15 +6,18 @@ replicaCount: 1
 
 image:
   pullPolicy: Always
-  tag: "latest"
-agent:
-  repository: ghcr.io/kube-tarian/kad/agent
-deployment_worker:
-  repository: ghcr.io/kube-tarian/kad/deployment-worker
-config_worker:
-  repository: ghcr.io/kube-tarian/kad/config-worker
-climon:
-  repository: ghcr.io/kube-tarian/kad/climon
+  agent:
+    repository: ghcr.io/kube-tarian/kad/agent
+    tag: latest
+  deployment_worker:
+    repository: ghcr.io/kube-tarian/kad/deployment-worker
+    tag: latest
+  config_worker:
+    repository: ghcr.io/kube-tarian/kad/config-worker
+    tag: latest
+  climon:
+    repository: ghcr.io/kube-tarian/kad/climon
+    tag: latest
 
 imagePullSecrets: []
 nameOverride: ""
