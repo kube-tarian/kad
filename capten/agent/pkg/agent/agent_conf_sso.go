@@ -26,6 +26,7 @@ func (a *Agent) ConfigureAppSSO(
 
 	appConfig, err := a.as.GetAppConfig(req.ReleaseName)
 	if err != nil {
+		a.log.Errorf("failed to GetAppConfig for release_name: %s err: %v", req.ReleaseName, err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err fetching appConfig").Error(),
@@ -51,6 +52,7 @@ func (a *Agent) ConfigureAppSSO(
 	launchUiMapping, overrideValuesMapping := map[string]any{}, map[any]any{}
 
 	if err := yaml.Unmarshal(appConfig.Values.LaunchUIValues, &launchUiMapping); err != nil {
+		a.log.Errorf("failed to Unmarshal LaunchUIValues: %s err: %v", string(appConfig.Values.LaunchUIValues), err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err Unmarshalling launchiUiValues").Error(),
@@ -58,6 +60,7 @@ func (a *Agent) ConfigureAppSSO(
 	}
 
 	if err := yaml.Unmarshal(appConfig.Values.OverrideValues, &overrideValuesMapping); err != nil {
+		a.log.Errorf("failed to Unmarshal OverrideValues: %s err: %v", string(appConfig.Values.OverrideValues), err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err Unmarshalling overrideValues").Error(),
@@ -67,6 +70,7 @@ func (a *Agent) ConfigureAppSSO(
 	// replace values
 	launchUiMapping, err = replaceTemplateValues(launchUiMapping, ssoOverwriteMapping)
 	if err != nil {
+		a.log.Errorf("failed to replaceTemplateValues, err: %v", err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err replacing launchUiMapping").Error(),
@@ -79,6 +83,7 @@ func (a *Agent) ConfigureAppSSO(
 	// update override values in db
 	marshaledOverrideValues, err := yaml.Marshal(overrideValuesMapping)
 	if err != nil {
+		a.log.Errorf("failed to Marshal, err: %v", err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err marshalling overrideValues").Error(),
@@ -87,6 +92,7 @@ func (a *Agent) ConfigureAppSSO(
 	newAppConfig := *appConfig
 	newAppConfig.Values.OverrideValues = marshaledOverrideValues
 	if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
+		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err upserting new appConfig").Error(),
@@ -97,6 +103,7 @@ func (a *Agent) ConfigureAppSSO(
 	wd := workers.NewDeployment(a.tc, a.log)
 	run, err := wd.SendEvent(context.TODO(), "update", installRequestFromSyncApp(&newAppConfig))
 	if err != nil {
+		a.log.Errorf("failed to SendEvent, err: %v", err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err sending deployment event").Error(),
