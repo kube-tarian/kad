@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
-	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
 )
 
@@ -40,25 +39,21 @@ func (a *Agent) ClimonAppDelete(ctx context.Context, request *agentpb.ClimonDele
 
 func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppRequest) (*agentpb.InstallAppResponse, error) {
 	a.log.Infof("Recieved App Install request %+v", request)
-	worker := workers.NewClimon(a.tc, a.log)
+	worker := workers.NewDeployment(a.tc, a.log)
 
-	config := &model.AppConfig{
-		ReleaseName:         request.AppConfig.ReleaseName,
-		AppName:             request.AppConfig.AppName,
-		Version:             request.AppConfig.Version,
-		Category:            request.AppConfig.Category,
-		Description:         request.AppConfig.Description,
-		ChartName:           request.AppConfig.ChartName,
-		RepoName:            request.AppConfig.RepoName,
-		RepoURL:             request.AppConfig.RepoURL,
-		Namespace:           request.AppConfig.Namespace,
-		CreateNamespace:     request.AppConfig.CreateNamespace,
-		PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
-		Icon:                string(request.AppConfig.Icon),
-		LaunchURL:           request.AppConfig.LaunchURL,
-		LaunchUIDescription: request.AppConfig.LaunchUIDescription,
+	config := &agentpb.ApplicationInstallRequest{
+		PluginName:  "helm",
+		RepoName:    request.AppConfig.RepoName,
+		RepoUrl:     request.AppConfig.RepoURL,
+		ChartName:   request.AppConfig.ChartName,
+		Namespace:   request.AppConfig.Namespace,
+		ReleaseName: request.AppConfig.ReleaseName,
+		Version:     request.AppConfig.Version,
+		ClusterName: "capten",
+		ValuesYaml:  string(request.OverrideValues),
 	}
-	run, err := worker.SendInstallAppEvent(ctx, "install", config)
+
+	run, err := worker.SendEvent(ctx, "install", config)
 	if err != nil {
 		return &agentpb.InstallAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,

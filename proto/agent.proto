@@ -204,6 +204,7 @@ message GetClusterAppValuesResponse {
 
 message InstallAppRequest {
   AppConfig appConfig =1;
+  bytes overrideValues = 2;
 }
 
 message InstallAppResponse {
