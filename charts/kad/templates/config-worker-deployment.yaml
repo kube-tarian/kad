@@ -34,7 +34,7 @@ spec:
         - name: {{ .Chart.Name }}-config-worker
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.config_worker.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.config_worker.repository }}:{{ .Values.image.config_worker.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
