@@ -27,6 +27,9 @@ func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (mod
 	execution := workflow.GetInfo(ctx).WorkflowExecution
 	logger.Infof("execution: %+v\n", execution)
 
+	fmt.Println("action => ", action)
+	fmt.Println("Workflow request => ", string(payload))
+
 	var a *activities.Activities
 	var err error
 	switch action {
