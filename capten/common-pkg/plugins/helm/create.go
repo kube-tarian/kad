@@ -29,14 +29,15 @@ func (h *HelmCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, er
 		return nil, err
 	}
 
-	// Use an unpacked chart directory.
 	chartSpec := helmclient.ChartSpec{
 		ReleaseName: req.ReleaseName,
-		ChartName:   fmt.Sprintf("%s/%s", req.RepoName, req.ChartName),
+		ChartName:   req.ChartName,
 		Namespace:   req.Namespace,
+		Version:     req.Version,
 		Wait:        true,
 		Timeout:     time.Duration(req.Timeout) * time.Minute,
-	}
+	} // Use an unpacked chart directory.
+
 	if req.ValuesYaml != "" {
 		chartSpec.ValuesYaml = req.ValuesYaml
 	}
