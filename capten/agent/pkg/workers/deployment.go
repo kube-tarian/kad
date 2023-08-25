@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
-	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/workflows"
 	"go.temporal.io/sdk/client"
 )
@@ -47,6 +47,8 @@ func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("Request payload => ", string(deployPayloadJSON))
 
 	log.Printf("Event sent to temporal: %+v", deployPayload)
 	run, err := d.client.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, json.RawMessage(deployPayloadJSON))
