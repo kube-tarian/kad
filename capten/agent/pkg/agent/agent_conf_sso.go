@@ -46,7 +46,7 @@ func (a *Agent) ConfigureAppSSO(
 	ssoOverwriteMapping := map[string]any{
 		"ClientId":     req.ClientId,
 		"ClientSecret": req.ClientSecret,
-		"OryURL":       req.OAuthBaseURL,
+		"OAuthBaseURL": req.OAuthBaseURL,
 	}
 
 	launchUiMapping, overrideValuesMapping := map[string]any{}, map[any]any{}
