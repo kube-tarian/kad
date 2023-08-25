@@ -91,13 +91,6 @@ func (a *Agent) ConfigureAppSSO(
 	}
 	newAppConfig := *appConfig
 	newAppConfig.Values.OverrideValues = marshaledOverrideValues
-	if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
-		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
-		return &agentpb.ConfigureAppSSOResponse{
-			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "err upserting new appConfig").Error(),
-		}, nil
-	}
 
 	// start temporal workflow to redploy apps
 	wd := workers.NewDeployment(a.tc, a.log)
@@ -107,6 +100,15 @@ func (a *Agent) ConfigureAppSSO(
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err sending deployment event").Error(),
+		}, nil
+	}
+
+	// update new values in db
+	if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
+		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
+		return &agentpb.ConfigureAppSSOResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: errors.WithMessage(err, "err upserting new appConfig").Error(),
 		}, nil
 	}
 
