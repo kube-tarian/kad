@@ -199,6 +199,6 @@ func installRequestFromSyncApp(data *agentpb.SyncAppData) *agentpb.ApplicationIn
 		Version:     data.Config.Version,
 		ClusterName: "capten",
 		ValuesYaml:  string(values),
-		Timeout:     5,
+		Timeout:     10,
 	}
 }
