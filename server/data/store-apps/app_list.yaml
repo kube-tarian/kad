@@ -1,6 +1,6 @@
 enabledApps:
-- falco
-- loki
+  - argo-cd
+  - crossplane
+  - tekton
 
 disabledApps:
-- signoz

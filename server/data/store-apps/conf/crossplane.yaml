@@ -1,0 +1,11 @@
+Name: "crossplane"
+ChartName: "tools/crossplane"
+Category: "iaas"
+Description: ""
+RepoName: "tools"
+RepoURL: "https://kube-tarian.github.io/helmrepo-supporting-tools"
+Namespace: "crossplane"
+ReleaseName: "crossplane"
+Version: "1.0.0"
+CreateNamespace: true
+OverrideValues:
