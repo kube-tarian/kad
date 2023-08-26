@@ -46,7 +46,7 @@ func (a *Agent) ConfigureAppSSO(
 	ssoOverwriteMapping := map[string]any{
 		"ClientId":     req.ClientId,
 		"ClientSecret": req.ClientSecret,
-		"OryURL":       req.OAuthBaseURL,
+		"OAuthBaseURL": req.OAuthBaseURL,
 	}
 
 	launchUiMapping, overrideValuesMapping := map[string]any{}, map[any]any{}
@@ -199,6 +199,6 @@ func installRequestFromSyncApp(data *agentpb.SyncAppData) *agentpb.ApplicationIn
 		Version:     data.Config.Version,
 		ClusterName: "capten",
 		ValuesYaml:  string(values),
-		Timeout:     5,
+		Timeout:     10,
 	}
 }
