@@ -56,7 +56,9 @@ jobs:
         with:
           context: .
           file: ./dockerfiles/agent/Dockerfile
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.run_id }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ github.run_id }},
+            ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest
           labels: ${{ steps.metadata.outputs.labels }}
         
           push: true
