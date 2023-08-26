@@ -48,8 +48,6 @@ func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload
 		return nil, err
 	}
 
-	fmt.Println("Request payload => ", string(deployPayloadJSON))
-
 	log.Printf("Event sent to temporal: %+v", deployPayload)
 	run, err := d.client.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, json.RawMessage(deployPayloadJSON))
 	if err != nil {
