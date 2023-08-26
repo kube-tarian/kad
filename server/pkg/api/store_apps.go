@@ -299,8 +299,10 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			Icon:                []byte(request.AppConfig.Icon),
 			LaunchURL:           request.AppConfig.LaunchURL,
 			LaunchUIDescription: request.AppConfig.LaunchUIDescription,
+			DefualtApp:          request.AppConfig.DefualtApp,
 		},
 		OverrideValues: request.OverrideValues,
+		LaunchUIValues: request.LaunchUIValues,
 	}
 
 	_, err = agent.GetClient().InstallApp(ctx, req)

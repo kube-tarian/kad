@@ -56,11 +56,47 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 
 	run, err := worker.SendEvent(ctx, "install", config)
 	if err != nil {
+		a.log.Errorf("failed to send store app install event, %v", err)
 		return &agentpb.InstallAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "Internall error in create install app job",
 		}, err
 	}
+
+	syncConfig := &agentpb.SyncAppData{
+		Config: &agentpb.AppConfig{
+			ReleaseName:         request.AppConfig.ReleaseName,
+			AppName:             request.AppConfig.AppName,
+			Version:             request.AppConfig.Version,
+			Category:            request.AppConfig.Category,
+			Description:         request.AppConfig.Description,
+			ChartName:           request.AppConfig.ChartName,
+			RepoName:            request.AppConfig.RepoName,
+			RepoURL:             request.AppConfig.RepoURL,
+			Namespace:           request.AppConfig.Namespace,
+			CreateNamespace:     request.AppConfig.CreateNamespace,
+			PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
+			Icon:                request.AppConfig.Icon,
+			LaunchURL:           request.AppConfig.LaunchURL,
+			LaunchUIDescription: request.AppConfig.LaunchUIDescription,
+			InstallStatus:       "Installed",
+			DefualtApp:          request.AppConfig.DefualtApp,
+		},
+		Values: &agentpb.AppValues{
+			OverrideValues: request.OverrideValues,
+			LaunchUIValues: request.LaunchUIValues,
+		},
+	}
+
+	if err := a.as.UpsertAppConfig(syncConfig); err != nil {
+		a.log.Errorf("failed to update sync app config, %v", err)
+		return &agentpb.InstallAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to sync app config",
+		}, err
+	}
+
+	a.log.Infof("Sync app [%s] successful", request.AppConfig.ReleaseName)
 
 	return &agentpb.InstallAppResponse{
 		Status:        agentpb.StatusCode_OK,

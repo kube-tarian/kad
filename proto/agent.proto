@@ -205,6 +205,7 @@ message GetClusterAppValuesResponse {
 message InstallAppRequest {
   AppConfig appConfig =1;
   bytes overrideValues = 2;
+  bytes launchUIValues = 3;
 }
 
 message InstallAppResponse {
