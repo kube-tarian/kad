@@ -1,12 +1,12 @@
-Name: "falco"
-ChartName: "tools/falco"
-Category: "Security"
+Name: "argo-cd"
+ChartName: "tools/argo-cd"
+Category: "CI/CD"
 Description: ""
 RepoName: "tools"
 RepoURL: "https://kube-tarian.github.io/helmrepo-supporting-tools"
-Namespace: "falco"
-ReleaseName: "falco"
-Version: "0.0.1"
+Namespace: "argo-cd"
+ReleaseName: "argo-cd"
+Version: "1.0.0"
 CreateNamespace: true
 OverrideValues:
   driver:

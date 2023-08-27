@@ -30,12 +30,13 @@ func (h *HelmCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, er
 	}
 
 	chartSpec := helmclient.ChartSpec{
-		ReleaseName: req.ReleaseName,
-		ChartName:   req.ChartName,
-		Namespace:   req.Namespace,
-		Version:     req.Version,
-		Wait:        true,
-		Timeout:     time.Duration(req.Timeout) * time.Minute,
+		ReleaseName:     req.ReleaseName,
+		ChartName:       req.ChartName,
+		Namespace:       req.Namespace,
+		Version:         req.Version,
+		Wait:            true,
+		Timeout:         time.Duration(req.Timeout) * time.Minute,
+		CreateNamespace: true,
 	} // Use an unpacked chart directory.
 
 	if req.ValuesYaml != "" {

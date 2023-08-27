@@ -225,6 +225,7 @@ message GetStoreAppValuesResponse {
 message DeployStoreAppRequest {
   StoreAppConfig appConfig = 1;
   bytes overrideValues = 2;
+    bytes launchUIValues = 3;
 }
 
 message DeployStoreAppResponse{

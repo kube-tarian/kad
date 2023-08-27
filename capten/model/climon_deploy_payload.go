@@ -12,6 +12,8 @@ type CreteRequestPayload struct {
 
 	ClusterName string `json:"cluster_name" required:"false"`
 	ValuesYaml  string `json:"values_yaml" required:"false"`
+
+	// CreateNamespace bool `json:"createNamespace"`
 }
 
 type DeleteRequestPayload struct {
