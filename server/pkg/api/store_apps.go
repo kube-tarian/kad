@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/hex"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
@@ -31,11 +33,11 @@ func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppR
 		Namespace:           request.AppConfig.Namespace,
 		CreateNamespace:     request.AppConfig.CreateNamespace,
 		PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
-		Icon:                request.AppConfig.Icon,
+		Icon:                hex.EncodeToString(request.AppConfig.Icon),
 		LaunchURL:           request.AppConfig.LaunchURL,
 		LaunchUIDescription: request.AppConfig.LaunchUIDescription,
-		OverrideValues:      request.AppValues.OverrideValues,
-		LaunchUIValues:      request.AppValues.LaunchUIValues,
+		OverrideValues:      base64.StdEncoding.EncodeToString(request.AppValues.OverrideValues),
+		LaunchUIValues:      base64.StdEncoding.EncodeToString(request.AppValues.LaunchUIValues),
 	}
 
 	if err := s.serverStore.AddOrUpdateApp(config); err != nil {
@@ -74,11 +76,11 @@ func (s *Server) UpdateStoreApp(ctx context.Context, request *serverpb.UpdateSto
 		Namespace:           request.AppConfig.Namespace,
 		CreateNamespace:     request.AppConfig.CreateNamespace,
 		PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
-		Icon:                request.AppConfig.Icon,
+		Icon:                hex.EncodeToString(request.AppConfig.Icon),
 		LaunchURL:           request.AppConfig.LaunchURL,
 		LaunchUIDescription: request.AppConfig.LaunchUIDescription,
-		OverrideValues:      request.AppValues.OverrideValues,
-		LaunchUIValues:      request.AppValues.LaunchUIValues,
+		OverrideValues:      base64.StdEncoding.EncodeToString(request.AppValues.OverrideValues),
+		LaunchUIValues:      base64.StdEncoding.EncodeToString(request.AppValues.LaunchUIValues),
 	}
 
 	if err := s.serverStore.AddOrUpdateApp(config); err != nil {
@@ -138,6 +140,7 @@ func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppR
 		}, nil
 	}
 
+	decodedIconBytes, _ := hex.DecodeString(config.Icon)
 	appConfig := &serverpb.StoreAppConfig{
 		AppName:             config.Name,
 		Version:             config.Version,
@@ -149,16 +152,24 @@ func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppR
 		Namespace:           config.Namespace,
 		CreateNamespace:     config.CreateNamespace,
 		PrivilegedNamespace: config.PrivilegedNamespace,
-		Icon:                config.Icon,
+		Icon:                decodedIconBytes,
 		LaunchURL:           config.LaunchUIURL,
 		LaunchUIDescription: config.LaunchUIDescription,
 		ReleaseName:         config.ReleaseName,
+	}
+
+	decodedOverrideValuesBytes, _ := base64.StdEncoding.DecodeString(config.OverrideValues)
+	decodedLaunchUiValuesBytes, _ := base64.StdEncoding.DecodeString(config.LaunchUIValues)
+	appValues := &serverpb.StoreAppValues{
+		OverrideValues: decodedOverrideValuesBytes,
+		LaunchUIValues: decodedLaunchUiValuesBytes,
 	}
 
 	return &serverpb.GetStoreAppResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "app config is sucessfuly fetched from store",
 		AppConfig:     appConfig,
+		AppValues:     appValues,
 	}, nil
 
 }
@@ -175,30 +186,39 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 		}, nil
 	}
 
-	appConfigs := []*serverpb.StoreAppConfig{}
+	appsData := []*serverpb.StoreAppsData{}
 	for _, config := range *configs {
-		appConfigs = append(appConfigs, &serverpb.StoreAppConfig{
-			AppName:             config.Name,
-			Version:             config.Version,
-			Category:            config.Category,
-			Description:         config.Description,
-			ChartName:           config.ChartName,
-			RepoName:            config.RepoName,
-			RepoURL:             config.RepoURL,
-			Namespace:           config.Namespace,
-			CreateNamespace:     config.CreateNamespace,
-			PrivilegedNamespace: config.PrivilegedNamespace,
-			Icon:                config.Icon,
-			LaunchURL:           config.LaunchUIURL,
-			LaunchUIDescription: config.LaunchUIDescription,
-			ReleaseName:         config.ReleaseName,
+		decodedIconBytes, _ := hex.DecodeString(config.Icon)
+		decodedOverrideValuesBytes, _ := base64.StdEncoding.DecodeString(config.OverrideValues)
+		decodedLaunchUiValuesBytes, _ := base64.StdEncoding.DecodeString(config.LaunchUIValues)
+		appsData = append(appsData, &serverpb.StoreAppsData{
+			AppConfigs: &serverpb.StoreAppConfig{
+				AppName:             config.Name,
+				Version:             config.Version,
+				Category:            config.Category,
+				Description:         config.Description,
+				ChartName:           config.ChartName,
+				RepoName:            config.RepoName,
+				RepoURL:             config.RepoURL,
+				Namespace:           config.Namespace,
+				CreateNamespace:     config.CreateNamespace,
+				PrivilegedNamespace: config.PrivilegedNamespace,
+				Icon:                decodedIconBytes,
+				LaunchURL:           config.LaunchUIURL,
+				LaunchUIDescription: config.LaunchUIDescription,
+				ReleaseName:         config.ReleaseName,
+			},
+			AppValues: &serverpb.StoreAppValues{
+				OverrideValues: decodedOverrideValuesBytes,
+				LaunchUIValues: decodedLaunchUiValuesBytes,
+			},
 		})
 	}
 
 	return &serverpb.GetStoreAppsResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "app config's are sucessfuly fetched from store",
-		AppConfigs:    appConfigs,
+		Data:          appsData,
 	}, nil
 }
 
@@ -220,6 +240,7 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 		}, nil
 	}
 
+	decodedIconBytes, _ := hex.DecodeString(config.Icon)
 	appConfig := &serverpb.StoreAppConfig{
 		AppName:             config.Name,
 		Version:             config.Version,
@@ -231,16 +252,24 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 		Namespace:           config.Namespace,
 		CreateNamespace:     config.CreateNamespace,
 		PrivilegedNamespace: config.PrivilegedNamespace,
-		Icon:                config.Icon,
+		Icon:                decodedIconBytes,
 		LaunchURL:           config.LaunchUIURL,
 		LaunchUIDescription: config.LaunchUIDescription,
 		ReleaseName:         config.ReleaseName,
+	}
+
+	decodedOverrideValuesBytes, _ := base64.StdEncoding.DecodeString(config.OverrideValues)
+	decodedLaunchUiValuesBytes, _ := base64.StdEncoding.DecodeString(config.LaunchUIValues)
+	appValues := &serverpb.StoreAppValues{
+		OverrideValues: decodedOverrideValuesBytes,
+		LaunchUIValues: decodedLaunchUiValuesBytes,
 	}
 
 	return &serverpb.GetStoreAppValuesResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "store app values sucessfuly fetched",
 		AppConfig:     appConfig,
+		AppValues:     appValues,
 	}, nil
 
 }
@@ -296,13 +325,15 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			Namespace:           request.AppConfig.Namespace,
 			CreateNamespace:     request.AppConfig.CreateNamespace,
 			PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
-			Icon:                []byte(request.AppConfig.Icon),
+			Icon:                request.AppConfig.Icon,
 			LaunchURL:           request.AppConfig.LaunchURL,
 			LaunchUIDescription: request.AppConfig.LaunchUIDescription,
 			DefualtApp:          request.AppConfig.DefualtApp,
 		},
-		OverrideValues: request.OverrideValues,
-		LaunchUIValues: request.LaunchUIValues,
+		AppValues: &agentpb.AppValues{
+			OverrideValues: request.AppValues.OverrideValues,
+			LaunchUIValues: request.AppValues.LaunchUIValues,
+		},
 	}
 
 	_, err = agent.GetClient().InstallApp(ctx, req)
