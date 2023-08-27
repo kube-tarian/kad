@@ -34,8 +34,8 @@ func (h *HelmCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, er
 		ChartName:   req.ChartName,
 		Namespace:   req.Namespace,
 		Version:     req.Version,
-		Wait:        true,
-		Timeout:     time.Duration(req.Timeout) * time.Minute,
+		//Wait:        true,
+		Timeout: time.Duration(req.Timeout) * time.Minute,
 	} // Use an unpacked chart directory.
 
 	if req.ValuesYaml != "" {
