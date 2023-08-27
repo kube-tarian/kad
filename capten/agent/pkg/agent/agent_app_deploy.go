@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
@@ -50,7 +51,7 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 		ReleaseName: request.AppConfig.ReleaseName,
 		Version:     request.AppConfig.Version,
 		ClusterName: "capten",
-		ValuesYaml:  string(request.OverrideValues),
+		ValuesYaml:  base64.StdEncoding.EncodeToString(request.AppValues.OverrideValues),
 		Timeout:     5,
 	}
 
@@ -83,8 +84,8 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 			DefualtApp:          request.AppConfig.DefualtApp,
 		},
 		Values: &agentpb.AppValues{
-			OverrideValues: request.OverrideValues,
-			LaunchUIValues: request.LaunchUIValues,
+			OverrideValues: request.AppValues.OverrideValues,
+			LaunchUIValues: request.AppValues.LaunchUIValues,
 		},
 	}
 
