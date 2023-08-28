@@ -73,8 +73,9 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			CreateNamespace:     appConfig.CreateNamespace,
 			PrivilegedNamespace: appConfig.PrivilegedNamespace,
 			Icon:                appConfig.Icon,
-			LaunchURL:           appConfig.LaunchUIURL,
+			LaunchURL:           appConfig.LaunchURL,
 			LaunchUIDescription: appConfig.LaunchUIDescription,
+			LaunchUIValues:      appConfig.LaunchUIValues,
 		}
 
 		overrideValuesJSON, err := json.Marshal(appConfig.OverrideValues)
@@ -89,7 +90,7 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 		}
 		storeAppConfig.LaunchUIValues = string(launchUIValues)
 
-		if err := appStore.AddOrUpdateApp(storeAppConfig); err != nil {
+		if err := appStore.AddOrUpdateStoreApp(storeAppConfig); err != nil {
 			return errors.WithMessagef(err, "failed to store app config for %s", appName)
 		}
 	}

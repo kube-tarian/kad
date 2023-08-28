@@ -9,6 +9,7 @@ import (
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/credential"
+	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -16,14 +17,13 @@ import (
 
 func (a *Agent) ConfigureAppSSO(
 	ctx context.Context, req *agentpb.ConfigureAppSSORequest) (*agentpb.ConfigureAppSSOResponse, error) {
-
 	if req.ReleaseName == "" {
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "release name empty",
 		}, nil
 	}
-	a.log.Infof("Received request for ConfigureAppSSO, release_name: %s\n", req.ReleaseName)
+	a.log.Infof("Received request for ConfigureAppSSO, app %s", req.ReleaseName)
 
 	appConfig, err := a.as.GetAppConfig(req.ReleaseName)
 	if err != nil {
@@ -35,7 +35,6 @@ func (a *Agent) ConfigureAppSSO(
 	}
 
 	if err := credential.StoreAppOauthCredential(ctx, req.ReleaseName, req.ClientId, req.ClientSecret); err != nil {
-		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentails for clientId: %s", req.ClientId)
 		a.log.Errorf("failed to store credential for ClientId: %s, %v", req.ClientId, err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
@@ -49,8 +48,16 @@ func (a *Agent) ConfigureAppSSO(
 		"OAuthBaseURL": req.OAuthBaseURL,
 	}
 
-	launchUiMapping, overrideValuesMapping := map[string]any{}, map[any]any{}
+	templateValuesMapping, err := deriveTemplateValuesMapping(appConfig.Values.OverrideValues, appConfig.Values.TemplateValues)
+	if err != nil {
+		a.log.Errorf("failed to derivee template values, err: %v", err)
+		return &agentpb.ConfigureAppSSOResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: errors.WithMessage(err, "failed to dervice template values").Error(),
+		}, nil
+	}
 
+	launchUiMapping := map[string]any{}
 	if err := yaml.Unmarshal(appConfig.Values.LaunchUIValues, &launchUiMapping); err != nil {
 		a.log.Errorf("failed to Unmarshal LaunchUIValues: %s err: %v", string(appConfig.Values.LaunchUIValues), err)
 		return &agentpb.ConfigureAppSSOResponse{
@@ -59,15 +66,6 @@ func (a *Agent) ConfigureAppSSO(
 		}, nil
 	}
 
-	if err := yaml.Unmarshal(appConfig.Values.OverrideValues, &overrideValuesMapping); err != nil {
-		a.log.Errorf("failed to Unmarshal OverrideValues: %s err: %v", string(appConfig.Values.OverrideValues), err)
-		return &agentpb.ConfigureAppSSOResponse{
-			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "err Unmarshalling overrideValues").Error(),
-		}, nil
-	}
-
-	// replace values
 	launchUiMapping, err = replaceTemplateValues(launchUiMapping, ssoOverwriteMapping)
 	if err != nil {
 		a.log.Errorf("failed to replaceTemplateValues, err: %v", err)
@@ -77,11 +75,8 @@ func (a *Agent) ConfigureAppSSO(
 		}, nil
 	}
 
-	// merge values
-	overrideValuesMapping = mergeRecursive(overrideValuesMapping, convertKey(launchUiMapping))
-
-	// update override values in db
-	marshaledOverrideValues, err := yaml.Marshal(overrideValuesMapping)
+	finalOverrideValuesMapping := mergeRecursive(convertKey(templateValuesMapping), convertKey(launchUiMapping))
+	marshaledOverrideValues, err := yaml.Marshal(finalOverrideValuesMapping)
 	if err != nil {
 		a.log.Errorf("failed to Marshal, err: %v", err)
 		return &agentpb.ConfigureAppSSOResponse{
@@ -89,13 +84,31 @@ func (a *Agent) ConfigureAppSSO(
 			StatusMessage: errors.WithMessage(err, "err marshalling overrideValues").Error(),
 		}, nil
 	}
+
 	newAppConfig := *appConfig
 	newAppConfig.Values.OverrideValues = marshaledOverrideValues
+	newAppConfig.Config.InstallStatus = "Updating"
 
-	// start temporal workflow to redploy apps
+	if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
+		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
+		return &agentpb.ConfigureAppSSOResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: errors.WithMessage(err, "err upserting new appConfig").Error(),
+		}, nil
+	}
+
 	wd := workers.NewDeployment(a.tc, a.log)
 	run, err := wd.SendEvent(context.TODO(), "update", installRequestFromSyncApp(&newAppConfig))
 	if err != nil {
+		newAppConfig.Config.InstallStatus = "Update Failed"
+		if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
+			a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
+			return &agentpb.ConfigureAppSSOResponse{
+				Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+				StatusMessage: errors.WithMessage(err, "err upserting new appConfig").Error(),
+			}, nil
+		}
+
 		a.log.Errorf("failed to SendEvent, err: %v", err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
@@ -103,7 +116,7 @@ func (a *Agent) ConfigureAppSSO(
 		}, nil
 	}
 
-	// update new values in db
+	newAppConfig.Config.InstallStatus = "Updated"
 	if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
 		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
 		return &agentpb.ConfigureAppSSOResponse{
@@ -186,19 +199,19 @@ func convertKey(m map[string]any) map[any]any {
 	return ret
 }
 
-func installRequestFromSyncApp(data *agentpb.SyncAppData) *agentpb.ApplicationInstallRequest {
+func installRequestFromSyncApp(data *agentpb.SyncAppData) *model.ApplicationInstallRequest {
 	values := make([]byte, len(data.Values.OverrideValues))
 	copy(values, data.Values.OverrideValues)
-	return &agentpb.ApplicationInstallRequest{
-		PluginName:  "helm",
-		RepoName:    data.Config.RepoName,
-		RepoUrl:     data.Config.RepoURL,
-		ChartName:   data.Config.ChartName,
-		Namespace:   data.Config.Namespace,
-		ReleaseName: data.Config.ReleaseName,
-		Version:     data.Config.Version,
-		ClusterName: "capten",
-		ValuesYaml:  string(values),
-		Timeout:     10,
+	return &model.ApplicationInstallRequest{
+		PluginName:     "helm",
+		RepoName:       data.Config.RepoName,
+		RepoURL:        data.Config.RepoURL,
+		ChartName:      data.Config.ChartName,
+		Namespace:      data.Config.Namespace,
+		ReleaseName:    data.Config.ReleaseName,
+		Version:        data.Config.Version,
+		ClusterName:    "capten",
+		OverrideValues: string(values),
+		Timeout:        10,
 	}
 }

@@ -59,7 +59,7 @@ ingressroute:
   enabled: true
   mtls:
     enabled: true
-  host: "captenagent.dev.optimizor.app"
+  host: "captenagent"
 
 cert:
   secretName: "kad-agent-cert"
