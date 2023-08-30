@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
@@ -165,6 +167,11 @@ func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppR
 		LaunchUIValues: decodedLaunchUiValuesBytes,
 	}
 
+	appConfigJson, _ := json.Marshal(appConfig)
+	fmt.Println("App Config/n", string(appConfigJson))
+	appValuesJson, _ := json.Marshal(appValues)
+	fmt.Println("App Values/n", string(appValuesJson))
+
 	return &serverpb.GetStoreAppResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "app config is sucessfuly fetched from store",
@@ -214,6 +221,9 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 			},
 		})
 	}
+
+	appStoreListJson, _ := json.Marshal(appsData)
+	fmt.Println("App store list/n", string(appStoreListJson))
 
 	return &serverpb.GetStoreAppsResponse{
 		Status:        serverpb.StatusCode_OK,
