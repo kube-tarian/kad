@@ -8,4 +8,3 @@ Namespace: "tekton"
 ReleaseName: "tekton"
 Version: "1.0.0"
 CreateNamespace: true
-OverrideValues:

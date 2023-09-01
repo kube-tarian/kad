@@ -8,6 +8,3 @@ Namespace: "argo-cd"
 ReleaseName: "argo-cd"
 Version: "1.0.0"
 CreateNamespace: true
-OverrideValues:
-  driver:
-    kind: ebpf
