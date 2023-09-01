@@ -3,7 +3,6 @@ package agent
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"html/template"
 	"reflect"
 
@@ -97,39 +96,31 @@ func (a *Agent) ConfigureAppSSO(
 		}, nil
 	}
 
-	wd := workers.NewDeployment(a.tc, a.log)
-	run, err := wd.SendEvent(context.TODO(), "update", installRequestFromSyncApp(&newAppConfig))
-	if err != nil {
-		newAppConfig.Config.InstallStatus = "Update Failed"
-		if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
-			a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
-			return &agentpb.ConfigureAppSSOResponse{
-				Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-				StatusMessage: errors.WithMessage(err, "err upserting new appConfig").Error(),
-			}, nil
+	go func() {
+		wd := workers.NewDeployment(a.tc, a.log)
+		_, err := wd.SendEvent(context.TODO(), "update", installRequestFromSyncApp(&newAppConfig))
+		if err != nil {
+			newAppConfig.Config.InstallStatus = "Update Failed"
+			if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
+				a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
+				return
+			}
+			a.log.Errorf("failed to SendEvent, err: %v", err)
+			return
 		}
 
-		a.log.Errorf("failed to SendEvent, err: %v", err)
-		return &agentpb.ConfigureAppSSOResponse{
-			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "err sending deployment event").Error(),
-		}, nil
-	}
+		newAppConfig.Config.InstallStatus = "Updated"
+		if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
+			a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
+			return
+		}
+	}()
 
-	newAppConfig.Config.InstallStatus = "Updated"
-	if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
-		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
-		return &agentpb.ConfigureAppSSOResponse{
-			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "err upserting new appConfig").Error(),
-		}, nil
-	}
-
+	a.log.Infof("Triggerred app [%s] update", newAppConfig.Config.ReleaseName)
 	return &agentpb.ConfigureAppSSOResponse{
 		Status:        agentpb.StatusCode_OK,
-		StatusMessage: fmt.Sprintf("app deployment scheduled, runId: %v", run.GetRunID()),
+		StatusMessage: "Triggerred app upgrade",
 	}, nil
-
 }
 
 func replaceTemplateValues(templateData, values map[string]any) (transformedData map[string]any, err error) {
