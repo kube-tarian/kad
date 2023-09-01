@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/agent"
@@ -53,4 +54,19 @@ func metadataContextToMap(ctx context.Context) map[string]string {
 		}
 	}
 	return metadataMap
+}
+
+func encodeBase64BytesToString(val []byte) string {
+	if len(val) == 0 {
+		return ""
+	}
+	return base64.StdEncoding.EncodeToString(val)
+}
+
+func decodeBase64StringToBytes(val string) []byte {
+	if len(val) == 0 {
+		return nil
+	}
+	dval, _ := base64.StdEncoding.DecodeString(val)
+	return dval
 }

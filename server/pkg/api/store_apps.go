@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -14,12 +13,11 @@ import (
 
 func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppRequest) (
 	*serverpb.AddStoreAppResponse, error) {
-
 	if request.AppConfig.AppName == "" || request.AppConfig.Version == "" {
-		s.log.Errorf("failed to add app config to store, %v", "App name/version is missing")
+		s.log.Infof("AppName or version is missing for add store app request")
 		return &serverpb.AddStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed add app config to store, app name/version is missing",
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "AppName or version is missing in the request",
 		}, nil
 	}
 
@@ -38,11 +36,12 @@ func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppR
 		Icon:                hex.EncodeToString(request.AppConfig.Icon),
 		LaunchURL:           request.AppConfig.LaunchURL,
 		LaunchUIDescription: request.AppConfig.LaunchUIDescription,
-		OverrideValues:      base64.StdEncoding.EncodeToString(request.AppValues.OverrideValues),
-		LaunchUIValues:      base64.StdEncoding.EncodeToString(request.AppValues.LaunchUIValues),
+		OverrideValues:      encodeBase64BytesToString(request.AppValues.OverrideValues),
+		LaunchUIValues:      encodeBase64BytesToString(request.AppValues.LaunchUIValues),
+		TemplateValues:      encodeBase64BytesToString(request.AppValues.TemplateValues),
 	}
 
-	if err := s.serverStore.AddOrUpdateApp(config); err != nil {
+	if err := s.serverStore.AddOrUpdateStoreApp(config); err != nil {
 		s.log.Errorf("failed to add app config to store, %v", err)
 		return &serverpb.AddStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -59,10 +58,10 @@ func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppR
 func (s *Server) UpdateStoreApp(ctx context.Context, request *serverpb.UpdateStoreAppRequest) (
 	*serverpb.UpdateStoreAppRsponse, error) {
 	if request.AppConfig.AppName == "" || request.AppConfig.Version == "" {
-		s.log.Errorf("failed to update app config in store, %v", "App name/version is missing")
+		s.log.Infof("AppName or version is missing for update store app request")
 		return &serverpb.UpdateStoreAppRsponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to update app config in store, app name/version is missing",
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "AppName or version is missing in the request",
 		}, nil
 	}
 
@@ -81,11 +80,12 @@ func (s *Server) UpdateStoreApp(ctx context.Context, request *serverpb.UpdateSto
 		Icon:                hex.EncodeToString(request.AppConfig.Icon),
 		LaunchURL:           request.AppConfig.LaunchURL,
 		LaunchUIDescription: request.AppConfig.LaunchUIDescription,
-		OverrideValues:      base64.StdEncoding.EncodeToString(request.AppValues.OverrideValues),
-		LaunchUIValues:      base64.StdEncoding.EncodeToString(request.AppValues.LaunchUIValues),
+		OverrideValues:      encodeBase64BytesToString(request.AppValues.OverrideValues),
+		LaunchUIValues:      encodeBase64BytesToString(request.AppValues.LaunchUIValues),
+		TemplateValues:      encodeBase64BytesToString(request.AppValues.TemplateValues),
 	}
 
-	if err := s.serverStore.AddOrUpdateApp(config); err != nil {
+	if err := s.serverStore.AddOrUpdateStoreApp(config); err != nil {
 		s.log.Errorf("failed to update app config in store, %v", err)
 		return &serverpb.UpdateStoreAppRsponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -102,10 +102,10 @@ func (s *Server) UpdateStoreApp(ctx context.Context, request *serverpb.UpdateSto
 func (s *Server) DeleteStoreApp(ctx context.Context, request *serverpb.DeleteStoreAppRequest) (
 	*serverpb.DeleteStoreAppResponse, error) {
 	if request.AppName == "" || request.Version == "" {
-		s.log.Errorf("failed to delete app config from store, %v", "App name/version is missing")
+		s.log.Infof("AppName or version is missing for delete store app request")
 		return &serverpb.DeleteStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to delete app config from store, app name/version is missing",
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "AppName or version is missing in the request",
 		}, nil
 	}
 
@@ -127,12 +127,13 @@ func (s *Server) DeleteStoreApp(ctx context.Context, request *serverpb.DeleteSto
 func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppRequest) (
 	*serverpb.GetStoreAppResponse, error) {
 	if request.AppName == "" || request.Version == "" {
-		s.log.Errorf("failed to get app config from store, %v", "App name/version is missing")
+		s.log.Infof("AppName or version is missing for get store app request")
 		return &serverpb.GetStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to get app config from store, app name/version is missing",
+			Status:        serverpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "AppName or version is missing in the request",
 		}, nil
 	}
+
 	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
 	if err != nil {
 		s.log.Errorf("failed to get app config from store, %v", err)
@@ -155,28 +156,15 @@ func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppR
 		CreateNamespace:     config.CreateNamespace,
 		PrivilegedNamespace: config.PrivilegedNamespace,
 		Icon:                decodedIconBytes,
-		LaunchURL:           config.LaunchUIURL,
+		LaunchURL:           config.LaunchURL,
 		LaunchUIDescription: config.LaunchUIDescription,
 		ReleaseName:         config.ReleaseName,
 	}
-
-	decodedOverrideValuesBytes, _ := base64.StdEncoding.DecodeString(config.OverrideValues)
-	decodedLaunchUiValuesBytes, _ := base64.StdEncoding.DecodeString(config.LaunchUIValues)
-	appValues := &serverpb.StoreAppValues{
-		OverrideValues: decodedOverrideValuesBytes,
-		LaunchUIValues: decodedLaunchUiValuesBytes,
-	}
-
-	appConfigJson, _ := json.Marshal(appConfig)
-	fmt.Println("App Config/n", string(appConfigJson))
-	appValuesJson, _ := json.Marshal(appValues)
-	fmt.Println("App Values/n", string(appValuesJson))
 
 	return &serverpb.GetStoreAppResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "app config is sucessfuly fetched from store",
 		AppConfig:     appConfig,
-		AppValues:     appValues,
 	}, nil
 
 }
@@ -196,8 +184,6 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 	appsData := []*serverpb.StoreAppsData{}
 	for _, config := range *configs {
 		decodedIconBytes, _ := hex.DecodeString(config.Icon)
-		decodedOverrideValuesBytes, _ := base64.StdEncoding.DecodeString(config.OverrideValues)
-		decodedLaunchUiValuesBytes, _ := base64.StdEncoding.DecodeString(config.LaunchUIValues)
 		appsData = append(appsData, &serverpb.StoreAppsData{
 			AppConfigs: &serverpb.StoreAppConfig{
 				AppName:             config.Name,
@@ -211,13 +197,9 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 				CreateNamespace:     config.CreateNamespace,
 				PrivilegedNamespace: config.PrivilegedNamespace,
 				Icon:                decodedIconBytes,
-				LaunchURL:           config.LaunchUIURL,
+				LaunchURL:           config.LaunchURL,
 				LaunchUIDescription: config.LaunchUIDescription,
 				ReleaseName:         config.ReleaseName,
-			},
-			AppValues: &serverpb.StoreAppValues{
-				OverrideValues: decodedOverrideValuesBytes,
-				LaunchUIValues: decodedLaunchUiValuesBytes,
 			},
 		})
 	}
@@ -263,34 +245,36 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 		CreateNamespace:     config.CreateNamespace,
 		PrivilegedNamespace: config.PrivilegedNamespace,
 		Icon:                decodedIconBytes,
-		LaunchURL:           config.LaunchUIURL,
+		LaunchURL:           config.LaunchURL,
 		LaunchUIDescription: config.LaunchUIDescription,
 		ReleaseName:         config.ReleaseName,
 	}
 
-	decodedOverrideValuesBytes, _ := base64.StdEncoding.DecodeString(config.OverrideValues)
-	decodedLaunchUiValuesBytes, _ := base64.StdEncoding.DecodeString(config.LaunchUIValues)
-	appValues := &serverpb.StoreAppValues{
-		OverrideValues: decodedOverrideValuesBytes,
-		LaunchUIValues: decodedLaunchUiValuesBytes,
-	}
-
 	return &serverpb.GetStoreAppValuesResponse{
-		Status:        serverpb.StatusCode_OK,
-		StatusMessage: "store app values sucessfuly fetched",
-		AppConfig:     appConfig,
-		AppValues:     appValues,
+		Status:         serverpb.StatusCode_OK,
+		StatusMessage:  "store app values sucessfuly fetched",
+		AppConfig:      appConfig,
+		OverrideValues: decodeBase64StringToBytes(config.OverrideValues),
 	}, nil
 
 }
 
 func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeployStoreAppRequest) (
 	*serverpb.DeployStoreAppResponse, error) {
-	if request.AppConfig.AppName == "" || request.AppConfig.Version == "" {
+	if request.AppName == "" || request.Version == "" {
 		s.log.Errorf("failed to get store app values, %v", "App name/version is missing")
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to get store app values, app name/version is missing",
+		}, nil
+	}
+
+	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
+	if err != nil {
+		s.log.Errorf("failed to get store app values, %v", err)
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to find store app values",
 		}, nil
 	}
 
@@ -322,27 +306,29 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		}, nil
 	}
 
+	decodedIconBytes, _ := hex.DecodeString(config.Icon)
 	req := &agentpb.InstallAppRequest{
 		AppConfig: &agentpb.AppConfig{
-			AppName:             request.AppConfig.AppName,
-			Version:             request.AppConfig.Version,
-			ReleaseName:         request.AppConfig.ReleaseName,
-			Category:            request.AppConfig.Category,
-			Description:         request.AppConfig.Description,
-			ChartName:           request.AppConfig.ChartName,
-			RepoName:            request.AppConfig.RepoName,
-			RepoURL:             request.AppConfig.RepoURL,
-			Namespace:           request.AppConfig.Namespace,
-			CreateNamespace:     request.AppConfig.CreateNamespace,
-			PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
-			Icon:                request.AppConfig.Icon,
-			LaunchURL:           request.AppConfig.LaunchURL,
-			LaunchUIDescription: request.AppConfig.LaunchUIDescription,
-			DefualtApp:          request.AppConfig.DefualtApp,
+			AppName:             config.Name,
+			Version:             config.Version,
+			ReleaseName:         config.ReleaseName,
+			Category:            config.Category,
+			Description:         config.Description,
+			ChartName:           config.ChartName,
+			RepoName:            config.RepoName,
+			RepoURL:             config.RepoURL,
+			Namespace:           config.Namespace,
+			CreateNamespace:     config.CreateNamespace,
+			PrivilegedNamespace: config.PrivilegedNamespace,
+			Icon:                decodedIconBytes,
+			LaunchURL:           config.LaunchURL,
+			LaunchUIDescription: config.LaunchUIDescription,
+			DefualtApp:          false,
 		},
 		AppValues: &agentpb.AppValues{
-			OverrideValues: request.AppValues.OverrideValues,
-			LaunchUIValues: request.AppValues.LaunchUIValues,
+			OverrideValues: request.OverrideValues,
+			LaunchUIValues: decodeBase64StringToBytes(config.LaunchUIValues),
+			TemplateValues: decodeBase64StringToBytes(config.TemplateValues),
 		},
 	}
 
@@ -359,5 +345,4 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "app is successfully deployed",
 	}, nil
-
 }

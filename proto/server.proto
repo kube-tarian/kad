@@ -163,7 +163,7 @@ message ClusterAppConfig {
 
 message AddStoreAppRequest {
   StoreAppConfig appConfig = 1;
-  StoreAppValues appValues = 2;
+  StoreAppAllValues appValues = 2;
 }
 
 message AddStoreAppResponse {
@@ -173,7 +173,7 @@ message AddStoreAppResponse {
 
 message UpdateStoreAppRequest {
   StoreAppConfig appConfig = 1;
-  StoreAppValues appValues = 2;
+  StoreAppAllValues appValues = 2;
 }
 
 message UpdateStoreAppRsponse {
@@ -200,7 +200,6 @@ message GetStoreAppResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   StoreAppConfig appConfig = 3;
-  StoreAppValues appValues = 4;
 }
 
 message GetStoreAppsRequest {
@@ -214,7 +213,7 @@ message GetStoreAppsResponse {
 
 message StoreAppsData {
   StoreAppConfig appConfigs = 1;
-  StoreAppValues appValues = 2;
+  bytes overrideValues = 2;
 }
 
 message GetStoreAppValuesRequest {
@@ -226,12 +225,13 @@ message GetStoreAppValuesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   StoreAppConfig appConfig = 3;
-  StoreAppValues appValues = 4;
+  bytes overrideValues = 4;
 }
 
 message DeployStoreAppRequest {
-  StoreAppConfig appConfig = 1;
-  StoreAppValues appValues = 2;
+  string appName = 1;
+  string version = 2;
+  bytes overrideValues = 3;
 }
 
 message DeployStoreAppResponse{
@@ -257,8 +257,8 @@ message StoreAppConfig {
   bool defualtApp = 15;
 }
 
-message StoreAppValues {
+message StoreAppAllValues {
   bytes overrideValues = 1;
   bytes launchUIValues = 2;
+  bytes templateValues = 3;
 }
-

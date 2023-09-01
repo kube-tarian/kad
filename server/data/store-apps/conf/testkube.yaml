@@ -8,4 +8,3 @@ Namespace: "testkube"
 ReleaseName: "testkube"
 Version: "1.0.0"
 CreateNamespace: true
-OverrideValues:

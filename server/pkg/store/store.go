@@ -15,7 +15,7 @@ type ServerStore interface {
 	AddCluster(orgID, clusterID, clusterName, endpoint string) error
 	UpdateCluster(orgID, clusterID, clusterName, endpoint string) error
 	DeleteCluster(orgID, clusterID string) error
-	AddOrUpdateApp(config *types.StoreAppConfig) error
+	AddOrUpdateStoreApp(config *types.StoreAppConfig) error
 	DeleteAppInStore(name, version string) error
 	GetAppFromStore(name, version string) (*types.AppConfig, error)
 	GetAppsFromStore() (*[]types.AppConfig, error)

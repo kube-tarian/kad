@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/workflows"
@@ -37,7 +36,7 @@ func (d *Deployment) GetWorkflowName() string {
 	return DeploymentWorkerWorkflowName
 }
 
-func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload *agentpb.ApplicationInstallRequest) (client.WorkflowRun, error) {
+func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload *model.ApplicationInstallRequest) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: DeploymentWorkerTaskQueue,
@@ -70,7 +69,7 @@ func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload
 	return run, nil
 }
 
-func (d *Deployment) SendDeleteEvent(ctx context.Context, action string, deployPayload *agentpb.ApplicationDeleteRequest) (client.WorkflowRun, error) {
+func (d *Deployment) SendDeleteEvent(ctx context.Context, action string, deployPayload *model.ApplicationDeleteRequest) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: DeploymentWorkerTaskQueue,

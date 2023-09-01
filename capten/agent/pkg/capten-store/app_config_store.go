@@ -5,14 +5,16 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	"github.com/pkg/errors"
 )
 
 const (
-	insertAppConfigByReleaseNameQuery = "INSERT INTO %s.AppConfig(release_name) VALUES (?)"
-	updateAppConfigByReleaseNameQuery = "UPDATE %s.AppConfig SET %s WHERE release_name = ?"
+	insertAppConfigByReleaseNameQuery = "INSERT INTO %s.ClusterAppConfig(release_name) VALUES (?)"
+	updateAppConfigByReleaseNameQuery = "UPDATE %s.ClusterAppConfig SET %s WHERE release_name = ?"
 )
 
 func CreateSelectByFieldNameQuery(keyspace, field string) string {
@@ -20,7 +22,7 @@ func CreateSelectByFieldNameQuery(keyspace, field string) string {
 }
 
 func CreateSelectAllQuery(keyspace string) string {
-	return fmt.Sprintf("SELECT %s FROM %s.AppConfig", strings.Join(appConfigfields, ", "), keyspace)
+	return fmt.Sprintf("SELECT %s FROM %s.ClusterAppConfig", strings.Join(appConfigfields, ", "), keyspace)
 }
 
 const (
@@ -30,7 +32,9 @@ const (
 	launchUrl, launchUIDesc              = "launch_url", "launch_redirect_url"
 	createNamespace, privilegedNamespace = "create_namespace", "privileged_namespace"
 	overrideValues, launchUiValues       = "override_values", "launch_ui_values"
+	templateValues, defaultApp           = "template_values", "default_app"
 	icon, installStatus                  = "icon", "install_status"
+	updateTime                           = "update_time"
 )
 
 var (
@@ -41,7 +45,9 @@ var (
 		launchUrl, launchUIDesc,
 		createNamespace, privilegedNamespace,
 		overrideValues, launchUiValues,
+		templateValues, defaultApp,
 		icon, installStatus,
+		updateTime,
 	}
 )
 
@@ -63,7 +69,7 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 	selectQuery := a.client.Session().Query(CreateSelectByFieldNameQuery(a.keyspace, releaseName), appReleaseName)
 
 	config := agentpb.AppConfig{}
-	var overrideValues, launchUiValues string
+	var overrideValues, launchUiValues, templateValues string
 
 	if err := selectQuery.Scan(
 		&config.AppName, &config.Description, &config.Category,
@@ -72,19 +78,24 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 		&config.LaunchURL, &config.LaunchUIDescription,
 		&config.CreateNamespace, &config.PrivilegedNamespace,
 		&overrideValues, &launchUiValues,
+		&templateValues, &config.DefualtApp,
 		&config.Icon, &config.InstallStatus,
+		&config.LastUpdateTime,
 	); err != nil {
 		return nil, err
 	}
 
 	overrideValuesCopy, _ := base64.StdEncoding.DecodeString(overrideValues)
 	launchUiValuesCopy, _ := base64.StdEncoding.DecodeString(launchUiValues)
+	templateValuesCopy, _ := base64.StdEncoding.DecodeString(templateValues)
 
 	return &agentpb.SyncAppData{
 		Config: &config,
 		Values: &agentpb.AppValues{
 			OverrideValues: overrideValuesCopy,
-			LaunchUIValues: launchUiValuesCopy},
+			LaunchUIValues: launchUiValuesCopy,
+			TemplateValues: templateValuesCopy,
+		},
 	}, nil
 }
 
@@ -93,7 +104,7 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 	iter := selectAllQuery.Iter()
 
 	config := agentpb.AppConfig{}
-	var overrideValues, launchUiValues string
+	var overrideValues, launchUiValues, templateValues string
 
 	ret := make([]*agentpb.SyncAppData, 0)
 	for iter.Scan(
@@ -103,24 +114,27 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&config.LaunchURL, &config.LaunchUIDescription,
 		&config.CreateNamespace, &config.PrivilegedNamespace,
 		&overrideValues, &launchUiValues,
+		&templateValues, &config.DefualtApp,
 		&config.Icon, &config.InstallStatus,
+		&config.LastUpdateTime,
 	) {
 		configCopy := config
 		overrideValuesCopy, _ := base64.StdEncoding.DecodeString(overrideValues)
 		launchUiValuesCopy, _ := base64.StdEncoding.DecodeString(launchUiValues)
+		templateValuesCopy, _ := base64.StdEncoding.DecodeString(templateValues)
 		a := &agentpb.SyncAppData{
 			Config: &configCopy,
 			Values: &agentpb.AppValues{
 				OverrideValues: overrideValuesCopy,
 				LaunchUIValues: launchUiValuesCopy,
+				TemplateValues: templateValuesCopy,
 			},
 		}
 		ret = append(ret, a)
 	}
 
 	if err := iter.Close(); err != nil {
-		a.log.Fatal("Failed to iterate through results:", err)
-		return nil, err
+		return nil, errors.WithMessage(err, "failed to iterate through results:")
 	}
 	return ret, nil
 }
@@ -128,16 +142,24 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 	params := []string{}
 
-	if config.Values != nil && len(config.Values.OverrideValues) > 0 {
-		encoded := base64.StdEncoding.EncodeToString(config.Values.OverrideValues)
-		params = append(params,
-			fmt.Sprintf("%s = '%s'", overrideValues, encoded))
-	}
+	if config.Values != nil {
+		if len(config.Values.OverrideValues) > 0 {
+			encoded := base64.StdEncoding.EncodeToString(config.Values.OverrideValues)
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", overrideValues, encoded))
+		}
 
-	if config.Values != nil && len(config.Values.LaunchUIValues) > 0 {
-		encoded := base64.StdEncoding.EncodeToString(config.Values.LaunchUIValues)
-		params = append(params,
-			fmt.Sprintf("%s = '%s'", launchUiValues, encoded))
+		if len(config.Values.LaunchUIValues) > 0 {
+			encoded := base64.StdEncoding.EncodeToString(config.Values.LaunchUIValues)
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", launchUiValues, encoded))
+		}
+
+		if len(config.Values.TemplateValues) > 0 {
+			encoded := base64.StdEncoding.EncodeToString(config.Values.TemplateValues)
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", templateValues, encoded))
+		}
 	}
 
 	if config.Config.CreateNamespace {
@@ -203,6 +225,12 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", installStatus, config.Config.InstallStatus))
 	}
+
+	params = append(params,
+		fmt.Sprintf("%s = '%s'", updateTime, time.Now().Format(time.RFC3339)))
+
+	params = append(params,
+		fmt.Sprintf("%s = %v", defaultApp, config.Config.DefualtApp))
 
 	if len(params) == 0 {
 		// query is empty there is nothing to update
