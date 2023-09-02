@@ -12,6 +12,8 @@ const (
 	serviceClientOAuthEntityName = "service-client-oauth"
 	oauthClientIdKey             = "CLIENT_ID"
 	oauthClientSecretKey         = "CLIENT_SECRET"
+	captenConfigEntityName       = "capten-config"
+	globalValuesCredIdentifier   = "global-values"
 )
 
 func GetServiceUserCredential(ctx context.Context, svcEntity, userName string) (cred credentials.ServiceCredential, err error) {
@@ -127,6 +129,30 @@ func GetAppOauthCredential(ctx context.Context, serviceName string) (clientId, c
 	if len(clientId) == 0 || len(clientSecret) == 0 {
 		err = errors.WithMessagef(err, "invalid service oauth credential %s/%s in the vault",
 			serviceClientOAuthEntityName, serviceName)
+		return
+	}
+	return
+}
+
+func GetClusterGlobalValues(ctx context.Context) (globalValues string, err error) {
+	credReader, err := credentials.NewCredentialReader(ctx)
+	if err != nil {
+		err = errors.WithMessage(err, "error in initializing credential reader")
+		return
+	}
+
+	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
+		captenConfigEntityName, globalValuesCredIdentifier)
+	if err != nil {
+		err = errors.WithMessagef(err, "error while reading cluster global values %s/%s from the vault",
+			captenConfigEntityName, globalValuesCredIdentifier)
+		return
+	}
+
+	globalValues = cred[globalValuesCredIdentifier]
+	if len(globalValues) == 0 {
+		err = errors.WithMessagef(err, "invalid cluster global values %s/%s in the vault",
+			captenConfigEntityName, globalValuesCredIdentifier)
 		return
 	}
 	return
