@@ -47,7 +47,7 @@ func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload
 		return nil, err
 	}
 
-	log.Printf("Event sent to temporal: %+v", deployPayload)
+	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
 	run, err := d.client.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, json.RawMessage(deployPayloadJSON))
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (d *Deployment) SendDeleteEvent(ctx context.Context, action string, deployP
 		return nil, err
 	}
 
-	log.Printf("Event sent to temporal: %+v", deployPayload)
+	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
 	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, deployPayload)
 	run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, workflows.Workflow, action, payloadJSON)
 	if err != nil {

@@ -31,7 +31,7 @@ func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (mod
 	var err error
 	switch action {
 	case "install", "update":
-		req := &model.DeployerPostRequest{}
+		req := &model.ApplicationDeployRequest{}
 		err = json.Unmarshal(payload, req)
 		if err == nil {
 			err = workflow.ExecuteActivity(ctx, a.DeploymentInstallActivity, payload).Get(ctx, &result)
