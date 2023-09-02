@@ -218,6 +218,7 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 			StatusMessage: "failed to get store app values, app name/version is missing",
 		}, nil
 	}
+
 	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
 	if err != nil {
 		s.log.Errorf("failed to get store app values, %v", err)
@@ -256,23 +257,6 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 
 func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeployStoreAppRequest) (
 	*serverpb.DeployStoreAppResponse, error) {
-	if request.AppName == "" || request.Version == "" {
-		s.log.Errorf("failed to get store app values, %v", "App name/version is missing")
-		return &serverpb.DeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to get store app values, app name/version is missing",
-		}, nil
-	}
-
-	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
-	if err != nil {
-		s.log.Errorf("failed to get store app values, %v", err)
-		return &serverpb.DeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to find store app values",
-		}, nil
-	}
-
 	metadataMap := metadataContextToMap(ctx)
 	orgId := metadataMap[organizationIDAttribute]
 	if orgId == "" {
@@ -282,22 +266,15 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			StatusMessage: "Organization Id is missing",
 		}, nil
 	}
-	clusterId := metadataMap[clusterIDAttribute]
-	if orgId == "" {
-		s.log.Errorf("cluster Id is missing in the request")
-		return &serverpb.DeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "cluster Id is missing",
-		}, nil
+	s.log.Infof("[org: %s] Deploy store app [%s:%s] request for cluster %s recieved", orgId,
+		request.AppName, request.Version, request.ClusterID)
 
-	}
-
-	agent, err := s.agentHandeler.GetAgent(clusterId)
+	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
 	if err != nil {
-		s.log.Errorf("failed to initialize agent, %v", err)
+		s.log.Errorf("failed to get store app values, %v", err)
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to deploy the app",
+			StatusMessage: "failed to find store app values",
 		}, nil
 	}
 
@@ -327,6 +304,15 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		},
 	}
 
+	agent, err := s.agentHandeler.GetAgent(request.ClusterID)
+	if err != nil {
+		s.log.Errorf("failed to initialize agent, %v", err)
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to deploy the app",
+		}, nil
+	}
+
 	_, err = agent.GetClient().InstallApp(ctx, req)
 	if err != nil {
 		s.log.Errorf("failed to deploy app, %v", err)
@@ -335,6 +321,9 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			StatusMessage: "failed to deploy the app",
 		}, nil
 	}
+
+	s.log.Infof("[org: %s] Store app [%s:%s] request request triggered for cluster %s", orgId,
+		request.AppName, request.Version, request.ClusterID)
 
 	return &serverpb.DeployStoreAppResponse{
 		Status:        serverpb.StatusCode_OK,

@@ -231,7 +231,8 @@ message GetStoreAppValuesResponse {
 message DeployStoreAppRequest {
   string appName = 1;
   string version = 2;
-  bytes overrideValues = 3;
+  string clusterID = 3;
+  bytes overrideValues = 4;
 }
 
 message DeployStoreAppResponse{
