@@ -17,7 +17,7 @@ type Activities struct {
 
 var logger = logging.NewLogger()
 
-func (a *Activities) DeploymentInstallActivity(ctx context.Context, req *model.DeployerPostRequest) (model.ResponsePayload, error) {
+func (a *Activities) DeploymentInstallActivity(ctx context.Context, req *model.ApplicationDeployRequest) (model.ResponsePayload, error) {
 	logger.Infof("Activity, name: %+v", req)
 	// e := activity.GetInfo(ctx)
 	// logger.Infof("activity info: %+v", e)
@@ -39,22 +39,15 @@ func (a *Activities) DeploymentInstallActivity(ctx context.Context, req *model.D
 		}, fmt.Errorf("plugin not supports deployment activities")
 	}
 
-	emptyVersion := ""
-	if req.Version == nil {
-		req.Version = &emptyVersion
-	}
-	if req.ValuesYaml == nil {
-		req.ValuesYaml = &emptyVersion
-	}
 	msg, err := deployerPlugin.Create(&model.CreteRequestPayload{
 		RepoName:    req.RepoName,
-		RepoURL:     req.RepoUrl,
+		RepoURL:     req.RepoURL,
 		ChartName:   req.ChartName,
 		Namespace:   req.Namespace,
 		ReleaseName: req.ReleaseName,
-		Timeout:     req.Timeout,
-		Version:     *req.Version,
-		ValuesYaml:  *req.ValuesYaml,
+		Timeout:     int(req.Timeout),
+		Version:     req.Version,
+		ValuesYaml:  req.OverrideValues,
 	})
 	if err != nil {
 		logger.Errorf("Deploy activities failed %v", err)
