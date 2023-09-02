@@ -1,6 +1,8 @@
 package storeapps
 
 import (
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -15,6 +17,7 @@ import (
 
 type Config struct {
 	AppStoreAppConfigPath string `envconfig:"APP_STORE_APP_CONFIG_PATH" default:"/data/store-apps/conf"`
+	AppStoreAppIconsPath  string `envconfig:"APP_STORE_APP_ICONS_PATH" default:"/data/store-apps/icons"`
 	SyncAppStore          bool   `envconfig:"SYNC_APP_STORE" default:"false"`
 	AppStoreConfigFile    string `envconfig:"APP_STORE_CONFIG_FILE" default:"/data/store-apps/app_list.yaml"`
 }
@@ -78,17 +81,32 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			LaunchUIValues:      appConfig.LaunchUIValues,
 		}
 
+		if len(appConfig.Icon) != 0 {
+			iconBytes, err := os.ReadFile(cfg.AppStoreAppIconsPath + "/" + appConfig.Icon)
+			if err != nil {
+				return fmt.Errorf("failed loading icon for app '%s', %v", appConfig.ReleaseName, err)
+			}
+			storeAppConfig.Icon = hex.EncodeToString(iconBytes)
+		}
+
 		overrideValuesJSON, err := json.Marshal(appConfig.OverrideValues)
 		if err != nil {
 			return errors.WithMessagef(err, "failed to unmarshall store app config values for %s", appName)
 		}
-
 		storeAppConfig.OverrideValues = string(overrideValuesJSON)
+
 		launchUIValues, err := json.Marshal(appConfig.LaunchUIValues)
 		if err != nil {
 			return errors.WithMessagef(err, "failed to unmarshall store app config UI values for %s", appName)
 		}
 		storeAppConfig.LaunchUIValues = string(launchUIValues)
+
+		templateValues, err := os.ReadFile(cfg.AppStoreAppConfigPath + "/values" + appName + "_template.yaml")
+		if err != nil {
+			return errors.WithMessagef(err, "failed to read template values for %s", appName)
+		} else if len(templateValues) > 0 {
+			storeAppConfig.TemplateValues = base64.StdEncoding.EncodeToString(templateValues)
+		}
 
 		if err := appStore.AddOrUpdateStoreApp(storeAppConfig); err != nil {
 			return errors.WithMessagef(err, "failed to store app config for %s", appName)
