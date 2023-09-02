@@ -106,6 +106,7 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			storeAppConfig.TemplateValues = base64.StdEncoding.EncodeToString(templateValues)
 		}
 
+		fmt.Printf("Adding the app - %v \n", storeAppConfig)
 		if err := appStore.AddOrUpdateStoreApp(storeAppConfig); err != nil {
 			return errors.WithMessagef(err, "failed to store app config for %s", appName)
 		}
