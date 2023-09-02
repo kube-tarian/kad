@@ -44,24 +44,24 @@ type StoreAppConfig struct {
 }
 
 type AppConfig struct {
-	Name                string `yaml:"Name"`
-	ChartName           string `yaml:"ChartName"`
-	Category            string `yaml:"Category"`
-	RepoName            string `yaml:"RepoName"`
-	RepoURL             string `yaml:"RepoURL"`
-	Namespace           string `yaml:"Namespace"`
-	ReleaseName         string `yaml:"ReleaseName"`
-	Version             string `yaml:"Version"`
-	Description         string `yaml:"Description"`
-	LaunchURL           string `yaml:"LaunchURL"`
-	LaunchUIDescription string `yaml:"LaunchUIDescription"`
-	LaunchUIIcon        string `yaml:"LaunchUIIcon"`
-	LaunchUIValues      string `yaml:"LaunchUIValues"`
-	OverrideValues      string `yaml:"OverrideValues"`
-	CreateNamespace     bool   `yaml:"CreateNamespace"`
-	PrivilegedNamespace bool   `yaml:"PrivilegedNamespace"`
-	TemplateValues      string `yaml:"TemplateValues"`
-	Icon                string `yaml:"Icon"`
+	Name                string                 `yaml:"Name"`
+	ChartName           string                 `yaml:"ChartName"`
+	Category            string                 `yaml:"Category"`
+	RepoName            string                 `yaml:"RepoName"`
+	RepoURL             string                 `yaml:"RepoURL"`
+	Namespace           string                 `yaml:"Namespace"`
+	ReleaseName         string                 `yaml:"ReleaseName"`
+	Version             string                 `yaml:"Version"`
+	Description         string                 `yaml:"Description"`
+	LaunchURL           string                 `yaml:"LaunchURL"`
+	LaunchUIDescription string                 `yaml:"LaunchUIDescription"`
+	LaunchUIIcon        string                 `yaml:"LaunchUIIcon"`
+	LaunchUIValues      map[string]interface{} `yaml:"LaunchUIValues"`
+	OverrideValues      map[string]interface{} `yaml:"OverrideValues"`
+	CreateNamespace     bool                   `yaml:"CreateNamespace"`
+	PrivilegedNamespace bool                   `yaml:"PrivilegedNamespace"`
+	TemplateValues      map[string]interface{} `yaml:"TemplateValues"`
+	Icon                string                 `yaml:"Icon"`
 }
 
 type AppInstallRequest struct {

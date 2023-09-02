@@ -219,13 +219,13 @@ message StoreAppsData {
 message GetStoreAppValuesRequest {
   string appName = 1;
   string version = 2;
+  string clusterID = 3;
 }
 
 message GetStoreAppValuesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  StoreAppConfig appConfig = 3;
-  bytes overrideValues = 4;
+  bytes overrideValues = 3;
 }
 
 message DeployStoreAppRequest {

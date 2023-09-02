@@ -3,7 +3,6 @@ package storeapps
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -78,7 +77,6 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			Icon:                appConfig.Icon,
 			LaunchURL:           appConfig.LaunchURL,
 			LaunchUIDescription: appConfig.LaunchUIDescription,
-			LaunchUIValues:      appConfig.LaunchUIValues,
 		}
 
 		if len(appConfig.Icon) != 0 {
@@ -89,24 +87,26 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			storeAppConfig.Icon = hex.EncodeToString(iconBytes)
 		}
 
-		overrideValuesJSON, err := json.Marshal(appConfig.OverrideValues)
-		if err != nil {
-			return errors.WithMessagef(err, "failed to unmarshall store app config values for %s", appName)
+		if len(appConfig.OverrideValues) > 0 {
+			marshaledOverride, err := yaml.Marshal(appConfig.OverrideValues)
+			if err != nil {
+				return errors.WithMessage(err, "override values marshal error")
+			}
+			storeAppConfig.OverrideValues = base64.StdEncoding.EncodeToString(marshaledOverride)
 		}
-		storeAppConfig.OverrideValues = string(overrideValuesJSON)
-
-		launchUIValues, err := json.Marshal(appConfig.LaunchUIValues)
-		if err != nil {
-			return errors.WithMessagef(err, "failed to unmarshall store app config UI values for %s", appName)
+		if len(appConfig.LaunchUIValues) > 0 {
+			marshaledOLaunchUI, err := yaml.Marshal(appConfig.LaunchUIValues)
+			if err != nil {
+				return errors.WithMessage(err, "launchui values marshal error")
+			}
+			storeAppConfig.LaunchUIValues = base64.StdEncoding.EncodeToString(marshaledOLaunchUI)
 		}
-		storeAppConfig.LaunchUIValues = string(launchUIValues)
 
 		templateValues, err := os.ReadFile(cfg.AppStoreAppConfigPath + "/values/" + appName + "_template.yaml")
 		if err == nil && len(templateValues) > 0 {
 			storeAppConfig.TemplateValues = base64.StdEncoding.EncodeToString(templateValues)
 		}
 
-		fmt.Printf("Adding the app - %v \n", storeAppConfig)
 		if err := appStore.AddOrUpdateStoreApp(storeAppConfig); err != nil {
 			return errors.WithMessagef(err, "failed to store app config for %s", appName)
 		}

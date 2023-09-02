@@ -19,22 +19,23 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Agent_SubmitJob_FullMethodName             = "/agentpb.Agent/SubmitJob"
-	Agent_ClusterAdd_FullMethodName            = "/agentpb.Agent/ClusterAdd"
-	Agent_ClusterDelete_FullMethodName         = "/agentpb.Agent/ClusterDelete"
-	Agent_RepositoryAdd_FullMethodName         = "/agentpb.Agent/RepositoryAdd"
-	Agent_RepositoryDelete_FullMethodName      = "/agentpb.Agent/RepositoryDelete"
-	Agent_ProjectAdd_FullMethodName            = "/agentpb.Agent/ProjectAdd"
-	Agent_ProjectDelete_FullMethodName         = "/agentpb.Agent/ProjectDelete"
-	Agent_Ping_FullMethodName                  = "/agentpb.Agent/Ping"
-	Agent_StoreCredential_FullMethodName       = "/agentpb.Agent/StoreCredential"
-	Agent_SyncApp_FullMethodName               = "/agentpb.Agent/SyncApp"
-	Agent_GetClusterApps_FullMethodName        = "/agentpb.Agent/GetClusterApps"
-	Agent_GetClusterAppLaunches_FullMethodName = "/agentpb.Agent/GetClusterAppLaunches"
-	Agent_ConfigureAppSSO_FullMethodName       = "/agentpb.Agent/ConfigureAppSSO"
-	Agent_GetClusterAppConfig_FullMethodName   = "/agentpb.Agent/GetClusterAppConfig"
-	Agent_GetClusterAppValues_FullMethodName   = "/agentpb.Agent/GetClusterAppValues"
-	Agent_InstallApp_FullMethodName            = "/agentpb.Agent/InstallApp"
+	Agent_SubmitJob_FullMethodName              = "/agentpb.Agent/SubmitJob"
+	Agent_ClusterAdd_FullMethodName             = "/agentpb.Agent/ClusterAdd"
+	Agent_ClusterDelete_FullMethodName          = "/agentpb.Agent/ClusterDelete"
+	Agent_RepositoryAdd_FullMethodName          = "/agentpb.Agent/RepositoryAdd"
+	Agent_RepositoryDelete_FullMethodName       = "/agentpb.Agent/RepositoryDelete"
+	Agent_ProjectAdd_FullMethodName             = "/agentpb.Agent/ProjectAdd"
+	Agent_ProjectDelete_FullMethodName          = "/agentpb.Agent/ProjectDelete"
+	Agent_Ping_FullMethodName                   = "/agentpb.Agent/Ping"
+	Agent_StoreCredential_FullMethodName        = "/agentpb.Agent/StoreCredential"
+	Agent_SyncApp_FullMethodName                = "/agentpb.Agent/SyncApp"
+	Agent_GetClusterApps_FullMethodName         = "/agentpb.Agent/GetClusterApps"
+	Agent_GetClusterAppLaunches_FullMethodName  = "/agentpb.Agent/GetClusterAppLaunches"
+	Agent_ConfigureAppSSO_FullMethodName        = "/agentpb.Agent/ConfigureAppSSO"
+	Agent_GetClusterAppConfig_FullMethodName    = "/agentpb.Agent/GetClusterAppConfig"
+	Agent_GetClusterAppValues_FullMethodName    = "/agentpb.Agent/GetClusterAppValues"
+	Agent_GetClusterGlobalValues_FullMethodName = "/agentpb.Agent/GetClusterGlobalValues"
+	Agent_InstallApp_FullMethodName             = "/agentpb.Agent/InstallApp"
 )
 
 // AgentClient is the client API for Agent service.
@@ -56,6 +57,7 @@ type AgentClient interface {
 	ConfigureAppSSO(ctx context.Context, in *ConfigureAppSSORequest, opts ...grpc.CallOption) (*ConfigureAppSSOResponse, error)
 	GetClusterAppConfig(ctx context.Context, in *GetClusterAppConfigRequest, opts ...grpc.CallOption) (*GetClusterAppConfigResponse, error)
 	GetClusterAppValues(ctx context.Context, in *GetClusterAppValuesRequest, opts ...grpc.CallOption) (*GetClusterAppValuesResponse, error)
+	GetClusterGlobalValues(ctx context.Context, in *GetClusterGlobalValuesRequest, opts ...grpc.CallOption) (*GetClusterGlobalValuesResponse, error)
 	InstallApp(ctx context.Context, in *InstallAppRequest, opts ...grpc.CallOption) (*InstallAppResponse, error)
 }
 
@@ -202,6 +204,15 @@ func (c *agentClient) GetClusterAppValues(ctx context.Context, in *GetClusterApp
 	return out, nil
 }
 
+func (c *agentClient) GetClusterGlobalValues(ctx context.Context, in *GetClusterGlobalValuesRequest, opts ...grpc.CallOption) (*GetClusterGlobalValuesResponse, error) {
+	out := new(GetClusterGlobalValuesResponse)
+	err := c.cc.Invoke(ctx, Agent_GetClusterGlobalValues_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *agentClient) InstallApp(ctx context.Context, in *InstallAppRequest, opts ...grpc.CallOption) (*InstallAppResponse, error) {
 	out := new(InstallAppResponse)
 	err := c.cc.Invoke(ctx, Agent_InstallApp_FullMethodName, in, out, opts...)
@@ -230,6 +241,7 @@ type AgentServer interface {
 	ConfigureAppSSO(context.Context, *ConfigureAppSSORequest) (*ConfigureAppSSOResponse, error)
 	GetClusterAppConfig(context.Context, *GetClusterAppConfigRequest) (*GetClusterAppConfigResponse, error)
 	GetClusterAppValues(context.Context, *GetClusterAppValuesRequest) (*GetClusterAppValuesResponse, error)
+	GetClusterGlobalValues(context.Context, *GetClusterGlobalValuesRequest) (*GetClusterGlobalValuesResponse, error)
 	InstallApp(context.Context, *InstallAppRequest) (*InstallAppResponse, error)
 	mustEmbedUnimplementedAgentServer()
 }
@@ -282,6 +294,9 @@ func (UnimplementedAgentServer) GetClusterAppConfig(context.Context, *GetCluster
 }
 func (UnimplementedAgentServer) GetClusterAppValues(context.Context, *GetClusterAppValuesRequest) (*GetClusterAppValuesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClusterAppValues not implemented")
+}
+func (UnimplementedAgentServer) GetClusterGlobalValues(context.Context, *GetClusterGlobalValuesRequest) (*GetClusterGlobalValuesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClusterGlobalValues not implemented")
 }
 func (UnimplementedAgentServer) InstallApp(context.Context, *InstallAppRequest) (*InstallAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InstallApp not implemented")
@@ -569,6 +584,24 @@ func _Agent_GetClusterAppValues_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Agent_GetClusterGlobalValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClusterGlobalValuesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).GetClusterGlobalValues(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_GetClusterGlobalValues_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).GetClusterGlobalValues(ctx, req.(*GetClusterGlobalValuesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Agent_InstallApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(InstallAppRequest)
 	if err := dec(in); err != nil {
@@ -653,6 +686,10 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetClusterAppValues",
 			Handler:    _Agent_GetClusterAppValues_Handler,
+		},
+		{
+			MethodName: "GetClusterGlobalValues",
+			Handler:    _Agent_GetClusterGlobalValues_Handler,
 		},
 		{
 			MethodName: "InstallApp",

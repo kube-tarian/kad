@@ -9,3 +9,5 @@ ReleaseName: "argo-cd"
 Icon: "argo-cd.svg"
 Version: "1.0.0"
 CreateNamespace: true
+OverrideValues:
+  DomainName: "{{.DomainName}}"

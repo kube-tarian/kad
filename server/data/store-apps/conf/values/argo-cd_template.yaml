@@ -1,2 +1,2 @@
-driver:
-  kind: ebpf
+test:
+  hostName: "argo.{{.DomainName}}"

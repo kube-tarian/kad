@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/invopop/yaml"
 	"github.com/kube-tarian/kad/server/pkg/types"
 	"github.com/stargate/stargate-grpc-go-client/stargate/pkg/client"
 	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
@@ -185,6 +186,21 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 		return nil, fmt.Errorf("failed to get override values: %w", err)
 	}
 
+	cqlLaunchUiValuesMap := map[string]interface{}{}
+	if len(cqlLaunchUiValues) > 0 {
+		_ = yaml.Unmarshal([]byte(cqlLaunchUiValues), &cqlLaunchUiValuesMap)
+	}
+
+	cqlOverrideValuesMap := map[string]interface{}{}
+	if len(cqlOverrideValues) > 0 {
+		_ = yaml.Unmarshal([]byte(cqlOverrideValues), &cqlOverrideValuesMap)
+	}
+
+	cqlTemplateValuesMap := map[string]interface{}{}
+	if len(cqlTemplateValues) > 0 {
+		_ = yaml.Unmarshal([]byte(cqlTemplateValues), &cqlTemplateValuesMap)
+	}
+
 	config := &types.AppConfig{
 		Name:                cqlAppName,
 		ChartName:           cqlChartName,
@@ -199,9 +215,9 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 		Category:            cqlCategory,
 		Icon:                cqlIcon,
 		Description:         cqlDescription,
-		LaunchUIValues:      cqlLaunchUiValues,
-		OverrideValues:      cqlOverrideValues,
-		TemplateValues:      cqlTemplateValues,
+		LaunchUIValues:      cqlLaunchUiValuesMap,
+		OverrideValues:      cqlOverrideValuesMap,
+		TemplateValues:      cqlTemplateValuesMap,
 		ReleaseName:         cqlReleaseNameValues,
 	}
 	return config, nil

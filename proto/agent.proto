@@ -28,6 +28,8 @@ service Agent {
   rpc GetClusterAppConfig (GetClusterAppConfigRequest) returns (GetClusterAppConfigResponse) {}
   rpc GetClusterAppValues (GetClusterAppValuesRequest) returns (GetClusterAppValuesResponse) {}
 
+  rpc GetClusterGlobalValues (GetClusterGlobalValuesRequest) returns (GetClusterGlobalValuesResponse) {}
+
   rpc InstallApp (InstallAppRequest) returns (InstallAppResponse) {}
 }
 
@@ -149,6 +151,15 @@ message GetClusterAppValuesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   AppValues values = 3;
+}
+
+message GetClusterGlobalValuesRequest {  
+}
+
+message GetClusterGlobalValuesResponse {  
+  StatusCode status = 1;
+  string statusMessage = 2;
+  bytes globalValues = 3;
 }
 
 message InstallAppRequest {
