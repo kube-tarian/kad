@@ -101,10 +101,8 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 		}
 		storeAppConfig.LaunchUIValues = string(launchUIValues)
 
-		templateValues, err := os.ReadFile(cfg.AppStoreAppConfigPath + "/values" + appName + "_template.yaml")
-		if err != nil {
-			return errors.WithMessagef(err, "failed to read template values for %s", appName)
-		} else if len(templateValues) > 0 {
+		templateValues, err := os.ReadFile(cfg.AppStoreAppConfigPath + "/values/" + appName + "_template.yaml")
+		if err == nil && len(templateValues) > 0 {
 			storeAppConfig.TemplateValues = base64.StdEncoding.EncodeToString(templateValues)
 		}
 
