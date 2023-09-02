@@ -2,17 +2,13 @@ package agent
 
 import (
 	"context"
-	"encoding/base64"
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
-	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
 )
 
 func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppRequest) (*agentpb.InstallAppResponse, error) {
 	a.log.Infof("Recieved App Install request %+v", request)
-	worker := workers.NewDeployment(a.tc, a.log)
-
 	templateValues, err := deriveTemplateValues(request.AppValues.OverrideValues, request.AppValues.TemplateValues)
 	if err != nil {
 		a.log.Errorf("failed to derive template values, %v", err)
@@ -20,19 +16,6 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to derive template values",
 		}, err
-	}
-
-	config := &model.ApplicationInstallRequest{
-		PluginName:     "helm",
-		RepoName:       request.AppConfig.RepoName,
-		RepoURL:        request.AppConfig.RepoURL,
-		ChartName:      request.AppConfig.ChartName,
-		Namespace:      request.AppConfig.Namespace,
-		ReleaseName:    request.AppConfig.ReleaseName,
-		Version:        request.AppConfig.Version,
-		ClusterName:    "capten",
-		OverrideValues: base64.StdEncoding.EncodeToString(templateValues),
-		Timeout:        5,
 	}
 
 	syncConfig := &agentpb.SyncAppData{
@@ -57,6 +40,7 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 		Values: &agentpb.AppValues{
 			OverrideValues: request.AppValues.OverrideValues,
 			LaunchUIValues: request.AppValues.LaunchUIValues,
+			TemplateValues: request.AppValues.TemplateValues,
 		},
 	}
 
@@ -69,7 +53,9 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 	}
 
 	go func() {
-		_, err = worker.SendEvent(ctx, "install", config)
+		wd := workers.NewDeployment(a.tc, a.log)
+		_, err = wd.SendEvent(context.TODO(), "install",
+			toAppDeployRequestFromSyncApp(syncConfig, templateValues))
 		if err != nil {
 			syncConfig.Config.InstallStatus = "Install Failed"
 			if err := a.as.UpsertAppConfig(syncConfig); err != nil {

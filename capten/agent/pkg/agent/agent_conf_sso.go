@@ -85,7 +85,6 @@ func (a *Agent) ConfigureAppSSO(
 	}
 
 	newAppConfig := *appConfig
-	newAppConfig.Values.OverrideValues = marshaledOverrideValues
 	newAppConfig.Config.InstallStatus = "Updating"
 
 	if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
@@ -98,7 +97,8 @@ func (a *Agent) ConfigureAppSSO(
 
 	go func() {
 		wd := workers.NewDeployment(a.tc, a.log)
-		_, err := wd.SendEvent(context.TODO(), "update", installRequestFromSyncApp(&newAppConfig))
+		_, err := wd.SendEvent(context.TODO(), "update",
+			toAppDeployRequestFromSyncApp(&newAppConfig, marshaledOverrideValues))
 		if err != nil {
 			newAppConfig.Config.InstallStatus = "Update Failed"
 			if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
@@ -190,9 +190,7 @@ func convertKey(m map[string]any) map[any]any {
 	return ret
 }
 
-func installRequestFromSyncApp(data *agentpb.SyncAppData) *model.ApplicationInstallRequest {
-	values := make([]byte, len(data.Values.OverrideValues))
-	copy(values, data.Values.OverrideValues)
+func toAppDeployRequestFromSyncApp(data *agentpb.SyncAppData, values []byte) *model.ApplicationInstallRequest {
 	return &model.ApplicationInstallRequest{
 		PluginName:     "helm",
 		RepoName:       data.Config.RepoName,
