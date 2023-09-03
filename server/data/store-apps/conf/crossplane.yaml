@@ -8,3 +8,5 @@ Namespace: "crossplane"
 ReleaseName: "crossplane"
 Version: "1.0.0"
 CreateNamespace: true
+OverrideValues:
+  DomainName: "{{.DomainName}}"

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/credential"
 
 	"github.com/intelops/go-common/credentials"
 )
@@ -36,5 +37,22 @@ func (a *Agent) StoreCredential(ctx context.Context, request *agentpb.StoreCrede
 	a.log.Infof("stored credentail for entity %s", credPath)
 	return &agentpb.StoreCredentialResponse{
 		Status: *agentpb.StatusCode_OK.Enum(),
+	}, nil
+}
+
+func (a *Agent) GetClusterGlobalValues(ctx context.Context, _ *agentpb.GetClusterGlobalValuesRequest) (*agentpb.GetClusterGlobalValuesResponse, error) {
+	values, err := credential.GetClusterGlobalValues(ctx)
+	if err != nil {
+		a.log.Errorf("%v", err)
+		return &agentpb.GetClusterGlobalValuesResponse{
+			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			StatusMessage: err.Error(),
+		}, nil
+	}
+
+	a.log.Infof("fetched cluster global values")
+	return &agentpb.GetClusterGlobalValuesResponse{
+		Status:       *agentpb.StatusCode_OK.Enum(),
+		GlobalValues: []byte(values),
 	}, nil
 }

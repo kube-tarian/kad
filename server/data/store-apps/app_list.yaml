@@ -1,6 +1,6 @@
 enabledApps:
   - argo-cd
   - crossplane
-  - tekton
+  - testkube
 
 disabledApps:

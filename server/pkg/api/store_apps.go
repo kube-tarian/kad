@@ -1,12 +1,17 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
+	"fmt"
+	"text/template"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/types"
+	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppRequest) (
@@ -211,13 +216,17 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 
 func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetStoreAppValuesRequest) (
 	*serverpb.GetStoreAppValuesResponse, error) {
-	if request.AppName == "" || request.Version == "" {
-		s.log.Errorf("failed to get store app values, %v", "App name/version is missing")
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if orgId == "" {
+		s.log.Errorf("organization ID is missing in the request")
 		return &serverpb.GetStoreAppValuesResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to get store app values, app name/version is missing",
+			StatusMessage: "Organization Id is missing",
 		}, nil
 	}
+	s.log.Infof("[org: %s] Get store app [%s:%s] values request for cluster %s recieved", orgId,
+		request.AppName, request.Version, request.ClusterID)
 
 	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
 	if err != nil {
@@ -228,31 +237,79 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 		}, nil
 	}
 
-	decodedIconBytes, _ := hex.DecodeString(config.Icon)
-	appConfig := &serverpb.StoreAppConfig{
-		AppName:             config.Name,
-		Version:             config.Version,
-		Category:            config.Category,
-		Description:         config.Description,
-		ChartName:           config.ChartName,
-		RepoName:            config.RepoName,
-		RepoURL:             config.RepoURL,
-		Namespace:           config.Namespace,
-		CreateNamespace:     config.CreateNamespace,
-		PrivilegedNamespace: config.PrivilegedNamespace,
-		Icon:                decodedIconBytes,
-		LaunchURL:           config.LaunchURL,
-		LaunchUIDescription: config.LaunchUIDescription,
-		ReleaseName:         config.ReleaseName,
+	marshaledOverride, err := yaml.Marshal(config.OverrideValues)
+	if err != nil {
+		return &serverpb.GetStoreAppValuesResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to marshal values",
+		}, nil
+	}
+
+	overrideValues, err := s.replaceGlobalValues(request.ClusterID, decodeBase64StringToBytes(string(marshaledOverride)))
+	if err != nil {
+		s.log.Errorf("failed to update overrided store app values, %v", err)
+		return &serverpb.GetStoreAppValuesResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to update overrided store app values",
+		}, nil
 	}
 
 	return &serverpb.GetStoreAppValuesResponse{
 		Status:         serverpb.StatusCode_OK,
 		StatusMessage:  "store app values sucessfuly fetched",
-		AppConfig:      appConfig,
-		OverrideValues: decodeBase64StringToBytes(config.OverrideValues),
+		OverrideValues: overrideValues,
 	}, nil
+}
 
+func (s *Server) replaceGlobalValues(clusterID string, overridedValues []byte) ([]byte, error) {
+	agent, err := s.agentHandeler.GetAgent(clusterID)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "failed to initialize agent for cluster %s", clusterID)
+	}
+	resp, err := agent.GetClient().GetClusterGlobalValues(context.TODO(), &agentpb.GetClusterGlobalValuesRequest{})
+	if err != nil {
+		return nil, err
+	}
+	if resp.Status != agentpb.StatusCode_OK {
+		return nil, fmt.Errorf("failed to get global values for cluster %s", clusterID)
+	}
+
+	var globalValues map[string]interface{}
+	err = yaml.Unmarshal(resp.GlobalValues, &globalValues)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "failed to unmarshal cluster values")
+	}
+
+	var overrideValues map[string]interface{}
+	err = yaml.Unmarshal(overridedValues, &overrideValues)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "failed to unmarshal override values")
+	}
+
+	return replaceOverrideGlobalValues(overrideValues, globalValues)
+
+}
+
+func replaceOverrideGlobalValues(overrideValues map[string]interface{},
+	globlaValues map[string]interface{}) (transformedData []byte, err error) {
+	yamlData, err := yaml.Marshal(overrideValues)
+	if err != nil {
+		return
+	}
+
+	tmpl, err := template.New("templateVal").Parse(string(yamlData))
+	if err != nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, globlaValues)
+	if err != nil {
+		return
+	}
+
+	transformedData = buf.Bytes()
+	return
 }
 
 func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeployStoreAppRequest) (
@@ -272,6 +329,22 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
 	if err != nil {
 		s.log.Errorf("failed to get store app values, %v", err)
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to find store app values",
+		}, nil
+	}
+
+	marshaledOverride, err := yaml.Marshal(config.OverrideValues)
+	if err != nil {
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to find store app values",
+		}, nil
+	}
+
+	marshaledLaunchUi, err := yaml.Marshal(config.LaunchUIValues)
+	if err != nil {
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to find store app values",
@@ -299,8 +372,8 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		},
 		AppValues: &agentpb.AppValues{
 			OverrideValues: request.OverrideValues,
-			LaunchUIValues: decodeBase64StringToBytes(config.LaunchUIValues),
-			TemplateValues: decodeBase64StringToBytes(config.TemplateValues),
+			LaunchUIValues: decodeBase64StringToBytes(string(marshaledLaunchUi)),
+			TemplateValues: decodeBase64StringToBytes(string(marshaledOverride)),
 		},
 	}
 
