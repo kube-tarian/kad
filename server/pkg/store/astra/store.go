@@ -39,6 +39,7 @@ func (a *AstraServerStore) InitializeDb() error {
 			Cql: query,
 		}
 
+		fmt.Println("INSIDE DB:::::::::: ", query, a.keyspace)
 		_, err := a.c.Session().ExecuteQuery(createQuery)
 		if err != nil {
 			return fmt.Errorf("failed to initialise db: %w", err)

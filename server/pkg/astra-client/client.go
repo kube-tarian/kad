@@ -85,6 +85,7 @@ func prepareDBAddress(conf *Config, serviceCredential map[string]string) (string
 	dbID := serviceCredential[astraCredDBIDKey]
 	region := serviceCredential[astraCredDBRegionKey]
 
+	fmt.Println("##### DB CREDS: ######", serviceCredential)
 	if len(dbID) == 0 || len(region) == 0 || len(serviceCredential[astraCredTokenKey]) == 0 {
 		return "", fmt.Errorf("invalid credential")
 	}
