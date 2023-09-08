@@ -71,7 +71,7 @@ func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.N
 	}
 
 	if s.cfg.RegisterLaunchAppsConifg {
-		if err := s.configureSSOForClusterApps(ctx, clusterID); err != nil {
+		if err := s.configureSSOForClusterApps(ctx, orgId, clusterID); err != nil {
 			s.log.Errorf("[org: %s] %v", orgId, err)
 			return &serverpb.NewClusterRegistrationResponse{
 				Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -218,7 +218,7 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 	var data []*serverpb.ClusterInfo
 	for _, cluster := range clusterDetails {
 		launchConfigList := []*agentpb.AppLaunchConfig{}
-		a, err := s.agentHandeler.GetAgent(cluster.ClusterID)
+		a, err := s.agentHandeler.GetAgent(orgId, cluster.ClusterID)
 		if err != nil {
 			s.log.Errorf("failed to connect to agent for cluster %s, %v", cluster.ClusterID, err)
 		} else {
@@ -261,7 +261,7 @@ func (s *Server) GetCluster(ctx context.Context, request *serverpb.GetClusterReq
 	}
 
 	s.log.Infof("[org: %s] GetCluster request recieved for cluster %s", orgId, request.ClusterID)
-	clusterDetails, err := s.serverStore.GetClusterDetails(request.ClusterID)
+	clusterDetails, err := s.serverStore.GetClusterDetails(orgId, request.ClusterID)
 	if err != nil {
 		s.log.Errorf("[org: %s] failed to get cluster %s, %v", orgId, request.ClusterID, err)
 		return &serverpb.GetClusterResponse{
@@ -270,7 +270,7 @@ func (s *Server) GetCluster(ctx context.Context, request *serverpb.GetClusterReq
 		}, err
 	}
 
-	a, err := s.agentHandeler.GetAgent(request.ClusterID)
+	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
 		s.log.Error("failed to connect to agent", err)
 		return &serverpb.GetClusterResponse{

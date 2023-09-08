@@ -62,7 +62,7 @@ func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetCluste
 	}
 	s.log.Infof("[org: %s] GetClusterApps request recieved for cluster %s", orgId, request.ClusterID)
 
-	a, err := s.agentHandeler.GetAgent(request.ClusterID)
+	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
 		s.log.Error("failed to connect to agent", err)
 		return &serverpb.GetClusterAppsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
@@ -95,7 +95,7 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 	}
 
 	s.log.Infof("[org: %s] GetClusterAppLaunchConfigs request recieved for cluster %s", orgId, request.ClusterID)
-	a, err := s.agentHandeler.GetAgent(request.ClusterID)
+	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
 		s.log.Error("failed to connect to agent", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
@@ -120,8 +120,8 @@ func (s *Server) GetClusterApp(ctx context.Context, request *serverpb.GetCluster
 	return &serverpb.GetClusterAppResponse{}, nil
 }
 
-func (s *Server) configureSSOForClusterApps(ctx context.Context, clusterID string) error {
-	agentClient, err := s.agentHandeler.GetAgent(clusterID)
+func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterID string) error {
+	agentClient, err := s.agentHandeler.GetAgent(orgId, clusterID)
 	if err != nil {
 		return errors.WithMessagef(err, "failed to get agent for cluster %s", clusterID)
 	}

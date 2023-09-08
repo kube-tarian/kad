@@ -245,7 +245,7 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 		}, nil
 	}
 
-	overrideValues, err := s.replaceGlobalValues(request.ClusterID, decodeBase64StringToBytes(string(marshaledOverride)))
+	overrideValues, err := s.replaceGlobalValues(orgId, request.ClusterID, decodeBase64StringToBytes(string(marshaledOverride)))
 	if err != nil {
 		s.log.Errorf("failed to update overrided store app values, %v", err)
 		return &serverpb.GetStoreAppValuesResponse{
@@ -261,8 +261,8 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 	}, nil
 }
 
-func (s *Server) replaceGlobalValues(clusterID string, overridedValues []byte) ([]byte, error) {
-	agent, err := s.agentHandeler.GetAgent(clusterID)
+func (s *Server) replaceGlobalValues(orgId, clusterID string, overridedValues []byte) ([]byte, error) {
+	agent, err := s.agentHandeler.GetAgent(orgId, clusterID)
 	if err != nil {
 		return nil, errors.WithMessagef(err, "failed to initialize agent for cluster %s", clusterID)
 	}
@@ -377,7 +377,7 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		},
 	}
 
-	agent, err := s.agentHandeler.GetAgent(request.ClusterID)
+	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
 		return &serverpb.DeployStoreAppResponse{
