@@ -5,11 +5,13 @@ servicedescription: "Server for managing Capten Clusters"  # Add your service de
 actions: #Add your actions or permissions here
   - name: "manage-cluster"
     displayname: "Manage Cluster"
+    actiondescription: "Permission to manage clusters"
   - name: "view-cluster"
     displayname: "View Cluster"
+    actiondescription: "Permission to view clusters"
   - name: "manage-apps"
     displayname: "Manage Apps"
-
+    actiondescription: "Permission to manage Apps"
 
 roles:
   - name: "cluster-admin"

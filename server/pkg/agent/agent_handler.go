@@ -54,13 +54,13 @@ func (s *AgentHandler) UpdateAgent(clusterID string, agentCfg *Config) error {
 	return s.AddAgent(clusterID, agentCfg)
 }
 
-func (s *AgentHandler) GetAgent(clusterID string) (*Agent, error) {
+func (s *AgentHandler) GetAgent(orgId, clusterID string) (*Agent, error) {
 	agent := s.getAgent(clusterID)
 	if agent != nil {
 		return agent, nil
 	}
 
-	cfg, err := s.getAgentConfig(clusterID)
+	cfg, err := s.getAgentConfig(orgId, clusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,10 +117,10 @@ func (s *AgentHandler) Close() {
 	}
 }
 
-func (s *AgentHandler) getAgentConfig(clusterID string) (*Config, error) {
+func (s *AgentHandler) getAgentConfig(orgId, clusterID string) (*Config, error) {
 	agentCfg := &Config{}
 
-	clusterDetail, err := s.serverStore.GetClusterDetails(clusterID)
+	clusterDetail, err := s.serverStore.GetClusterDetails(orgId, clusterID)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to get cluster")
 	}
