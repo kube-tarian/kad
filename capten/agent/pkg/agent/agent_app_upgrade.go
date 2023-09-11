@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/credential"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
@@ -30,57 +31,30 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 		}, nil
 	}
 
-	// 2: replace template with new override values from the request
-	templateValuesMapping, err := deriveTemplateValuesMapping(req.OverrideValues, appConfig.Values.TemplateValues)
+	// 2: populate template values, overriding with launchUiValues if needed
+	newAppConfig, marshaledOverrideValues, err := PopulateTemplateValues(appConfig, req.OverrideValues, req.LaunchUIValues, a.log)
 	if err != nil {
-		a.log.Errorf("failed to derive template values, err: %v", err)
 		return &agentpb.UpgradeAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "failed to dervice template values").Error(),
+			StatusMessage: errors.WithMessage(err, "err populating template values").Error(),
 		}, nil
 	}
 
-	launchUiMapping := map[string]any{}
-	newAppConfig := *appConfig
-
-	// 3: if launchUiValues are present then replace them too in the template while saving some of them to vault
+	// 3: save to vault
 	if len(req.LaunchUIValues) > 0 {
-		// replace launchUiMapping with the new launchUi values from the request
-		launchUiMapping, err = deriveTemplateValuesMapping(req.LaunchUIValues, appConfig.Values.LaunchUIValues)
-		if err != nil {
-			a.log.Errorf("failed to replaceTemplateValues, err: %v", err)
-			return &agentpb.UpgradeAppResponse{
-				Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-				StatusMessage: errors.WithMessage(err, "err replacing launchUiMapping").Error(),
-			}, nil
-		}
-
-		// save to vault
 		if err := a.storeSecrets(req.ReleaseName, appConfig.Values.LaunchUIValues); err != nil {
 			a.log.Errorf("failed to store secrets, err: %v", err)
 			return &agentpb.UpgradeAppResponse{
 				Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-				StatusMessage: errors.WithMessage(err, "err replacing launchUiMapping").Error(),
+				StatusMessage: errors.WithMessage(err, "err storing secrets").Error(),
 			}, nil
 		}
-
-	}
-
-	// 4: merge final set of values together
-	finalOverrideValuesMapping := mergeRecursive(convertKey(templateValuesMapping), convertKey(launchUiMapping))
-	marshaledOverrideValues, err := yaml.Marshal(finalOverrideValuesMapping)
-	if err != nil {
-		a.log.Errorf("failed to Marshal, err: %v", err)
-		return &agentpb.UpgradeAppResponse{
-			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "err marshalling overrideValues").Error(),
-		}, nil
 	}
 
 	newAppConfig.Config.InstallStatus = "Updating"
 
 	// 5: Upsert the new config with status as updating
-	if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
+	if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
 		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
 		return &agentpb.UpgradeAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
@@ -91,10 +65,10 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 	go func() {
 		wd := workers.NewDeployment(a.tc, a.log)
 		_, err := wd.SendEvent(context.TODO(), "update",
-			toAppDeployRequestFromSyncApp(&newAppConfig, marshaledOverrideValues))
+			toAppDeployRequestFromSyncApp(newAppConfig, marshaledOverrideValues))
 		if err != nil {
 			newAppConfig.Config.InstallStatus = "Update Failed"
-			if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
+			if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
 				a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
 				return
 			}
@@ -107,7 +81,7 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 		newAppConfig.Values.OverrideValues = req.OverrideValues
 
 		// 6: change status to updated once deployment is done
-		if err := a.as.UpsertAppConfig(&newAppConfig); err != nil {
+		if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
 			a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
 			return
 		}
@@ -121,18 +95,52 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 
 }
 
+func PopulateTemplateValues(appConfig *agentpb.SyncAppData, overrideValues, launchUiValues []byte, log logging.Logger) (
+	*agentpb.SyncAppData, []byte, error) {
+	// replace template with new override values from the request
+	templateValuesMapping, err := deriveTemplateValuesMapping(overrideValues, appConfig.Values.TemplateValues)
+	if err != nil {
+		log.Errorf("failed to derive template values, err: %v", err)
+		return nil, nil, err
+	}
+
+	launchUiMapping := map[string]any{}
+	newAppConfig := *appConfig
+
+	// if launchUiValues are present then replace them too in the template while saving some of them to vault
+	if len(launchUiValues) > 0 {
+		// replace launchUiMapping with the new launchUi values from the request
+		launchUiMapping, err = deriveTemplateValuesMapping(launchUiValues, appConfig.Values.LaunchUIValues)
+		if err != nil {
+			log.Errorf("failed to deriveTemplateValuesMapping, release:%s err: %v", appConfig.Config.ReleaseName, err)
+			return nil, nil, err
+		}
+	}
+
+	// merge final set of values together
+	finalOverrideValuesMapping := mergeRecursive(convertKey(templateValuesMapping), convertKey(launchUiMapping))
+	marshaledOverrideValues, err := yaml.Marshal(finalOverrideValuesMapping)
+	if err != nil {
+		log.Errorf("failed to Marshal finalOverrideValuesMapping, release:%s err: %v", appConfig.Config.ReleaseName, err)
+		return nil, nil, err
+	}
+
+	return &newAppConfig, marshaledOverrideValues, nil
+}
+
 // function to store all secrets to vault, currently works for sso mapping only
 func (a *Agent) storeSecrets(releaseName string, launchUiValues []byte) error {
 
 	launchUiValuesMapping := map[string]any{}
 	if err := yaml.Unmarshal(launchUiValues, &launchUiValuesMapping); err != nil {
-		a.log.Errorf("failed to unmarshal launchValues while upgradingApp for release: %v", releaseName)
+		a.log.Errorf("failed to unmarshal launchValues while upgradingApp for release: %v err: %v", releaseName, err)
 		return err
 	}
 
 	// Store SSO Credentials
-	clientId, clientSecret := launchUiValuesMapping["ClientId"].(string), launchUiValuesMapping["ClientSecret"].(string)
-	if len(clientId) > 0 && len(clientSecret) > 0 {
+	clientId, ok1 := launchUiValuesMapping["ClientId"].(string)
+	clientSecret, ok2 := launchUiValuesMapping["ClientSecret"].(string)
+	if ok1 && ok2 && len(clientId) > 0 && len(clientSecret) > 0 {
 		if err := credential.StoreAppOauthCredential(
 			context.TODO(), releaseName, clientId, clientSecret); err != nil {
 			a.log.Errorf("failed to store credential for releaseName-ClientId: %s, %v",
