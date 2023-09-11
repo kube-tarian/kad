@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"fmt"
 	"log"
 	"strings"
 	"testing"
@@ -32,12 +31,10 @@ func TestPopulateTemplateValues(t *testing.T) {
 	assert.True(len(overrideRequest) > 0, "expected overrideRequest to be populated")
 	assert.True(len(launchUiRequest) > 0, "expected launchUiRequest to be populated")
 
-	newAppConfig, marshaledOverride, err := PopulateTemplateValues(appConfig, overrideRequest, launchUiRequest, logger)
-	_, _, _ = newAppConfig, marshaledOverride, err
+	_, marshalled, err := PopulateTemplateValues(appConfig, overrideRequest, launchUiRequest, logger)
 
-	fmt.Printf("marshalled\n------\n%v\n", string(marshaledOverride))
-	fmt.Printf("------\n")
-
+	assert.True(strings.Contains(string(marshalled), "capten.intelops.launchUI"))
+	assert.True(strings.Contains(string(marshalled), "capten.intelops.override"))
 	assert.Nil(err)
 }
 
@@ -46,7 +43,6 @@ func createDummyOverrideValuesRequestBytes() []byte {
 DomainName: "capten.intelops.override"
 `
 	byt := yamlStringToByte(overrideTemplate)
-	// fmt.Printf("DummyOverride mapping: %+v\n", byteToMap(byt)) // to verify proper conversion
 	return byt
 
 }
@@ -59,7 +55,6 @@ ClientId: "some_client_id"
 ClientSecret: "some_client_secret"
 `
 	byt := yamlStringToByte(launchUiTemplate)
-	// fmt.Printf("DummyLaunch: %+v\n", byteToMap(byt)) // to verify proper conversion
 	return byt
 }
 
@@ -86,11 +81,6 @@ func byteToMap(byt []byte) map[string]any {
 		log.Println("err while Unmarshal", err)
 		return nil
 	}
-	// err := yaml.NewEncoder(bytes.NewBuffer(byt)).Encode(&initialMapping)
-	// if err != nil {
-	// 	log.Println("err while encoding", err)
-	// 	return nil
-	// }
 	return initialMapping
 }
 
