@@ -38,6 +38,31 @@ func TestPopulateTemplateValues(t *testing.T) {
 	assert.Nil(err)
 }
 
+func TestPopulateTemplateValuesWithNoLaunchValues(t *testing.T) {
+	assert := require.New(t)
+	logger := logging.NewLogger()
+	_ = logger
+
+	appConfig := &agentpb.SyncAppData{
+		Config: &agentpb.AppConfig{ReleaseName: "release"},
+		Values: &agentpb.AppValues{
+			OverrideValues: yamlStringToByte(overrideTemplate),
+			LaunchUIValues: yamlStringToByte(launchUiTemplate),
+			TemplateValues: yamlStringToByte(totalTemplate),
+		},
+	}
+	_ = appConfig
+
+	overrideRequest := createDummyOverrideValuesRequestBytes()
+	assert.True(len(overrideRequest) > 0, "expected overrideRequest to be populated")
+
+	_, marshalled, err := PopulateTemplateValues(appConfig, overrideRequest, nil, logger)
+
+	assert.True(!strings.Contains(string(marshalled), "capten.intelops.launchUI"))
+	assert.True(strings.Contains(string(marshalled), "capten.intelops.override"))
+	assert.Nil(err)
+}
+
 func createDummyOverrideValuesRequestBytes() []byte {
 	const overrideTemplate = `
 DomainName: "capten.intelops.override"
