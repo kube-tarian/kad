@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/base64"
+	"time"
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/server/pkg/agent"
@@ -177,6 +178,15 @@ func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
+	err = s.serverStore.DeleteFullCacheAppLaunches(orgId, request.ClusterID)
+	if err != nil {
+		s.log.Errorf("[org: %s] failed to delete clusterappLaunches %s from db, %v", orgId, request.ClusterID, err)
+		return &serverpb.DeleteClusterRegistrationResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed delete register cluster",
+		}, nil
+	}
+
 	err = s.serverStore.DeleteCluster(orgId, request.ClusterID)
 	if err != nil {
 		s.log.Errorf("[org: %s] failed to delete cluster %s from db, %v", orgId, request.ClusterID, err)
@@ -217,17 +227,10 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 
 	var data []*serverpb.ClusterInfo
 	for _, cluster := range clusterDetails {
-		launchConfigList := []*agentpb.AppLaunchConfig{}
-		a, err := s.agentHandeler.GetAgent(orgId, cluster.ClusterID)
+		resp, err := s.GetClusterAppLaunchesFromCacheOrAgent(ctx, orgId, cluster.ClusterID)
 		if err != nil {
-			s.log.Errorf("failed to connect to agent for cluster %s, %v", cluster.ClusterID, err)
-		} else {
-			resp, err := a.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
-			if err != nil {
-				s.log.Errorf("failed to get cluster application launches from agent for cluster %s, %v", cluster.ClusterID, err)
-				continue
-			}
-			launchConfigList = resp.LaunchConfigList
+			s.log.Errorf("failed to get cluster appLaunches for cluster: %s, %v", cluster.ClusterID, err)
+			continue
 		}
 
 		attributes := []*serverpb.ClusterAttribute{}
@@ -236,7 +239,7 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 			ClusterName:      cluster.ClusterName,
 			AgentEndpoint:    cluster.Endpoint,
 			Attributes:       attributes,
-			AppLaunchConfigs: mapAgentAppLauncesToServerResp(launchConfigList),
+			AppLaunchConfigs: mapAgentAppLauncesToServerResp(resp.LaunchConfigList),
 		})
 	}
 
@@ -270,18 +273,9 @@ func (s *Server) GetCluster(ctx context.Context, request *serverpb.GetClusterReq
 		}, err
 	}
 
-	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
-	if err != nil {
-		s.log.Error("failed to connect to agent", err)
-		return &serverpb.GetClusterResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed get agent details",
-		}, err
-	}
-
-	resp, err := a.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
-	if err != nil {
-		s.log.Error("failed to get cluster application launches from agent", err)
+	resp, err := s.GetClusterAppLaunchesFromCacheOrAgent(ctx, orgId, request.ClusterID)
+	if err != nil || resp == nil || resp.Status != agentpb.StatusCode_OK {
+		s.log.Error("failed to get cluster application launches from cache/agent: %v", resp)
 		return &serverpb.GetClusterResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed get cluster app lauches",
@@ -314,4 +308,33 @@ func (s *Server) getBase64DecodedString(encodedString string) (string, error) {
 	}
 
 	return string(decodedByte), nil
+}
+
+func (s *Server) GetClusterAppLaunchesFromCacheOrAgent(ctx context.Context, orgId, clusterID string) (
+	*agentpb.GetClusterAppLaunchesResponse, error) {
+	currentTime := time.Now()
+
+	lastFetchedTime := time.Unix(s.orgClusterIDCache[orgId+"-"+clusterID]-offsetTime, 0)
+
+	if currentTime.After(lastFetchedTime) {
+		// cache expired re-trigger the cache
+		agentClient, aErr := s.agentHandeler.GetAgent(orgId, clusterID)
+		if aErr == nil {
+			resp, err := agentClient.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
+			if err == nil {
+				updateErr := s.serverStore.UpdateCacheAppLaunches(orgId, clusterID, resp.LaunchConfigList)
+				if updateErr == nil {
+					s.mutex.Lock()
+					s.orgClusterIDCache[orgId+"-"+clusterID] = currentTime.Unix()
+					s.mutex.Unlock()
+
+					return resp, err
+				}
+
+			}
+		}
+	}
+
+	// If any failure happens return from cache.
+	return s.serverStore.GetCacheAppLaunches(orgId, clusterID)
 }

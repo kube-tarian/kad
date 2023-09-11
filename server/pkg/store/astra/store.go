@@ -32,6 +32,7 @@ func (a *AstraServerStore) InitializeDb() error {
 	initDbQueries := []string{
 		fmt.Sprintf(createClusterEndpointTableQuery, a.keyspace),
 		fmt.Sprintf(createAppConfigTableQuery, a.keyspace),
+		fmt.Sprintf(createCacheAgentAppLaunchesTableQuery, a.keyspace),
 	}
 
 	for _, query := range initDbQueries {
