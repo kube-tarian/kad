@@ -47,6 +47,15 @@ func (a *Agent) ConfigureAppSSO(
 		"OAuthBaseURL": req.OAuthBaseURL,
 	}
 
+	overrideValuesMapping := map[string]any{}
+	if err := yaml.Unmarshal(appConfig.Values.OverrideValues, &overrideValuesMapping); err != nil {
+		return nil, errors.WithMessagef(err, "failed to Unmarshal override values")
+	}
+
+	for key, val := range overrideValuesMapping {
+		ssoOverwriteMapping[key] = val
+	}
+
 	templateValuesMapping, err := deriveTemplateValuesMapping(appConfig.Values.OverrideValues, appConfig.Values.TemplateValues)
 	if err != nil {
 		a.log.Errorf("failed to derivee template values, err: %v", err)
