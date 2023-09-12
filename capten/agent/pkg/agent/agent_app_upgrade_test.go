@@ -24,7 +24,6 @@ func TestPopulateTemplateValues(t *testing.T) {
 			TemplateValues: yamlStringToByte(totalTemplate),
 		},
 	}
-	_ = appConfig
 
 	overrideRequest := createDummyOverrideValuesRequestBytes()
 	launchUiRequest := createDummyLaunchUiValuesRequestBytes()
@@ -51,7 +50,6 @@ func TestPopulateTemplateValuesWithNoLaunchValues(t *testing.T) {
 			TemplateValues: yamlStringToByte(totalTemplate),
 		},
 	}
-	_ = appConfig
 
 	overrideRequest := createDummyOverrideValuesRequestBytes()
 	assert.True(len(overrideRequest) > 0, "expected overrideRequest to be populated")
