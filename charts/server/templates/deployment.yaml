@@ -75,6 +75,8 @@ spec:
               value: {{ .Values.ory.credIdentifier }}
             - name: IAM_URL
               value: {{.Values.iam.address}}
+            - name: CAPTEN_OAUTH_URL
+              value: {{.Values.ory.captenOAuthURL}}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
