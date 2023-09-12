@@ -131,7 +131,7 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterI
 	}
 
 	s.mutex.Lock()
-	s.orgClusterIDCache[orgId+"-"+clusterID] = time.Now().Unix()
+	s.orgClusterIDCache[orgId+"-"+clusterID] = time.Now().Add(delayTimeinMin * time.Minute).Unix()
 	s.mutex.Unlock()
 
 	for _, app := range resp.LaunchConfigList {

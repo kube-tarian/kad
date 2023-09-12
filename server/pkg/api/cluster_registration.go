@@ -313,8 +313,7 @@ func (s *Server) getBase64DecodedString(encodedString string) (string, error) {
 func (s *Server) GetClusterAppLaunchesFromCacheOrAgent(ctx context.Context, orgId, clusterID string) (
 	*agentpb.GetClusterAppLaunchesResponse, error) {
 	currentTime := time.Now()
-
-	lastFetchedTime := time.Unix(s.orgClusterIDCache[orgId+"-"+clusterID]-offsetTime, 0)
+	lastFetchedTime := time.Unix(s.orgClusterIDCache[orgId+"-"+clusterID], 0)
 
 	if currentTime.After(lastFetchedTime) {
 		// cache expired re-trigger the cache
@@ -325,7 +324,7 @@ func (s *Server) GetClusterAppLaunchesFromCacheOrAgent(ctx context.Context, orgI
 				updateErr := s.serverStore.UpdateCacheAppLaunches(orgId, clusterID, resp.LaunchConfigList)
 				if updateErr == nil {
 					s.mutex.Lock()
-					s.orgClusterIDCache[orgId+"-"+clusterID] = currentTime.Unix()
+					s.orgClusterIDCache[orgId+"-"+clusterID] = currentTime.Add(delayTimeinMin * time.Minute).Unix()
 					s.mutex.Unlock()
 
 					return resp, err

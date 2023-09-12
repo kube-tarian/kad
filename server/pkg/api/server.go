@@ -18,7 +18,7 @@ import (
 const (
 	organizationIDAttribute = "organizationid"
 	clusterIDAttribute      = "clusterid"
-	offsetTime              = 10
+	delayTimeinMin          = 15
 )
 
 type Server struct {

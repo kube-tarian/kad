@@ -25,7 +25,7 @@ const (
 	icon=textAsBlob('%s'), launch_url='%s', launch_ui_description='%s' WHERE org_id=%s AND cluster_id=%s AND release_name='%s';`
 	deleteCacheAppLaunchesQuery = `DELETE FROM %s.app_launches 
 	WHERE org_id=%s AND cluster_id=%s AND release_name='%s';`
-	deleteFullCacheAppLaunchesQuery = `DELETE * FROM %s.app_launches WHERE org_id=%s AND cluster_id=%s;`
+	deleteFullCacheAppLaunchesQuery = `DELETE FROM %s.app_launches WHERE org_id=%s AND cluster_id=%s;`
 )
 
 func (a *AstraServerStore) GetCacheAppLaunches(orgID, clusterID string) (*agentpb.GetClusterAppLaunchesResponse, error) {
