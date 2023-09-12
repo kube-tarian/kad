@@ -30,6 +30,7 @@ astra:
 ory:
   credIdentifier: capten
   entityName: ory
+  captenOAuthURL: https://alpha.optimizor.app/api/.ory
 
 env:
   logLevel: info
