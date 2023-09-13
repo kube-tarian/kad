@@ -23,6 +23,9 @@ service Server {
   rpc GetStoreApps (GetStoreAppsRequest) returns (GetStoreAppsResponse) {}
   rpc GetStoreAppValues(GetStoreAppValuesRequest) returns (GetStoreAppValuesResponse) {}
   rpc DeployStoreApp(DeployStoreAppRequest) returns (DeployStoreAppResponse) {}
+
+  rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
+
 }
 
 enum StatusCode {
@@ -262,4 +265,15 @@ message StoreAppAllValues {
   bytes overrideValues = 1;
   bytes launchUIValues = 2;
   bytes templateValues = 3;
+}
+
+message StoreCredentialRequest {
+  string clusterID = 1;
+  string credIdentifier = 2;
+  map<string, string>  credential = 3;  
+}
+
+message StoreCredentialResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
 }
