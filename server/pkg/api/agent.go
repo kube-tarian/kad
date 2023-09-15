@@ -31,7 +31,7 @@ func (s *Server) StoreCredential(ctx context.Context, request *serverpb.StoreCre
 	response, err := agent.GetClient().StoreCredential(context.Background(), &agentpb.StoreCredentialRequest{
 		CredentialType: "generic",
 		CredEntityName: "k8s",
-		CredIdentifier: "github",
+		CredIdentifier: request.CredIdentifier,
 		Credential:     request.Credential,
 	})
 	if err != nil {
