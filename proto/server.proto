@@ -270,7 +270,8 @@ message StoreAppAllValues {
 message StoreCredentialRequest {
   string clusterID = 1;
   string credIdentifier = 2;
-  map<string, string>  credential = 3;  
+  string credentialEntiryName=3;
+  map<string, string>  credential = 4;  
 }
 
 message StoreCredentialResponse {

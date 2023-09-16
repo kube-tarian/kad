@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 )
@@ -29,8 +30,8 @@ func (s *Server) StoreCredential(ctx context.Context, request *serverpb.StoreCre
 	}
 
 	response, err := agent.GetClient().StoreCredential(context.Background(), &agentpb.StoreCredentialRequest{
-		CredentialType: "generic",
-		CredEntityName: "k8s",
+		CredentialType: credentials.GenericCredentialType,
+		CredEntityName: request.CredentialEntiryName,
 		CredIdentifier: request.CredIdentifier,
 		Credential:     request.Credential,
 	})
