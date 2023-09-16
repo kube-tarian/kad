@@ -65,7 +65,8 @@ func (a *Agent) ConfigureAppSSO(
 		}, nil
 	}
 
-	go a.DeployApp(newAppConfig, marshaledOverrideValues, []byte("update"))
+	installReq := toAppDeployRequestFromSyncApp(newAppConfig, marshaledOverrideValues)
+	go a.DeployApp(installReq, newAppConfig, []byte("update"))
 
 	a.log.Infof("Triggerred app [%s] update", newAppConfig.Config.ReleaseName)
 	return &agentpb.ConfigureAppSSOResponse{

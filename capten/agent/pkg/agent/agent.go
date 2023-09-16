@@ -11,6 +11,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
+	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
 	ory "github.com/ory/client-go"
@@ -76,7 +77,7 @@ func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*ag
 	return prepareJobResponse(run, worker.GetWorkflowName()), err
 }
 
-func (a *Agent) DeployApp(newAppConfig *agentpb.SyncAppData, marshaledOverrideValues, action []byte) {
+func (a *Agent) DeployApp(req *model.ApplicationInstallRequest, newAppConfig *agentpb.SyncAppData, action []byte) {
 
 	var installStatus string
 	switch string(action) {
@@ -90,8 +91,7 @@ func (a *Agent) DeployApp(newAppConfig *agentpb.SyncAppData, marshaledOverrideVa
 	}
 
 	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendEvent(context.TODO(), string(action),
-		toAppDeployRequestFromSyncApp(newAppConfig, marshaledOverrideValues))
+	_, err := wd.SendEvent(context.TODO(), string(action), req)
 	if err != nil {
 		newAppConfig.Config.InstallStatus = fmt.Sprintf("%s Failed", string(action))
 		if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
