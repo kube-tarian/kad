@@ -76,6 +76,39 @@ func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*ag
 	return prepareJobResponse(run, worker.GetWorkflowName()), err
 }
 
+func (a *Agent) DeployApp(newAppConfig *agentpb.SyncAppData, marshaledOverrideValues, action []byte) {
+
+	var installStatus string
+	switch string(action) {
+	case "update":
+		installStatus = "updated"
+	case "install":
+		installStatus = "installed"
+	default:
+		a.log.Errorf("failed to DeployApp, err: unknown action")
+		return
+	}
+
+	wd := workers.NewDeployment(a.tc, a.log)
+	_, err := wd.SendEvent(context.TODO(), string(action),
+		toAppDeployRequestFromSyncApp(newAppConfig, marshaledOverrideValues))
+	if err != nil {
+		newAppConfig.Config.InstallStatus = fmt.Sprintf("%s Failed", string(action))
+		if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
+			a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
+			return
+		}
+		a.log.Errorf("failed to SendEvent, err: %v", err)
+		return
+	}
+
+	newAppConfig.Config.InstallStatus = installStatus
+	if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
+		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
+		return
+	}
+}
+
 func (a *Agent) getWorker(operatoin string) (workers.Worker, error) {
 	switch operatoin {
 	default:

@@ -36,7 +36,8 @@ const (
 	Agent_GetClusterAppValues_FullMethodName    = "/agentpb.Agent/GetClusterAppValues"
 	Agent_GetClusterGlobalValues_FullMethodName = "/agentpb.Agent/GetClusterGlobalValues"
 	Agent_InstallApp_FullMethodName             = "/agentpb.Agent/InstallApp"
-	Agent_UpgradeApp_FullMethodName             = "/agentpb.Agent/UpgradeApp"
+	Agent_UpgradeAppWithValues_FullMethodName   = "/agentpb.Agent/UpgradeAppWithValues"
+	Agent_UpgradeAppWithVersion_FullMethodName  = "/agentpb.Agent/UpgradeAppWithVersion"
 )
 
 // AgentClient is the client API for Agent service.
@@ -60,7 +61,8 @@ type AgentClient interface {
 	GetClusterAppValues(ctx context.Context, in *GetClusterAppValuesRequest, opts ...grpc.CallOption) (*GetClusterAppValuesResponse, error)
 	GetClusterGlobalValues(ctx context.Context, in *GetClusterGlobalValuesRequest, opts ...grpc.CallOption) (*GetClusterGlobalValuesResponse, error)
 	InstallApp(ctx context.Context, in *InstallAppRequest, opts ...grpc.CallOption) (*InstallAppResponse, error)
-	UpgradeApp(ctx context.Context, in *UpgradeAppRequest, opts ...grpc.CallOption) (*UpgradeAppResponse, error)
+	UpgradeAppWithValues(ctx context.Context, in *UpgradeAppWithValuesRequest, opts ...grpc.CallOption) (*UpgradeAppWithValuesResponse, error)
+	UpgradeAppWithVersion(ctx context.Context, in *UpgradeAppWithVersionRequest, opts ...grpc.CallOption) (*UpgradeAppWithVersionResponse, error)
 }
 
 type agentClient struct {
@@ -224,9 +226,18 @@ func (c *agentClient) InstallApp(ctx context.Context, in *InstallAppRequest, opt
 	return out, nil
 }
 
-func (c *agentClient) UpgradeApp(ctx context.Context, in *UpgradeAppRequest, opts ...grpc.CallOption) (*UpgradeAppResponse, error) {
-	out := new(UpgradeAppResponse)
-	err := c.cc.Invoke(ctx, Agent_UpgradeApp_FullMethodName, in, out, opts...)
+func (c *agentClient) UpgradeAppWithValues(ctx context.Context, in *UpgradeAppWithValuesRequest, opts ...grpc.CallOption) (*UpgradeAppWithValuesResponse, error) {
+	out := new(UpgradeAppWithValuesResponse)
+	err := c.cc.Invoke(ctx, Agent_UpgradeAppWithValues_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) UpgradeAppWithVersion(ctx context.Context, in *UpgradeAppWithVersionRequest, opts ...grpc.CallOption) (*UpgradeAppWithVersionResponse, error) {
+	out := new(UpgradeAppWithVersionResponse)
+	err := c.cc.Invoke(ctx, Agent_UpgradeAppWithVersion_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +265,8 @@ type AgentServer interface {
 	GetClusterAppValues(context.Context, *GetClusterAppValuesRequest) (*GetClusterAppValuesResponse, error)
 	GetClusterGlobalValues(context.Context, *GetClusterGlobalValuesRequest) (*GetClusterGlobalValuesResponse, error)
 	InstallApp(context.Context, *InstallAppRequest) (*InstallAppResponse, error)
-	UpgradeApp(context.Context, *UpgradeAppRequest) (*UpgradeAppResponse, error)
+	UpgradeAppWithValues(context.Context, *UpgradeAppWithValuesRequest) (*UpgradeAppWithValuesResponse, error)
+	UpgradeAppWithVersion(context.Context, *UpgradeAppWithVersionRequest) (*UpgradeAppWithVersionResponse, error)
 	mustEmbedUnimplementedAgentServer()
 }
 
@@ -313,8 +325,11 @@ func (UnimplementedAgentServer) GetClusterGlobalValues(context.Context, *GetClus
 func (UnimplementedAgentServer) InstallApp(context.Context, *InstallAppRequest) (*InstallAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InstallApp not implemented")
 }
-func (UnimplementedAgentServer) UpgradeApp(context.Context, *UpgradeAppRequest) (*UpgradeAppResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpgradeApp not implemented")
+func (UnimplementedAgentServer) UpgradeAppWithValues(context.Context, *UpgradeAppWithValuesRequest) (*UpgradeAppWithValuesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpgradeAppWithValues not implemented")
+}
+func (UnimplementedAgentServer) UpgradeAppWithVersion(context.Context, *UpgradeAppWithVersionRequest) (*UpgradeAppWithVersionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpgradeAppWithVersion not implemented")
 }
 func (UnimplementedAgentServer) mustEmbedUnimplementedAgentServer() {}
 
@@ -635,20 +650,38 @@ func _Agent_InstallApp_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Agent_UpgradeApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpgradeAppRequest)
+func _Agent_UpgradeAppWithValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpgradeAppWithValuesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentServer).UpgradeApp(ctx, in)
+		return srv.(AgentServer).UpgradeAppWithValues(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Agent_UpgradeApp_FullMethodName,
+		FullMethod: Agent_UpgradeAppWithValues_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).UpgradeApp(ctx, req.(*UpgradeAppRequest))
+		return srv.(AgentServer).UpgradeAppWithValues(ctx, req.(*UpgradeAppWithValuesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_UpgradeAppWithVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpgradeAppWithVersionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).UpgradeAppWithVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_UpgradeAppWithVersion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).UpgradeAppWithVersion(ctx, req.(*UpgradeAppWithVersionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -729,8 +762,12 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Agent_InstallApp_Handler,
 		},
 		{
-			MethodName: "UpgradeApp",
-			Handler:    _Agent_UpgradeApp_Handler,
+			MethodName: "UpgradeAppWithValues",
+			Handler:    _Agent_UpgradeAppWithValues_Handler,
+		},
+		{
+			MethodName: "UpgradeAppWithVersion",
+			Handler:    _Agent_UpgradeAppWithVersion_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

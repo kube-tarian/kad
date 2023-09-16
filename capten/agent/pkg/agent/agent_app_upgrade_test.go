@@ -40,7 +40,6 @@ func TestPopulateTemplateValues(t *testing.T) {
 func TestPopulateTemplateValuesWithNoLaunchValues(t *testing.T) {
 	assert := require.New(t)
 	logger := logging.NewLogger()
-	_ = logger
 
 	appConfig := &agentpb.SyncAppData{
 		Config: &agentpb.AppConfig{ReleaseName: "release"},

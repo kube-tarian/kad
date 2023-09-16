@@ -31,7 +31,8 @@ service Agent {
   rpc GetClusterGlobalValues (GetClusterGlobalValuesRequest) returns (GetClusterGlobalValuesResponse) {}
 
   rpc InstallApp (InstallAppRequest) returns (InstallAppResponse) {}
-  rpc UpgradeApp (UpgradeAppRequest) returns (UpgradeAppResponse) {}
+  rpc UpgradeAppWithValues (UpgradeAppWithValuesRequest) returns (UpgradeAppWithValuesResponse) {}
+  rpc UpgradeAppWithVersion (UpgradeAppWithVersionRequest) returns (UpgradeAppWithVersionResponse) {}
 }
 
 enum StatusCode {
@@ -223,13 +224,22 @@ message AppLaunchConfig {
   string launchUIDescription = 6;
 }
 
-message UpgradeAppRequest {
+message UpgradeAppWithValuesRequest {
   string releaseName = 1;
   bytes overrideValues = 2;
-  bytes launchUIValues = 3;
 }
 
-message UpgradeAppResponse {
+message UpgradeAppWithValuesResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UpgradeAppWithVersionRequest {
+  string releaseName = 1;
+  string version = 2;
+}
+
+message UpgradeAppWithVersionResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }
