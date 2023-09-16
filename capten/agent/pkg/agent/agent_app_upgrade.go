@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppWithValuesRequest) (*agentpb.UpgradeAppWithValuesResponse, error) {
+func (a *Agent) UpgradeAppWithValues(ctx context.Context, req *agentpb.UpgradeAppWithValuesRequest) (*agentpb.UpgradeAppWithValuesResponse, error) {
 
 	a.log.Infof("Received request for UpgradeApp, app %s", req.ReleaseName)
 
