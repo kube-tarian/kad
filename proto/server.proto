@@ -269,7 +269,7 @@ message StoreAppAllValues {
 
 message StoreCredentialRequest {
   string clusterID = 1;
-  string credIdentifier = 2;
+  string credentialIdentifier = 2;
   string credentialEntiryName=3;
   map<string, string>  credential = 4;  
 }

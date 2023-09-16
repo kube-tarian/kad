@@ -32,7 +32,7 @@ func (s *Server) StoreCredential(ctx context.Context, request *serverpb.StoreCre
 	response, err := agent.GetClient().StoreCredential(context.Background(), &agentpb.StoreCredentialRequest{
 		CredentialType: credentials.GenericCredentialType,
 		CredEntityName: request.CredentialEntiryName,
-		CredIdentifier: request.CredIdentifier,
+		CredIdentifier: request.CredentialIdentifier,
 		Credential:     request.Credential,
 	})
 	if err != nil {
