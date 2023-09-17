@@ -10,4 +10,22 @@ Icon: "argo-cd.svg"
 Version: "1.0.0"
 CreateNamespace: true
 OverrideValues:
-  DomainName: "{{.DomainName}}"
+  server:
+    extraArgs:
+      - --insecure
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod-cluster
+      kubernetes.io/force-ssl-redirect: "true"
+      kubernetes.io/ssl-redirect: "true"
+      kubernetes.io/tls-acme: "true"
+    hosts:
+      - argo.{{.DomainName}}
+    paths:
+      - /
+    pathType: Prefix
+    tls:
+      - secretName: argocd-cert
+        hosts:
+          - argo.{{.DomainName}}
