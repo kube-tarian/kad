@@ -13,6 +13,7 @@ type ServiceConfig struct {
 	Database                 string `envconfig:"DATABASE" default:"astra"`
 	AuthEnabled              bool   `envconfig:"AUTH_ENABLED" default:"false"`
 	RegisterLaunchAppsConifg bool   `envconfig:"REGISTER_LAUNCH_APPS_CONFIG" default:"false"`
+	CaptenOAuthURL           string `envconfig:"CAPTEN_OAUTH_URL" default:"https://alpha.optimizor.app/api/.ory"`
 }
 
 func GetServiceConfig() (ServiceConfig, error) {
