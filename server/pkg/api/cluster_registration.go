@@ -178,7 +178,7 @@ func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	err = s.serverStore.DeleteFullCacheAppLaunches(orgId, request.ClusterID)
+	err = s.serverStore.DeleteFullClusterAppLaunches(orgId, request.ClusterID)
 	if err != nil {
 		s.log.Errorf("[org: %s] failed to delete clusterappLaunches %s from db, %v", orgId, request.ClusterID, err)
 		return &serverpb.DeleteClusterRegistrationResponse{
@@ -321,7 +321,7 @@ func (s *Server) GetClusterAppLaunchesFromCacheOrAgent(ctx context.Context, orgI
 		if aErr == nil {
 			resp, err := agentClient.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
 			if err == nil {
-				updateErr := s.serverStore.UpdateCacheAppLaunches(orgId, clusterID, resp.LaunchConfigList)
+				updateErr := s.serverStore.UpdateClusterAppLaunches(orgId, clusterID, resp.LaunchConfigList)
 				if updateErr == nil {
 					s.mutex.Lock()
 					s.orgClusterIDCache[orgId+"-"+clusterID] = currentTime.Add(delayTimeinMin * time.Minute).Unix()
@@ -335,5 +335,5 @@ func (s *Server) GetClusterAppLaunchesFromCacheOrAgent(ctx context.Context, orgI
 	}
 
 	// If any failure happens return from cache.
-	return s.serverStore.GetCacheAppLaunches(orgId, clusterID)
+	return s.serverStore.GetClusterAppLaunches(orgId, clusterID)
 }

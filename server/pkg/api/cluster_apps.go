@@ -126,7 +126,7 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterI
 		return fmt.Errorf("failed to get cluster app launches from cluster %s, err: %v", clusterID, resp)
 	}
 
-	if err := s.serverStore.InsertCacheAppLaunches(orgId, clusterID, resp.LaunchConfigList); err != nil {
+	if err := s.serverStore.InsertClusterAppLaunches(orgId, clusterID, resp.LaunchConfigList); err != nil {
 		return fmt.Errorf("failed to store cluster app launches on server db %s, err: %v", clusterID, err)
 	}
 

@@ -16,26 +16,26 @@ const (
 	getClusterDetailsQuery = "SELECT cluster_name, endpoint FROM %s.capten_clusters WHERE org_id=%s AND cluster_id=%s;"
 	getClustersForOrgQuery = "SELECT cluster_id, cluster_name, endpoint FROM %s.capten_clusters WHERE org_id=%s;"
 
-	getCacheAppLaunchesQuery = `SELECT release_name, description, category, icon, launch_url, launch_ui_description 
+	getClusterAppLaunchesQuery = `SELECT release_name, description, category, icon, launch_url, launch_ui_description 
 	 FROM %s.app_launches WHERE org_id=%s AND cluster_id=%s;`
-	insertCacheAppLaunchesQuery = `INSERT INTO %s.app_launches 
+	insertClusterAppLaunchesQuery = `INSERT INTO %s.app_launches 
 	(cluster_id, org_id, release_name, description, category, icon, launch_url, launch_ui_description)
 	VALUES (%s, %s, '%s', '%s', '%s', textAsBlob('%s'),'%s', '%s');`
-	updateCacheAppLaunchesQuery = `UPDATE %s.app_launches SET description='%s', category='%s', 
+	updateClusterAppLaunchesQuery = `UPDATE %s.app_launches SET description='%s', category='%s', 
 	icon=textAsBlob('%s'), launch_url='%s', launch_ui_description='%s' WHERE org_id=%s AND cluster_id=%s AND release_name='%s';`
-	deleteCacheAppLaunchesQuery = `DELETE FROM %s.app_launches 
+	deleteClusterAppLaunchesQuery = `DELETE FROM %s.app_launches 
 	WHERE org_id=%s AND cluster_id=%s AND release_name='%s';`
-	deleteFullCacheAppLaunchesQuery = `DELETE FROM %s.app_launches WHERE org_id=%s AND cluster_id=%s;`
+	deleteFullClusterAppLaunchesQuery = `DELETE FROM %s.app_launches WHERE org_id=%s AND cluster_id=%s;`
 )
 
-func (a *AstraServerStore) GetCacheAppLaunches(orgID, clusterID string) (*agentpb.GetClusterAppLaunchesResponse, error) {
+func (a *AstraServerStore) GetClusterAppLaunches(orgID, clusterID string) (*agentpb.GetClusterAppLaunchesResponse, error) {
 	q := &pb.Query{
-		Cql: fmt.Sprintf(getCacheAppLaunchesQuery, a.keyspace, orgID, clusterID),
+		Cql: fmt.Sprintf(getClusterAppLaunchesQuery, a.keyspace, orgID, clusterID),
 	}
 
 	response, err := a.c.Session().ExecuteQuery(q)
 	if err != nil {
-		return nil, fmt.Errorf("failed get cache cluster app launches: %w", err)
+		return nil, fmt.Errorf("failed get Cluster cluster app launches: %w", err)
 	}
 
 	result := response.GetResultSet()
@@ -81,40 +81,40 @@ func (a *AstraServerStore) GetCacheAppLaunches(orgID, clusterID string) (*agentp
 		LaunchConfigList: clusterAppLaunches}, nil
 }
 
-func (a *AstraServerStore) DeleteFullCacheAppLaunches(orgID, clusterID string) error {
+func (a *AstraServerStore) DeleteFullClusterAppLaunches(orgID, clusterID string) error {
 	q := &pb.Query{
-		Cql: fmt.Sprintf(deleteFullCacheAppLaunchesQuery, a.keyspace, orgID, clusterID),
+		Cql: fmt.Sprintf(deleteFullClusterAppLaunchesQuery, a.keyspace, orgID, clusterID),
 	}
 
 	_, err := a.c.Session().ExecuteQuery(q)
 	if err != nil {
-		return fmt.Errorf("failed get cache cluster app launches: %w", err)
+		return fmt.Errorf("failed get Cluster cluster app launches: %w", err)
 	}
 	return nil
 }
 
-func (a *AstraServerStore) deleteCacheAppLaunches(orgID, clusterID, appLaunches []*agentpb.AppLaunchConfig) error {
+func (a *AstraServerStore) deleteClusterAppLaunches(orgID, clusterID, appLaunches []*agentpb.AppLaunchConfig) error {
 	if len(appLaunches) == 0 {
 		return nil
 	}
 
 	batchQuery := make([]*pb.BatchQuery, len(appLaunches))
 	for index, app := range appLaunches {
-		batchQuery[index] = &pb.BatchQuery{Cql: fmt.Sprintf(deleteCacheAppLaunchesQuery, a.keyspace, orgID, clusterID, app.ReleaseName)}
+		batchQuery[index] = &pb.BatchQuery{Cql: fmt.Sprintf(deleteClusterAppLaunchesQuery, a.keyspace, orgID, clusterID, app.ReleaseName)}
 	}
 	_, err := a.c.Session().ExecuteBatch(&pb.Batch{Queries: batchQuery})
 
 	return err
 }
 
-func (a *AstraServerStore) InsertCacheAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error {
+func (a *AstraServerStore) InsertClusterAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error {
 	if len(appLaunches) == 0 {
 		return nil
 	}
 
 	batchQuery := make([]*pb.BatchQuery, len(appLaunches))
 	for index, app := range appLaunches {
-		batchQuery[index] = &pb.BatchQuery{Cql: fmt.Sprintf(insertCacheAppLaunchesQuery, a.keyspace,
+		batchQuery[index] = &pb.BatchQuery{Cql: fmt.Sprintf(insertClusterAppLaunchesQuery, a.keyspace,
 			clusterID, orgID, app.ReleaseName, app.Description, app.Category, app.Icon, app.LaunchURL, app.LaunchUIDescription)}
 	}
 	_, err := a.c.Session().ExecuteBatch(&pb.Batch{Queries: batchQuery})
@@ -122,10 +122,10 @@ func (a *AstraServerStore) InsertCacheAppLaunches(orgID, clusterID string, appLa
 	return err
 }
 
-func (a *AstraServerStore) UpdateCacheAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error {
-	appResponse, err := a.GetCacheAppLaunches(orgID, clusterID)
+func (a *AstraServerStore) UpdateClusterAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error {
+	appResponse, err := a.GetClusterAppLaunches(orgID, clusterID)
 	if err != nil {
-		return fmt.Errorf("failed to update the applaunches cache, err %w", err)
+		return fmt.Errorf("failed to update the applaunches Cluster, err %w", err)
 	}
 
 	if len(appLaunches) == 0 && len(appResponse.LaunchConfigList) == 0 {
@@ -149,7 +149,7 @@ func (a *AstraServerStore) UpdateCacheAppLaunches(orgID, clusterID string, appLa
 	for _, dbApp := range dbAvailableReleaseName {
 		if _, found := sentAvailableReleaseName[dbApp.ReleaseName]; !found {
 			deleteBatchQuery = append(deleteBatchQuery, &pb.BatchQuery{Cql: fmt.Sprintf(
-				deleteCacheAppLaunchesQuery, a.keyspace, orgID, clusterID, dbApp.ReleaseName)})
+				deleteClusterAppLaunchesQuery, a.keyspace, orgID, clusterID, dbApp.ReleaseName)})
 		}
 	}
 
@@ -157,7 +157,7 @@ func (a *AstraServerStore) UpdateCacheAppLaunches(orgID, clusterID string, appLa
 	for _, sentApp := range appLaunches {
 		dbAppLaunches, found := dbAvailableReleaseName[sentApp.ReleaseName]
 		if !found {
-			insertBatchQuery = append(insertBatchQuery, &pb.BatchQuery{Cql: fmt.Sprintf(insertCacheAppLaunchesQuery,
+			insertBatchQuery = append(insertBatchQuery, &pb.BatchQuery{Cql: fmt.Sprintf(insertClusterAppLaunchesQuery,
 				a.keyspace, clusterID, orgID, sentApp.ReleaseName, sentApp.Description, sentApp.Category, sentApp.Icon, sentApp.LaunchURL, sentApp.LaunchUIDescription)})
 
 			continue
@@ -167,11 +167,15 @@ func (a *AstraServerStore) UpdateCacheAppLaunches(orgID, clusterID string, appLa
 		if sentApp.ReleaseName == dbAppLaunches.ReleaseName && (sentApp.Category != sentApp.Category ||
 			sentApp.Description != dbAppLaunches.Description || string(sentApp.Icon) != string(dbAppLaunches.Icon) ||
 			sentApp.LaunchUIDescription != dbAppLaunches.LaunchUIDescription || sentApp.LaunchURL != dbAppLaunches.LaunchURL) {
-			updateBatchQuery = append(updateBatchQuery, &pb.BatchQuery{Cql: fmt.Sprintf(updateCacheAppLaunchesQuery, a.keyspace,
+			updateBatchQuery = append(updateBatchQuery, &pb.BatchQuery{Cql: fmt.Sprintf(updateClusterAppLaunchesQuery, a.keyspace,
 				sentApp.Description, sentApp.Category, sentApp.Icon, sentApp.LaunchURL, sentApp.LaunchUIDescription, orgID, clusterID, sentApp.ReleaseName)})
 
 		}
 
+	}
+
+	if len(insertBatchQuery) == 0 && len(updateBatchQuery) == 0 && len(deleteBatchQuery) == 0 {
+		return nil
 	}
 
 	finalBatchQuery := append(insertBatchQuery, updateBatchQuery...)

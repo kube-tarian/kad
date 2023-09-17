@@ -21,10 +21,10 @@ type ServerStore interface {
 	GetAppFromStore(name, version string) (*types.AppConfig, error)
 	GetAppsFromStore() (*[]types.AppConfig, error)
 	GetStoreAppValues(name, version string) (*types.AppConfig, error)
-	GetCacheAppLaunches(orgID, clusterID string) (*agentpb.GetClusterAppLaunchesResponse, error)
-	DeleteFullCacheAppLaunches(orgID, clusterID string) error
-	InsertCacheAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error
-	UpdateCacheAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error
+	GetClusterAppLaunches(orgID, clusterID string) (*agentpb.GetClusterAppLaunchesResponse, error)
+	DeleteFullClusterAppLaunches(orgID, clusterID string) error
+	InsertClusterAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error
+	UpdateClusterAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error
 }
 
 func NewStore(db string) (ServerStore, error) {
