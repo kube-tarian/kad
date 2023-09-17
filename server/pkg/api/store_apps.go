@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"text/template"
 
@@ -187,6 +188,8 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 	appsData := []*serverpb.StoreAppsData{}
 	for _, config := range *configs {
 		decodedIconBytes, _ := hex.DecodeString(config.Icon)
+		ov, err := json.Marshal(config.OverrideValues)
+		fmt.Println("error -> ", err)
 		appsData = append(appsData, &serverpb.StoreAppsData{
 			AppConfigs: &serverpb.StoreAppConfig{
 				AppName:             config.Name,
@@ -204,6 +207,7 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 				LaunchUIDescription: config.LaunchUIDescription,
 				ReleaseName:         config.ReleaseName,
 			},
+			OverrideValues: ov,
 		})
 	}
 
