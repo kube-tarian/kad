@@ -27,6 +27,8 @@ type AppStoreConfig struct {
 }
 
 func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
+
+	fmt.Println("Sync App started")
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return err
