@@ -203,6 +203,8 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 		cqlTemplateValuesByte, _ = base64.StdEncoding.DecodeString(cqlTemplateValues)
 	}
 
+	fmt.Println("cqlOverrideValues =>", cqlOverrideValues)
+	fmt.Println("lenghth =>", len(cqlOverrideValues))
 	config := &types.AppConfig{
 		Name:                cqlAppName,
 		ChartName:           cqlChartName,
