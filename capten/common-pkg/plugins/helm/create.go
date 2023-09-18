@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -17,11 +18,12 @@ import (
 func (h *HelmCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, error) {
 	h.logger.Infof("Helm client Install invoke started")
 
-	helmClient, err := h.getHelmClient(req.Namespace)
+	helmClient, err := h.getHelmClient(req.Namespace, req.ReleaseName)
 	if err != nil {
 		h.logger.Errorf("helm client initialization failed, %v", err)
 		return nil, err
 	}
+	defer h.cleanupRepo(req.Namespace, req.ReleaseName)
 
 	err = h.addOrUpdate(helmClient, req)
 	if err != nil {
@@ -61,11 +63,11 @@ func (h *HelmCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, er
 	return json.RawMessage(fmt.Sprintf("{\"status\": \"Application %s install successful\"}", rel.Name)), nil
 }
 
-func (h *HelmCLient) getHelmClient(namespace string) (helmclient.Client, error) {
+func (h *HelmCLient) getHelmClient(namespace, releaseName string) (helmclient.Client, error) {
 	opt := &helmclient.Options{
 		Namespace:        namespace,
-		RepositoryCache:  "/tmp/.helmcache",
-		RepositoryConfig: "/tmp/.helmrepo",
+		RepositoryCache:  "/tmp/" + namespace + "-" + releaseName + ".helmcache",
+		RepositoryConfig: "/tmp/" + namespace + "-" + releaseName + ".helmrepo",
 		Debug:            true,
 		Linting:          true,
 		DebugLog:         h.logger.Debugf,
@@ -78,6 +80,11 @@ func (h *HelmCLient) getHelmClient(namespace string) (helmclient.Client, error) 
 
 	// External cluster
 	// return h.getHelmClientForExternalCluster(req, opt)
+}
+
+func (h *HelmCLient) cleanupRepo(namespace, releaseName string) {
+	_ = os.RemoveAll("/tmp/" + namespace + "-" + releaseName + ".helmcache")
+	_ = os.RemoveAll("/tmp/" + namespace + "-" + releaseName + ".helmrepo")
 }
 
 func (h *HelmCLient) getHelmClientForExternalCluster(req *model.Request, opt *helmclient.Options) (helmclient.Client, error) {

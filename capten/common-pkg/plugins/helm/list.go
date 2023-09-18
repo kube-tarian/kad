@@ -8,11 +8,12 @@ import (
 
 func (h *HelmCLient) List(req *model.ListRequestPayload) (json.RawMessage, error) {
 	h.logger.Infof("Helm client List invoke started")
-	helmClient, err := h.getHelmClient(req.Namespace)
+	helmClient, err := h.getHelmClient(req.Namespace, "list")
 	if err != nil {
 		h.logger.Errorf("helm client initialization failed, %v", err)
 		return nil, err
 	}
+	defer h.cleanupRepo(req.Namespace, "list")
 
 	// List all deployed releases.
 	results, err := helmClient.ListDeployedReleases()

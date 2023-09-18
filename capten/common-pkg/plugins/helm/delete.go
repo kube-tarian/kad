@@ -11,11 +11,12 @@ import (
 func (h *HelmCLient) Delete(req *model.DeleteRequestPayload) (json.RawMessage, error) {
 	h.logger.Infof("Helm client Install invoke started")
 
-	helmClient, err := h.getHelmClient(req.Namespace)
+	helmClient, err := h.getHelmClient(req.Namespace, req.ReleaseName)
 	if err != nil {
 		h.logger.Errorf("helm client initialization failed, %v", err)
 		return nil, err
 	}
+	defer h.cleanupRepo(req.Namespace, req.ReleaseName)
 
 	// Define the released chart to be uninstalled.
 	chartSpec := helmclient.ChartSpec{

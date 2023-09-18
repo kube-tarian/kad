@@ -41,7 +41,7 @@ func (c *RESTClientGetter) ToDiscoveryClient() (discovery.CachedDiscoveryInterfa
 	// The more API groups exist, the more discovery requests need to be made.
 	// Given 25 API groups with about one version each, discovery needs to make 50 requests.
 	// This setting is only used for discovery.
-	config.Burst = 100
+	config.Burst = 300
 
 	for _, fn := range c.opts {
 		fn(config)

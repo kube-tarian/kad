@@ -68,7 +68,9 @@ func NewClientFromKubeConf(options *KubeConfClientOptions, restClientOpts ...RES
 // NewClientFromRestConf returns a new Helm client constructed with the provided REST config options.
 func NewClientFromRestConf(options *RestConfClientOptions) (Client, error) {
 	settings := cli.New()
-
+	settings.BurstLimit = 300
+	//flags := genericclioptions.NewConfigFlags(true).WithDiscoveryBurst(300)
+	options.RestConfig.Burst = 300
 	clientGetter := NewRESTClientGetter(options.Namespace, nil, options.RestConfig)
 
 	return newClient(options.Options, clientGetter, settings)
@@ -316,10 +318,10 @@ func (c *HelmClient) install(ctx context.Context, spec *ChartSpec, opts *Generic
 		)
 	}
 
-	helmChart, err = updateDependencies(helmChart, &client.ChartPathOptions, chartPath, c, client.DependencyUpdate, spec)
+	/*helmChart, err = updateDependencies(helmChart, &client.ChartPathOptions, chartPath, c, client.DependencyUpdate, spec)
 	if err != nil {
 		return nil, err
-	}
+	}*/
 
 	values, err := spec.GetValuesMap()
 	if err != nil {
