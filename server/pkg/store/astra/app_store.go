@@ -194,8 +194,6 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 	var cqlOverrideValuesByte []byte
 	if len(cqlOverrideValues) > 0 {
 		cqlOverrideValuesByte, _ = base64.StdEncoding.DecodeString(cqlOverrideValues)
-		fmt.Println("Decoded valaues =>", string(cqlOverrideValuesByte))
-
 	}
 
 	var cqlTemplateValuesByte []byte
@@ -203,8 +201,6 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 		cqlTemplateValuesByte, _ = base64.StdEncoding.DecodeString(cqlTemplateValues)
 	}
 
-	fmt.Println("cqlOverrideValues =>", cqlOverrideValues)
-	fmt.Println("lenghth =>", len(cqlOverrideValues))
 	config := &types.AppConfig{
 		Name:                cqlAppName,
 		ChartName:           cqlChartName,

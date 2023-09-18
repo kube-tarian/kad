@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"text/template"
 
@@ -186,7 +187,6 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 
 	appsData := []*serverpb.StoreAppsData{}
 	for _, config := range *configs {
-		fmt.Println("Override valaues => ", string(config.OverrideValues))
 		decodedIconBytes, _ := hex.DecodeString(config.Icon)
 		appsData = append(appsData, &serverpb.StoreAppsData{
 			AppConfigs: &serverpb.StoreAppConfig{
@@ -379,23 +379,25 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		},
 	}
 
-	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
-	if err != nil {
-		s.log.Errorf("failed to initialize agent, %v", err)
-		return &serverpb.DeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to deploy the app",
-		}, nil
-	}
+	v, _ := json.Marshal(req)
+	fmt.Println(string(v))
+	// agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
+	// if err != nil {
+	// 	s.log.Errorf("failed to initialize agent, %v", err)
+	// 	return &serverpb.DeployStoreAppResponse{
+	// 		Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+	// 		StatusMessage: "failed to deploy the app",
+	// 	}, nil
+	// }
 
-	_, err = agent.GetClient().InstallApp(ctx, req)
-	if err != nil {
-		s.log.Errorf("failed to deploy app, %v", err)
-		return &serverpb.DeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to deploy the app",
-		}, nil
-	}
+	// _, err = agent.GetClient().InstallApp(ctx, req)
+	// if err != nil {
+	// 	s.log.Errorf("failed to deploy app, %v", err)
+	// 	return &serverpb.DeployStoreAppResponse{
+	// 		Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+	// 		StatusMessage: "failed to deploy the app",
+	// 	}, nil
+	// }
 
 	s.log.Infof("[org: %s] Store app [%s:%s] request request triggered for cluster %s", orgId,
 		request.AppName, request.Version, request.ClusterID)
