@@ -93,7 +93,7 @@ func (a *Agent) DeployApp(req *model.ApplicationInstallRequest, newAppConfig *ag
 	wd := workers.NewDeployment(a.tc, a.log)
 	_, err := wd.SendEvent(context.TODO(), string(action), req)
 	if err != nil {
-		newAppConfig.Config.InstallStatus = fmt.Sprintf("%s Failed", string(action))
+		newAppConfig.Config.InstallStatus = fmt.Sprintf("%s failed", string(action))
 		if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
 			a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
 			return

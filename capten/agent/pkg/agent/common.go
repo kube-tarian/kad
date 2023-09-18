@@ -51,6 +51,8 @@ func PopulateTemplateValues(appConfig *agentpb.SyncAppData, newOverrideValues, l
 
 	if len(launchUiValues) > 0 {
 		// replace launchUiMapping with the new launchUi values from the request
+		// also append override values to that
+		launchUiValues = enrichBytesMapping(launchUiValues, finalOverrideMappingBytes)
 		launchUiMapping, err = deriveTemplateValuesMapping(launchUiValues, appConfig.Values.LaunchUIValues)
 		if err != nil {
 			log.Errorf("failed to deriveTemplateValuesMapping, release:%s err: %v", appConfig.Config.ReleaseName, err)
@@ -79,6 +81,27 @@ func GetSSOvalues(releaseName string) ([]byte, error) {
 		"ClientSecret": csecret,
 	}
 	return yaml.Marshal(ssoOverwriteMapping)
+}
+
+func enrichBytesMapping(base, override []byte) []byte {
+	// used to enrich the base mapping with any additional values
+	baseMap, overrideMap := map[string]any{}, map[string]any{}
+	if err := yaml.Unmarshal(base, &baseMap); err != nil {
+		return base
+	}
+	if err := yaml.Unmarshal(override, &overrideMap); err != nil {
+		return base
+	}
+	for k, v := range overrideMap {
+		if _, found := baseMap[k]; !found {
+			baseMap[k] = v
+		}
+	}
+	out, err := yaml.Marshal(baseMap)
+	if err != nil {
+		return base
+	}
+	return out
 }
 
 func replaceTemplateValues(templateData, values map[string]any) (transformedData map[string]any, err error) {

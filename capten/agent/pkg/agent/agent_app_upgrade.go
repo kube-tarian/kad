@@ -38,11 +38,10 @@ func (a *Agent) UpgradeAppWithValues(ctx context.Context, req *agentpb.UpgradeAp
 			StatusMessage: errors.WithMessage(err, "err populating template values").Error(),
 		}, nil
 	}
+	appConfig.Config.InstallStatus = "updating"
 
-	newAppConfig.Config.InstallStatus = "updating"
-
-	// Upsert the new config with status as updating
-	if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
+	// Upsert the config with status as updating
+	if err := a.as.UpsertAppConfig(appConfig); err != nil {
 		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
 		return &agentpb.UpgradeAppWithValuesResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
