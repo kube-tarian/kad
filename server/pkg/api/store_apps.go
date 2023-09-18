@@ -381,6 +381,7 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 
 	v, _ := json.Marshal(req)
 	fmt.Println(string(v))
+	fmt.Println(string(req.AppValues.OverrideValues))
 	// agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	// if err != nil {
 	// 	s.log.Errorf("failed to initialize agent, %v", err)
