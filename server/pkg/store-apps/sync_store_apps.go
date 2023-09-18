@@ -3,7 +3,6 @@ package storeapps
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -50,7 +49,6 @@ type AppConfig struct {
 
 func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 
-	fmt.Println("Sync App started")
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return err
@@ -134,8 +132,6 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 		if err := appStore.AddOrUpdateStoreApp(storeAppConfig); err != nil {
 			return errors.WithMessagef(err, "failed to store app config for %s", appName)
 		}
-		vjson, _ := json.Marshal(*storeAppConfig)
-		fmt.Println("stored config =>", string(vjson))
 	}
 	return nil
 }

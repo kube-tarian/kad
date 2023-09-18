@@ -45,12 +45,10 @@ func main() {
 		log.Fatal("failed to initialize %s db, %w", cfg.Database, err)
 	}
 
-	fmt.Println("SyncStoreApps - started")
 	err = storeapps.SyncStoreApps(log, serverStore)
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
-	fmt.Println("SyncStoreApps - ended")
 
 	oryclient, err := oryclient.NewOryClient(log)
 	if err != nil {
