@@ -204,6 +204,7 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 				LaunchUIDescription: config.LaunchUIDescription,
 				ReleaseName:         config.ReleaseName,
 			},
+			OverrideValues: config.OverrideValues,
 		})
 	}
 
