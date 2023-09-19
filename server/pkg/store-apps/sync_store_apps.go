@@ -17,7 +17,7 @@ import (
 type Config struct {
 	AppStoreAppConfigPath string `envconfig:"APP_STORE_APP_CONFIG_PATH" default:"/data/store-apps/conf"`
 	AppStoreAppIconsPath  string `envconfig:"APP_STORE_APP_ICONS_PATH" default:"/data/store-apps/icons"`
-	SyncAppStore          bool   `envconfig:"SYNC_APP_STORE" default:"false"`
+	SyncAppStore          bool   `envconfig:"SYNC_APP_STORE" default:"true"`
 	AppStoreConfigFile    string `envconfig:"APP_STORE_CONFIG_FILE" default:"/data/store-apps/app_list.yaml"`
 }
 
@@ -26,7 +26,29 @@ type AppStoreConfig struct {
 	DisabledApps []string `yaml:"disabledApps"`
 }
 
+type AppConfig struct {
+	Name                string                 `yaml:"Name"`
+	ChartName           string                 `yaml:"ChartName"`
+	Category            string                 `yaml:"Category"`
+	RepoName            string                 `yaml:"RepoName"`
+	RepoURL             string                 `yaml:"RepoURL"`
+	Namespace           string                 `yaml:"Namespace"`
+	ReleaseName         string                 `yaml:"ReleaseName"`
+	Version             string                 `yaml:"Version"`
+	Description         string                 `yaml:"Description"`
+	LaunchURL           string                 `yaml:"LaunchURL"`
+	LaunchUIDescription string                 `yaml:"LaunchUIDescription"`
+	LaunchUIIcon        string                 `yaml:"LaunchUIIcon"`
+	LaunchUIValues      map[string]interface{} `yaml:"LaunchUIValues"`
+	OverrideValues      map[string]interface{} `yaml:"OverrideValues"`
+	CreateNamespace     bool                   `yaml:"CreateNamespace"`
+	PrivilegedNamespace bool                   `yaml:"PrivilegedNamespace"`
+	TemplateValues      map[string]interface{} `yaml:"TemplateValues"`
+	Icon                string                 `yaml:"Icon"`
+}
+
 func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
+
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return err
@@ -53,7 +75,7 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			return errors.WithMessagef(err, "failed to read store app config for %s", appName)
 		}
 
-		var appConfig types.AppConfig
+		var appConfig AppConfig
 		if err := yaml.Unmarshal(appData, &appConfig); err != nil {
 			return errors.WithMessagef(err, "failed to unmarshall store app config for %s", appName)
 		}
