@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
@@ -95,14 +96,8 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 	}
 
 	s.log.Infof("[org: %s] GetClusterAppLaunchConfigs request recieved for cluster %s", orgId, request.ClusterID)
-	a, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
-	if err != nil {
-		s.log.Error("failed to connect to agent", err)
-		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to connect to agent"}, nil
-	}
 
-	resp, err := a.GetClient().GetClusterAppLaunches(ctx, &agentpb.GetClusterAppLaunchesRequest{})
+	resp, err := s.GetClusterAppLaunchesFromCacheOrAgent(ctx, orgId, request.ClusterID)
 	if err != nil {
 		s.log.Error("failed to get cluster application launches from agent", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
@@ -130,6 +125,14 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterI
 	if err != nil || resp == nil || resp.Status != agentpb.StatusCode_OK {
 		return fmt.Errorf("failed to get cluster app launches from cluster %s, err: %v", clusterID, resp)
 	}
+
+	if err := s.serverStore.InsertClusterAppLaunches(orgId, clusterID, resp.LaunchConfigList); err != nil {
+		return fmt.Errorf("failed to store cluster app launches on server db %s, err: %v", clusterID, err)
+	}
+
+	s.mutex.Lock()
+	s.orgClusterIDCache[orgId+"-"+clusterID] = time.Now().Add(delayTimeinMin * time.Minute).Unix()
+	s.mutex.Unlock()
 
 	for _, app := range resp.LaunchConfigList {
 		appName := fmt.Sprintf("%s-%s", clusterID, app.ReleaseName)
