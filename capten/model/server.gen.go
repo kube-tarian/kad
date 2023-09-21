@@ -91,6 +91,14 @@ type ApplicationDeployRequest struct {
 	OverrideValues string `json:"OverrideValues,omitempty"`
 }
 
+type ConfigureCICD struct {
+	PluginName string `json:"PluginName,omitempty"`
+	RepoURL    string `json:"RepoURL,omitempty"`
+	Token      string `json:"Token,omitempty"`
+	Timeout    uint32 `json:"Timeout,omitempty"`
+	Version    string `json:"Version,omitempty"`
+}
+
 // ProjectDeleteRequest defines model for ProjectDeleteRequest.
 type ProjectDeleteRequest struct {
 	// PluginName Plugin name
