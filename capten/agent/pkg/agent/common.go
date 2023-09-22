@@ -5,6 +5,7 @@ import (
 	"context"
 	"html/template"
 	"reflect"
+	"strings"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
@@ -73,6 +74,10 @@ func PopulateTemplateValues(appConfig *agentpb.SyncAppData, newOverrideValues, l
 
 func GetSSOvalues(releaseName string) ([]byte, error) {
 	cid, csecret, err := credential.GetAppOauthCredential(context.TODO(), releaseName)
+	if err != nil && strings.Contains(err.Error(), "secret not found") {
+		// no secret was found so in that case, no sso values need to be returned
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
