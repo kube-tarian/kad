@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 
@@ -41,7 +42,14 @@ const (
 func New(options *Options) (Client, error) {
 	settings := cli.New()
 
-	err := setEnvSettings(&options, settings)
+	// Note: hardcoding kubeconfig path here to check deployment
+	dir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	settings.KubeConfig = path.Join(dir, "kubeconfig", "new_cluster_kubeconfig")
+
+	err = setEnvSettings(&options, settings)
 	if err != nil {
 		return nil, err
 	}
