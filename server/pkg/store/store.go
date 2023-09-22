@@ -3,6 +3,7 @@ package store
 import (
 	"fmt"
 
+	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/types"
 
 	"github.com/kube-tarian/kad/server/pkg/store/astra"
@@ -20,6 +21,10 @@ type ServerStore interface {
 	GetAppFromStore(name, version string) (*types.AppConfig, error)
 	GetAppsFromStore() (*[]types.AppConfig, error)
 	GetStoreAppValues(name, version string) (*types.AppConfig, error)
+	GetClusterAppLaunches(orgID, clusterID string) (*agentpb.GetClusterAppLaunchesResponse, error)
+	DeleteFullClusterAppLaunches(orgID, clusterID string) error
+	InsertClusterAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error
+	UpdateClusterAppLaunches(orgID, clusterID string, appLaunches []*agentpb.AppLaunchConfig) error
 }
 
 func NewStore(db string) (ServerStore, error) {
