@@ -278,7 +278,7 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *agentpb.AddOrUpdateOnb
 			params = append(params,
 				fmt.Sprintf("%s = '%s'", details, string(payload.Details)))
 		}
-		batch.Query(fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", ")), payload.Type, payload.ProjectUrl)
+		batch.Query(fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", "), payload.Type, payload.ProjectUrl))
 	}
 	err := a.client.Session().ExecuteBatch(batch)
 
