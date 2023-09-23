@@ -3,6 +3,7 @@ package captenstore
 import (
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -251,6 +252,8 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *agentpb.AddOrUpdateOnb
 
 	onboarding := agentpb.Onboarding{}
 
+	x, _ := json.Marshal(selectQuery)
+	fmt.Println("Slect quey => " + string(x))
 	if err := selectQuery.Scan(
 		&onboarding.Type, &onboarding.ProjectUrl, &onboarding.Status,
 	); err != nil {
@@ -280,6 +283,8 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *agentpb.AddOrUpdateOnb
 		}
 		batch.Query(fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", "), payload.Type, payload.ProjectUrl))
 	}
+	y, _ := json.Marshal(batch)
+	fmt.Println("Batch => " + string(y))
 	err := a.client.Session().ExecuteBatch(batch)
 
 	return err
