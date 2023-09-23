@@ -8,7 +8,7 @@ RUN CGO_ENABLED=0 go build -o ./build/config-worker config-worker/main.go
 
 FROM alpine:3.16
 RUN apk add --no-cache libc6-compat
-COPY --from=builder ./build/config_worker /config_worker
+COPY --from=builder ./build/config-worker /config-worker
 COPY --from=builder ./config-worker/git-config-files /git-config-files
 
 ENTRYPOINT ["./config-worker"]
