@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -15,7 +16,7 @@ import (
 
 func handleGit(ctx context.Context, params model.ConfigureParameters, payload interface{}) (model.ResponsePayload, error) {
 	var err error
-	respPayload := model.ResponsePayload{Status: "Failed", Message: []byte("Failed to configure the git")}
+	respPayload := model.ResponsePayload{Status: "Failed", Message: json.RawMessage("{\"error\": \"requested payload is wrong\"}")}
 	req, ok := payload.(model.ConfigureCICD)
 	if !ok {
 		return respPayload, fmt.Errorf("Wrong payload: %v, recieved for configuring git", payload)
@@ -30,10 +31,11 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload in
 	}
 
 	if err != nil {
-		return respPayload, err
+		return model.ResponsePayload{Status: "Failed",
+			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
 	}
 
-	return model.ResponsePayload{Status: "Success", Message: []byte("Successfully configured the git")}, nil
+	return model.ResponsePayload{Status: "Success"}, nil
 }
 
 func configureCICD(ctx context.Context, params model.ConfigureCICD, appDir string) error {
