@@ -31,6 +31,10 @@ service Agent {
   rpc GetClusterGlobalValues (GetClusterGlobalValuesRequest) returns (GetClusterGlobalValuesResponse) {}
 
   rpc InstallApp (InstallAppRequest) returns (InstallAppResponse) {}
+
+  rpc AddOrUpdateOnboarding (AddOrUpdateOnboardingRequest) returns (AddOrUpdateOnboardingResponse) {}
+  rpc GetOnboarding (GetOnboardingRequest) returns (GetOnboardingResponse) {}
+  rpc DeleteOnboarding (DeleteOnboardingRequest) returns (DeleteOnboardingResponse){}
 }
 
 enum StatusCode {
@@ -222,4 +226,41 @@ message AppLaunchConfig {
   string launchUIDescription = 6;
 }
 
+message Onboarding {
+  string type = 1;
+  string projectUrl = 2;
+  string status = 3;
+  bytes  details=4;
+}
 
+message AddOrUpdateOnboardingRequest {
+  string type = 1;
+  string projectUrl = 2;
+  bytes  details=4;
+}
+
+message AddOrUpdateOnboardingResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message GetOnboardingRequest {
+  string type = 1;
+  string projectUrl = 2;
+}
+
+message GetOnboardingResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  Onboarding onboarding = 3;
+}
+
+message DeleteOnboardingRequest {
+  string type = 1;
+  string projectUrl = 2;
+}
+
+message DeleteOnboardingResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
