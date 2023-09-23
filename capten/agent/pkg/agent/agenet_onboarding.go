@@ -38,7 +38,12 @@ func (a *Agent) GetOnboarding(ctx context.Context, request *agentpb.GetOnboardin
 	return &agentpb.GetOnboardingResponse{
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Successfully fetched the onboarding integration",
-		Onboarding:    resp,
+		Onboarding: &agentpb.Onboarding{
+			Type:       resp.Type,
+			ProjectUrl: resp.ProjectUrl,
+			Status:     resp.Status,
+			Details:    resp.Details,
+		},
 	}, nil
 }
 

@@ -51,3 +51,10 @@ type ResponsePayload struct {
 func (rsp *ResponsePayload) ToString() string {
 	return fmt.Sprintf("Status: %s, Message: %s", rsp.Status, string(rsp.Message))
 }
+
+type Onboarding struct {
+	Type       string `json:"type,omitempty"`
+	ProjectUrl string `json:"projectUrl,omitempty"`
+	Status     string `json:"status,omitempty"`
+	Details    []byte `json:"details,omitempty"`
+}

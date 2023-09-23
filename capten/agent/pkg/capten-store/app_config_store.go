@@ -10,6 +10,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/pkg/errors"
 )
 
@@ -250,14 +251,12 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *agentpb.AddOrUpdateOnb
 	selectQuery := a.client.Session().Query(fmt.Sprintf(getOnboardingIntegrationQuery,
 		a.keyspace, payload.Type, payload.ProjectUrl))
 
-	onboarding := agentpb.Onboarding{}
+	onboarding := model.Onboarding{}
 
-	fmt.Println("Slect quey => " + selectQuery.String())
 	if err := selectQuery.Scan(
 		&onboarding.Type, &onboarding.ProjectUrl, &onboarding.Status,
-	); err != nil {
-		// return err
-		fmt.Println("err => " + err.Error())
+	); err != nil && err != gocql.ErrNotFound {
+		return err
 	}
 
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
@@ -283,25 +282,27 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *agentpb.AddOrUpdateOnb
 		}
 		batch.Query(fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", "), payload.Type, payload.ProjectUrl))
 	}
-	y, _ := json.Marshal(batch)
-	fmt.Println("Batch => " + string(y))
+
 	err := a.client.Session().ExecuteBatch(batch)
 
 	return err
 }
 
-func (a *Store) GetOnboardingIntegration(onboardingIntegrationType, onboardingProjectUrl string) (*agentpb.Onboarding, error) {
+func (a *Store) GetOnboardingIntegration(onboardingIntegrationType, onboardingProjectUrl string) (*model.Onboarding, error) {
 
 	selectQuery := a.client.Session().Query(fmt.Sprintf(getOnboardingIntegrationQuery,
 		a.keyspace, onboardingIntegrationType, onboardingProjectUrl))
 
-	onboarding := agentpb.Onboarding{}
+	onboarding := model.Onboarding{}
 
 	if err := selectQuery.Scan(
 		&onboarding.Type, &onboarding.ProjectUrl, &onboarding.Status, &onboarding.Details,
 	); err != nil {
 		return nil, err
 	}
+
+	x, _ := json.Marshal(onboarding)
+	fmt.Println(string(x))
 
 	return &onboarding, nil
 }
