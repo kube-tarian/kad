@@ -10,7 +10,6 @@ import (
 
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
-	"github.com/kube-tarian/kad/capten/config-worker/pkg/constants"
 	"github.com/kube-tarian/kad/capten/model"
 )
 
@@ -23,8 +22,9 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload in
 	}
 
 	switch params.Action {
-	case constants.TektonDirName:
-		err = configureCICD(ctx, req, constants.TektonDirName)
+	case TektonDirName:
+		err = configureCICD(ctx, req, TektonDirName)
+		// Raise a PR
 	default:
 		err = fmt.Errorf("unknown action %s for resouce %s", params.Action, params.Resource)
 	}
@@ -56,9 +56,9 @@ func configureCICD(ctx context.Context, params model.ConfigureCICD, appDir strin
 
 	repoName := strings.Split(params.RepoURL, "/")
 	// get the repoName
-	cloneDir := filepath.Join(dir, strings.TrimRight(repoName[len(repoName)-1], ".git"))
+	cloneDir := filepath.Join(dir, strings.TrimRight(repoName[len(repoName)-1], gitUrlSuffix))
 
-	cmd := exec.Command("cp", "--recursive", filepath.Join("/", constants.GitTemplateDir, appDir), cloneDir)
+	cmd := exec.Command("cp", "--recursive", filepath.Join("/", GitTemplateDir, appDir, cloneDir))
 	if err := cmd.Run(); err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func configureCICD(ctx context.Context, params model.ConfigureCICD, appDir strin
 		return err
 	}
 
-	if err := configPlugin.Push(); err != nil {
+	if err := configPlugin.Push(appDir + branchSuffix); err != nil {
 		return err
 	}
 

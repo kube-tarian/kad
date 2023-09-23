@@ -62,6 +62,6 @@ func (op *Operation) Commit(path, msg string) error {
 	return nil
 }
 
-func (op *Operation) Push() error {
-	return op.repository.Push(&git.PushOptions{})
+func (op *Operation) Push(branchName string) error {
+	return op.repository.Push(&git.PushOptions{RemoteName: branchName, Force: true})
 }
