@@ -1,3 +1,3 @@
 DROP TABLE AppConfig;
 
-DROP TABLE OnboardIntegrations;
+DROP TABLE onboardintegrations;

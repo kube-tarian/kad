@@ -22,7 +22,7 @@ CREATE TABLE ClusterAppConfig(
     AND min_index_interval = 128
     AND speculative_retry = '99PERCENTILE';
 
-CREATE TABLE OnboardIntegrations (
+CREATE TABLE onboardintegrations (
     type text,
     projectUrl text,
     status text,
