@@ -10,9 +10,14 @@ import (
 )
 
 type Operation struct {
+	repository *git.Repository
 }
 
-func (op *Operation) Clone(directory, url, token string) (*git.Repository, error) {
+func New() *Operation {
+	return &Operation{}
+}
+
+func (op *Operation) Clone(directory, url, token string) error {
 	r, err := git.PlainClone(directory, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
 			Username: "dummy", // yes, this can be anything except an empty string
@@ -23,14 +28,16 @@ func (op *Operation) Clone(directory, url, token string) (*git.Repository, error
 	})
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return r, err
+	op.repository = r
+
+	return nil
 }
 
-func (op *Operation) Commit(r *git.Repository, path, msg string) error {
-	w, err := r.Worktree()
+func (op *Operation) Commit(path, msg string) error {
+	w, err := op.repository.Worktree()
 	if err != nil {
 		return err
 	}
@@ -55,6 +62,6 @@ func (op *Operation) Commit(r *git.Repository, path, msg string) error {
 	return nil
 }
 
-func (op *Operation) Push(r *git.Repository) error {
-	return r.Push(&git.PushOptions{})
+func (op *Operation) Push() error {
+	return op.repository.Push(&git.PushOptions{})
 }
