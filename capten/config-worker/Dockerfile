@@ -10,5 +10,4 @@ RUN apk add --no-cache libc6-compat
 COPY --from=builder ./build/config_worker config_worker
 COPY config-worker/git-config-files /git-config-files
 
-USER 65532:65532
 ENTRYPOINT ["./config_worker"]
