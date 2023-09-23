@@ -2,6 +2,7 @@ package workers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -40,8 +41,13 @@ func (d *Config) SendEvent(ctx context.Context, confParams *model.ConfigureParam
 		TaskQueue: ConfigWorkerTaskQueue,
 	}
 
+	deployPayloadJson, err := json.Marshal(deployPayload)
+	if err != nil {
+		return nil, err
+	}
+
 	log.Printf("Event sent to temporal: %+v", deployPayload)
-	run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, ConfigWorkerWorkflowName, confParams, deployPayload)
+	run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, ConfigWorkerWorkflowName, confParams, json.RawMessage(deployPayloadJson))
 	if err != nil {
 		return nil, err
 	}

@@ -14,11 +14,13 @@ import (
 	"github.com/kube-tarian/kad/capten/model"
 )
 
-func handleGit(ctx context.Context, params model.ConfigureParameters, payload interface{}) (model.ResponsePayload, error) {
+func handleGit(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
 	var err error
 	respPayload := model.ResponsePayload{Status: "Failed", Message: json.RawMessage("{\"error\": \"requested payload is wrong\"}")}
-	req, ok := payload.(model.ConfigureCICD)
-	if !ok {
+	req := &model.ConfigureCICD{}
+	err = json.Unmarshal(payload, req)
+
+	if err != nil {
 		return respPayload, fmt.Errorf("Wrong payload: %v, recieved for configuring git", payload)
 	}
 
@@ -38,7 +40,7 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload in
 	return model.ResponsePayload{Status: "Success"}, nil
 }
 
-func configureCICD(ctx context.Context, params model.ConfigureCICD, appDir string) error {
+func configureCICD(ctx context.Context, params *model.ConfigureCICD, appDir string) error {
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
 	if !ok {

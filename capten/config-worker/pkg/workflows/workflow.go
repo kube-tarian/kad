@@ -1,6 +1,7 @@
 package workflows
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/intelops/go-common/logging"
@@ -11,7 +12,7 @@ import (
 )
 
 // Workflow is a config workflow definition.
-func Workflow(ctx workflow.Context, params model.ConfigureParameters, string, payload interface{}) (model.ResponsePayload, error) {
+func Workflow(ctx workflow.Context, params model.ConfigureParameters, string, payload json.RawMessage) (model.ResponsePayload, error) {
 	var result model.ResponsePayload
 	logger := logging.NewLogger()
 
