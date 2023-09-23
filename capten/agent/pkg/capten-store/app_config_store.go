@@ -3,7 +3,6 @@ package captenstore
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -300,9 +299,6 @@ func (a *Store) GetOnboardingIntegration(onboardingIntegrationType, onboardingPr
 	); err != nil {
 		return nil, err
 	}
-
-	x, _ := json.Marshal(onboarding)
-	fmt.Println(string(x))
 
 	return &onboarding, nil
 }

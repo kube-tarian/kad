@@ -150,6 +150,12 @@ func (s *Server) GetOnboarding(ctx context.Context, request *serverpb.GetOnboard
 	return &serverpb.GetOnboardingResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "Successfully fetched the onboarding",
+		Onboarding: &serverpb.Onboarding{
+			Type:       response.Onboarding.Type,
+			ProjectUrl: response.Onboarding.ProjectUrl,
+			Status:     response.Onboarding.Status,
+			Details:    response.Onboarding.Details,
+		},
 	}, nil
 }
 
