@@ -29,7 +29,7 @@ func (a *Activities) ConfigurationActivity(ctx context.Context, params model.Con
 	case "git":
 		return handleGit(ctx, params, payload)
 	default:
-		logger.Errorf("unknown resource type in configuration")
+		logger.Errorf("unknown resource type: %s in configuration", params.Resource)
 		return model.ResponsePayload{
 			Status:  "Failed",
 			Message: json.RawMessage("{\"error\": \"unknown resource type in configuration\"}"),
