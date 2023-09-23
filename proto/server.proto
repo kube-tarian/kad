@@ -293,8 +293,7 @@ message AddOrUpdateOnboardingRequest {
   string clusterId = 1;
   string type = 2;
   string projectUrl = 3;
-  string status = 4;
-  bytes  details=5;
+  bytes  details=4;
 }
 
 message AddOrUpdateOnboardingResponse {
