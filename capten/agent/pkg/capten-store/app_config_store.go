@@ -252,12 +252,12 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *agentpb.AddOrUpdateOnb
 
 	onboarding := agentpb.Onboarding{}
 
-	x, _ := json.Marshal(selectQuery)
-	fmt.Println("Slect quey => " + string(x))
+	fmt.Println("Slect quey => " + selectQuery.String())
 	if err := selectQuery.Scan(
 		&onboarding.Type, &onboarding.ProjectUrl, &onboarding.Status,
 	); err != nil {
-		return err
+		// return err
+		fmt.Println("err => " + err.Error())
 	}
 
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
