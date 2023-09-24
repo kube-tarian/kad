@@ -1,3 +1,5 @@
+DROP TABLE OnboardIntegrations;
+
 CREATE TABLE OnboardIntegrations (
     usecase text,
     project_url text,
