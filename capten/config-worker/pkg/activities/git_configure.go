@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
@@ -19,7 +18,6 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	respPayload := model.ResponsePayload{Status: "Failed", Message: json.RawMessage("{\"error\": \"requested payload is wrong\"}")}
 	req := &model.ConfigureCICD{}
 	err = json.Unmarshal(payload, req)
-
 	if err != nil {
 		return respPayload, fmt.Errorf("Wrong payload: %v, recieved for configuring git", payload)
 	}
@@ -58,11 +56,7 @@ func configureCICD(ctx context.Context, params *model.ConfigureCICD, appDir stri
 		return err
 	}
 
-	repoName := strings.Split(params.RepoURL, "/")
-	// get the repoName
-	cloneDir := filepath.Join(dir, strings.TrimRight(repoName[len(repoName)-1], gitUrlSuffix))
-
-	cmd := exec.Command("cp", "--recursive", filepath.Join("/", GitTemplateDir, appDir, cloneDir))
+	cmd := exec.Command("cp", "--recursive", filepath.Join("./", GitTemplateDir, appDir), dir)
 	if err := cmd.Run(); err != nil {
 		return err
 	}
@@ -71,7 +65,7 @@ func configureCICD(ctx context.Context, params *model.ConfigureCICD, appDir stri
 		return err
 	}
 
-	if err := configPlugin.Push(appDir + branchSuffix); err != nil {
+	if err := configPlugin.Push(appDir+"-"+branchSuffix, params.Token); err != nil {
 		return err
 	}
 

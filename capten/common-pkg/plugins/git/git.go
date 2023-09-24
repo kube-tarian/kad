@@ -5,6 +5,7 @@ import (
 	"time"
 
 	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
@@ -47,7 +48,7 @@ func (op *Operation) Commit(path, msg string) error {
 		return err
 	}
 
-	_, err = w.Commit("example go-git commit", &git.CommitOptions{
+	_, err = w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  "capten-agent-bot",
 			Email: "capten-agent-bot@intelops.dev",
@@ -62,6 +63,12 @@ func (op *Operation) Commit(path, msg string) error {
 	return nil
 }
 
-func (op *Operation) Push(branchName string) error {
-	return op.repository.Push(&git.PushOptions{RemoteName: branchName, Force: true})
+func (op *Operation) Push(branchName, token string) error {
+	return op.repository.Push(&git.PushOptions{RemoteName: "origin", Force: true,
+		Auth: &http.BasicAuth{
+			Username: "dummy", // yes, this can be anything except an empty string
+			Password: token,
+		},
+		RefSpecs: []config.RefSpec{config.RefSpec("refs/heads/main:refs/heads/" + branchName),
+			config.RefSpec("refs/heads/master:refs/heads/" + branchName)}})
 }

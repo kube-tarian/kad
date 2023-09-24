@@ -39,7 +39,7 @@ type DeploymentWorker interface {
 type ConfigureCICD interface {
 	Clone(directory, url, token string) error
 	Commit(path, msg string) error
-	Push(branchName string) error
+	Push(branchName, token string) error
 }
 
 type ConfigurationWorker interface {

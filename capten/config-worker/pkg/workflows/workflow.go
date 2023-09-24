@@ -12,7 +12,7 @@ import (
 )
 
 // Workflow is a config workflow definition.
-func Workflow(ctx workflow.Context, params model.ConfigureParameters, string, payload json.RawMessage) (model.ResponsePayload, error) {
+func Workflow(ctx workflow.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
 	var result model.ResponsePayload
 	logger := logging.NewLogger()
 
