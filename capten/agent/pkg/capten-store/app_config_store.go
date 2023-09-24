@@ -308,9 +308,15 @@ func (a *Store) DeleteOnboardingIntegration(usecase, onboardingProjectUrl string
 	deleteQuery := a.client.Session().Query(fmt.Sprintf(deleteOnboardingIntegrationQuery,
 		a.keyspace, usecase, onboardingProjectUrl))
 
-	if err := deleteQuery.Exec(); err != nil {
+	fmt.Println(fmt.Sprintf(deleteOnboardingIntegrationQuery,
+		a.keyspace, usecase, onboardingProjectUrl))
+
+	err := deleteQuery.Exec()
+	if err != nil {
 		return err
 	}
+
+	fmt.Println(fmt.Sprintf("Error - %v", err))
 
 	return nil
 }
