@@ -23,11 +23,12 @@ CREATE TABLE ClusterAppConfig(
     AND speculative_retry = '99PERCENTILE';
 
 CREATE TABLE OnboardIntegrations (
-    type text,
-    projectUrl text,
+    usecase text,
+    project_url text,
     status text,
-    details blob,
-    PRIMARY KEY (type, projectUrl)
+    access_token text,
+    details text,
+    PRIMARY KEY (usecase, project_url)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
