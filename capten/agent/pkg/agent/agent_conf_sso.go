@@ -9,25 +9,24 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func (a *Agent) ConfigureAppSSO(
-	ctx context.Context, req *agentpb.ConfigureAppSSORequest) (*agentpb.ConfigureAppSSOResponse, error) {
-
-	a.log.Infof("Received request for ConfigureAppSSO, app %s", req.ReleaseName)
+func (a *Agent) ConfigureAppSSO(ctx context.Context,
+	req *agentpb.ConfigureAppSSORequest) (*agentpb.ConfigureAppSSOResponse, error) {
+	a.log.Infof("Received ConfigureAppSSO request, %+v", req)
 
 	appConfig, err := a.as.GetAppConfig(req.ReleaseName)
 	if err != nil {
-		a.log.Errorf("failed to GetAppConfig for release_name: %s err: %v", req.ReleaseName, err)
+		a.log.Errorf("failed to read app %s config data, %v", req.ReleaseName, err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "err fetching appConfig").Error(),
+			StatusMessage: errors.WithMessage(err, "failed to read app config data").Error(),
 		}, nil
 	}
 
 	if err := credential.StoreAppOauthCredential(ctx, req.ReleaseName, req.ClientId, req.ClientSecret); err != nil {
-		a.log.Errorf("failed to store credential for ClientId: %s, %v", req.ClientId, err)
+		a.log.Errorf("failed to store oauth credential for app %s, %v", req.ReleaseName, err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "err saving SSO credentials in vault").Error(),
+			StatusMessage: errors.WithMessage(err, "failed to store SSO credential").Error(),
 		}, nil
 	}
 
@@ -40,7 +39,11 @@ func (a *Agent) ConfigureAppSSO(
 	// save OAuthBaseURL in the db as part of the override values
 	overrideValuesMapping := map[string]any{}
 	if err := yaml.Unmarshal(appConfig.Values.OverrideValues, &overrideValuesMapping); err != nil {
-		return nil, errors.WithMessagef(err, "failed to Unmarshal override values")
+		a.log.Errorf("failed to ummrashal override values for app %s, %v", req.ReleaseName, err)
+		return &agentpb.ConfigureAppSSOResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: errors.WithMessage(err, "failed to prepare app values").Error(),
+		}, nil
 	}
 	overrideValuesMapping["OAuthBaseURL"] = req.OAuthBaseURL
 
@@ -50,25 +53,28 @@ func (a *Agent) ConfigureAppSSO(
 
 	ssoOverwriteBytes, _ := yaml.Marshal(ssoOverwriteMapping)
 	overrideValuesBytes, _ := yaml.Marshal(overrideValuesMapping)
-	newAppConfig, marshaledOverrideValues, err := PopulateTemplateValues(appConfig, overrideValuesBytes, ssoOverwriteBytes, a.log)
+	updateAppConfig, marshaledOverrideValues, err := populateTemplateValues(appConfig, overrideValuesBytes, ssoOverwriteBytes, a.log)
 	if err != nil {
-		return nil, errors.WithMessage(err, "err PopulateTemplateValues")
-	}
-
-	newAppConfig.Config.InstallStatus = "Updating"
-
-	if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
-		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
+		a.log.Errorf("failed to populate template values for app %s, %v", req.ReleaseName, err)
 		return &agentpb.ConfigureAppSSOResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "err upserting new appConfig").Error(),
+			StatusMessage: errors.WithMessage(err, "failed to prepare app values").Error(),
 		}, nil
 	}
 
-	installReq := toAppDeployRequestFromSyncApp(newAppConfig, marshaledOverrideValues)
-	go a.DeployApp(installReq, newAppConfig, []byte("update"))
+	updateAppConfig.Config.InstallStatus = string(appUpgradingStatus)
+	if err := a.as.UpsertAppConfig(updateAppConfig); err != nil {
+		a.log.Errorf("failed to update app config data for app %s, %v", req.ReleaseName, err)
+		return &agentpb.ConfigureAppSSOResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: errors.WithMessage(err, "failed to update app config data").Error(),
+		}, nil
+	}
 
-	a.log.Infof("Triggerred app [%s] update", newAppConfig.Config.ReleaseName)
+	deployReq := prepareAppDeployRequestFromSyncApp(updateAppConfig, marshaledOverrideValues)
+	go a.upgradeAppWithWorkflow(deployReq, updateAppConfig)
+
+	a.log.Infof("Triggerred app [%s] upgrade with SSO configure", updateAppConfig.Config.ReleaseName)
 	return &agentpb.ConfigureAppSSOResponse{
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Triggerred app upgrade",

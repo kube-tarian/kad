@@ -1,25 +1,15 @@
 package agent
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"html/template"
 
-	"github.com/gogo/status"
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
-	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
-	ory "github.com/ory/client-go"
-	"github.com/pkg/errors"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"gopkg.in/yaml.v2"
 
 	"go.temporal.io/sdk/client"
 )
@@ -77,38 +67,6 @@ func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*ag
 	return prepareJobResponse(run, worker.GetWorkflowName()), err
 }
 
-func (a *Agent) DeployApp(req *model.ApplicationInstallRequest, newAppConfig *agentpb.SyncAppData, action []byte) {
-
-	var installStatus string
-	switch string(action) {
-	case "update":
-		installStatus = "updated"
-	case "install":
-		installStatus = "installed"
-	default:
-		a.log.Errorf("failed to DeployApp, err: unknown action")
-		return
-	}
-
-	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendEvent(context.TODO(), string(action), req)
-	if err != nil {
-		newAppConfig.Config.InstallStatus = fmt.Sprintf("%s failed", string(action))
-		if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
-			a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
-			return
-		}
-		a.log.Errorf("failed to SendEvent, err: %v", err)
-		return
-	}
-
-	newAppConfig.Config.InstallStatus = installStatus
-	if err := a.as.UpsertAppConfig(newAppConfig); err != nil {
-		a.log.Errorf("failed to UpsertAppConfig, err: %v", err)
-		return
-	}
-}
-
 func (a *Agent) getWorker(operatoin string) (workers.Worker, error) {
 	switch operatoin {
 	default:
@@ -121,121 +79,4 @@ func prepareJobResponse(run client.WorkflowRun, name string) *agentpb.JobRespons
 		return &agentpb.JobResponse{Id: run.GetID(), RunID: run.GetRunID(), WorkflowName: name}
 	}
 	return &agentpb.JobResponse{}
-}
-
-func (a *Agent) AuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	tk, oryUrl, oryPat, err := a.extractDetailsFromContext(ctx)
-	if err != nil {
-		a.log.Errorf("error occured while extracting oauth token, oryurl, and ory pat token error: %v", err.Error())
-		return nil, status.Error(codes.Unauthenticated, "invalid or missing token")
-	}
-	oryApiClient := NewOrySdk(a.log, oryUrl)
-	isValid, err := verifyToken(a.log, oryPat, tk, oryApiClient)
-	if err != nil || !isValid {
-		return nil, status.Error(codes.Unauthenticated, "invalid or missing token")
-	}
-
-	return handler(ctx, req)
-}
-
-// NewOrySdk creates a oryAPIClient using the oryURL
-// and returns it
-func NewOrySdk(log logging.Logger, oryURL string) *ory.APIClient {
-	log.Info("creating a ory client")
-	config := ory.NewConfiguration()
-	config.Servers = ory.ServerConfigurations{{
-		URL: oryURL,
-	}}
-
-	return ory.NewAPIClient(config)
-}
-
-func (a *Agent) extractDetailsFromContext(ctx context.Context) (oauthToken, oryURL, oryPAT string, err error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		errMsg := "failed to extract metadata from context"
-		a.log.Errorf(errMsg)
-		return "", "", "", errors.New(errMsg)
-	}
-
-	if values, ok := md["oauth_token"]; ok && len(values) > 0 {
-		oauthToken = values[0]
-	} else {
-		errMsg := "missing oauth_token in metadata"
-		a.log.Errorf(errMsg)
-		return "", "", "", errors.New(errMsg)
-	}
-
-	if values, ok := md["ory_url"]; ok && len(values) > 0 {
-		oryURL = values[0]
-	} else {
-		errMsg := "missing ory_url in metadata"
-		a.log.Errorf(errMsg)
-		return "", "", "", errors.New(errMsg)
-	}
-
-	if values, ok := md["ory_pat"]; ok && len(values) > 0 {
-		oryPAT = values[0]
-	} else {
-		errMsg := "missing ory_pat in metadata"
-		a.log.Errorf(errMsg)
-		return "", "", "", errors.New(errMsg)
-	}
-
-	return oauthToken, oryURL, oryPAT, nil
-}
-
-func verifyToken(log logging.Logger, oryPAT, token string, oryApiClient *ory.APIClient) (bool, error) {
-	oryAuthedContext := context.WithValue(context.Background(), ory.ContextAccessToken, oryPAT)
-	introspect, _, err := oryApiClient.OAuth2Api.IntrospectOAuth2Token(oryAuthedContext).Token(token).Scope("").Execute()
-	if err != nil {
-		log.Errorf("Failed to introspect token: %v", err)
-		return false, err
-	}
-	if !introspect.Active {
-		log.Error("Token is not active")
-	}
-	return introspect.Active, nil
-}
-
-func executeTemplateValuesTemplate(data []byte, values map[string]any) (transformedData []byte, err error) {
-	tmpl, err := template.New("templateVal").Parse(string(data))
-	if err != nil {
-		return
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, values)
-	if err != nil {
-		return
-	}
-
-	transformedData = buf.Bytes()
-	return
-}
-
-func deriveTemplateValuesMapping(overrideValues, templateValues []byte) (map[string]any, error) {
-	templateValues, err := deriveTemplateValues(overrideValues, templateValues)
-	if err != nil {
-		return nil, err
-	}
-
-	templateValuesMapping := map[string]any{}
-	if err := yaml.Unmarshal(templateValues, &templateValuesMapping); err != nil {
-		return nil, errors.WithMessagef(err, "failed to Unmarshal template values")
-	}
-	return templateValuesMapping, nil
-}
-
-func deriveTemplateValues(overrideValues, templateValues []byte) ([]byte, error) {
-	overrideValuesMapping := map[string]any{}
-	if err := yaml.Unmarshal(overrideValues, &overrideValuesMapping); err != nil {
-		return nil, errors.WithMessagef(err, "failed to Unmarshal override values")
-	}
-
-	templateValues, err := executeTemplateValuesTemplate(templateValues, overrideValuesMapping)
-	if err != nil {
-		return nil, errors.WithMessagef(err, "failed to exeute template values update")
-	}
-	return templateValues, nil
 }

@@ -30,7 +30,7 @@ func TestPopulateTemplateValues(t *testing.T) {
 	assert.True(len(overrideRequest) > 0, "expected overrideRequest to be populated")
 	assert.True(len(launchUiRequest) > 0, "expected launchUiRequest to be populated")
 
-	_, marshalled, err := PopulateTemplateValues(appConfig, overrideRequest, launchUiRequest, logger)
+	_, marshalled, err := populateTemplateValues(appConfig, overrideRequest, launchUiRequest, logger)
 
 	assert.True(strings.Contains(string(marshalled), "capten.intelops.launchUI"))
 	assert.True(strings.Contains(string(marshalled), "capten.intelops.override"))
@@ -53,7 +53,7 @@ func TestPopulateTemplateValuesWithNoLaunchValues(t *testing.T) {
 	overrideRequest := createDummyOverrideValuesRequestBytes()
 	assert.True(len(overrideRequest) > 0, "expected overrideRequest to be populated")
 
-	_, marshalled, err := PopulateTemplateValues(appConfig, overrideRequest, nil, logger)
+	_, marshalled, err := populateTemplateValues(appConfig, overrideRequest, nil, logger)
 
 	assert.True(!strings.Contains(string(marshalled), "capten.intelops.launchUI"))
 	assert.True(strings.Contains(string(marshalled), "capten.intelops.override"))

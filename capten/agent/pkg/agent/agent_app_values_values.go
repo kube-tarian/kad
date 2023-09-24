@@ -11,10 +11,11 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/credential"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
-func PopulateTemplateValues(appConfig *agentpb.SyncAppData, newOverrideValues, launchUiValues []byte, log logging.Logger) (
+func populateTemplateValues(appConfig *agentpb.SyncAppData, newOverrideValues, launchUiValues []byte, log logging.Logger) (
 	*agentpb.SyncAppData, []byte, error) {
 
 	newAppConfig := *appConfig
@@ -176,7 +177,49 @@ func convertKey(m map[string]any) map[any]any {
 	return ret
 }
 
-func toAppDeployRequestFromSyncApp(data *agentpb.SyncAppData, values []byte) *model.ApplicationInstallRequest {
+func executeTemplateValuesTemplate(data []byte, values map[string]any) (transformedData []byte, err error) {
+	tmpl, err := template.New("templateVal").Parse(string(data))
+	if err != nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, values)
+	if err != nil {
+		return
+	}
+
+	transformedData = buf.Bytes()
+	return
+}
+
+func deriveTemplateValuesMapping(overrideValues, templateValues []byte) (map[string]any, error) {
+	templateValues, err := deriveTemplateValues(overrideValues, templateValues)
+	if err != nil {
+		return nil, err
+	}
+
+	templateValuesMapping := map[string]any{}
+	if err := yaml.Unmarshal(templateValues, &templateValuesMapping); err != nil {
+		return nil, errors.WithMessagef(err, "failed to Unmarshal template values")
+	}
+	return templateValuesMapping, nil
+}
+
+func deriveTemplateValues(overrideValues, templateValues []byte) ([]byte, error) {
+	overrideValuesMapping := map[string]any{}
+	if err := yaml.Unmarshal(overrideValues, &overrideValuesMapping); err != nil {
+		return nil, errors.WithMessagef(err, "failed to Unmarshal override values")
+	}
+
+	templateValues, err := executeTemplateValuesTemplate(templateValues, overrideValuesMapping)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "failed to exeute template values update")
+	}
+	return templateValues, nil
+}
+
+func prepareAppDeployRequestFromSyncApp(data *agentpb.SyncAppData, values []byte) *model.ApplicationInstallRequest {
 	return &model.ApplicationInstallRequest{
 		PluginName:     "helm",
 		RepoName:       data.Config.RepoName,
