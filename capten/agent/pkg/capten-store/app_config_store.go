@@ -16,7 +16,7 @@ import (
 const (
 	insertAppConfigByReleaseNameQuery = "INSERT INTO %s.ClusterAppConfig(release_name) VALUES (?)"
 	updateAppConfigByReleaseNameQuery = "UPDATE %s.ClusterAppConfig SET %s WHERE release_name = ?"
-	getOnboardingIntegrationQuery     = "SELECT usecase, project_url, status, access_token, details FROM %s.OnboardIntegrations WHERE usecase='%s';"
+	getOnboardingIntegrationQuery     = "SELECT usecase, project_url, status, access_token FROM %s.OnboardIntegrations WHERE usecase='%s';"
 	insertOnboardingIntegrationQuery  = "INSERT INTO %s.OnboardIntegrations(usecase, project_url, status, access_token, details) VALUES (?,?,?,?,?);"
 	updateOnboardingIntegrationQuery  = "UPDATE %s.OnboardIntegrations SET %s WHERE usecase='%s';"
 	deleteOnboardingIntegrationQuery  = "DELETE FROM %s.OnboardIntegrations WHERE usecase='%s' AND project_url='%s';"
