@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
@@ -69,8 +68,7 @@ func (s *Server) SetClusterGitoptsProject(ctx context.Context, request *serverpb
 			StatusMessage: "Organization Id is missing",
 		}, nil
 	}
-	fmt.Println("orgId =>", orgId)
-	fmt.Println("request.ClusterId =>", request.ClusterId)
+
 	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
