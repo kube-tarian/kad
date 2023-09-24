@@ -1,10 +1,12 @@
+DROP TABLE OnboardIntegrations;
+
 CREATE TABLE OnboardIntegrations (
     usecase text,
     project_url text,
     status text,
     access_token text,
     details text,
-    PRIMARY KEY (usecase, projectUrl)
+    PRIMARY KEY (usecase, project_url)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
