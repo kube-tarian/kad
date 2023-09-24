@@ -26,9 +26,9 @@ service Server {
 
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
 
-  rpc AddOrUpdateOnboarding (AddOrUpdateOnboardingRequest) returns (AddOrUpdateOnboardingResponse) {}
-  rpc GetOnboarding (GetOnboardingRequest) returns (GetOnboardingResponse) {}
-  rpc DeleteOnboarding (DeleteOnboardingRequest) returns (DeleteOnboardingResponse){}
+  rpc SetClusterGitoptsProject (SetClusterGitoptsProjectRequest) returns (SetClusterGitoptsProjectResponse) {}
+  rpc GetClusterGitoptsProject (GetClusterGitoptsProjectRequest) returns (GetClusterGitoptsProjectResponse) {}
+  rpc DeleteClusterGitoptsProject (DeleteClusterGitoptsProjectRequest) returns (DeleteClusterGitoptsProjectResponse){}
 }
 
 enum StatusCode {
@@ -282,44 +282,43 @@ message StoreCredentialResponse {
   string statusMessage = 2;
 }
 
-message Onboarding {
-  string type = 1;
+message ClusterGitoptsConfig {
+  string usecase = 1;
   string projectUrl = 2;
-  string status = 3;
-  bytes  details=4;
+  string accessToken = 3;
+  string  status=4;
 }
 
-message AddOrUpdateOnboardingRequest {
+message SetClusterGitoptsProjectRequest {
   string clusterId = 1;
-  string type = 2;
+  string gitoptsUsecase = 2;
   string projectUrl = 3;
-  bytes  details=4;
+  string  accessToken=4;
 }
 
-message AddOrUpdateOnboardingResponse {
+message SetClusterGitoptsProjectResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }
 
-message GetOnboardingRequest {
+message GetClusterGitoptsProjectRequest {
   string clusterId = 1;
-  string type = 2;
-  string projectUrl = 3;
+  string usecase = 2;
 }
 
-message GetOnboardingResponse {
+message GetClusterGitoptsProjectResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  Onboarding onboarding = 3;
+  ClusterGitoptsConfig clusterGitoptsConfig = 3;
 }
 
-message DeleteOnboardingRequest {
+message DeleteClusterGitoptsProjectRequest {
   string clusterId = 1;
-  string type = 2;
+  string usecase = 2;
   string projectUrl = 3;
 }
 
-message DeleteOnboardingResponse {
+message DeleteClusterGitoptsProjectResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }

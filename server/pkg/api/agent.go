@@ -57,13 +57,13 @@ func (s *Server) StoreCredential(ctx context.Context, request *serverpb.StoreCre
 	}, nil
 }
 
-func (s *Server) AddOrUpdateOnboarding(ctx context.Context, request *serverpb.AddOrUpdateOnboardingRequest) (
-	*serverpb.AddOrUpdateOnboardingResponse, error) {
+func (s *Server) SetClusterGitoptsProject(ctx context.Context, request *serverpb.SetClusterGitoptsProjectRequest) (
+	*serverpb.SetClusterGitoptsProjectResponse, error) {
 	metadataMap := metadataContextToMap(ctx)
 	orgId := metadataMap[organizationIDAttribute]
 	if orgId == "" {
 		s.log.Errorf("organization ID is missing in the request")
-		return &serverpb.AddOrUpdateOnboardingResponse{
+		return &serverpb.SetClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "Organization Id is missing",
 		}, nil
@@ -72,47 +72,46 @@ func (s *Server) AddOrUpdateOnboarding(ctx context.Context, request *serverpb.Ad
 	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &serverpb.AddOrUpdateOnboardingResponse{
+		return &serverpb.SetClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Onboarding Add/Update failed",
+			StatusMessage: "Cluster Gitopts Project Set failed",
 		}, nil
 	}
 
-	response, err := agent.GetClient().AddOrUpdateOnboarding(context.Background(), &agentpb.AddOrUpdateOnboardingRequest{
-		Type:       request.Type,
-		ProjectUrl: request.ProjectUrl,
-		Status:     "started",
-		Details:    request.Details,
+	response, err := agent.GetClient().SetClusterGitoptsProject(context.Background(), &agentpb.SetClusterGitoptsProjectRequest{
+		GitoptsUsecase: request.GitoptsUsecase,
+		ProjectUrl:     request.ProjectUrl,
+		AccessToken:    request.AccessToken,
 	})
 	if err != nil {
-		s.log.Errorf("failed to App/Update onboarding, %v", err)
-		return &serverpb.AddOrUpdateOnboardingResponse{
+		s.log.Errorf("failed to set Cluster Gitopts Project, %v", err)
+		return &serverpb.SetClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Onboarding Add/Update failed",
+			StatusMessage: "Cluster Gitopts Project Set failed",
 		}, nil
 	}
 
 	if response.Status != agentpb.StatusCode_OK {
-		s.log.Errorf("failed to Add/Update onboarding")
-		return &serverpb.AddOrUpdateOnboardingResponse{
+		s.log.Errorf("Cluster Gitopts Project Set failed")
+		return &serverpb.SetClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Onboarding Add/Update failed",
+			StatusMessage: "Cluster Gitopts Project Set failed",
 		}, nil
 	}
 
-	return &serverpb.AddOrUpdateOnboardingResponse{
+	return &serverpb.SetClusterGitoptsProjectResponse{
 		Status:        serverpb.StatusCode_OK,
-		StatusMessage: "Add/Update of onboarding success",
+		StatusMessage: "Successfully Set Cluster Gitopts Project",
 	}, nil
 }
 
-func (s *Server) GetOnboarding(ctx context.Context, request *serverpb.GetOnboardingRequest) (
-	*serverpb.GetOnboardingResponse, error) {
+func (s *Server) GetClusterGitoptsProject(ctx context.Context, request *serverpb.GetClusterGitoptsProjectRequest) (
+	*serverpb.GetClusterGitoptsProjectResponse, error) {
 	metadataMap := metadataContextToMap(ctx)
 	orgId := metadataMap[organizationIDAttribute]
 	if orgId == "" {
 		s.log.Errorf("organization ID is missing in the request")
-		return &serverpb.GetOnboardingResponse{
+		return &serverpb.GetClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "Organization Id is missing",
 		}, nil
@@ -121,51 +120,50 @@ func (s *Server) GetOnboarding(ctx context.Context, request *serverpb.GetOnboard
 	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &serverpb.GetOnboardingResponse{
+		return &serverpb.GetClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to get the onboarding",
+			StatusMessage: "failed to get the Cluster Gitopts Project",
 		}, nil
 	}
 
-	response, err := agent.GetClient().GetOnboarding(context.Background(), &agentpb.GetOnboardingRequest{
-		Type:       request.Type,
-		ProjectUrl: request.ProjectUrl,
+	response, err := agent.GetClient().GetClusterGitoptsProject(context.Background(), &agentpb.GetClusterGitoptsProjectRequest{
+		Usecase: request.Usecase,
 	})
 	if err != nil {
-		s.log.Errorf("failed to get the onboarding, %v", err)
-		return &serverpb.GetOnboardingResponse{
+		s.log.Errorf("failed to get the Cluster Gitopts Project, %v", err)
+		return &serverpb.GetClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to get the onboarding",
+			StatusMessage: "failed to get the Cluster Gitopts Project",
 		}, nil
 	}
 
 	if response.Status != agentpb.StatusCode_OK {
-		s.log.Errorf("failed to get the onboarding")
-		return &serverpb.GetOnboardingResponse{
+		s.log.Errorf("failed to get the Cluster Gitopts Project")
+		return &serverpb.GetClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to get the onboarding",
+			StatusMessage: "failed to get the Cluster Gitopts Project",
 		}, nil
 	}
 
-	return &serverpb.GetOnboardingResponse{
+	return &serverpb.GetClusterGitoptsProjectResponse{
 		Status:        serverpb.StatusCode_OK,
-		StatusMessage: "Successfully fetched the onboarding",
-		Onboarding: &serverpb.Onboarding{
-			Type:       response.Onboarding.Type,
-			ProjectUrl: response.Onboarding.ProjectUrl,
-			Status:     response.Onboarding.Status,
-			Details:    response.Onboarding.Details,
+		StatusMessage: "Successfully fetched the Cluster Gitopts Project",
+		ClusterGitoptsConfig: &serverpb.ClusterGitoptsConfig{
+			Usecase:     response.ClusterGitoptsConfig.Usecase,
+			ProjectUrl:  response.ClusterGitoptsConfig.ProjectUrl,
+			AccessToken: response.ClusterGitoptsConfig.AccessToken,
+			Status:      response.ClusterGitoptsConfig.Status,
 		},
 	}, nil
 }
 
-func (s *Server) DeleteOnboarding(ctx context.Context, request *serverpb.DeleteOnboardingRequest) (
-	*serverpb.DeleteOnboardingResponse, error) {
+func (s *Server) DeleteClusterGitoptsProject(ctx context.Context, request *serverpb.DeleteClusterGitoptsProjectRequest) (
+	*serverpb.DeleteClusterGitoptsProjectResponse, error) {
 	metadataMap := metadataContextToMap(ctx)
 	orgId := metadataMap[organizationIDAttribute]
 	if orgId == "" {
 		s.log.Errorf("organization ID is missing in the request")
-		return &serverpb.DeleteOnboardingResponse{
+		return &serverpb.DeleteClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "Organization Id is missing",
 		}, nil
@@ -174,34 +172,34 @@ func (s *Server) DeleteOnboarding(ctx context.Context, request *serverpb.DeleteO
 	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &serverpb.DeleteOnboardingResponse{
+		return &serverpb.DeleteClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Onboarding delation failed",
+			StatusMessage: "Delete Cluster Gitopts Project failed",
 		}, nil
 	}
 
-	response, err := agent.GetClient().DeleteOnboarding(context.Background(), &agentpb.DeleteOnboardingRequest{
-		Type:       request.Type,
+	response, err := agent.GetClient().DeleteClusterGitoptsProject(context.Background(), &agentpb.DeleteClusterGitoptsProjectRequest{
+		Usecase:    request.Usecase,
 		ProjectUrl: request.ProjectUrl,
 	})
 	if err != nil {
-		s.log.Errorf("failed to deletion onboarding, %v", err)
-		return &serverpb.DeleteOnboardingResponse{
+		s.log.Errorf("failed to Delete Cluster Gitopts Project, %v", err)
+		return &serverpb.DeleteClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Onboarding deletion failed",
+			StatusMessage: "Delete Cluster Gitopts Project failed",
 		}, nil
 	}
 
 	if response.Status != agentpb.StatusCode_OK {
-		s.log.Errorf("failed to delete onboarding")
-		return &serverpb.DeleteOnboardingResponse{
+		s.log.Errorf("failed to Delete Cluster Gitopts Project")
+		return &serverpb.DeleteClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Onboarding delete failed",
+			StatusMessage: "Delete Cluster Gitopts Project failed",
 		}, nil
 	}
 
-	return &serverpb.DeleteOnboardingResponse{
+	return &serverpb.DeleteClusterGitoptsProjectResponse{
 		Status:        serverpb.StatusCode_OK,
-		StatusMessage: "Successfully deleted the onboarding",
+		StatusMessage: "Successfully Deleted Cluster Gitopts Project",
 	}, nil
 }

@@ -16,10 +16,10 @@ import (
 const (
 	insertAppConfigByReleaseNameQuery = "INSERT INTO %s.ClusterAppConfig(release_name) VALUES (?)"
 	updateAppConfigByReleaseNameQuery = "UPDATE %s.ClusterAppConfig SET %s WHERE release_name = ?"
-	getOnboardingIntegrationQuery     = "SELECT type, projectUrl, status, details FROM %s.OnboardIntegrations WHERE type='%s' AND projectUrl ='%s';"
-	insertOnboardingIntegrationQuery  = "INSERT INTO %s.OnboardIntegrations(type, projectUrl, status, details) VALUES (?,?,?,?);"
-	updateOnboardingIntegrationQuery  = "UPDATE %s.OnboardIntegrations SET %s WHERE type='%s' AND projectUrl ='%s';"
-	deleteOnboardingIntegrationQuery  = "DELETE FROM %s.OnboardIntegrations WHERE type='%s' AND projectUrl='%s';"
+	getOnboardingIntegrationQuery     = "SELECT usecase, project_url, status, access_token, details FROM %s.OnboardIntegrations WHERE usecase='%s';"
+	insertOnboardingIntegrationQuery  = "INSERT INTO %s.OnboardIntegrations(usecase, project_url, status, access_token, details) VALUES (?,?,?,?,?);"
+	updateOnboardingIntegrationQuery  = "UPDATE %s.OnboardIntegrations SET %s WHERE usecase='%s';"
+	deleteOnboardingIntegrationQuery  = "DELETE FROM %s.OnboardIntegrations WHERE usecase='%s' AND project_url='%s';"
 )
 
 func CreateSelectByFieldNameQuery(keyspace, field string) string {
@@ -31,16 +31,16 @@ func CreateSelectAllQuery(keyspace string) string {
 }
 
 const (
-	appName, description, category              = "app_name", "description", "category"
-	chartName, repoName, repoUrl                = "chart_name", "repo_name", "repo_url"
-	namespace, releaseName, version             = "namespace", "release_name", "version"
-	launchUrl, launchUIDesc                     = "launch_url", "launch_redirect_url"
-	createNamespace, privilegedNamespace        = "create_namespace", "privileged_namespace"
-	overrideValues, launchUiValues              = "override_values", "launch_ui_values"
-	templateValues, defaultApp                  = "template_values", "default_app"
-	icon, installStatus                         = "icon", "install_status"
-	updateTime                                  = "update_time"
-	onboardingType, projectUrl, status, details = "type", "projectUrl", "status", "details"
+	appName, description, category                    = "app_name", "description", "category"
+	chartName, repoName, repoUrl                      = "chart_name", "repo_name", "repo_url"
+	namespace, releaseName, version                   = "namespace", "release_name", "version"
+	launchUrl, launchUIDesc                           = "launch_url", "launch_redirect_url"
+	createNamespace, privilegedNamespace              = "create_namespace", "privileged_namespace"
+	overrideValues, launchUiValues                    = "override_values", "launch_ui_values"
+	templateValues, defaultApp                        = "template_values", "default_app"
+	icon, installStatus                               = "icon", "install_status"
+	updateTime                                        = "update_time"
+	usecase, projectUrl, status, accessToken, details = "usecase", "project_url", "status", "access_token", "details"
 )
 
 var (
@@ -245,27 +245,27 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 	return strings.Join(params, ", "), false
 }
 
-func (a *Store) AddOrUpdateOnboardingIntegration(payload *agentpb.AddOrUpdateOnboardingRequest) error {
+func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsConfig) error {
 
 	selectQuery := a.client.Session().Query(fmt.Sprintf(getOnboardingIntegrationQuery,
-		a.keyspace, payload.Type, payload.ProjectUrl))
+		a.keyspace, payload.Usecase))
 
-	onboarding := model.Onboarding{}
+	config := model.ClusterGitoptsConfig{}
 
 	if err := selectQuery.Scan(
-		&onboarding.Type, &onboarding.ProjectUrl, &onboarding.Status,
+		&config.ProjectUrl, &config.Usecase, &config.Status,
 	); err != nil && err != gocql.ErrNotFound {
 		return err
 	}
 
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	if onboarding.Type == "" && onboarding.ProjectUrl == "" {
-		batch.Query(fmt.Sprintf(insertOnboardingIntegrationQuery, a.keyspace), payload.Type, payload.ProjectUrl, payload.Status, string(payload.Details))
+	if config.Usecase == "" {
+		batch.Query(fmt.Sprintf(insertOnboardingIntegrationQuery, a.keyspace), payload.Usecase, payload.ProjectUrl, payload.Status, payload.AccessToken, "")
 	} else {
 		params := []string{}
-		if payload.Type != "" {
+		if payload.Usecase != "" {
 			params = append(params,
-				fmt.Sprintf("%s = '%s'", onboardingType, payload.Type))
+				fmt.Sprintf("%s = '%s'", usecase, payload.Usecase))
 		}
 		if payload.ProjectUrl != "" {
 			params = append(params,
@@ -275,11 +275,11 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *agentpb.AddOrUpdateOnb
 			params = append(params,
 				fmt.Sprintf("%s = '%s'", status, payload.Status))
 		}
-		if string(payload.Details) != "" {
+		if payload.AccessToken != "" {
 			params = append(params,
-				fmt.Sprintf("%s = '%s'", details, string(payload.Details)))
+				fmt.Sprintf("%s = '%s'", accessToken, payload.AccessToken))
 		}
-		batch.Query(fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", "), payload.Type, payload.ProjectUrl))
+		batch.Query(fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", "), payload.Usecase))
 	}
 
 	err := a.client.Session().ExecuteBatch(batch)
@@ -287,15 +287,15 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *agentpb.AddOrUpdateOnb
 	return err
 }
 
-func (a *Store) GetOnboardingIntegration(onboardingIntegrationType, onboardingProjectUrl string) (*model.Onboarding, error) {
+func (a *Store) GetOnboardingIntegration(usecase string) (*model.ClusterGitoptsConfig, error) {
 
 	selectQuery := a.client.Session().Query(fmt.Sprintf(getOnboardingIntegrationQuery,
-		a.keyspace, onboardingIntegrationType, onboardingProjectUrl))
+		a.keyspace, usecase))
 
-	onboarding := model.Onboarding{}
+	onboarding := model.ClusterGitoptsConfig{}
 
 	if err := selectQuery.Scan(
-		&onboarding.Type, &onboarding.ProjectUrl, &onboarding.Status, &onboarding.Details,
+		&onboarding.Usecase, &onboarding.ProjectUrl, &onboarding.Status, &onboarding.AccessToken,
 	); err != nil {
 		return nil, err
 	}
@@ -303,10 +303,10 @@ func (a *Store) GetOnboardingIntegration(onboardingIntegrationType, onboardingPr
 	return &onboarding, nil
 }
 
-func (a *Store) DeleteOnboardingIntegration(onboardingIntegrationType, onboardingProjectUrl string) error {
+func (a *Store) DeleteOnboardingIntegration(usecase, onboardingProjectUrl string) error {
 
 	deleteQuery := a.client.Session().Query(fmt.Sprintf(deleteOnboardingIntegrationQuery,
-		a.keyspace, onboardingIntegrationType, onboardingProjectUrl))
+		a.keyspace, usecase, onboardingProjectUrl))
 
 	if err := deleteQuery.Exec(); err != nil {
 		return err

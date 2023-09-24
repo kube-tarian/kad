@@ -4,61 +4,69 @@ import (
 	"context"
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 )
 
-func (a *Agent) AddOrUpdateOnboarding(ctx context.Context, request *agentpb.AddOrUpdateOnboardingRequest) (*agentpb.AddOrUpdateOnboardingResponse, error) {
+func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.SetClusterGitoptsProjectRequest) (*agentpb.SetClusterGitoptsProjectResponse, error) {
 
-	if err := a.as.AddOrUpdateOnboardingIntegration(request); err != nil {
-		a.log.Errorf("Add/Update of onboarding integration failed, %v", err)
-		return &agentpb.AddOrUpdateOnboardingResponse{
+	confi := &model.ClusterGitoptsConfig{
+		Usecase:     request.GitoptsUsecase,
+		ProjectUrl:  request.ProjectUrl,
+		AccessToken: request.AccessToken,
+		Status:      "started",
+	}
+
+	if err := a.as.AddOrUpdateOnboardingIntegration(confi); err != nil {
+		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
+		return &agentpb.SetClusterGitoptsProjectResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Add/Update onboarding integration failed",
+			StatusMessage: "Cluster Gitopts Project Set failed",
 		}, err
 	}
 
-	a.log.Infof("Add/Update of onboarding integration successful. Project Url - %s", request.ProjectUrl)
-	return &agentpb.AddOrUpdateOnboardingResponse{
+	a.log.Infof("Set Cluster Gitopts Project successful. Project Url - %s", request.ProjectUrl)
+	return &agentpb.SetClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
-		StatusMessage: "Add/Update of onboarding integration successful",
+		StatusMessage: "Set Cluster Gitopts Project successful",
 	}, nil
 }
 
-func (a *Agent) GetOnboarding(ctx context.Context, request *agentpb.GetOnboardingRequest) (*agentpb.GetOnboardingResponse, error) {
+func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.GetClusterGitoptsProjectRequest) (*agentpb.GetClusterGitoptsProjectResponse, error) {
 
-	resp, err := a.as.GetOnboardingIntegration(request.Type, request.ProjectUrl)
+	resp, err := a.as.GetOnboardingIntegration(request.Usecase)
 	if err != nil {
-		a.log.Errorf("failed to get onboarding integration, %v", err)
-		return &agentpb.GetOnboardingResponse{
+		a.log.Errorf("failed to get the Cluster Gitopts Project, %v", err)
+		return &agentpb.GetClusterGitoptsProjectResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to get the onboarding integration",
+			StatusMessage: "failed to get the Cluster Gitopts Project",
 		}, err
 	}
 
-	a.log.Infof("Successfully fetched the onboarding integration. Project Url - %s", request.ProjectUrl)
-	return &agentpb.GetOnboardingResponse{
+	a.log.Infof("Successfully fetched the the Cluster Gitopts Project. Project Url - %s", request.Usecase)
+	return &agentpb.GetClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Successfully fetched the onboarding integration",
-		Onboarding: &agentpb.Onboarding{
-			Type:       resp.Type,
-			ProjectUrl: resp.ProjectUrl,
-			Status:     resp.Status,
-			Details:    resp.Details,
+		ClusterGitoptsConfig: &agentpb.ClusterGitoptsConfig{
+			Usecase:     resp.Usecase,
+			ProjectUrl:  resp.ProjectUrl,
+			AccessToken: resp.AccessToken,
+			Status:      resp.Status,
 		},
 	}, nil
 }
 
-func (a *Agent) DeleteOnboarding(ctx context.Context, request *agentpb.DeleteOnboardingRequest) (*agentpb.DeleteOnboardingResponse, error) {
+func (a *Agent) DeleteClusterGitoptsProject(ctx context.Context, request *agentpb.DeleteClusterGitoptsProjectRequest) (*agentpb.DeleteClusterGitoptsProjectResponse, error) {
 
-	if err := a.as.DeleteOnboardingIntegration(request.Type, request.ProjectUrl); err != nil {
+	if err := a.as.DeleteOnboardingIntegration(request.Usecase, request.ProjectUrl); err != nil {
 		a.log.Errorf("failed to delete onboarding integration, %v", err)
-		return &agentpb.DeleteOnboardingResponse{
+		return &agentpb.DeleteClusterGitoptsProjectResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to delete the onboarding integration",
 		}, err
 	}
 
 	a.log.Infof("Successfully deleted the onboarding integration. Project Url - %s", request.ProjectUrl)
-	return &agentpb.DeleteOnboardingResponse{
+	return &agentpb.DeleteClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Successfully deleted the onboarding integration",
 	}, nil

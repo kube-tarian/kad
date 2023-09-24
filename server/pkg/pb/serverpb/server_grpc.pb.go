@@ -38,9 +38,9 @@ type ServerClient interface {
 	GetStoreAppValues(ctx context.Context, in *GetStoreAppValuesRequest, opts ...grpc.CallOption) (*GetStoreAppValuesResponse, error)
 	DeployStoreApp(ctx context.Context, in *DeployStoreAppRequest, opts ...grpc.CallOption) (*DeployStoreAppResponse, error)
 	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
-	AddOrUpdateOnboarding(ctx context.Context, in *AddOrUpdateOnboardingRequest, opts ...grpc.CallOption) (*AddOrUpdateOnboardingResponse, error)
-	GetOnboarding(ctx context.Context, in *GetOnboardingRequest, opts ...grpc.CallOption) (*GetOnboardingResponse, error)
-	DeleteOnboarding(ctx context.Context, in *DeleteOnboardingRequest, opts ...grpc.CallOption) (*DeleteOnboardingResponse, error)
+	SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error)
+	GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error)
+	DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error)
 }
 
 type serverClient struct {
@@ -195,27 +195,27 @@ func (c *serverClient) StoreCredential(ctx context.Context, in *StoreCredentialR
 	return out, nil
 }
 
-func (c *serverClient) AddOrUpdateOnboarding(ctx context.Context, in *AddOrUpdateOnboardingRequest, opts ...grpc.CallOption) (*AddOrUpdateOnboardingResponse, error) {
-	out := new(AddOrUpdateOnboardingResponse)
-	err := c.cc.Invoke(ctx, "/serverpb.Server/AddOrUpdateOnboarding", in, out, opts...)
+func (c *serverClient) SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error) {
+	out := new(SetClusterGitoptsProjectResponse)
+	err := c.cc.Invoke(ctx, "/serverpb.Server/SetClusterGitoptsProject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *serverClient) GetOnboarding(ctx context.Context, in *GetOnboardingRequest, opts ...grpc.CallOption) (*GetOnboardingResponse, error) {
-	out := new(GetOnboardingResponse)
-	err := c.cc.Invoke(ctx, "/serverpb.Server/GetOnboarding", in, out, opts...)
+func (c *serverClient) GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error) {
+	out := new(GetClusterGitoptsProjectResponse)
+	err := c.cc.Invoke(ctx, "/serverpb.Server/GetClusterGitoptsProject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *serverClient) DeleteOnboarding(ctx context.Context, in *DeleteOnboardingRequest, opts ...grpc.CallOption) (*DeleteOnboardingResponse, error) {
-	out := new(DeleteOnboardingResponse)
-	err := c.cc.Invoke(ctx, "/serverpb.Server/DeleteOnboarding", in, out, opts...)
+func (c *serverClient) DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error) {
+	out := new(DeleteClusterGitoptsProjectResponse)
+	err := c.cc.Invoke(ctx, "/serverpb.Server/DeleteClusterGitoptsProject", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -242,9 +242,9 @@ type ServerServer interface {
 	GetStoreAppValues(context.Context, *GetStoreAppValuesRequest) (*GetStoreAppValuesResponse, error)
 	DeployStoreApp(context.Context, *DeployStoreAppRequest) (*DeployStoreAppResponse, error)
 	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
-	AddOrUpdateOnboarding(context.Context, *AddOrUpdateOnboardingRequest) (*AddOrUpdateOnboardingResponse, error)
-	GetOnboarding(context.Context, *GetOnboardingRequest) (*GetOnboardingResponse, error)
-	DeleteOnboarding(context.Context, *DeleteOnboardingRequest) (*DeleteOnboardingResponse, error)
+	SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error)
+	GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error)
+	DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error)
 	mustEmbedUnimplementedServerServer()
 }
 
@@ -300,14 +300,14 @@ func (UnimplementedServerServer) DeployStoreApp(context.Context, *DeployStoreApp
 func (UnimplementedServerServer) StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreCredential not implemented")
 }
-func (UnimplementedServerServer) AddOrUpdateOnboarding(context.Context, *AddOrUpdateOnboardingRequest) (*AddOrUpdateOnboardingResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddOrUpdateOnboarding not implemented")
+func (UnimplementedServerServer) SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetClusterGitoptsProject not implemented")
 }
-func (UnimplementedServerServer) GetOnboarding(context.Context, *GetOnboardingRequest) (*GetOnboardingResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetOnboarding not implemented")
+func (UnimplementedServerServer) GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClusterGitoptsProject not implemented")
 }
-func (UnimplementedServerServer) DeleteOnboarding(context.Context, *DeleteOnboardingRequest) (*DeleteOnboardingResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteOnboarding not implemented")
+func (UnimplementedServerServer) DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteClusterGitoptsProject not implemented")
 }
 func (UnimplementedServerServer) mustEmbedUnimplementedServerServer() {}
 
@@ -610,56 +610,56 @@ func _Server_StoreCredential_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Server_AddOrUpdateOnboarding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddOrUpdateOnboardingRequest)
+func _Server_SetClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetClusterGitoptsProjectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ServerServer).AddOrUpdateOnboarding(ctx, in)
+		return srv.(ServerServer).SetClusterGitoptsProject(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/serverpb.Server/AddOrUpdateOnboarding",
+		FullMethod: "/serverpb.Server/SetClusterGitoptsProject",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).AddOrUpdateOnboarding(ctx, req.(*AddOrUpdateOnboardingRequest))
+		return srv.(ServerServer).SetClusterGitoptsProject(ctx, req.(*SetClusterGitoptsProjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Server_GetOnboarding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetOnboardingRequest)
+func _Server_GetClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClusterGitoptsProjectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ServerServer).GetOnboarding(ctx, in)
+		return srv.(ServerServer).GetClusterGitoptsProject(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/serverpb.Server/GetOnboarding",
+		FullMethod: "/serverpb.Server/GetClusterGitoptsProject",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).GetOnboarding(ctx, req.(*GetOnboardingRequest))
+		return srv.(ServerServer).GetClusterGitoptsProject(ctx, req.(*GetClusterGitoptsProjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Server_DeleteOnboarding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteOnboardingRequest)
+func _Server_DeleteClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClusterGitoptsProjectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ServerServer).DeleteOnboarding(ctx, in)
+		return srv.(ServerServer).DeleteClusterGitoptsProject(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/serverpb.Server/DeleteOnboarding",
+		FullMethod: "/serverpb.Server/DeleteClusterGitoptsProject",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).DeleteOnboarding(ctx, req.(*DeleteOnboardingRequest))
+		return srv.(ServerServer).DeleteClusterGitoptsProject(ctx, req.(*DeleteClusterGitoptsProjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -736,16 +736,16 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Server_StoreCredential_Handler,
 		},
 		{
-			MethodName: "AddOrUpdateOnboarding",
-			Handler:    _Server_AddOrUpdateOnboarding_Handler,
+			MethodName: "SetClusterGitoptsProject",
+			Handler:    _Server_SetClusterGitoptsProject_Handler,
 		},
 		{
-			MethodName: "GetOnboarding",
-			Handler:    _Server_GetOnboarding_Handler,
+			MethodName: "GetClusterGitoptsProject",
+			Handler:    _Server_GetClusterGitoptsProject_Handler,
 		},
 		{
-			MethodName: "DeleteOnboarding",
-			Handler:    _Server_DeleteOnboarding_Handler,
+			MethodName: "DeleteClusterGitoptsProject",
+			Handler:    _Server_DeleteClusterGitoptsProject_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
