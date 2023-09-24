@@ -79,7 +79,7 @@ func configureDB() error {
 		return errors.WithMessage(err, "error creating database")
 	}
 
-	if err := dbmigrate.RunMigrations(log, dbmigrate.UP); err != nil {
+	if err := dbmigrate.RunMigrations(log, dbmigrate.PURGE); err != nil {
 		return errors.WithMessage(err, "error in migrating cassandra DB")
 	}
 	return nil
