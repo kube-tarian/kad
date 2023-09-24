@@ -35,6 +35,9 @@ service Agent {
   rpc SetClusterGitoptsProject (SetClusterGitoptsProjectRequest) returns (SetClusterGitoptsProjectResponse) {}
   rpc GetClusterGitoptsProject (GetClusterGitoptsProjectRequest) returns (GetClusterGitoptsProjectResponse) {}
   rpc DeleteClusterGitoptsProject (DeleteClusterGitoptsProjectRequest) returns (DeleteClusterGitoptsProjectResponse){}
+
+  rpc UpgradeApp (UpgradeAppRequest) returns (UpgradeAppResponse) {}
+  rpc UpdateAppValues (UpdateAppValuesRequest) returns (UpdateAppValuesResponse) {}
 }
 
 enum StatusCode {
@@ -260,6 +263,27 @@ message DeleteClusterGitoptsProjectRequest {
 }
 
 message DeleteClusterGitoptsProjectResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UpgradeAppRequest {
+  string releaseName = 1;
+  string version = 2;
+  bytes overrideValues = 3;
+}
+
+message UpgradeAppResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UpdateAppValuesRequest {
+  string releaseName = 1;
+  bytes overrideValues = 3;
+}
+
+message UpdateAppValuesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }

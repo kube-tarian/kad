@@ -40,7 +40,6 @@ const (
 // New returns a new Helm client with the provided options
 func New(options *Options) (Client, error) {
 	settings := cli.New()
-
 	err := setEnvSettings(&options, settings)
 	if err != nil {
 		return nil, err

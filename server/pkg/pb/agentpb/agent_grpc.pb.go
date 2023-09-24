@@ -42,6 +42,8 @@ type AgentClient interface {
 	SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error)
 	GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error)
 	DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error)
+	UpgradeApp(ctx context.Context, in *UpgradeAppRequest, opts ...grpc.CallOption) (*UpgradeAppResponse, error)
+	UpdateAppValues(ctx context.Context, in *UpdateAppValuesRequest, opts ...grpc.CallOption) (*UpdateAppValuesResponse, error)
 }
 
 type agentClient struct {
@@ -232,6 +234,24 @@ func (c *agentClient) DeleteClusterGitoptsProject(ctx context.Context, in *Delet
 	return out, nil
 }
 
+func (c *agentClient) UpgradeApp(ctx context.Context, in *UpgradeAppRequest, opts ...grpc.CallOption) (*UpgradeAppResponse, error) {
+	out := new(UpgradeAppResponse)
+	err := c.cc.Invoke(ctx, "/agentpb.Agent/UpgradeApp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) UpdateAppValues(ctx context.Context, in *UpdateAppValuesRequest, opts ...grpc.CallOption) (*UpdateAppValuesResponse, error) {
+	out := new(UpdateAppValuesResponse)
+	err := c.cc.Invoke(ctx, "/agentpb.Agent/UpdateAppValues", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AgentServer is the server API for Agent service.
 // All implementations must embed UnimplementedAgentServer
 // for forward compatibility
@@ -256,6 +276,8 @@ type AgentServer interface {
 	SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error)
 	GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error)
 	DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error)
+	UpgradeApp(context.Context, *UpgradeAppRequest) (*UpgradeAppResponse, error)
+	UpdateAppValues(context.Context, *UpdateAppValuesRequest) (*UpdateAppValuesResponse, error)
 	mustEmbedUnimplementedAgentServer()
 }
 
@@ -322,6 +344,12 @@ func (UnimplementedAgentServer) GetClusterGitoptsProject(context.Context, *GetCl
 }
 func (UnimplementedAgentServer) DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClusterGitoptsProject not implemented")
+}
+func (UnimplementedAgentServer) UpgradeApp(context.Context, *UpgradeAppRequest) (*UpgradeAppResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpgradeApp not implemented")
+}
+func (UnimplementedAgentServer) UpdateAppValues(context.Context, *UpdateAppValuesRequest) (*UpdateAppValuesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppValues not implemented")
 }
 func (UnimplementedAgentServer) mustEmbedUnimplementedAgentServer() {}
 
@@ -696,6 +724,42 @@ func _Agent_DeleteClusterGitoptsProject_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Agent_UpgradeApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpgradeAppRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).UpgradeApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agentpb.Agent/UpgradeApp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).UpgradeApp(ctx, req.(*UpgradeAppRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_UpdateAppValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateAppValuesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).UpdateAppValues(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agentpb.Agent/UpdateAppValues",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).UpdateAppValues(ctx, req.(*UpdateAppValuesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Agent_ServiceDesc is the grpc.ServiceDesc for Agent service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -782,6 +846,14 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteClusterGitoptsProject",
 			Handler:    _Agent_DeleteClusterGitoptsProject_Handler,
+		},
+		{
+			MethodName: "UpgradeApp",
+			Handler:    _Agent_UpgradeApp_Handler,
+		},
+		{
+			MethodName: "UpdateAppValues",
+			Handler:    _Agent_UpdateAppValues_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
