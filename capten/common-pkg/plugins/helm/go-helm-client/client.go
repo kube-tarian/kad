@@ -41,15 +41,7 @@ const (
 // New returns a new Helm client with the provided options
 func New(options *Options) (Client, error) {
 	settings := cli.New()
-
-	// Note: hardcoding kubeconfig path here to check deployment
-	dir, err := os.Getwd()
-	if err != nil {
-		return nil, err
-	}
-	settings.KubeConfig = path.Join(dir, "kubeconfig", "new_cluster_kubeconfig")
-
-	err = setEnvSettings(&options, settings)
+	err := setEnvSettings(&options, settings)
 	if err != nil {
 		return nil, err
 	}
