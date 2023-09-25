@@ -14,6 +14,7 @@ const (
 type appDeployAction string
 
 const (
-	appInstallAction appDeployAction = "install"
-	appUpgradeAction appDeployAction = "upgrade"
+	appInstallAction   appDeployAction = "install"
+	appUnInstallAction appDeployAction = "delete"
+	appUpgradeAction   appDeployAction = "upgrade"
 )

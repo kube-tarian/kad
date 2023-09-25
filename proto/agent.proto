@@ -31,6 +31,8 @@ service Agent {
   rpc GetClusterGlobalValues (GetClusterGlobalValuesRequest) returns (GetClusterGlobalValuesResponse) {}
 
   rpc InstallApp (InstallAppRequest) returns (InstallAppResponse) {}
+  rpc UnInstallApp (UnInstallAppRequest) returns (UnInstallAppResponse) {}
+
   rpc UpgradeApp (UpgradeAppRequest) returns (UpgradeAppResponse) {}
   rpc UpdateAppValues (UpdateAppValuesRequest) returns (UpdateAppValuesResponse) {}
 }
@@ -170,6 +172,18 @@ message InstallAppRequest {
 }
 
 message InstallAppResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UnInstallAppRequest {
+  string appName = 1;
+  string version = 2;
+  string namespace = 3;
+  string releaseName = 4;
+}
+
+message UnInstallAppResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }

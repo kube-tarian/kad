@@ -64,6 +64,55 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 	}, nil
 }
 
+func (a *Agent) UnInstallApp(ctx context.Context, request *agentpb.UnInstallAppRequest) (*agentpb.UnInstallAppResponse, error) {
+	a.log.Infof("Recieved App UnInstall request %+v", request)
+
+	if request.Namespace == "" {
+		a.log.Errorf("namespace is empty")
+		return &agentpb.UnInstallAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "namespace is missing in request",
+		}, nil
+	}
+	if request.ReleaseName == "" {
+		a.log.Errorf("release name is empty")
+		return &agentpb.UnInstallAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "release name is missing in request",
+		}, nil
+	}
+
+	req := &model.ApplicationDeleteRequest{
+		PluginName:  "helm",
+		Namespace:   request.Namespace,
+		ReleaseName: request.ReleaseName,
+		ClusterName: "capten",
+		Timeout:     10,
+	}
+
+	if err := a.unInstallAppWithWorkflow(req); err != nil {
+		a.log.Errorf("failed to uninstall the app %s, %v", req.ReleaseName, err)
+		return &agentpb.UnInstallAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to undeploy the app",
+		}, nil
+	}
+
+	if err := a.as.DeleteAppConfigByReleaseName(request.ReleaseName); err != nil {
+		a.log.Errorf("failed to delete installed app config record %s, %v", req.ReleaseName, err)
+		return &agentpb.UnInstallAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to undeploy the app",
+		}, nil
+	}
+
+	a.log.Infof("Triggerred app [%s] un install", request.ReleaseName)
+	return &agentpb.UnInstallAppResponse{
+		Status:        agentpb.StatusCode_OK,
+		StatusMessage: "Triggerred app un install",
+	}, nil
+}
+
 func (a *Agent) UpdateAppValues(ctx context.Context, req *agentpb.UpdateAppValuesRequest) (*agentpb.UpdateAppValuesResponse, error) {
 	a.log.Infof("Received UpdateAppValues request %+v", req)
 
@@ -175,6 +224,16 @@ func (a *Agent) installAppWithWorkflow(req *model.ApplicationInstallRequest,
 		a.log.Errorf("failed to update app config for app %s, %v", appConfig.Config.ReleaseName, err)
 		return
 	}
+}
+
+func (a *Agent) unInstallAppWithWorkflow(req *model.ApplicationDeleteRequest) error {
+	wd := workers.NewDeployment(a.tc, a.log)
+	_, err := wd.SendDeleteEvent(context.TODO(), string(appUnInstallAction), req)
+	if err != nil {
+		a.log.Errorf("failed to send delete event to workflow for app %s, %v", req.ReleaseName, err)
+		return err
+	}
+	return nil
 }
 
 func (a *Agent) upgradeAppWithWorkflow(req *model.ApplicationInstallRequest,

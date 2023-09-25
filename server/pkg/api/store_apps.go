@@ -404,3 +404,95 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		StatusMessage: "app is successfully deployed",
 	}, nil
 }
+
+func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeployStoreAppRequest) (
+	*serverpb.UnDeployStoreAppResponse, error) {
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if orgId == "" {
+		s.log.Errorf("organization ID is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Organization Id is missing",
+		}, nil
+	}
+	if request.AppName == "" {
+		s.log.Errorf("App name is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "App name is missing",
+		}, nil
+	}
+	if request.Version == "" {
+		s.log.Errorf("App version is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "App version is missing",
+		}, nil
+	}
+	if request.Namespace == "" {
+		s.log.Errorf("Namespace is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Namespace is missing",
+		}, nil
+	}
+	if request.ReleaseName == "" {
+		s.log.Errorf("Release name is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Release name is missing",
+		}, nil
+	}
+
+	s.log.Infof("[org: %s] Un Deploy store app [%s:%s] request for cluster %s recieved", orgId,
+		request.AppName, request.Version, request.ClusterID)
+
+	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
+	if err != nil {
+		s.log.Errorf("failed to get store app values, %v", err)
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to find store app values",
+		}, nil
+	}
+	if config == nil {
+		s.log.Errorf("failed to get store app values")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "app is not installed from store",
+		}, nil
+	}
+
+	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
+	if err != nil {
+		s.log.Errorf("failed to initialize agent, %v", err)
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to undeploy the app",
+		}, nil
+	}
+	req := &agentpb.UnInstallAppRequest{
+		AppName:     request.AppName,
+		Version:     request.Version,
+		Namespace:   request.Namespace,
+		ReleaseName: request.ReleaseName,
+	}
+
+	_, err = agent.GetClient().UnInstallApp(ctx, req)
+	if err != nil {
+		s.log.Errorf("failed to undeploy app, %v", err)
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to undeploy the app",
+		}, nil
+	}
+
+	s.log.Infof("[org: %s] Store app [%s:%s] request request triggered for cluster %s", orgId,
+		request.AppName, request.Version, request.ClusterID)
+
+	return &serverpb.UnDeployStoreAppResponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "app is successfully undeployed",
+	}, nil
+}

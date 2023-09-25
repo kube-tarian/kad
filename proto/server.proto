@@ -22,7 +22,9 @@ service Server {
   rpc GetStoreApp (GetStoreAppRequest) returns (GetStoreAppResponse) {}
   rpc GetStoreApps (GetStoreAppsRequest) returns (GetStoreAppsResponse) {}
   rpc GetStoreAppValues(GetStoreAppValuesRequest) returns (GetStoreAppValuesResponse) {}
+
   rpc DeployStoreApp(DeployStoreAppRequest) returns (DeployStoreAppResponse) {}
+  rpc UnDeployStoreApp(UnDeployStoreAppRequest) returns (UnDeployStoreAppResponse) {}
 
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
 
@@ -275,6 +277,19 @@ message StoreCredentialRequest {
 }
 
 message StoreCredentialResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UnDeployStoreAppRequest {
+  string clusterID = 1;
+  string appName = 2;
+  string version = 3;
+  string namespace = 4;
+  string releaseName = 5;
+}
+
+message UnDeployStoreAppResponse{
   StatusCode status = 1;
   string statusMessage = 2;
 }
