@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
@@ -71,8 +69,6 @@ func (s *Server) SetClusterGitoptsProject(ctx context.Context, request *serverpb
 		}, nil
 	}
 
-	x, _ := json.Marshal(request)
-	fmt.Println("Request", string(x))
 	if v, ok := request.Credential[credentialAccessTokenKey]; !ok || v == "" {
 		s.log.Errorf("accessToken is missing in the request")
 		return &serverpb.SetClusterGitoptsProjectResponse{
