@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	organizationIDAttribute = "organizationid"
-	clusterIDAttribute      = "clusterid"
-	delayTimeinMin          = 15
+	organizationIDAttribute  = "organizationid"
+	clusterIDAttribute       = "clusterid"
+	delayTimeinMin           = 15
+	credentialAccessTokenKey = "accessToken"
 )
 
 type Server struct {

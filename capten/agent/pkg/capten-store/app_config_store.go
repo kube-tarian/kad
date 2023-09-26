@@ -16,8 +16,8 @@ import (
 const (
 	insertAppConfigByReleaseNameQuery = "INSERT INTO %s.ClusterAppConfig(release_name) VALUES (?)"
 	updateAppConfigByReleaseNameQuery = "UPDATE %s.ClusterAppConfig SET %s WHERE release_name = ?"
-	getOnboardingIntegrationQuery     = "SELECT usecase, project_url, status, access_token FROM %s.OnboardIntegrations WHERE usecase='%s';"
-	insertOnboardingIntegrationQuery  = "INSERT INTO %s.OnboardIntegrations(usecase, project_url, status, access_token, details) VALUES (?,?,?,?,?);"
+	getOnboardingIntegrationQuery     = "SELECT usecase, project_url, status FROM %s.OnboardIntegrations WHERE usecase='%s';"
+	insertOnboardingIntegrationQuery  = "INSERT INTO %s.OnboardIntegrations(usecase, project_url, status, details) VALUES (?,?,?,?,?);"
 	updateOnboardingIntegrationQuery  = "UPDATE %s.OnboardIntegrations SET %s WHERE usecase='%s';"
 	deleteOnboardingIntegrationQuery  = "DELETE FROM %s.OnboardIntegrations WHERE usecase='%s' AND project_url='%s';"
 )
@@ -31,16 +31,16 @@ func CreateSelectAllQuery(keyspace string) string {
 }
 
 const (
-	appName, description, category                    = "app_name", "description", "category"
-	chartName, repoName, repoUrl                      = "chart_name", "repo_name", "repo_url"
-	namespace, releaseName, version                   = "namespace", "release_name", "version"
-	launchUrl, launchUIDesc                           = "launch_url", "launch_redirect_url"
-	createNamespace, privilegedNamespace              = "create_namespace", "privileged_namespace"
-	overrideValues, launchUiValues                    = "override_values", "launch_ui_values"
-	templateValues, defaultApp                        = "template_values", "default_app"
-	icon, installStatus                               = "icon", "install_status"
-	updateTime                                        = "update_time"
-	usecase, projectUrl, status, accessToken, details = "usecase", "project_url", "status", "access_token", "details"
+	appName, description, category       = "app_name", "description", "category"
+	chartName, repoName, repoUrl         = "chart_name", "repo_name", "repo_url"
+	namespace, releaseName, version      = "namespace", "release_name", "version"
+	launchUrl, launchUIDesc              = "launch_url", "launch_redirect_url"
+	createNamespace, privilegedNamespace = "create_namespace", "privileged_namespace"
+	overrideValues, launchUiValues       = "override_values", "launch_ui_values"
+	templateValues, defaultApp           = "template_values", "default_app"
+	icon, installStatus                  = "icon", "install_status"
+	updateTime                           = "update_time"
+	usecase, projectUrl, status, details = "usecase", "project_url", "status", "details"
 )
 
 var (
@@ -260,7 +260,7 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsCo
 
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	if config.Usecase == "" {
-		batch.Query(fmt.Sprintf(insertOnboardingIntegrationQuery, a.keyspace), payload.Usecase, payload.ProjectUrl, payload.Status, payload.AccessToken, "")
+		batch.Query(fmt.Sprintf(insertOnboardingIntegrationQuery, a.keyspace), payload.Usecase, payload.ProjectUrl, payload.Status, "")
 	} else {
 		params := []string{}
 		if payload.Usecase != "" {
@@ -274,10 +274,6 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsCo
 		if payload.Status != "" {
 			params = append(params,
 				fmt.Sprintf("%s = '%s'", status, payload.Status))
-		}
-		if payload.AccessToken != "" {
-			params = append(params,
-				fmt.Sprintf("%s = '%s'", accessToken, payload.AccessToken))
 		}
 		batch.Query(fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", "), payload.Usecase))
 	}
@@ -295,7 +291,7 @@ func (a *Store) GetOnboardingIntegration(usecase string) (*model.ClusterGitoptsC
 	onboarding := model.ClusterGitoptsConfig{}
 
 	if err := selectQuery.Scan(
-		&onboarding.Usecase, &onboarding.ProjectUrl, &onboarding.Status, &onboarding.AccessToken,
+		&onboarding.Usecase, &onboarding.ProjectUrl, &onboarding.Status,
 	); err != nil {
 		return nil, err
 	}

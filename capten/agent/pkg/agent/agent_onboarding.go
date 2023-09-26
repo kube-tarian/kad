@@ -2,18 +2,24 @@ package agent
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
+)
+
+const (
+	CredEntityNameK8S    string = "k8s"
+	CredIdentifierGithub string = "github"
 )
 
 func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.SetClusterGitoptsProjectRequest) (*agentpb.SetClusterGitoptsProjectResponse, error) {
 
 	confi := &model.ClusterGitoptsConfig{
-		Usecase:     request.GitoptsUsecase,
-		ProjectUrl:  request.ProjectUrl,
-		AccessToken: request.AccessToken,
-		Status:      "started",
+		Usecase:    request.Usecase,
+		ProjectUrl: request.ProjectUrl,
+		Status:     "started",
 	}
 
 	if err := a.as.AddOrUpdateOnboardingIntegration(confi); err != nil {
@@ -23,8 +29,32 @@ func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.S
 			StatusMessage: "Cluster Gitopts Project Set failed",
 		}, err
 	}
-
 	a.log.Infof("Set Cluster Gitopts Project successful. Project Url - %s", request.ProjectUrl)
+
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, CredEntityNameK8S, CredIdentifierGithub)
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentails client for %s", credPath)
+		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
+		return &agentpb.SetClusterGitoptsProjectResponse{
+			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			StatusMessage: err.Error(),
+		}, nil
+	}
+
+	err = credAdmin.PutCredential(ctx, credentials.GenericCredentialType, CredEntityNameK8S,
+		CredIdentifierGithub, request.Credential)
+	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system", "failed to store credentail for %s", credPath)
+		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
+		return &agentpb.SetClusterGitoptsProjectResponse{
+			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			StatusMessage: err.Error(),
+		}, nil
+	}
+	a.log.Audit("security", "storecred", "success", "system", "credentail stored for %s", credPath)
+	a.log.Infof("stored credentail for entity %s", credPath)
+
 	return &agentpb.SetClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Set Cluster Gitopts Project successful",
@@ -41,16 +71,36 @@ func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.G
 			StatusMessage: "failed to get the Cluster Gitopts Project",
 		}, err
 	}
-
 	a.log.Infof("Successfully fetched the the Cluster Gitopts Project. Project Url - %s", request.Usecase)
+
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, CredEntityNameK8S, CredIdentifierGithub)
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		a.log.Errorf("failed to get credentail for %s, %v", credPath, err)
+		return &agentpb.GetClusterGitoptsProjectResponse{
+			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			StatusMessage: err.Error(),
+		}, nil
+	}
+
+	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, CredEntityNameK8S,
+		CredIdentifierGithub)
+	if err != nil {
+		a.log.Errorf("failed to get credentail for %s, %v", credPath, err)
+		return &agentpb.GetClusterGitoptsProjectResponse{
+			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			StatusMessage: err.Error(),
+		}, nil
+	}
+
 	return &agentpb.GetClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Successfully fetched the onboarding integration",
 		ClusterGitoptsConfig: &agentpb.ClusterGitoptsConfig{
-			Usecase:     resp.Usecase,
-			ProjectUrl:  resp.ProjectUrl,
-			AccessToken: resp.AccessToken,
-			Status:      resp.Status,
+			Usecase:    resp.Usecase,
+			ProjectUrl: resp.ProjectUrl,
+			Status:     resp.Status,
+			Credential: cred,
 		},
 	}, nil
 }

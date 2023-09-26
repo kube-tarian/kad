@@ -53,8 +53,7 @@ func (rsp *ResponsePayload) ToString() string {
 }
 
 type ClusterGitoptsConfig struct {
-	Usecase     string `json:"usecase,omitempty"`
-	ProjectUrl  string `json:"project_url,omitempty"`
-	Status      string `json:"status,omitempty"`
-	AccessToken string `json:"access_token,omitempty"`
+	Usecase    string `json:"usecase,omitempty"`
+	ProjectUrl string `json:"project_url,omitempty"`
+	Status     string `json:"status,omitempty"`
 }

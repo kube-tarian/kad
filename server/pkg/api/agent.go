@@ -69,6 +69,14 @@ func (s *Server) SetClusterGitoptsProject(ctx context.Context, request *serverpb
 		}, nil
 	}
 
+	if v, ok := request.Credential[credentialAccessTokenKey]; !ok || v == "" {
+		s.log.Errorf("accessToken is missing in the request")
+		return &serverpb.SetClusterGitoptsProjectResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Access Token credential is missing",
+		}, nil
+	}
+
 	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
@@ -79,9 +87,9 @@ func (s *Server) SetClusterGitoptsProject(ctx context.Context, request *serverpb
 	}
 
 	response, err := agent.GetClient().SetClusterGitoptsProject(context.Background(), &agentpb.SetClusterGitoptsProjectRequest{
-		GitoptsUsecase: request.GitoptsUsecase,
-		ProjectUrl:     request.ProjectUrl,
-		AccessToken:    request.AccessToken,
+		Usecase:    request.Usecase,
+		ProjectUrl: request.ProjectUrl,
+		Credential: request.Credential,
 	})
 	if err != nil {
 		s.log.Errorf("failed to set Cluster Gitopts Project, %v", err)
@@ -149,10 +157,10 @@ func (s *Server) GetClusterGitoptsProject(ctx context.Context, request *serverpb
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "Successfully fetched the Cluster Gitopts Project",
 		ClusterGitoptsConfig: &serverpb.ClusterGitoptsConfig{
-			Usecase:     response.ClusterGitoptsConfig.Usecase,
-			ProjectUrl:  response.ClusterGitoptsConfig.ProjectUrl,
-			AccessToken: response.ClusterGitoptsConfig.AccessToken,
-			Status:      response.ClusterGitoptsConfig.Status,
+			Usecase:    response.ClusterGitoptsConfig.Usecase,
+			ProjectUrl: response.ClusterGitoptsConfig.ProjectUrl,
+			Status:     response.ClusterGitoptsConfig.Status,
+			Credential: response.ClusterGitoptsConfig.Credential,
 		},
 	}, nil
 }

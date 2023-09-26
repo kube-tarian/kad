@@ -285,15 +285,15 @@ message StoreCredentialResponse {
 message ClusterGitoptsConfig {
   string usecase = 1;
   string projectUrl = 2;
-  string accessToken = 3;
-  string  status=4;
+  string status=3;
+  map<string, string> credential=4;
 }
 
 message SetClusterGitoptsProjectRequest {
   string clusterId = 1;
-  string gitoptsUsecase = 2;
+  string usecase = 2;
   string projectUrl = 3;
-  string  accessToken=4;
+  map<string, string> credential=4;
 }
 
 message SetClusterGitoptsProjectResponse {
