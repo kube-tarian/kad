@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	CredEntityNameK8S    string = "k8s"
-	CredIdentifierGithub string = "github"
+	CredEntityNameOnboarding string = "onboarding"
 )
 
 func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.SetClusterGitoptsProjectRequest) (*agentpb.SetClusterGitoptsProjectResponse, error) {
@@ -31,7 +30,7 @@ func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.S
 	}
 	a.log.Infof("Set Cluster Gitopts Project successful. Project Url - %s", request.ProjectUrl)
 
-	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, CredEntityNameK8S, CredIdentifierGithub)
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, CredEntityNameOnboarding, request.Usecase)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentails client for %s", credPath)
@@ -42,8 +41,8 @@ func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.S
 		}, nil
 	}
 
-	err = credAdmin.PutCredential(ctx, credentials.GenericCredentialType, CredEntityNameK8S,
-		CredIdentifierGithub, request.Credential)
+	err = credAdmin.PutCredential(ctx, credentials.GenericCredentialType, CredEntityNameOnboarding,
+		request.Usecase, request.Credential)
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to store credentail for %s", credPath)
 		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
@@ -73,7 +72,7 @@ func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.G
 	}
 	a.log.Infof("Successfully fetched the the Cluster Gitopts Project. Project Url - %s", request.Usecase)
 
-	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, CredEntityNameK8S, CredIdentifierGithub)
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, CredEntityNameOnboarding, request.Usecase)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		a.log.Errorf("failed to get credentail for %s, %v", credPath, err)
@@ -83,8 +82,8 @@ func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.G
 		}, nil
 	}
 
-	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, CredEntityNameK8S,
-		CredIdentifierGithub)
+	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, CredEntityNameOnboarding,
+		request.Usecase)
 	if err != nil {
 		a.log.Errorf("failed to get credentail for %s, %v", credPath, err)
 		return &agentpb.GetClusterGitoptsProjectResponse{
