@@ -109,7 +109,7 @@ func (a *Agent) UnInstallApp(ctx context.Context, request *agentpb.UnInstallAppR
 	a.log.Infof("Triggerred app [%s] un install", request.ReleaseName)
 	return &agentpb.UnInstallAppResponse{
 		Status:        agentpb.StatusCode_OK,
-		StatusMessage: "Triggerred app un install",
+		StatusMessage: "app is successfully undeployed",
 	}, nil
 }
 

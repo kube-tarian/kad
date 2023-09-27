@@ -40,6 +40,9 @@ func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (mod
 		req := &model.DeployerDeleteRequest{}
 		err = json.Unmarshal(payload, req)
 		if err == nil {
+			fmt.Println("Incomming Request payload => ", string(payload))
+			x, _ := json.Marshal(req)
+			fmt.Println("Outgoing Request payload => ", string(x))
 			err = workflow.ExecuteActivity(ctx, a.DeploymentDeleteActivity, payload).Get(ctx, &result)
 		}
 	default:

@@ -479,7 +479,7 @@ func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeplo
 		ReleaseName: request.ReleaseName,
 	}
 
-	_, err = agent.GetClient().UnInstallApp(ctx, req)
+	resp, err := agent.GetClient().UnInstallApp(ctx, req)
 	if err != nil {
 		s.log.Errorf("failed to undeploy app, %v", err)
 		return &serverpb.UnDeployStoreAppResponse{
@@ -492,7 +492,7 @@ func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeplo
 		request.AppName, request.Version, request.ClusterID)
 
 	return &serverpb.UnDeployStoreAppResponse{
-		Status:        serverpb.StatusCode_OK,
-		StatusMessage: "app is successfully undeployed",
+		Status:        serverpb.StatusCode(resp.Status),
+		StatusMessage: resp.StatusMessage,
 	}, nil
 }
