@@ -36,11 +36,11 @@ type ApplicationInstallRequest struct {
 }
 
 type ApplicationDeleteRequest struct {
-	PluginName  string `json:"PluginName,omitempty"`
-	Namespace   string `json:"Namespace,omitempty"`
-	ReleaseName string `json:"ReleaseName,omitempty"`
-	Timeout     uint32 `json:"Timeout,omitempty"`
-	ClusterName string `json:"ClusterName,omitempty"`
+	PluginName  string `json:"plugin_name,omitempty"`
+	Namespace   string `json:"namespace,omitempty"`
+	ReleaseName string `json:"release_name,omitempty"`
+	Timeout     uint32 `json:"timeout,omitempty"`
+	ClusterName string `json:"cluster_name,omitempty"`
 }
 
 type ResponsePayload struct {
