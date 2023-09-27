@@ -27,13 +27,6 @@ func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (mod
 	execution := workflow.GetInfo(ctx).WorkflowExecution
 	logger.Infof("execution: %+v\n", execution)
 
-	fmt.Println("Action => ", action)
-	fmt.Println("Incomming Request payload => ", string(payload))
-	reqX := &model.ApplicationDeployRequest{}
-	_ = json.Unmarshal(payload, reqX)
-	x, _ := json.Marshal(reqX)
-	fmt.Println("Outgoing Request payload => ", string(x))
-
 	var a *activities.Activities
 	var err error
 	switch action {
@@ -47,12 +40,8 @@ func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (mod
 		req := &model.DeployerDeleteRequest{}
 		err = json.Unmarshal(payload, req)
 		if err == nil {
-			fmt.Println("Incomming Request payload => ", string(payload))
-			x, _ := json.Marshal(req)
-			fmt.Println("Outgoing Request payload => ", string(x))
 			err = workflow.ExecuteActivity(ctx, a.DeploymentDeleteActivity, payload).Get(ctx, &result)
 		}
-		fmt.Println("Error unmarshalling => ", err.Error())
 	default:
 		err = fmt.Errorf("unknown action %v", action)
 	}
