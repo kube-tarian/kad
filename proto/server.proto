@@ -26,6 +26,9 @@ service Server {
 
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
 
+  rpc SetClusterGitoptsProject (SetClusterGitoptsProjectRequest) returns (SetClusterGitoptsProjectResponse) {}
+  rpc GetClusterGitoptsProject (GetClusterGitoptsProjectRequest) returns (GetClusterGitoptsProjectResponse) {}
+  rpc DeleteClusterGitoptsProject (DeleteClusterGitoptsProjectRequest) returns (DeleteClusterGitoptsProjectResponse){}
 }
 
 enum StatusCode {
@@ -275,6 +278,47 @@ message StoreCredentialRequest {
 }
 
 message StoreCredentialResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message ClusterGitoptsConfig {
+  string usecase = 1;
+  string projectUrl = 2;
+  string status=3;
+  map<string, string> credential=4;
+}
+
+message SetClusterGitoptsProjectRequest {
+  string clusterId = 1;
+  string usecase = 2;
+  string projectUrl = 3;
+  map<string, string> credential=4;
+}
+
+message SetClusterGitoptsProjectResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message GetClusterGitoptsProjectRequest {
+  string clusterId = 1;
+  string usecase = 2;
+}
+
+message GetClusterGitoptsProjectResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  ClusterGitoptsConfig clusterGitoptsConfig = 3;
+}
+
+message DeleteClusterGitoptsProjectRequest {
+  string clusterId = 1;
+  string usecase = 2;
+  string projectUrl = 3;
+}
+
+message DeleteClusterGitoptsProjectResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }

@@ -4,7 +4,7 @@ Category: "iaas"
 Description: ""
 RepoName: "tools"
 RepoURL: "https://kube-tarian.github.io/helmrepo-supporting-tools"
-Namespace: "crossplane"
+Namespace: "crossplane-system"
 ReleaseName: "crossplane"
 Version: "1.0.0"
 CreateNamespace: true
