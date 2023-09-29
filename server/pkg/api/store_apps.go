@@ -416,18 +416,11 @@ func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeplo
 			StatusMessage: "Organization Id is missing",
 		}, nil
 	}
-	if request.AppName == "" {
-		s.log.Errorf("App name is missing in the request")
+	if request.ClusterID == "" {
+		s.log.Errorf("Cluster Id is missing in the request")
 		return &serverpb.UnDeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "App name is missing",
-		}, nil
-	}
-	if request.Version == "" {
-		s.log.Errorf("App version is missing in the request")
-		return &serverpb.UnDeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "App version is missing",
+			StatusMessage: "Cluster Id is missing",
 		}, nil
 	}
 	if request.Namespace == "" {
@@ -442,6 +435,20 @@ func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeplo
 		return &serverpb.UnDeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "Release name is missing",
+		}, nil
+	}
+	if request.AppName == "" {
+		s.log.Errorf("App name is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "App name is missing",
+		}, nil
+	}
+	if request.Version == "" {
+		s.log.Errorf("App version is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "App version is missing",
 		}, nil
 	}
 
@@ -472,13 +479,11 @@ func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeplo
 			StatusMessage: "failed to undeploy the app",
 		}, nil
 	}
+
 	req := &agentpb.UnInstallAppRequest{
-		AppName:     request.AppName,
-		Version:     request.Version,
 		Namespace:   request.Namespace,
 		ReleaseName: request.ReleaseName,
 	}
-
 	resp, err := agent.GetClient().UnInstallApp(ctx, req)
 	if err != nil {
 		s.log.Errorf("failed to undeploy app, %v", err)

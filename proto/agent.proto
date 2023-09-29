@@ -177,10 +177,8 @@ message InstallAppResponse {
 }
 
 message UnInstallAppRequest {
-  string appName = 1;
-  string version = 2;
-  string namespace = 3;
-  string releaseName = 4;
+  string namespace = 1;
+  string releaseName = 2;
 }
 
 message UnInstallAppResponse {
