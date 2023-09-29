@@ -277,6 +277,7 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsCo
 
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	if config.Usecase == "" {
+		fmt.Println("Insert Query => \n", fmt.Sprintf(insertOnboardingIntegrationQuery, a.keyspace), payload.Usecase, payload.ProjectUrl, payload.Status, "")
 		batch.Query(fmt.Sprintf(insertOnboardingIntegrationQuery, a.keyspace), payload.Usecase, payload.ProjectUrl, payload.Status, "")
 	} else {
 		params := []string{}
@@ -292,6 +293,7 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsCo
 			params = append(params,
 				fmt.Sprintf("%s = '%s'", status, payload.Status))
 		}
+		fmt.Println("Update Query => \n", fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", "), payload.Usecase))
 		batch.Query(fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", "), payload.Usecase))
 	}
 
