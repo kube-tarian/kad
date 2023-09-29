@@ -9,6 +9,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/pkg/errors"
 )
 
@@ -16,6 +17,10 @@ const (
 	insertAppConfigByReleaseNameQuery = "INSERT INTO %s.ClusterAppConfig(release_name) VALUES (?)"
 	updateAppConfigByReleaseNameQuery = "UPDATE %s.ClusterAppConfig SET %s WHERE release_name = ?"
 	deleteAppConfigByReleaseNameQuery = "DELETE FROM %s.ClusterAppConfig WHERE release_name= ? "
+	getOnboardingIntegrationQuery     = "SELECT usecase, project_url, status FROM %s.OnboardIntegrations WHERE usecase='%s';"
+	insertOnboardingIntegrationQuery  = "INSERT INTO %s.OnboardIntegrations(usecase, project_url, status, details) VALUES (?,?,?,?,?);"
+	updateOnboardingIntegrationQuery  = "UPDATE %s.OnboardIntegrations SET %s WHERE usecase='%s';"
+	deleteOnboardingIntegrationQuery  = "DELETE FROM %s.OnboardIntegrations WHERE usecase='%s' AND project_url='%s';"
 )
 
 func CreateSelectByFieldNameQuery(keyspace, field string) string {
@@ -36,6 +41,7 @@ const (
 	templateValues, defaultApp           = "template_values", "default_app"
 	icon, installStatus                  = "icon", "install_status"
 	updateTime                           = "update_time"
+	usecase, projectUrl, status, details = "usecase", "project_url", "status", "details"
 )
 
 var (
@@ -250,4 +256,71 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 		return "", true
 	}
 	return strings.Join(params, ", "), false
+}
+
+func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsConfig) error {
+
+	selectQuery := a.client.Session().Query(fmt.Sprintf(getOnboardingIntegrationQuery,
+		a.keyspace, payload.Usecase))
+
+	config := model.ClusterGitoptsConfig{}
+
+	if err := selectQuery.Scan(
+		&config.ProjectUrl, &config.Usecase, &config.Status,
+	); err != nil && err != gocql.ErrNotFound {
+		return err
+	}
+
+	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
+	if config.Usecase == "" {
+		batch.Query(fmt.Sprintf(insertOnboardingIntegrationQuery, a.keyspace), payload.Usecase, payload.ProjectUrl, payload.Status, "")
+	} else {
+		params := []string{}
+		if payload.Usecase != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", usecase, payload.Usecase))
+		}
+		if payload.ProjectUrl != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", projectUrl, payload.ProjectUrl))
+		}
+		if payload.Status != "" {
+			params = append(params,
+				fmt.Sprintf("%s = '%s'", status, payload.Status))
+		}
+		batch.Query(fmt.Sprintf(updateOnboardingIntegrationQuery, a.keyspace, strings.Join(params, ", "), payload.Usecase))
+	}
+
+	err := a.client.Session().ExecuteBatch(batch)
+
+	return err
+}
+
+func (a *Store) GetOnboardingIntegration(usecase string) (*model.ClusterGitoptsConfig, error) {
+
+	selectQuery := a.client.Session().Query(fmt.Sprintf(getOnboardingIntegrationQuery,
+		a.keyspace, usecase))
+
+	onboarding := model.ClusterGitoptsConfig{}
+
+	if err := selectQuery.Scan(
+		&onboarding.Usecase, &onboarding.ProjectUrl, &onboarding.Status,
+	); err != nil {
+		return nil, err
+	}
+
+	return &onboarding, nil
+}
+
+func (a *Store) DeleteOnboardingIntegration(usecase, onboardingProjectUrl string) error {
+
+	deleteQuery := a.client.Session().Query(fmt.Sprintf(deleteOnboardingIntegrationQuery,
+		a.keyspace, usecase, onboardingProjectUrl))
+
+	err := deleteQuery.Exec()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

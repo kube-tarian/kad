@@ -51,3 +51,9 @@ type ResponsePayload struct {
 func (rsp *ResponsePayload) ToString() string {
 	return fmt.Sprintf("Status: %s, Message: %s", rsp.Status, string(rsp.Message))
 }
+
+type ClusterGitoptsConfig struct {
+	Usecase    string `json:"usecase,omitempty"`
+	ProjectUrl string `json:"project_url,omitempty"`
+	Status     string `json:"status,omitempty"`
+}

@@ -39,6 +39,9 @@ type ServerClient interface {
 	DeployStoreApp(ctx context.Context, in *DeployStoreAppRequest, opts ...grpc.CallOption) (*DeployStoreAppResponse, error)
 	UnDeployStoreApp(ctx context.Context, in *UnDeployStoreAppRequest, opts ...grpc.CallOption) (*UnDeployStoreAppResponse, error)
 	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
+	SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error)
+	GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error)
+	DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error)
 }
 
 type serverClient struct {
@@ -202,6 +205,33 @@ func (c *serverClient) StoreCredential(ctx context.Context, in *StoreCredentialR
 	return out, nil
 }
 
+func (c *serverClient) SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error) {
+	out := new(SetClusterGitoptsProjectResponse)
+	err := c.cc.Invoke(ctx, "/serverpb.Server/SetClusterGitoptsProject", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serverClient) GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error) {
+	out := new(GetClusterGitoptsProjectResponse)
+	err := c.cc.Invoke(ctx, "/serverpb.Server/GetClusterGitoptsProject", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serverClient) DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error) {
+	out := new(DeleteClusterGitoptsProjectResponse)
+	err := c.cc.Invoke(ctx, "/serverpb.Server/DeleteClusterGitoptsProject", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServerServer is the server API for Server service.
 // All implementations must embed UnimplementedServerServer
 // for forward compatibility
@@ -223,6 +253,9 @@ type ServerServer interface {
 	DeployStoreApp(context.Context, *DeployStoreAppRequest) (*DeployStoreAppResponse, error)
 	UnDeployStoreApp(context.Context, *UnDeployStoreAppRequest) (*UnDeployStoreAppResponse, error)
 	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
+	SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error)
+	GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error)
+	DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error)
 	mustEmbedUnimplementedServerServer()
 }
 
@@ -280,6 +313,15 @@ func (UnimplementedServerServer) UnDeployStoreApp(context.Context, *UnDeployStor
 }
 func (UnimplementedServerServer) StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreCredential not implemented")
+}
+func (UnimplementedServerServer) SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetClusterGitoptsProject not implemented")
+}
+func (UnimplementedServerServer) GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClusterGitoptsProject not implemented")
+}
+func (UnimplementedServerServer) DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteClusterGitoptsProject not implemented")
 }
 func (UnimplementedServerServer) mustEmbedUnimplementedServerServer() {}
 
@@ -600,6 +642,60 @@ func _Server_StoreCredential_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Server_SetClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetClusterGitoptsProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).SetClusterGitoptsProject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/serverpb.Server/SetClusterGitoptsProject",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).SetClusterGitoptsProject(ctx, req.(*SetClusterGitoptsProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Server_GetClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClusterGitoptsProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).GetClusterGitoptsProject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/serverpb.Server/GetClusterGitoptsProject",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).GetClusterGitoptsProject(ctx, req.(*GetClusterGitoptsProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Server_DeleteClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClusterGitoptsProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).DeleteClusterGitoptsProject(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/serverpb.Server/DeleteClusterGitoptsProject",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).DeleteClusterGitoptsProject(ctx, req.(*DeleteClusterGitoptsProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Server_ServiceDesc is the grpc.ServiceDesc for Server service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -674,6 +770,18 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StoreCredential",
 			Handler:    _Server_StoreCredential_Handler,
+		},
+		{
+			MethodName: "SetClusterGitoptsProject",
+			Handler:    _Server_SetClusterGitoptsProject_Handler,
+		},
+		{
+			MethodName: "GetClusterGitoptsProject",
+			Handler:    _Server_GetClusterGitoptsProject_Handler,
+		},
+		{
+			MethodName: "DeleteClusterGitoptsProject",
+			Handler:    _Server_DeleteClusterGitoptsProject_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
