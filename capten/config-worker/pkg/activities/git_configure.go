@@ -47,18 +47,14 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	switch req.Type {
 	case "git":
 		err = configureCICD(ctx, req, TektonDirName, cred["GIT_TOKEN"])
-		if err != nil {
-			break
-		}
-
 		// Once we finalize what needs to be replaced then we can come and work here.
 	default:
-		err = fmt.Errorf("unknown action %s for resouce %s", params.Action, params.Resource)
+		err = fmt.Errorf("unknown use case type %s for resouce", req.Type)
 	}
 
 	if err != nil {
-		return model.ResponsePayload{Status: "Failed",
-			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
+		fmt.Println("ERROR: ", err)
+		return model.ResponsePayload{Status: "Failed"}, err
 	}
 
 	return model.ResponsePayload{Status: "Success"}, nil
@@ -94,6 +90,15 @@ func configureCICD(ctx context.Context, params *model.UseCase, appDir, token str
 	}
 
 	if err := configPlugin.Push(appDir+"-"+branchSuffix, token); err != nil {
+		return err
+	}
+
+	defaultBranch, err := configPlugin.GetDefaultBranchName()
+	if err != nil {
+		return err
+	}
+	_, err = createPR(ctx, params.RepoURL, appDir+"-"+branchSuffix, defaultBranch, token)
+	if err != nil {
 		return err
 	}
 

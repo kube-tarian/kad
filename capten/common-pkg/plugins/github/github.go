@@ -2,6 +2,8 @@ package github
 
 import (
 	"context"
+	"crypto/tls"
+	"net/http"
 
 	"github.com/google/go-github/v55/github"
 )
@@ -16,7 +18,13 @@ type Operation struct {
 }
 
 func NewOperation(token string) *Operation {
-	client := github.NewClient(nil).WithAuthToken(token)
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+
+	client := github.NewClient(httpClient).WithAuthToken(token)
 	return &Operation{client: client}
 }
 

@@ -1,6 +1,7 @@
 package git
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -25,8 +26,9 @@ func (op *Operation) Clone(directory, url, token string) error {
 			Username: "dummy", // yes, this can be anything except an empty string
 			Password: token,
 		},
-		URL:      url,
-		Progress: os.Stdout,
+		URL:             url,
+		Progress:        os.Stdout,
+		InsecureSkipTLS: true,
 	})
 
 	if err != nil {
@@ -79,10 +81,17 @@ func (op *Operation) Push(branchName, token string) error {
 		return fmt.Errorf("failed to get the current head: %w", err)
 	}
 
-	return op.repository.Push(&git.PushOptions{RemoteName: "origin", Force: true,
+	err = op.repository.Push(&git.PushOptions{RemoteName: "origin", Force: true,
 		Auth: &http.BasicAuth{
 			Username: "dummy", // yes, this can be anything except an empty string
 			Password: token,
 		},
-		RefSpecs: []config.RefSpec{config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/heads/%s", defBranch, branchName))}})
+		InsecureSkipTLS: true,
+		RefSpecs:        []config.RefSpec{config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/heads/%s", defBranch, branchName))}})
+
+	if errors.Is(err, git.NoErrAlreadyUpToDate) {
+		return nil
+	}
+
+	return err
 }
