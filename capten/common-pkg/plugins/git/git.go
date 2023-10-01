@@ -20,6 +20,7 @@ func New() *Operation {
 }
 
 func (op *Operation) Clone(directory, url, token string) error {
+	fmt.Println("CLONE TOEKN: ", token)
 	r, err := git.PlainClone(directory, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
 			Username: "dummy", // yes, this can be anything except an empty string
