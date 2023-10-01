@@ -8,13 +8,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/github"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
 	"github.com/kube-tarian/kad/capten/model"
 	cp "github.com/otiai10/copy"
-	"github.com/pkg/errors"
 )
 
 func handleGit(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
@@ -26,27 +24,27 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 		return respPayload, fmt.Errorf("Wrong payload: %v, recieved for configuring git", payload)
 	}
 
-	config, _ := GetConfig()
-	// read from the vault
-	credReader, err := credentials.NewCredentialReader(ctx)
-	if err != nil {
-		err = errors.WithMessage(err, "error in initializing credential reader")
-		return model.ResponsePayload{Status: "Failed",
-			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
-	}
+	// config, _ := GetConfig()
+	// // read from the vault
+	// credReader, err := credentials.NewCredentialReader(ctx)
+	// if err != nil {
+	// 	err = errors.WithMessage(err, "error in initializing credential reader")
+	// 	return model.ResponsePayload{Status: "Failed",
+	// 		Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
+	// }
 
-	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
-		config.VaultEntityName, req.VaultCredIdentifier)
-	if err != nil {
-		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
-			config.VaultEntityName, req.VaultCredIdentifier)
-		return model.ResponsePayload{Status: "Failed",
-			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
-	}
+	// cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
+	// 	config.VaultEntityName, req.VaultCredIdentifier)
+	// if err != nil {
+	// 	err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
+	// 		config.VaultEntityName, req.VaultCredIdentifier)
+	// 	return model.ResponsePayload{Status: "Failed",
+	// 		Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
+	// }
 
 	switch req.Type {
 	case "git":
-		err = configureCICD(ctx, req, TektonDirName, cred["GIT_TOKEN"])
+		err = configureCICD(ctx, req, TektonDirName, "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")
 		if err != nil {
 			break
 		}
