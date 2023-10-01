@@ -83,7 +83,7 @@ func configureCICD(ctx context.Context, params *model.UseCase, appDir, token str
 		return err
 	}
 
-	cp.Copy(filepath.Join("./", GitTemplateDir, appDir), dir)
+	err = cp.Copy(filepath.Join("./", GitTemplateDir, appDir), dir)
 	if err != nil {
 		return err
 	}
