@@ -437,39 +437,9 @@ func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeplo
 			StatusMessage: "Release name is missing",
 		}, nil
 	}
-	if request.AppName == "" {
-		s.log.Errorf("App name is missing in the request")
-		return &serverpb.UnDeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "App name is missing",
-		}, nil
-	}
-	if request.Version == "" {
-		s.log.Errorf("App version is missing in the request")
-		return &serverpb.UnDeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "App version is missing",
-		}, nil
-	}
 
-	s.log.Infof("[org: %s] Un Deploy store app [%s:%s] request for cluster %s recieved", orgId,
-		request.AppName, request.Version, request.ClusterID)
-
-	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
-	if err != nil {
-		s.log.Errorf("failed to get store app values, %v", err)
-		return &serverpb.UnDeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to find store app values",
-		}, nil
-	}
-	if config == nil {
-		s.log.Errorf("failed to get store app values")
-		return &serverpb.UnDeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "app is not installed from store",
-		}, nil
-	}
+	s.log.Infof("[org: %s] Un Deploy store app %s request for cluster %s recieved", orgId,
+		request.ReleaseName, request.ClusterID)
 
 	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
 	if err != nil {
@@ -493,8 +463,8 @@ func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeplo
 		}, nil
 	}
 
-	s.log.Infof("[org: %s] Store app [%s:%s] request request triggered for cluster %s", orgId,
-		request.AppName, request.Version, request.ClusterID)
+	s.log.Infof("[org: %s] Store app %s request request triggered for cluster %s", orgId,
+		request.ReleaseName, request.ClusterID)
 
 	return &serverpb.UnDeployStoreAppResponse{
 		Status:        serverpb.StatusCode(resp.Status),
