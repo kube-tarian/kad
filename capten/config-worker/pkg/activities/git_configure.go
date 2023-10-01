@@ -68,35 +68,42 @@ func configureCICD(ctx context.Context, params *model.UseCase, appDir, token str
 
 	dir, err := os.MkdirTemp("/"+GitTemplateDir, "clone*")
 	if err != nil {
+		fmt.Println("ERROR MkdirTemp: ", err)
 		return err
 	}
 
 	defer os.RemoveAll(dir) // clean up
 
 	if err := configPlugin.Clone(dir, params.RepoURL, token); err != nil {
+		fmt.Println("ERROR Clone: ", err)
 		return err
 	}
 
 	err = cp.Copy(filepath.Join("./", GitTemplateDir, appDir), dir)
 	if err != nil {
+		fmt.Println("ERROR Copy: ", err)
 		return err
 	}
 
 	if err := configPlugin.Commit(appDir, fmt.Sprintf("configure %s for the repo", appDir),
 		config.GitDefaultCommiterName, config.GitDefaultCommiterEmail); err != nil {
+		fmt.Println("ERROR Commit: ", err)
 		return err
 	}
 
 	if err := configPlugin.Push(appDir+"-"+branchSuffix, token); err != nil {
+		fmt.Println("ERROR Push: ", err)
 		return err
 	}
 
 	defaultBranch, err := configPlugin.GetDefaultBranchName()
 	if err != nil {
+		fmt.Println("ERROR defaultBranch: ", err)
 		return err
 	}
 	_, err = createPR(ctx, params.RepoURL, appDir+"-"+branchSuffix, defaultBranch, token)
 	if err != nil {
+		fmt.Println("ERROR createPR: ", err)
 		return err
 	}
 
