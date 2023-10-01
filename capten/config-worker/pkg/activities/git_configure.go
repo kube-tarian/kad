@@ -5,27 +5,53 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"strings"
 
+	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
+	"github.com/kube-tarian/kad/capten/common-pkg/plugins/github"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
 	"github.com/kube-tarian/kad/capten/model"
+	cp "github.com/otiai10/copy"
+	"github.com/pkg/errors"
 )
 
 func handleGit(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
 	var err error
 	respPayload := model.ResponsePayload{Status: "Failed", Message: json.RawMessage("{\"error\": \"requested payload is wrong\"}")}
-	req := &model.ConfigureCICD{}
+	req := &model.UseCase{}
 	err = json.Unmarshal(payload, req)
 	if err != nil {
 		return respPayload, fmt.Errorf("Wrong payload: %v, recieved for configuring git", payload)
 	}
 
-	switch params.Action {
-	case TektonDirName:
-		err = configureCICD(ctx, req, TektonDirName)
-		// Raise a PR
+	config, _ := GetConfig()
+	// read from the vault
+	credReader, err := credentials.NewCredentialReader(ctx)
+	if err != nil {
+		err = errors.WithMessage(err, "error in initializing credential reader")
+		return model.ResponsePayload{Status: "Failed",
+			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
+	}
+
+	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
+		config.VaultEntityName, req.VaultCredIdentifier)
+	if err != nil {
+		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
+			config.VaultEntityName, req.VaultCredIdentifier)
+		return model.ResponsePayload{Status: "Failed",
+			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
+	}
+
+	switch req.Type {
+	case "git":
+		err = configureCICD(ctx, req, TektonDirName, cred["GIT_TOKEN"])
+		if err != nil {
+			break
+		}
+
+		// Once we finalize what needs to be replaced then we can come and work here.
 	default:
 		err = fmt.Errorf("unknown action %s for resouce %s", params.Action, params.Resource)
 	}
@@ -38,34 +64,36 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	return model.ResponsePayload{Status: "Success"}, nil
 }
 
-func configureCICD(ctx context.Context, params *model.ConfigureCICD, appDir string) error {
+func configureCICD(ctx context.Context, params *model.UseCase, appDir, token string) error {
+	config, _ := GetConfig()
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
 	if !ok {
 		return fmt.Errorf("plugin not supports Configuration for CICD activities")
 	}
 
-	dir, err := os.MkdirTemp("", "clone*")
+	dir, err := os.MkdirTemp("/"+GitTemplateDir, "clone*")
 	if err != nil {
 		return err
 	}
 
 	defer os.RemoveAll(dir) // clean up
 
-	if err := configPlugin.Clone(dir, params.RepoURL, params.Token); err != nil {
+	if err := configPlugin.Clone(dir, params.RepoURL, token); err != nil {
 		return err
 	}
 
-	cmd := exec.Command("cp", "--recursive", filepath.Join("./", GitTemplateDir, appDir), dir)
-	if err := cmd.Run(); err != nil {
+	cp.Copy(filepath.Join("./", GitTemplateDir, appDir), dir)
+	if err != nil {
 		return err
 	}
 
-	if err := configPlugin.Commit(appDir, fmt.Sprintf("configure %s for the repo", appDir)); err != nil {
+	if err := configPlugin.Commit(appDir, fmt.Sprintf("configure %s for the repo", appDir),
+		config.GitDefaultCommiterName, config.GitDefaultCommiterEmail); err != nil {
 		return err
 	}
 
-	if err := configPlugin.Push(appDir+"-"+branchSuffix, params.Token); err != nil {
+	if err := configPlugin.Push(appDir+"-"+branchSuffix, token); err != nil {
 		return err
 	}
 
@@ -74,4 +102,10 @@ func configureCICD(ctx context.Context, params *model.ConfigureCICD, appDir stri
 
 func getCICDPlugin() workerframework.ConfigureCICD {
 	return git.New()
+}
+
+func createPR(ctx context.Context, repoURL, commitBranch, baseBranch, token string) (string, error) {
+	op := github.NewOperation(token)
+	str := strings.Split(repoURL, "/")
+	return op.CreatePR(ctx, strings.TrimSuffix(str[len(str)-1], gitUrlSuffix), str[len(str)-2], "Configuring CI/CD", commitBranch, baseBranch, "")
 }

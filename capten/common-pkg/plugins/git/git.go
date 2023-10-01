@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -37,7 +38,7 @@ func (op *Operation) Clone(directory, url, token string) error {
 	return nil
 }
 
-func (op *Operation) Commit(path, msg string) error {
+func (op *Operation) Commit(path, msg, name, email string) error {
 	w, err := op.repository.Worktree()
 	if err != nil {
 		return err
@@ -50,8 +51,8 @@ func (op *Operation) Commit(path, msg string) error {
 
 	_, err = w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  "capten-agent-bot",
-			Email: "capten-agent-bot@intelops.dev",
+			Name:  name,
+			Email: email,
 			When:  time.Now(),
 		},
 	})
@@ -63,12 +64,25 @@ func (op *Operation) Commit(path, msg string) error {
 	return nil
 }
 
+func (op *Operation) GetDefaultBranchName() (string, error) {
+	defBranch, err := op.repository.Head()
+	if err != nil {
+		return "", fmt.Errorf("failed to get the current head: %w", err)
+	}
+
+	return string(defBranch.Name()), nil
+}
+
 func (op *Operation) Push(branchName, token string) error {
+	defBranch, err := op.GetDefaultBranchName()
+	if err != nil {
+		return fmt.Errorf("failed to get the current head: %w", err)
+	}
+
 	return op.repository.Push(&git.PushOptions{RemoteName: "origin", Force: true,
 		Auth: &http.BasicAuth{
 			Username: "dummy", // yes, this can be anything except an empty string
 			Password: token,
 		},
-		RefSpecs: []config.RefSpec{config.RefSpec("refs/heads/main:refs/heads/" + branchName),
-			config.RefSpec("refs/heads/master:refs/heads/" + branchName)}})
+		RefSpecs: []config.RefSpec{config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/heads/%s", defBranch, branchName))}})
 }
