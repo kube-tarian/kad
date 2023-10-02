@@ -253,7 +253,7 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsCo
 	config := model.ClusterGitoptsConfig{}
 
 	if err := selectQuery.Scan(
-		&config.ProjectUrl, &config.Usecase, &config.Status,
+		&config.Usecase, &config.ProjectUrl, &config.Status,
 	); err != nil && err != gocql.ErrNotFound {
 		return err
 	}
