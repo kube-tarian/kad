@@ -7,6 +7,8 @@ import (
 	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
+	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
+	topmodel "github.com/kube-tarian/kad/capten/model"
 )
 
 const (
@@ -53,6 +55,9 @@ func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.S
 	}
 	a.log.Audit("security", "storecred", "success", "system", "credentail stored for %s", credPath)
 	a.log.Infof("stored credentail for entity %s", credPath)
+
+	// start the config-worker routine
+	go a.configureGitRepo(*confi)
 
 	return &agentpb.SetClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
@@ -119,4 +124,25 @@ func (a *Agent) DeleteClusterGitoptsProject(ctx context.Context, request *agentp
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Successfully deleted the onboarding integration",
 	}, nil
+}
+
+func (a *Agent) configureGitRepo(req model.ClusterGitoptsConfig) {
+	ci := topmodel.UseCase{Type: req.Usecase, RepoURL: req.ProjectUrl, VaultCredIdentifier: req.Usecase}
+	wd := workers.NewConfig(a.tc, a.log)
+	_, err := wd.SendEvent(context.TODO(), &topmodel.ConfigureParameters{Resource: "configure-ci-cd"}, ci)
+	if err != nil {
+		req.Status = "failed"
+		if err := a.as.AddOrUpdateOnboardingIntegration(&req); err != nil {
+			a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
+			return
+		}
+		a.log.Errorf("failed to send event to workflow to configure %s, %v", req.ProjectUrl, err)
+		return
+	}
+
+	req.Status = "completed"
+	if err := a.as.AddOrUpdateOnboardingIntegration(&req); err != nil {
+		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
+		return
+	}
 }
