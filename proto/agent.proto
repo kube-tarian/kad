@@ -31,6 +31,7 @@ service Agent {
   rpc GetClusterGlobalValues (GetClusterGlobalValuesRequest) returns (GetClusterGlobalValuesResponse) {}
 
   rpc InstallApp (InstallAppRequest) returns (InstallAppResponse) {}
+  rpc UnInstallApp (UnInstallAppRequest) returns (UnInstallAppResponse) {}
 
   rpc SetClusterGitoptsProject (SetClusterGitoptsProjectRequest) returns (SetClusterGitoptsProjectResponse) {}
   rpc GetClusterGitoptsProject (GetClusterGitoptsProjectRequest) returns (GetClusterGitoptsProjectResponse) {}
@@ -175,6 +176,15 @@ message InstallAppRequest {
 }
 
 message InstallAppResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UnInstallAppRequest {
+  string releaseName = 2;
+}
+
+message UnInstallAppResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }

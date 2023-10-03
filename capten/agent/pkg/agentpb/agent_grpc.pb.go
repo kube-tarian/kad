@@ -39,6 +39,7 @@ type AgentClient interface {
 	GetClusterAppValues(ctx context.Context, in *GetClusterAppValuesRequest, opts ...grpc.CallOption) (*GetClusterAppValuesResponse, error)
 	GetClusterGlobalValues(ctx context.Context, in *GetClusterGlobalValuesRequest, opts ...grpc.CallOption) (*GetClusterGlobalValuesResponse, error)
 	InstallApp(ctx context.Context, in *InstallAppRequest, opts ...grpc.CallOption) (*InstallAppResponse, error)
+	UnInstallApp(ctx context.Context, in *UnInstallAppRequest, opts ...grpc.CallOption) (*UnInstallAppResponse, error)
 	SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error)
 	GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error)
 	DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error)
@@ -207,6 +208,15 @@ func (c *agentClient) InstallApp(ctx context.Context, in *InstallAppRequest, opt
 	return out, nil
 }
 
+func (c *agentClient) UnInstallApp(ctx context.Context, in *UnInstallAppRequest, opts ...grpc.CallOption) (*UnInstallAppResponse, error) {
+	out := new(UnInstallAppResponse)
+	err := c.cc.Invoke(ctx, "/agentpb.Agent/UnInstallApp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *agentClient) SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error) {
 	out := new(SetClusterGitoptsProjectResponse)
 	err := c.cc.Invoke(ctx, "/agentpb.Agent/SetClusterGitoptsProject", in, out, opts...)
@@ -273,6 +283,7 @@ type AgentServer interface {
 	GetClusterAppValues(context.Context, *GetClusterAppValuesRequest) (*GetClusterAppValuesResponse, error)
 	GetClusterGlobalValues(context.Context, *GetClusterGlobalValuesRequest) (*GetClusterGlobalValuesResponse, error)
 	InstallApp(context.Context, *InstallAppRequest) (*InstallAppResponse, error)
+	UnInstallApp(context.Context, *UnInstallAppRequest) (*UnInstallAppResponse, error)
 	SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error)
 	GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error)
 	DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error)
@@ -335,6 +346,9 @@ func (UnimplementedAgentServer) GetClusterGlobalValues(context.Context, *GetClus
 }
 func (UnimplementedAgentServer) InstallApp(context.Context, *InstallAppRequest) (*InstallAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method InstallApp not implemented")
+}
+func (UnimplementedAgentServer) UnInstallApp(context.Context, *UnInstallAppRequest) (*UnInstallAppResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnInstallApp not implemented")
 }
 func (UnimplementedAgentServer) SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetClusterGitoptsProject not implemented")
@@ -670,6 +684,24 @@ func _Agent_InstallApp_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Agent_UnInstallApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnInstallAppRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).UnInstallApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/agentpb.Agent/UnInstallApp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).UnInstallApp(ctx, req.(*UnInstallAppRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Agent_SetClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetClusterGitoptsProjectRequest)
 	if err := dec(in); err != nil {
@@ -834,6 +866,10 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "InstallApp",
 			Handler:    _Agent_InstallApp_Handler,
+		},
+		{
+			MethodName: "UnInstallApp",
+			Handler:    _Agent_UnInstallApp_Handler,
 		},
 		{
 			MethodName: "SetClusterGitoptsProject",

@@ -37,6 +37,7 @@ type ServerClient interface {
 	GetStoreApps(ctx context.Context, in *GetStoreAppsRequest, opts ...grpc.CallOption) (*GetStoreAppsResponse, error)
 	GetStoreAppValues(ctx context.Context, in *GetStoreAppValuesRequest, opts ...grpc.CallOption) (*GetStoreAppValuesResponse, error)
 	DeployStoreApp(ctx context.Context, in *DeployStoreAppRequest, opts ...grpc.CallOption) (*DeployStoreAppResponse, error)
+	UnDeployStoreApp(ctx context.Context, in *UnDeployStoreAppRequest, opts ...grpc.CallOption) (*UnDeployStoreAppResponse, error)
 	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
 	SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error)
 	GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error)
@@ -186,6 +187,15 @@ func (c *serverClient) DeployStoreApp(ctx context.Context, in *DeployStoreAppReq
 	return out, nil
 }
 
+func (c *serverClient) UnDeployStoreApp(ctx context.Context, in *UnDeployStoreAppRequest, opts ...grpc.CallOption) (*UnDeployStoreAppResponse, error) {
+	out := new(UnDeployStoreAppResponse)
+	err := c.cc.Invoke(ctx, "/serverpb.Server/UnDeployStoreApp", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *serverClient) StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error) {
 	out := new(StoreCredentialResponse)
 	err := c.cc.Invoke(ctx, "/serverpb.Server/StoreCredential", in, out, opts...)
@@ -241,6 +251,7 @@ type ServerServer interface {
 	GetStoreApps(context.Context, *GetStoreAppsRequest) (*GetStoreAppsResponse, error)
 	GetStoreAppValues(context.Context, *GetStoreAppValuesRequest) (*GetStoreAppValuesResponse, error)
 	DeployStoreApp(context.Context, *DeployStoreAppRequest) (*DeployStoreAppResponse, error)
+	UnDeployStoreApp(context.Context, *UnDeployStoreAppRequest) (*UnDeployStoreAppResponse, error)
 	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
 	SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error)
 	GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error)
@@ -296,6 +307,9 @@ func (UnimplementedServerServer) GetStoreAppValues(context.Context, *GetStoreApp
 }
 func (UnimplementedServerServer) DeployStoreApp(context.Context, *DeployStoreAppRequest) (*DeployStoreAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeployStoreApp not implemented")
+}
+func (UnimplementedServerServer) UnDeployStoreApp(context.Context, *UnDeployStoreAppRequest) (*UnDeployStoreAppResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnDeployStoreApp not implemented")
 }
 func (UnimplementedServerServer) StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreCredential not implemented")
@@ -592,6 +606,24 @@ func _Server_DeployStoreApp_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Server_UnDeployStoreApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnDeployStoreAppRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).UnDeployStoreApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/serverpb.Server/UnDeployStoreApp",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).UnDeployStoreApp(ctx, req.(*UnDeployStoreAppRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Server_StoreCredential_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StoreCredentialRequest)
 	if err := dec(in); err != nil {
@@ -730,6 +762,10 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeployStoreApp",
 			Handler:    _Server_DeployStoreApp_Handler,
+		},
+		{
+			MethodName: "UnDeployStoreApp",
+			Handler:    _Server_UnDeployStoreApp_Handler,
 		},
 		{
 			MethodName: "StoreCredential",
