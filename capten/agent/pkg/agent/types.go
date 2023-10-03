@@ -9,6 +9,8 @@ const (
 	appUpgradedStatus       appStatus = "Upgraded"
 	appIntallFailedStatus   appStatus = "Installion Failed"
 	appUpgradeFaileddStatus appStatus = "Upgrade Failed"
+	appUnInstalledStatus    appStatus = "UnInstalled"
+	appUnInstallingStatus   appStatus = "UnInstalling"
 )
 
 type appDeployAction string

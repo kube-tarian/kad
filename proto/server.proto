@@ -286,7 +286,6 @@ message StoreCredentialResponse {
 
 message UnDeployStoreAppRequest {
   string clusterID = 1;
-  string namespace = 4;
   string releaseName = 5;
 }
 

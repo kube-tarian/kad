@@ -67,13 +67,6 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 func (a *Agent) UnInstallApp(ctx context.Context, request *agentpb.UnInstallAppRequest) (*agentpb.UnInstallAppResponse, error) {
 	a.log.Infof("Recieved App UnInstall request %+v", request)
 
-	if request.Namespace == "" {
-		a.log.Errorf("namespace is empty")
-		return &agentpb.UnInstallAppResponse{
-			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "namespace is missing in request",
-		}, nil
-	}
 	if request.ReleaseName == "" {
 		a.log.Errorf("release name is empty")
 		return &agentpb.UnInstallAppResponse{
@@ -82,29 +75,33 @@ func (a *Agent) UnInstallApp(ctx context.Context, request *agentpb.UnInstallAppR
 		}, nil
 	}
 
+	appConfigdata, err := a.as.GetAppConfig(request.ReleaseName)
+	if err != nil {
+		a.log.Errorf("failed to fetch app config record %s, %v", request.ReleaseName, err)
+		return &agentpb.UnInstallAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to fetch app config",
+		}, nil
+	}
+
 	req := &model.ApplicationDeleteRequest{
 		PluginName:  "helm",
-		Namespace:   request.Namespace,
+		Namespace:   appConfigdata.Config.Namespace,
 		ReleaseName: request.ReleaseName,
 		ClusterName: "capten",
 		Timeout:     10,
 	}
 
-	if err := a.unInstallAppWithWorkflow(req); err != nil {
-		a.log.Errorf("failed to uninstall the app %s, %v", req.ReleaseName, err)
+	appConfigdata.Config.InstallStatus = string(appUnInstallingStatus)
+	if err := a.as.UpsertAppConfig(appConfigdata); err != nil {
+		a.log.Errorf("failed to update app config status with UnInstalling for app %s, %v", req.ReleaseName, err)
 		return &agentpb.UnInstallAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to undeploy the app",
 		}, nil
 	}
 
-	if err := a.as.DeleteAppConfigByReleaseName(request.ReleaseName); err != nil {
-		a.log.Errorf("failed to delete installed app config record %s, %v", req.ReleaseName, err)
-		return &agentpb.UnInstallAppResponse{
-			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to undeploy the app",
-		}, nil
-	}
+	go a.unInstallAppWithWorkflow(req, appConfigdata)
 
 	a.log.Infof("Triggerred app [%s] un install", request.ReleaseName)
 	return &agentpb.UnInstallAppResponse{
@@ -226,14 +223,24 @@ func (a *Agent) installAppWithWorkflow(req *model.ApplicationInstallRequest,
 	}
 }
 
-func (a *Agent) unInstallAppWithWorkflow(req *model.ApplicationDeleteRequest) error {
+func (a *Agent) unInstallAppWithWorkflow(req *model.ApplicationDeleteRequest, appConfig *agentpb.SyncAppData) {
 	wd := workers.NewDeployment(a.tc, a.log)
 	_, err := wd.SendDeleteEvent(context.TODO(), string(appUnInstallAction), req)
 	if err != nil {
 		a.log.Errorf("failed to send delete event to workflow for app %s, %v", req.ReleaseName, err)
-		return err
+
+		appConfig.Config.InstallStatus = string(appIntalledStatus)
+		if err := a.as.UpsertAppConfig(appConfig); err != nil {
+			a.log.Errorf("failed to update app config status with Installed for app %s, %v", req.ReleaseName, err)
+		}
+		return
 	}
-	return nil
+
+	appConfig.Config.InstallStatus = string(appUnInstalledStatus)
+	if err := a.as.DeleteAppConfigByReleaseName(req.ReleaseName); err != nil {
+		a.log.Errorf("failed to delete installed app config record %s, %v", req.ReleaseName, err)
+		return
+	}
 }
 
 func (a *Agent) upgradeAppWithWorkflow(req *model.ApplicationInstallRequest,

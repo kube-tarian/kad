@@ -423,13 +423,6 @@ func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeplo
 			StatusMessage: "Cluster Id is missing",
 		}, nil
 	}
-	if request.Namespace == "" {
-		s.log.Errorf("Namespace is missing in the request")
-		return &serverpb.UnDeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Namespace is missing",
-		}, nil
-	}
 	if request.ReleaseName == "" {
 		s.log.Errorf("Release name is missing in the request")
 		return &serverpb.UnDeployStoreAppResponse{
@@ -451,7 +444,6 @@ func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeplo
 	}
 
 	req := &agentpb.UnInstallAppRequest{
-		Namespace:   request.Namespace,
 		ReleaseName: request.ReleaseName,
 	}
 	resp, err := agent.GetClient().UnInstallApp(ctx, req)

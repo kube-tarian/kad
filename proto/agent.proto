@@ -181,7 +181,6 @@ message InstallAppResponse {
 }
 
 message UnInstallAppRequest {
-  string namespace = 1;
   string releaseName = 2;
 }
 
