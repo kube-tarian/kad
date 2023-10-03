@@ -1,9 +1,9 @@
 package git
 
 import (
-	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	git "github.com/go-git/go-git/v5"
@@ -72,7 +72,8 @@ func (op *Operation) GetDefaultBranchName() (string, error) {
 		return "", fmt.Errorf("failed to get the current head: %w", err)
 	}
 
-	return string(defBranch.Name()), nil
+	defaultBranch := strings.Split(defBranch.String(), "/")
+	return defaultBranch[len(defaultBranch)-1], nil
 }
 
 func (op *Operation) Push(branchName, token string) error {
@@ -88,10 +89,6 @@ func (op *Operation) Push(branchName, token string) error {
 		},
 		InsecureSkipTLS: true,
 		RefSpecs:        []config.RefSpec{config.RefSpec(fmt.Sprintf("refs/heads/%s:refs/heads/%s", defBranch, branchName))}})
-
-	if errors.Is(err, git.NoErrAlreadyUpToDate) {
-		return nil
-	}
 
 	return err
 }
