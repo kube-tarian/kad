@@ -11,7 +11,6 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
-	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/workflows"
 	"go.temporal.io/sdk/client"
 )
 
@@ -82,7 +81,8 @@ func (d *Deployment) SendDeleteEvent(ctx context.Context, action string, deployP
 
 	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
 	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, deployPayload)
-	run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, workflows.Workflow, action, payloadJSON)
+	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, workflows.Workflow, action, payloadJSON)
+	run, err := d.client.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, json.RawMessage(payloadJSON))
 	if err != nil {
 		return nil, err
 	}

@@ -404,3 +404,62 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		StatusMessage: "app is successfully deployed",
 	}, nil
 }
+
+func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeployStoreAppRequest) (
+	*serverpb.UnDeployStoreAppResponse, error) {
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if orgId == "" {
+		s.log.Errorf("organization ID is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Organization Id is missing",
+		}, nil
+	}
+	if request.ClusterID == "" {
+		s.log.Errorf("Cluster Id is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Cluster Id is missing",
+		}, nil
+	}
+	if request.ReleaseName == "" {
+		s.log.Errorf("Release name is missing in the request")
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Release name is missing",
+		}, nil
+	}
+
+	s.log.Infof("[org: %s] Un Deploy store app %s request for cluster %s recieved", orgId,
+		request.ReleaseName, request.ClusterID)
+
+	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
+	if err != nil {
+		s.log.Errorf("failed to initialize agent, %v", err)
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to undeploy the app",
+		}, nil
+	}
+
+	req := &agentpb.UnInstallAppRequest{
+		ReleaseName: request.ReleaseName,
+	}
+	resp, err := agent.GetClient().UnInstallApp(ctx, req)
+	if err != nil {
+		s.log.Errorf("failed to undeploy app, %v", err)
+		return &serverpb.UnDeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to undeploy the app",
+		}, nil
+	}
+
+	s.log.Infof("[org: %s] Store app %s request request triggered for cluster %s", orgId,
+		request.ReleaseName, request.ClusterID)
+
+	return &serverpb.UnDeployStoreAppResponse{
+		Status:        serverpb.StatusCode(resp.Status),
+		StatusMessage: resp.StatusMessage,
+	}, nil
+}

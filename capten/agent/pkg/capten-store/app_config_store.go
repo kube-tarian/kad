@@ -16,6 +16,7 @@ import (
 const (
 	insertAppConfigByReleaseNameQuery = "INSERT INTO %s.ClusterAppConfig(release_name) VALUES (?)"
 	updateAppConfigByReleaseNameQuery = "UPDATE %s.ClusterAppConfig SET %s WHERE release_name = ?"
+	deleteAppConfigByReleaseNameQuery = "DELETE FROM %s.ClusterAppConfig WHERE release_name= ? "
 	getOnboardingIntegrationQuery     = "SELECT usecase, project_url, status FROM %s.OnboardIntegrations WHERE usecase='%s';"
 	insertOnboardingIntegrationQuery  = "INSERT INTO %s.OnboardIntegrations(usecase, project_url, status, details) VALUES (?,?,?,?);"
 	updateOnboardingIntegrationQuery  = "UPDATE %s.OnboardIntegrations SET %s WHERE usecase='%s';"
@@ -69,6 +70,18 @@ func (a *Store) UpsertAppConfig(config *agentpb.SyncAppData) error {
 		batch.Query(fmt.Sprintf(updateAppConfigByReleaseNameQuery, a.keyspace, kvPairs), config.Config.ReleaseName)
 	}
 	return a.client.Session().ExecuteBatch(batch)
+}
+func (a *Store) DeleteAppConfigByReleaseName(releaseName string) error {
+
+	deleteQuery := a.client.Session().Query(fmt.Sprintf(deleteAppConfigByReleaseNameQuery,
+		a.keyspace), releaseName)
+
+	err := deleteQuery.Exec()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error) {
