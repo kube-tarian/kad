@@ -68,7 +68,7 @@ func configureCICD(ctx context.Context, params *model.UseCase, appDir, token str
 		return fmt.Errorf("plugin not supports Configuration for CICD activities")
 	}
 
-	dir, err := os.MkdirTemp("/"+GitTemplateDir, "clone*")
+	dir, err := os.MkdirTemp(config.GitCLoneDir, "clone*")
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func configureCICD(ctx context.Context, params *model.UseCase, appDir, token str
 		return err
 	}
 
-	err = cp.Copy(filepath.Join("./", GitTemplateDir, appDir), filepath.Join(dir, appDir))
+	err = cp.Copy(filepath.Join(GitTemplateDir, appDir), filepath.Join(dir, appDir))
 	if err != nil {
 		return err
 	}
