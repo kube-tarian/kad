@@ -8,6 +8,7 @@ RUN CGO_ENABLED=0 go build -o ./build/config-worker config-worker/main.go
 
 FROM scratch
 COPY --from=builder ./build/config-worker /config-worker
-COPY --from=builder ./config-worker/git-config-files /git-config-files
+COPY --from=builder ./config-worker/gitopts-templates /gitopts-templates
 
+USER 65532:65532
 ENTRYPOINT ["./config-worker"]

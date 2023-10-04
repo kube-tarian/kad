@@ -45,8 +45,8 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	}
 
 	switch req.Type {
-	case "git":
-		err = configureCICD(ctx, req, TektonDirName, cred["GIT_TOKEN"])
+	case "CICD":
+		err = configureCICD(ctx, req, CICDdirName, cred["accessToken"])
 		// Once we finalize what needs to be replaced then we can come and work here.
 	default:
 		err = fmt.Errorf("unknown use case type %s for resouce", req.Type)

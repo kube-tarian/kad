@@ -1,8 +1,8 @@
 package activities
 
 const (
-	GitTemplateDir = "git-config-files"
-	TektonDirName  = "tekton"
+	GitTemplateDir = "gitopts-templates"
+	CICDdirName    = "cicd"
 	branchSuffix   = "bot"
 	gitUrlSuffix   = ".git"
 )

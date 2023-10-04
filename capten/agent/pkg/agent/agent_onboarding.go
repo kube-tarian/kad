@@ -129,7 +129,7 @@ func (a *Agent) DeleteClusterGitoptsProject(ctx context.Context, request *agentp
 func (a *Agent) configureGitRepo(req model.ClusterGitoptsConfig) {
 	ci := topmodel.UseCase{Type: req.Usecase, RepoURL: req.ProjectUrl, VaultCredIdentifier: req.Usecase}
 	wd := workers.NewConfig(a.tc, a.log)
-	_, err := wd.SendEvent(context.TODO(), &topmodel.ConfigureParameters{Resource: "configure-ci-cd"}, ci)
+	_, err := wd.SendEvent(context.TODO(), &topmodel.ConfigureParameters{Resource: req.Usecase}, ci)
 	if err != nil {
 		req.Status = "failed"
 		if err := a.as.AddOrUpdateOnboardingIntegration(&req); err != nil {
