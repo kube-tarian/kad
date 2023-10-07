@@ -30,7 +30,7 @@ func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (mod
 	var a *activities.Activities
 	var err error
 	switch action {
-	case "install", "update":
+	case "install", "update", "upgrade":
 		req := &model.ApplicationDeployRequest{}
 		err = json.Unmarshal(payload, req)
 		if err == nil {
