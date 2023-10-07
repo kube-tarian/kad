@@ -36,7 +36,7 @@ func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.S
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentails client for %s", credPath)
 		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
 		return &agentpb.SetClusterGitoptsProjectResponse{
-			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: err.Error(),
 		}, nil
 	}
@@ -47,7 +47,7 @@ func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.S
 		a.log.Audit("security", "storecred", "failed", "system", "failed to store credentail for %s", credPath)
 		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
 		return &agentpb.SetClusterGitoptsProjectResponse{
-			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: err.Error(),
 		}, nil
 	}
@@ -77,7 +77,7 @@ func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.G
 	if err != nil {
 		a.log.Errorf("failed to get credentail for %s, %v", credPath, err)
 		return &agentpb.GetClusterGitoptsProjectResponse{
-			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: err.Error(),
 		}, nil
 	}
@@ -87,7 +87,7 @@ func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.G
 	if err != nil {
 		a.log.Errorf("failed to get credentail for %s, %v", credPath, err)
 		return &agentpb.GetClusterGitoptsProjectResponse{
-			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: err.Error(),
 		}, nil
 	}

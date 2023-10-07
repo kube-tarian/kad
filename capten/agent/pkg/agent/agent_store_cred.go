@@ -17,7 +17,7 @@ func (a *Agent) StoreCredential(ctx context.Context, request *agentpb.StoreCrede
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentails client for %s", credPath)
 		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
 		return &agentpb.StoreCredentialResponse{
-			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: err.Error(),
 		}, nil
 	}
@@ -28,7 +28,7 @@ func (a *Agent) StoreCredential(ctx context.Context, request *agentpb.StoreCrede
 		a.log.Audit("security", "storecred", "failed", "system", "failed to store credentail for %s", credPath)
 		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
 		return &agentpb.StoreCredentialResponse{
-			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: err.Error(),
 		}, nil
 	}
@@ -36,7 +36,7 @@ func (a *Agent) StoreCredential(ctx context.Context, request *agentpb.StoreCrede
 	a.log.Audit("security", "storecred", "success", "system", "credentail stored for %s", credPath)
 	a.log.Infof("stored credentail for entity %s", credPath)
 	return &agentpb.StoreCredentialResponse{
-		Status: *agentpb.StatusCode_OK.Enum(),
+		Status: agentpb.StatusCode_OK,
 	}, nil
 }
 
@@ -45,14 +45,14 @@ func (a *Agent) GetClusterGlobalValues(ctx context.Context, _ *agentpb.GetCluste
 	if err != nil {
 		a.log.Errorf("%v", err)
 		return &agentpb.GetClusterGlobalValuesResponse{
-			Status:        *agentpb.StatusCode_INTERNRAL_ERROR.Enum(),
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: err.Error(),
 		}, nil
 	}
 
 	a.log.Infof("fetched cluster global values")
 	return &agentpb.GetClusterGlobalValuesResponse{
-		Status:       *agentpb.StatusCode_OK.Enum(),
+		Status:       agentpb.StatusCode_OK,
 		GlobalValues: []byte(values),
 	}, nil
 }

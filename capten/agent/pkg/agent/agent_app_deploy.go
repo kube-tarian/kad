@@ -162,7 +162,7 @@ func (a *Agent) UpdateAppValues(ctx context.Context, req *agentpb.UpdateAppValue
 
 }
 
-func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.InstallAppRequest) (*agentpb.UpgradeAppResponse, error) {
+func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) (*agentpb.UpgradeAppResponse, error) {
 	a.log.Infof("Received UpgradeApp request %+v", req.AppConfig.ReleaseName)
 
 	_, err := a.as.GetAppConfig(req.AppConfig.ReleaseName)
