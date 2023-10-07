@@ -162,40 +162,75 @@ func (a *Agent) UpdateAppValues(ctx context.Context, req *agentpb.UpdateAppValue
 
 }
 
-func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) (*agentpb.UpgradeAppResponse, error) {
-	a.log.Infof("Received UpgradeApp request %+v", req.ReleaseName)
+func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.InstallAppRequest) (*agentpb.UpgradeAppResponse, error) {
+	a.log.Infof("Received UpgradeApp request %+v", req.AppConfig.ReleaseName)
 
-	appConfig, err := a.as.GetAppConfig(req.ReleaseName)
+	_, err := a.as.GetAppConfig(req.AppConfig.ReleaseName)
 	if err != nil {
-		a.log.Errorf("failed to read app %s config data, %v", req.ReleaseName, err)
+		a.log.Errorf("failed to read app %s config data, %v", req.AppConfig.ReleaseName, err)
 		return &agentpb.UpgradeAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "failed to read app config data").Error(),
 		}, nil
 	}
 
-	launchUiValues, err := GetSSOvalues(req.ReleaseName)
+	launchUiValues, err := GetSSOvalues(req.AppConfig.ReleaseName)
 	if err != nil {
-		a.log.Errorf("failed to SSO config for app %s, %v", req.ReleaseName, err)
+		a.log.Errorf("failed to SSO config for app %s, %v", req.AppConfig.ReleaseName, err)
 		return &agentpb.UpgradeAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: errors.WithMessage(err, "err in getLanchUiValues").Error(),
 		}, nil
 	}
 
-	newAppConfig, marshaledOverrideValues, err := populateTemplateValues(appConfig, nil, launchUiValues, a.log)
+	templateValues, err := deriveTemplateValues(req.AppValues.OverrideValues, req.AppValues.TemplateValues)
 	if err != nil {
+		a.log.Errorf("failed to derive template values for app %s, %v", req.AppConfig.ReleaseName, err)
 		return &agentpb.UpgradeAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: errors.WithMessage(err, "err populating template values").Error(),
+			StatusMessage: "failed to prepare app values",
 		}, nil
 	}
 
-	installReq := prepareAppDeployRequestFromSyncApp(newAppConfig, marshaledOverrideValues)
-	installReq.Version = req.GetVersion()
-	go a.upgradeAppWithWorkflow(installReq, newAppConfig)
+	syncConfig := &agentpb.SyncAppData{
+		Config: &agentpb.AppConfig{
+			ReleaseName:         req.AppConfig.ReleaseName,
+			AppName:             req.AppConfig.AppName,
+			Version:             req.AppConfig.Version,
+			Category:            req.AppConfig.Category,
+			Description:         req.AppConfig.Description,
+			ChartName:           req.AppConfig.ChartName,
+			RepoName:            req.AppConfig.RepoName,
+			RepoURL:             req.AppConfig.RepoURL,
+			Namespace:           req.AppConfig.Namespace,
+			CreateNamespace:     req.AppConfig.CreateNamespace,
+			PrivilegedNamespace: req.AppConfig.PrivilegedNamespace,
+			Icon:                req.AppConfig.Icon,
+			LaunchURL:           req.AppConfig.LaunchURL,
+			LaunchUIDescription: req.AppConfig.LaunchUIDescription,
+			InstallStatus:       string(appIntallingStatus),
+			DefualtApp:          req.AppConfig.DefualtApp,
+		},
+		Values: &agentpb.AppValues{
+			OverrideValues: req.AppValues.OverrideValues,
+			LaunchUIValues: launchUiValues,
+			TemplateValues: req.AppValues.TemplateValues,
+		},
+	}
 
-	a.log.Infof("Triggerred app [%s] upgrade", newAppConfig.Config.ReleaseName)
+	if err := a.as.UpsertAppConfig(syncConfig); err != nil {
+		a.log.Errorf("failed to update app config data for app %s, %v", req.AppConfig.ReleaseName, err)
+		return &agentpb.UpgradeAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to update app config data",
+		}, nil
+	}
+
+	deployReq := prepareAppDeployRequestFromSyncApp(syncConfig, templateValues)
+
+	go a.upgradeAppWithWorkflow(deployReq, syncConfig)
+
+	a.log.Infof("Triggerred app [%s] upgrade", syncConfig.Config.ReleaseName)
 	return &agentpb.UpgradeAppResponse{
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Triggerred app upgrade",

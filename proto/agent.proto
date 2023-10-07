@@ -37,7 +37,7 @@ service Agent {
   rpc GetClusterGitoptsProject (GetClusterGitoptsProjectRequest) returns (GetClusterGitoptsProjectResponse) {}
   rpc DeleteClusterGitoptsProject (DeleteClusterGitoptsProjectRequest) returns (DeleteClusterGitoptsProjectResponse){}
 
-  rpc UpgradeApp (UpgradeAppRequest) returns (UpgradeAppResponse) {}
+  rpc UpgradeApp (InstallAppRequest) returns (UpgradeAppResponse) {}
   rpc UpdateAppValues (UpdateAppValuesRequest) returns (UpdateAppValuesResponse) {}
 }
 
