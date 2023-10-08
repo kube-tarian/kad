@@ -278,9 +278,8 @@ message DeleteClusterGitoptsProjectResponse {
 }
 
 message UpgradeAppRequest {
-  string releaseName = 1;
-  string version = 2;
-  bytes overrideValues = 3;
+  AppConfig appConfig =1;
+  AppValues appValues = 2;
 }
 
 message UpgradeAppResponse {

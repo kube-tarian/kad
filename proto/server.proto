@@ -26,6 +26,8 @@ service Server {
   rpc DeployStoreApp(DeployStoreAppRequest) returns (DeployStoreAppResponse) {}
   rpc UnDeployStoreApp(UnDeployStoreAppRequest) returns (UnDeployStoreAppResponse) {}
 
+  rpc UpgradeStoreApp(UpgradeStoreAppRequest) returns (UpgradeStoreAppResponse) {}
+
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
 
   rpc SetClusterGitoptsProject (SetClusterGitoptsProjectRequest) returns (SetClusterGitoptsProjectResponse) {}
@@ -234,6 +236,18 @@ message GetStoreAppValuesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   bytes overrideValues = 3;
+}
+
+message UpgradeStoreAppRequest {
+  string appName = 1;
+  string version = 2;
+  string clusterID = 3;
+  bytes overrideValues = 4;
+}
+
+message UpgradeStoreAppResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
 }
 
 message DeployStoreAppRequest {

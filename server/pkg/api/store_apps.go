@@ -405,6 +405,99 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 	}, nil
 }
 
+func (s *Server) UpgradeStoreApp(ctx context.Context, request *serverpb.UpgradeStoreAppRequest) (
+	*serverpb.UpgradeStoreAppResponse, error) {
+	metadataMap := metadataContextToMap(ctx)
+	orgId := metadataMap[organizationIDAttribute]
+	if orgId == "" {
+		s.log.Errorf("organization ID is missing in the request")
+		return &serverpb.UpgradeStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "Organization Id is missing",
+		}, nil
+	}
+
+	s.log.Infof("[org: %s] Deploy store app [%s:%s] request for cluster %s recieved", orgId,
+		request.AppName, request.Version, request.ClusterID)
+
+	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
+	if err != nil {
+		s.log.Errorf("failed to get store app values, %v", err)
+		return &serverpb.UpgradeStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to find store app values",
+		}, nil
+	}
+
+	marshaledOverride, err := yaml.Marshal(config.OverrideValues)
+	if err != nil {
+		return &serverpb.UpgradeStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to find store app values",
+		}, nil
+	}
+
+	marshaledLaunchUi, err := yaml.Marshal(config.LaunchUIValues)
+	if err != nil {
+		return &serverpb.UpgradeStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to find store app values",
+		}, nil
+	}
+
+	decodedIconBytes, _ := hex.DecodeString(config.Icon)
+	req := &agentpb.UpgradeAppRequest{
+		AppConfig: &agentpb.AppConfig{
+			AppName:             config.Name,
+			Version:             config.Version,
+			ReleaseName:         config.ReleaseName,
+			Category:            config.Category,
+			Description:         config.Description,
+			ChartName:           config.ChartName,
+			RepoName:            config.RepoName,
+			RepoURL:             config.RepoURL,
+			Namespace:           config.Namespace,
+			CreateNamespace:     config.CreateNamespace,
+			PrivilegedNamespace: config.PrivilegedNamespace,
+			Icon:                decodedIconBytes,
+			LaunchURL:           config.LaunchURL,
+			LaunchUIDescription: config.LaunchUIDescription,
+			DefualtApp:          false,
+		},
+		AppValues: &agentpb.AppValues{
+			OverrideValues: request.OverrideValues,
+			LaunchUIValues: decodeBase64StringToBytes(string(marshaledLaunchUi)),
+			TemplateValues: decodeBase64StringToBytes(string(marshaledOverride)),
+		},
+	}
+
+	agent, err := s.agentHandeler.GetAgent(orgId, request.ClusterID)
+	if err != nil {
+		s.log.Errorf("failed to initialize agent, %v", err)
+		return &serverpb.UpgradeStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to deploy the app",
+		}, nil
+	}
+
+	_, err = agent.GetClient().UpgradeApp(ctx, req)
+	if err != nil {
+		s.log.Errorf("failed to deploy app, %v", err)
+		return &serverpb.UpgradeStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to deploy the app",
+		}, nil
+	}
+
+	s.log.Infof("[org: %s] Store app [%s:%s] request request triggered for cluster %s", orgId,
+		request.AppName, request.Version, request.ClusterID)
+
+	return &serverpb.UpgradeStoreAppResponse{
+		Status:        serverpb.StatusCode_OK,
+		StatusMessage: "app is successfully deployed",
+	}, nil
+}
+
 func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeployStoreAppRequest) (
 	*serverpb.UnDeployStoreAppResponse, error) {
 	metadataMap := metadataContextToMap(ctx)
