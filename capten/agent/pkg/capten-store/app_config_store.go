@@ -314,10 +314,6 @@ func (a *Store) GetOnboardingIntegration(usecase string) (*model.ClusterGitoptsC
 
 func (a *Store) DeleteOnboardingIntegration(usecase, onboardingProjectUrl string) error {
 
-	fmt.Println("query start...")
-	fmt.Println(fmt.Sprintf(deleteOnboardingIntegrationQuery,
-		a.keyspace, usecase))
-	fmt.Println("query end...")
 	deleteQuery := a.client.Session().Query(fmt.Sprintf(deleteOnboardingIntegrationQuery,
 		a.keyspace, usecase))
 
