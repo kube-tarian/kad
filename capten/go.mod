@@ -35,6 +35,8 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
+require github.com/cloudflare/circl v1.3.3 // indirect
+
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/BurntSushi/toml v1.2.0 // indirect
@@ -44,7 +46,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
 	github.com/Masterminds/squirrel v1.5.3 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/argoproj/gitops-engine v0.7.1-0.20221004132320-98ccd3d43fd9 // indirect
 	github.com/argoproj/pkg v0.11.1-0.20211203175135-36c59d8fafe0 // indirect
@@ -100,6 +102,7 @@ require (
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-github/v41 v41.0.0 // indirect
+	github.com/google/go-github/v55 v55.0.0
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
@@ -155,6 +158,7 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
+	github.com/otiai10/copy v1.12.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect

@@ -91,6 +91,14 @@ type ApplicationDeployRequest struct {
 	OverrideValues string `json:"OverrideValues,omitempty"`
 }
 
+type UseCase struct {
+	Type                string            `json:"Type,omitempty"`
+	RepoURL             string            `json:"RepoURL,omitempty"`
+	VaultCredIdentifier string            `json:"VaultCredIdentifier,omitempty"`
+	Timeout             uint32            `json:"Timeout,omitempty"`
+	OverrideValues      map[string]string `json:"OverrideValues,omitempty"`
+}
+
 // ProjectDeleteRequest defines model for ProjectDeleteRequest.
 type ProjectDeleteRequest struct {
 	// PluginName Plugin name

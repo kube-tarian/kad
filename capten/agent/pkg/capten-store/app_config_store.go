@@ -276,10 +276,6 @@ func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsCo
 		batch.Query(fmt.Sprintf(insertOnboardingIntegrationQuery, a.keyspace), payload.Usecase, payload.ProjectUrl, payload.Status, "")
 	} else {
 		params := []string{}
-		if payload.Usecase != "" {
-			params = append(params,
-				fmt.Sprintf("%s = '%s'", usecase, payload.Usecase))
-		}
 		if payload.ProjectUrl != "" {
 			params = append(params,
 				fmt.Sprintf("%s = '%s'", projectUrl, payload.ProjectUrl))

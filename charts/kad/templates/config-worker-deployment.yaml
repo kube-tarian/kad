@@ -30,6 +30,9 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: git-clone-dir
+          emptyDir: {}
       containers:
         - name: {{ .Chart.Name }}-config-worker
           securityContext:
@@ -48,6 +51,9 @@ spec:
             httpGet:
               path: /status
               port: http
+          volumeMounts:
+            - mountPath: {{ .Values.configWorkerGitCloneDir }}
+              name: git-clone-dir
           env:
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel }}
@@ -55,6 +61,12 @@ spec:
               value: "{{ .Values.temporal.temporalServiceURL }}.{{ .Release.Namespace }}.svc.cluster.local:7233"
             - name: PORT
               value: "{{ .Values.service.port }}"
+            - name: VAULT_ADDR
+              value: {{ .Values.vault.address }}
+            - name: GIT_CLONE_DIR
+              value: {{ .Values.configWorkerGitCloneDir }}
+            - name: VAULT_ROLE
+              value: {{ .Values.vault.role }}
             - name: CASSANDRA_SERVICE_URL
               value: "{{ .Values.cassandra.serviceURL }}"
             - name: CASSANDRA_KEYSPACE_NAME

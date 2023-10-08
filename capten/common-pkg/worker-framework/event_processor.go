@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/kelseyhightower/envconfig"
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/model"
 
@@ -34,6 +34,13 @@ type DeploymentWorker interface {
 	Create(payload *model.CreteRequestPayload) (json.RawMessage, error)
 	Delete(payload *model.DeleteRequestPayload) (json.RawMessage, error)
 	List(payload *model.ListRequestPayload) (json.RawMessage, error)
+}
+
+type ConfigureCICD interface {
+	Clone(directory, url, token string) error
+	Commit(path, msg, name, email string) error
+	Push(branchName, token string) error
+	GetDefaultBranchName() (string, error)
 }
 
 type ConfigurationWorker interface {

@@ -2,13 +2,14 @@ package workers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/model"
 	"go.temporal.io/sdk/client"
 )
@@ -40,8 +41,13 @@ func (d *Config) SendEvent(ctx context.Context, confParams *model.ConfigureParam
 		TaskQueue: ConfigWorkerTaskQueue,
 	}
 
+	deployPayloadJson, err := json.Marshal(deployPayload)
+	if err != nil {
+		return nil, err
+	}
+
 	log.Printf("Event sent to temporal: %+v", deployPayload)
-	run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, ConfigWorkerWorkflowName, deployPayload)
+	run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, ConfigWorkerWorkflowName, confParams, json.RawMessage(deployPayloadJson))
 	if err != nil {
 		return nil, err
 	}
