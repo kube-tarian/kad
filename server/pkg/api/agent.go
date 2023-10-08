@@ -73,7 +73,7 @@ func (s *Server) SetClusterGitoptsProject(ctx context.Context, request *serverpb
 		s.log.Errorf("accessToken is missing in the request")
 		return &serverpb.SetClusterGitoptsProjectResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "Access Token credential is missing",
+			StatusMessage: "accessToken credential is missing",
 		}, nil
 	}
 

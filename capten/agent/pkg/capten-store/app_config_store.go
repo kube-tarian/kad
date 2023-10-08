@@ -20,7 +20,7 @@ const (
 	getOnboardingIntegrationQuery     = "SELECT usecase, project_url, status FROM %s.OnboardIntegrations WHERE usecase='%s';"
 	insertOnboardingIntegrationQuery  = "INSERT INTO %s.OnboardIntegrations(usecase, project_url, status, details) VALUES (?,?,?,?);"
 	updateOnboardingIntegrationQuery  = "UPDATE %s.OnboardIntegrations SET %s WHERE usecase='%s';"
-	deleteOnboardingIntegrationQuery  = "DELETE FROM %s.OnboardIntegrations WHERE usecase='%s' AND project_url='%s';"
+	deleteOnboardingIntegrationQuery  = "DELETE FROM %s.OnboardIntegrations WHERE usecase='%s';"
 )
 
 func CreateSelectByFieldNameQuery(keyspace, field string) string {
@@ -315,7 +315,7 @@ func (a *Store) GetOnboardingIntegration(usecase string) (*model.ClusterGitoptsC
 func (a *Store) DeleteOnboardingIntegration(usecase, onboardingProjectUrl string) error {
 
 	deleteQuery := a.client.Session().Query(fmt.Sprintf(deleteOnboardingIntegrationQuery,
-		a.keyspace, usecase, onboardingProjectUrl))
+		a.keyspace, usecase))
 
 	err := deleteQuery.Exec()
 	if err != nil {
