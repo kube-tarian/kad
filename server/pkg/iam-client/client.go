@@ -103,3 +103,30 @@ func (c *Client) RegisterAppClientSecrets(ctx context.Context, clientName, redir
 	}
 	return res.ClientId, res.ClientSecret, nil
 }
+
+func (c *Client) RegisterCerbosPolicy() error {
+	grpcOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	iamConn := cm.NewIamConn(
+		cm.WithGrpcDialOption(grpcOpts...),
+		cm.WithIamAddress(c.cfg.IAMURL),
+		cm.WithCerbosYamlPath(c.cfg.CerbosResourcePolicyFilePath),
+	)
+
+	ctx := context.Background()
+	oauthCred, err := c.oryClient.GetServiceOauthCredential(ctx, c.cfg.ServiceName)
+	if err != nil {
+		return errors.WithMessage(err, "error while getting service oauth token")
+	}
+
+	newCtx := metadata.AppendToOutgoingContext(context.Background(),
+		"oauth_token", oauthCred.AccessToken, "ory_url", c.oryClient.GetURL(), "ory_pat", c.oryClient.GetPAT())
+
+	err = iamConn.RegisterCerbosResourcePolicies(newCtx)
+	if err != nil {
+		return errors.WithMessage(err, "Failed to update action roles")
+	}
+	return nil
+}
