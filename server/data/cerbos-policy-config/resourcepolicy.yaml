@@ -1,0 +1,12 @@
+servicename: "capten-server"
+policies:
+  - resourceName: "someresourcename1"
+    actions:
+      - "someaction1"
+      - "someaction2"
+      - "someaction3"
+  - resourceName: "someresourcename2"
+    actions:
+      - "someaction1"
+      - "someaction2"
+      - "someaction3"
