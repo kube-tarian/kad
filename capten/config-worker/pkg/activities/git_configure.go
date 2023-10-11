@@ -75,7 +75,7 @@ func configureCICD(ctx context.Context, params *model.UseCase, token string) err
 	}
 	defer os.RemoveAll(templateDir)
 
-	if err := configPlugin.Clone(templateDir, config.CiCDTemplateRepo, ""); err != nil {
+	if err := configPlugin.Clone(templateDir, config.CiCDTemplateRepo, token); err != nil {
 		return err
 	}
 
