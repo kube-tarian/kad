@@ -110,6 +110,9 @@ tolerations: []
 affinity: {}
 
 configWorkerGitCloneDir: "/gitCloneDir"
+configWorker:
+  templateRepo: "https://github.com/intelops/capten-templates.git"
+  appsToConfig: "tekton,infra/crossplane"
 # TODO: attributes to be added
 temporal:
   external: true

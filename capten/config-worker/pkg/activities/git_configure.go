@@ -46,7 +46,7 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 
 	switch req.Type {
 	case "CICD":
-		err = configureCICD(ctx, req, CICDdirName, cred["accessToken"])
+		err = configureCICD(ctx, req, cred["accessToken"])
 		// Once we finalize what needs to be replaced then we can come and work here.
 	default:
 		err = fmt.Errorf("unknown use case type %s for resouce", req.Type)
@@ -60,7 +60,7 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	return model.ResponsePayload{Status: "Success"}, nil
 }
 
-func configureCICD(ctx context.Context, params *model.UseCase, appDir, token string) error {
+func configureCICD(ctx context.Context, params *model.UseCase, token string) error {
 	config, _ := GetConfig()
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
@@ -68,28 +68,42 @@ func configureCICD(ctx context.Context, params *model.UseCase, appDir, token str
 		return fmt.Errorf("plugin not supports Configuration for CICD activities")
 	}
 
-	dir, err := os.MkdirTemp(config.GitCLoneDir, "clone*")
+	// Clone the template repo
+	templateDir, err := os.MkdirTemp(config.GitCLoneDir, "clone*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(templateDir)
+
+	if err := configPlugin.Clone(templateDir, config.CiCDTemplateRepo, token); err != nil {
+		return err
+	}
+
+	reqRepo, err := os.MkdirTemp(config.GitCLoneDir, "clone*")
 	if err != nil {
 		return err
 	}
 
-	defer os.RemoveAll(dir) // clean up
+	defer os.RemoveAll(reqRepo) // clean up
 
-	if err := configPlugin.Clone(dir, params.RepoURL, token); err != nil {
+	if err := configPlugin.Clone(reqRepo, params.RepoURL, token); err != nil {
 		return err
 	}
 
-	err = cp.Copy(filepath.Join(GitTemplateDir, appDir), filepath.Join(dir, appDir))
-	if err != nil {
-		return err
+	for _, dir := range strings.Split(config.CICDAppsToConfigure, ",") {
+		err = cp.Copy(filepath.Join(templateDir, dir), filepath.Join(reqRepo, dir))
+		if err != nil {
+			return err
+		}
+
 	}
 
-	if err := configPlugin.Commit(appDir, fmt.Sprintf("configure %s for the repo", appDir),
+	if err := configPlugin.Commit(".", "configure CICD for the repo",
 		config.GitDefaultCommiterName, config.GitDefaultCommiterEmail); err != nil {
 		return err
 	}
 
-	if err := configPlugin.Push(appDir+"-"+branchSuffix, token); err != nil {
+	if err := configPlugin.Push(branchName, token); err != nil {
 		return err
 	}
 
@@ -97,7 +111,7 @@ func configureCICD(ctx context.Context, params *model.UseCase, appDir, token str
 	if err != nil {
 		return err
 	}
-	_, err = createPR(ctx, params.RepoURL, appDir+"-"+branchSuffix, defaultBranch, token)
+	_, err = createPR(ctx, params.RepoURL, branchName, defaultBranch, token)
 	if err != nil {
 		return err
 	}

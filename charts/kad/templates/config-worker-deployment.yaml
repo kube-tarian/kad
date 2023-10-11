@@ -65,6 +65,10 @@ spec:
               value: {{ .Values.vault.address }}
             - name: GIT_CLONE_DIR
               value: {{ .Values.configWorkerGitCloneDir }}
+            - name: CI_CD_TEMPLATE_REPO
+              value: {{ .Values.configWorker.templateRepo }}
+            - name: CI_CD_APPS_CONFIGURE
+              value: {{ .Values.configWorker.appsToConfig }}
             - name: VAULT_ROLE
               value: {{ .Values.vault.role }}
             - name: CASSANDRA_SERVICE_URL
