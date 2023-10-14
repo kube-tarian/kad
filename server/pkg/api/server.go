@@ -24,27 +24,25 @@ const (
 
 type Server struct {
 	serverpb.UnimplementedServerServer
-	serverStore       store.ServerStore
-	agentHandeler     *agent.AgentHandler
-	log               logging.Logger
-	oryClient         oryclient.OryClient
-	iam               iamclient.IAMRegister
-	cfg               config.ServiceConfig
-	mutex             *sync.Mutex
-	orgClusterIDCache map[string]int64
+	serverStore   store.ServerStore
+	agentHandeler *agent.AgentHandler
+	log           logging.Logger
+	oryClient     oryclient.OryClient
+	iam           iamclient.IAMRegister
+	cfg           config.ServiceConfig
+	mutex         *sync.Mutex
 }
 
 func NewServer(log logging.Logger, cfg config.ServiceConfig, serverStore store.ServerStore,
 	oryClient oryclient.OryClient, iam iamclient.IAMRegister) (*Server, error) {
 	return &Server{
-		serverStore:       serverStore,
-		agentHandeler:     agent.NewAgentHandler(log, cfg, serverStore, oryClient),
-		log:               log,
-		oryClient:         oryClient,
-		iam:               iam,
-		cfg:               cfg,
-		mutex:             &sync.Mutex{},
-		orgClusterIDCache: make(map[string]int64),
+		serverStore:   serverStore,
+		agentHandeler: agent.NewAgentHandler(log, cfg, serverStore, oryClient),
+		log:           log,
+		oryClient:     oryClient,
+		iam:           iam,
+		cfg:           cfg,
+		mutex:         &sync.Mutex{},
 	}, nil
 }
 

@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/pkg/errors"
@@ -23,10 +22,6 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterI
 	if err := s.serverStore.InsertClusterAppLaunches(orgId, clusterID, resp.LaunchConfigList); err != nil {
 		return fmt.Errorf("failed to store cluster app launches on server db %s, err: %v", clusterID, err)
 	}
-
-	s.mutex.Lock()
-	s.orgClusterIDCache[orgId+"-"+clusterID] = time.Now().Add(delayTimeinMin * time.Minute).Unix()
-	s.mutex.Unlock()
 
 	for _, app := range resp.LaunchConfigList {
 		appName := fmt.Sprintf("%s-%s", clusterID, app.ReleaseName)
