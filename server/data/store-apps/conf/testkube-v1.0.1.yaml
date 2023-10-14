@@ -1,0 +1,12 @@
+Name: "testkube"
+ChartName: "tools/testkube"
+Category: "Testing framework"
+Description: ""
+RepoName: "tools"
+RepoURL: "https://kube-tarian.github.io/helmrepo-supporting-tools"
+Namespace: "testkube"
+ReleaseName: "testkube"
+Version: "1.0.1"
+CreateNamespace: true
+OverrideValues:
+  DomainName: "{{.DomainName}}"

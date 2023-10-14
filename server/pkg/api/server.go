@@ -77,3 +77,11 @@ func decodeBase64StringToBytes(val string) []byte {
 	dval, _ := base64.StdEncoding.DecodeString(val)
 	return dval
 }
+
+func getBase64DecodedString(encodedString string) (string, error) {
+	decodedByte, err := base64.StdEncoding.DecodeString(encodedString)
+	if err != nil {
+		return "", err
+	}
+	return string(decodedByte), nil
+}
