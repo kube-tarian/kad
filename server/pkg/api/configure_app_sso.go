@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/pkg/errors"
 )
@@ -19,27 +20,34 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterI
 		return fmt.Errorf("failed to get cluster app launches from cluster %s, err: %v", clusterID, resp)
 	}
 
-	if err := s.serverStore.InsertClusterAppLaunches(orgId, clusterID, resp.LaunchConfigList); err != nil {
-		return fmt.Errorf("failed to store cluster app launches on server db %s, err: %v", clusterID, err)
-	}
-
 	for _, app := range resp.LaunchConfigList {
-		appName := fmt.Sprintf("%s-%s", clusterID, app.ReleaseName)
-		clientID, clientSecret, err := s.iam.RegisterAppClientSecrets(ctx, appName, app.LaunchURL)
+		err := s.configureSSOForClusterApp(ctx, agentClient, clusterID, app.ReleaseName, app.LaunchURL)
 		if err != nil {
-			return errors.WithMessagef(err, "failed to register app %s on cluster %s with IAM", app.ReleaseName, clusterID)
+			return err
 		}
 
-		ssoResp, err := agentClient.GetClient().ConfigureAppSSO(ctx, &agentpb.ConfigureAppSSORequest{
-			ReleaseName:  app.ReleaseName,
-			ClientId:     clientID,
-			ClientSecret: clientSecret,
-			OAuthBaseURL: s.cfg.CaptenOAuthURL,
-		})
-
-		if err != nil || ssoResp == nil || ssoResp.Status != agentpb.StatusCode_OK {
-			return fmt.Errorf("failed to configure sso for app  %s on cluster %s, err: %v", app.ReleaseName, clusterID, ssoResp)
-		}
 	}
+	return nil
+}
+
+func (s *Server) configureSSOForClusterApp(ctx context.Context, agentClient *agent.Agent, clusterID, releaseName, launchURL string) error {
+	s.log.Infof("Configuring app launch SSO for %s on cluster %s", releaseName, clusterID)
+	appName := fmt.Sprintf("%s-%s", clusterID, releaseName)
+	clientID, clientSecret, err := s.iam.RegisterAppClientSecrets(ctx, appName, launchURL)
+	if err != nil {
+		return errors.WithMessagef(err, "failed to register app %s on cluster %s with IAM", releaseName, clusterID)
+	}
+
+	ssoResp, err := agentClient.GetClient().ConfigureAppSSO(ctx, &agentpb.ConfigureAppSSORequest{
+		ReleaseName:  releaseName,
+		ClientId:     clientID,
+		ClientSecret: clientSecret,
+		OAuthBaseURL: s.cfg.CaptenOAuthURL,
+	})
+
+	if err != nil || ssoResp == nil || ssoResp.Status != agentpb.StatusCode_OK {
+		return fmt.Errorf("failed to configure sso for app  %s on cluster %s, err: %v", releaseName, clusterID, ssoResp)
+	}
+	s.log.Infof("Configured app launch SSO for %s on cluster %s", releaseName, clusterID)
 	return nil
 }

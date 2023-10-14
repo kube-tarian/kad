@@ -16,21 +16,20 @@ const (
 )
 
 func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.SetClusterGitoptsProjectRequest) (*agentpb.SetClusterGitoptsProjectResponse, error) {
-
-	confi := &model.ClusterGitoptsConfig{
+	a.log.Infof("Set Cluster Gitopts Project request for usecase %s, project %s", request.Usecase, request.ProjectUrl)
+	gitOptsConfig := &model.ClusterGitoptsConfig{
 		Usecase:    request.Usecase,
 		ProjectUrl: request.ProjectUrl,
 		Status:     "started",
 	}
 
-	if err := a.as.AddOrUpdateOnboardingIntegration(confi); err != nil {
+	if err := a.as.AddOrUpdateOnboardingIntegration(gitOptsConfig); err != nil {
 		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
 		return &agentpb.SetClusterGitoptsProjectResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "Cluster Gitopts Project Set failed",
 		}, err
 	}
-	a.log.Infof("Set Cluster Gitopts Project successful. Project Url - %s", request.ProjectUrl)
 
 	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, CredEntityNameOnboarding, request.Usecase)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
@@ -54,10 +53,10 @@ func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.S
 		}, nil
 	}
 	a.log.Audit("security", "storecred", "success", "system", "credentail stored for %s", credPath)
-	a.log.Infof("stored credentail for entity %s", credPath)
+	a.log.Infof("Set Cluster Gitopts Project stored for usecase %s, project %s", request.Usecase, request.ProjectUrl)
 
 	// start the config-worker routine
-	go a.configureGitRepo(*confi)
+	go a.configureGitRepo(*gitOptsConfig)
 
 	return &agentpb.SetClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
@@ -65,7 +64,9 @@ func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.S
 	}, nil
 }
 
-func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.GetClusterGitoptsProjectRequest) (*agentpb.GetClusterGitoptsProjectResponse, error) {
+func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.GetClusterGitoptsProjectRequest) (
+	*agentpb.GetClusterGitoptsProjectResponse, error) {
+	a.log.Infof("Get Cluster Gitopts Project request for usecase %s", request.Usecase)
 
 	resp, err := a.as.GetOnboardingIntegration(request.Usecase)
 	if err != nil {
@@ -97,6 +98,7 @@ func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.G
 		}, nil
 	}
 
+	a.log.Infof("Get Cluster Gitopts Project request for usecase %s successful, project %s", request.Usecase, resp.ProjectUrl)
 	return &agentpb.GetClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Successfully fetched the onboarding integration",
@@ -109,7 +111,9 @@ func (a *Agent) GetClusterGitoptsProject(ctx context.Context, request *agentpb.G
 	}, nil
 }
 
-func (a *Agent) DeleteClusterGitoptsProject(ctx context.Context, request *agentpb.DeleteClusterGitoptsProjectRequest) (*agentpb.DeleteClusterGitoptsProjectResponse, error) {
+func (a *Agent) DeleteClusterGitoptsProject(ctx context.Context, request *agentpb.DeleteClusterGitoptsProjectRequest) (
+	*agentpb.DeleteClusterGitoptsProjectResponse, error) {
+	a.log.Infof("Delete Cluster Gitopts Project request for usecase %s and project %s", request.Usecase, request.ProjectUrl)
 
 	if err := a.as.DeleteOnboardingIntegration(request.Usecase, request.ProjectUrl); err != nil {
 		a.log.Errorf("failed to delete onboarding integration, %v", err)
@@ -119,7 +123,7 @@ func (a *Agent) DeleteClusterGitoptsProject(ctx context.Context, request *agentp
 		}, err
 	}
 
-	a.log.Infof("Successfully deleted the onboarding integration. Project Url - %s", request.ProjectUrl)
+	a.log.Infof("Delete Cluster Gitopts Project request for usecase %s and project %s successful", request.Usecase, request.ProjectUrl)
 	return &agentpb.DeleteClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Successfully deleted the onboarding integration",
@@ -145,4 +149,5 @@ func (a *Agent) configureGitRepo(req model.ClusterGitoptsConfig) {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		return
 	}
+	a.log.Infof("Configure onboarding Gitopts Project completed for usecase %s and project %s", req.Usecase, req.ProjectUrl)
 }
