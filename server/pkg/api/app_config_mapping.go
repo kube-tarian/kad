@@ -29,7 +29,7 @@ func mapAgentAppsToServerResp(appDataList []*agentpb.AppData) []*serverpb.Cluste
 	return clusterAppConfigs
 }
 
-func mapAgentAppLauncesToServerResp(appLaunchCfgs []*agentpb.AppLaunchConfig) []*serverpb.AppLaunchConfig {
+func mapAgentAppLaunchConfigsToServer(appLaunchCfgs []*agentpb.AppLaunchConfig) []*serverpb.AppLaunchConfig {
 	svrAppLaunchCfg := make([]*serverpb.AppLaunchConfig, len(appLaunchCfgs))
 	for index, cfg := range appLaunchCfgs {
 		var launchCfg serverpb.AppLaunchConfig

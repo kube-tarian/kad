@@ -18,15 +18,15 @@ func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *server
 	}
 	s.log.Infof("GetClusterAppLaunchConfigs request recieved for cluster %s, [org: %s]", request.ClusterID, orgId)
 
-	resp, err := s.getClusterAppLaunchesFromCacheOrAgent(ctx, orgId, request.ClusterID)
+	launchConfigList, err := s.getClusterAppLaunchesAgent(ctx, orgId, request.ClusterID)
 	if err != nil {
 		s.log.Error("failed to get cluster application launches from agent", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to get cluster application launches from agent"}, err
 	}
 
-	s.log.Infof("Fetched %d app launch UIs from the cluster %s, [org: %s]", len(resp.LaunchConfigList), request.ClusterID, orgId)
+	s.log.Infof("Fetched %d app launch UIs from the cluster %s, [org: %s]", len(launchConfigList), request.ClusterID, orgId)
 	return &serverpb.GetClusterAppLaunchConfigsResponse{Status: serverpb.StatusCode_OK,
 		StatusMessage:   "successfully fetched the data from agent",
-		AppLaunchConfig: mapAgentAppLauncesToServerResp(resp.LaunchConfigList)}, nil
+		AppLaunchConfig: mapAgentAppLaunchConfigsToServer(launchConfigList)}, nil
 }
