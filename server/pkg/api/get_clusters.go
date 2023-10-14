@@ -29,7 +29,7 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 
 	var data []*serverpb.ClusterInfo
 	for _, cluster := range clusterDetails {
-		resp, err := s.getClusterAppLaunchesFromCacheOrAgent(ctx, orgId, cluster.ClusterID)
+		launchConfigList, err := s.getClusterAppLaunchesAgent(ctx, orgId, cluster.ClusterID)
 		if err != nil {
 			s.log.Errorf("failed to get cluster appLaunches for cluster: %s, %v", cluster.ClusterID, err)
 			continue
@@ -41,7 +41,7 @@ func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersR
 			ClusterName:      cluster.ClusterName,
 			AgentEndpoint:    cluster.Endpoint,
 			Attributes:       attributes,
-			AppLaunchConfigs: mapAgentAppLauncesToServerResp(resp.LaunchConfigList),
+			AppLaunchConfigs: mapAgentAppLaunchConfigsToServer(launchConfigList),
 		})
 	}
 
