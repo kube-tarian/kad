@@ -35,6 +35,11 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 
+	err = iamclient.RegisterCerbosPolicy(log)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
+
 	serverStore, err := store.NewStore(cfg.Database)
 	if err != nil {
 		log.Fatal("Failed to connect to %s database", cfg.Database, err)
