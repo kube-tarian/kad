@@ -1,7 +1,8 @@
 enabledApps:
-  - argo-cd
-  - crossplane
-  - testkube
-  - tekton
+  - argo-cd-v1.0.0
+  - crossplane-v1.0.0
+  - testkube-v1.0.0
+  - testkube-v1.0.1
+  - tekton-v0.1.1
 
 disabledApps:
