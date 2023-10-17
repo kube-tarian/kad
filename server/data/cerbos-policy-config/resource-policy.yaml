@@ -1,12 +1,222 @@
-servicename: "capten-server"
+servicename: "capten"
 policies:
-  - resourceName: "someresourcename1"
+  - resourceName: "agentpb-Agent-SubmitJob"
     actions:
-      - "someaction1"
-      - "someaction2"
-      - "someaction3"
-  - resourceName: "someresourcename2"
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-ClusterAdd"
     actions:
-      - "someaction1"
-      - "someaction2"
-      - "someaction3"
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-ClusterDelete"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-RepositoryAdd"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-RepositoryDelete"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-ProjectAdd"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-ProjectDelete"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-Ping"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-StoreCredential"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-SyncApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-GetClusterApps"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-GetClusterAppLaunches"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-ConfigureAppSSO"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-GetClusterAppConfig"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-GetClusterAppValues"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-GetClusterGlobalValues"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-InstallApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-UnInstallApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-SetClusterGitoptsProject"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-GetClusterGitoptsProject"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-DeleteClusterGitoptsProject"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-UpgradeApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "agentpb-Agent-UpdateAppValues"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-NewClusterRegistration"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-UpdateClusterRegistration"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-DeleteClusterRegistration"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-GetClusters"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-GetCluster"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-GetClusterApps"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-GetClusterAppLaunchConfigs"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-GetClusterApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-AddStoreApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-UpdateStoreApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-DeleteStoreApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-GetStoreApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-GetStoreApps"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-GetStoreAppValues"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-DeployStoreApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-UnDeployStoreApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-UpgradeStoreApp"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-StoreCredential"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-SetClusterGitoptsProject"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-GetClusterGitoptsProject"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
+  - resourceName: "serverpb-Server-DeleteClusterGitoptsProject"
+    actions:
+      - "manage-cluster"
+      - "view-cluster"
+      - "manage-apps"
