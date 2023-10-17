@@ -9,8 +9,7 @@ require (
 	github.com/gocql/gocql v1.3.1
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
-	github.com/intelops/go-common v1.0.19
-	github.com/invopop/yaml v0.1.0
+	github.com/intelops/go-common v1.0.20
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kube-tarian/kad/agent v0.0.0-20221228201013-ed4f78e4b887
 	github.com/ory/client-go v1.1.49
@@ -48,6 +47,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/vault/api v1.9.2 // indirect
 	github.com/hashicorp/vault/api/auth/kubernetes v0.4.1 // indirect
+	github.com/invopop/yaml v0.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
