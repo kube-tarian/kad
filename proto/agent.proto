@@ -39,6 +39,10 @@ service Agent {
 
   rpc UpgradeApp (UpgradeAppRequest) returns (UpgradeAppResponse) {}
   rpc UpdateAppValues (UpdateAppValuesRequest) returns (UpdateAppValuesResponse) {}
+  
+  rpc AddTektonProjectApp (AddTektonProject) returns (AddTektonProjectResponse) {}
+  rpc GetTektonProjectApp (GetTektonProjectRequest) returns (GetTektonProjectResponse) {}
+  rpc DeleteTektonProjectApp (DeleteTektonProjectRequest) returns (DeleteTektonProjectResponse) {}
 }
 
 enum StatusCode {
@@ -293,6 +297,42 @@ message UpdateAppValuesRequest {
 }
 
 message UpdateAppValuesResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message AddTektonProject {
+  string accessToken = 1;
+  string gitProjectUrl = 2;
+  map<string, string> labels=3;
+}
+
+message TektonProject {
+  string accessToken = 1;
+  string gitProjectUrl = 2;
+  map<string, string> labels=3;
+  string status = 4;
+}
+
+message AddTektonProjectResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message GetTektonProjectRequest {
+  map<string, string> labels=1;
+}
+
+message GetTektonProjectResponse {
+  repeated TektonProject project = 1;
+}
+
+message DeleteTektonProjectRequest {
+  string gitProjectUrl = 1;
+  map<string, string> labels=2;
+}
+
+message DeleteTektonProjectResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }
