@@ -1,4 +1,4 @@
-servicename: "capten"
+servicename: "capten-server"
 policies:
   - resourceName: "agentpb-Agent-SubmitJob"
     actions:
