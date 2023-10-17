@@ -39,6 +39,19 @@ service Agent {
 
   rpc UpgradeApp (UpgradeAppRequest) returns (UpgradeAppResponse) {}
   rpc UpdateAppValues (UpdateAppValuesRequest) returns (UpdateAppValuesResponse) {}
+
+  rpc AddGitProject (AddGitProjectRequest) returns (AddGitProjectResponse) {}
+  rpc UpdateGitProject (UpdateGitProjectRequest) returns (UpdateGitProjectResponse) {}
+  rpc DeleteGitProject (DeleteGitProjectRequest) returns (DeleteGitProjectResponse) {}
+  rpc GetGitProjects (GetGitProjectsRequest) returns (GetGitProjectsResponse) {}
+  rpc GetGitProjectsForLabels (GetGitProjectsForLabelsRequest) returns (GetGitProjectsForLabelsResponse) {}
+
+  rpc AddCloudProvider (AddCloudProviderRequest) returns (AddCloudProviderResponse) {}
+  rpc UpdateCloudProvider (UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
+  rpc DeleteCloudProvider (DeleteCloudProviderRequest) returns (DeleteCloudProviderResponse) {}
+  rpc GetCloudProviders (GetCloudProvidersRequest) returns (GetCloudProvidersResponse) {}
+  rpc GetCloudProvidersForLabels (GetCloudProvidersForLabelsRequest) returns (GetCloudProvidersForLabelsResponse) {}
+
 }
 
 enum StatusCode {
@@ -295,4 +308,135 @@ message UpdateAppValuesRequest {
 message UpdateAppValuesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
+}
+
+// --------- Git Project APIs ---------
+message AddGitProjectRequest {
+  string projectUrl = 1;
+  repeated string labels = 2;
+  string lastUpdateTime = 3;
+  string accessToken = 4; // stored in vault as "generic/gitproject/id/secretToken"
+}
+
+message AddGitProjectResponse {
+  string id = 1;
+  StatusCode status = 2;
+  string statusMessage = 3;
+}
+
+message UpdateGitProjectRequest {
+  string id = 1;
+  string projectUrl = 2;
+  repeated string labels = 3;
+  string lastUpdateTime = 4;
+  string accessToken = 5;
+}
+
+message UpdateGitProjectResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message DeleteGitProjectRequest {
+  string id = 1;
+}
+
+message DeleteGitProjectResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+
+
+message GetGitProjectsRequest {
+}
+
+message GitProject {
+  string id = 1;
+  string projectUrl = 2;
+  repeated string labels = 3;
+  string lastUpdateTime = 4;
+  string accessToken = 5;
+}
+message GetGitProjectsResponse {
+  repeated GitProject gitProjects = 1;
+  StatusCode status = 2;
+  string statusMessage = 3;
+}
+
+message GetGitProjectsForLabelsRequest {
+  repeated string labels = 1;
+}
+
+message GetGitProjectsForLabelsResponse {
+  repeated GitProject gitProjects = 1;
+  StatusCode status = 2;
+  string statusMessage = 3;
+}
+
+// --------- Cloud provider APIs ---------
+
+// Cloud providers apis
+// cluster id passed with header
+message AddCloudProviderRequest {
+  repeated string labels = 1;
+  string lastUpdateTime = 2;
+  string accessKey = 3;
+  string secretKey = 4;
+
+}
+
+message AddCloudProviderResponse {
+  string id = 1;
+  StatusCode status = 2;
+  string statusMessage = 3;
+}
+
+message UpdateCloudProviderRequest {
+  string id = 1;
+  repeated string labels = 2;
+  string lastUpdateTime = 3;
+  string accessKey = 4;
+  string secretKey = 5;
+}
+
+message UpdateCloudProviderResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message DeleteCloudProviderRequest {
+  string id = 1;
+}
+
+message DeleteCloudProviderResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message GetCloudProvidersRequest {
+}
+
+message CloudProvider {
+  string id = 1;
+  repeated string labels = 2;
+  string lastUpdateTime = 3;
+  string accessKey = 4;
+  string secretKey = 5;
+}
+
+message GetCloudProvidersResponse {
+  repeated CloudProvider cloudProviders = 1;
+  StatusCode status = 2;
+  string statusMessage = 3;
+}
+
+message GetCloudProvidersForLabelsRequest {
+  repeated string labels = 1;
+}
+
+message GetCloudProvidersForLabelsResponse {
+  repeated CloudProvider cloudProviders = 1;
+  StatusCode status = 2;
+  string statusMessage = 3;
 }
