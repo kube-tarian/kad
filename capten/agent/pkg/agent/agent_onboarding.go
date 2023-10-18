@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/intelops/go-common/credentials"
-	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
 	topmodel "github.com/kube-tarian/kad/capten/model"
 )

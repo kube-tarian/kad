@@ -11,8 +11,9 @@ import (
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agent"
-	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/util"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
@@ -53,6 +54,8 @@ func main() {
 		grpcServer = grpc.NewServer()
 	}
 	agentpb.RegisterAgentServer(grpcServer, s)
+	captenpluginspb.RegisterCaptenPluginsServer(grpcServer, s)
+
 	log.Infof("Agent listening at %v", listener.Addr())
 	reflection.Register(grpcServer)
 

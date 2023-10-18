@@ -2,22 +2,20 @@ package agent
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/temporalclient"
-	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
-
-	"go.temporal.io/sdk/client"
 )
 
 var _ agentpb.AgentServer = &Agent{}
 
 type Agent struct {
 	agentpb.UnimplementedAgentServer
+	captenpluginspb.UnimplementedCaptenPluginsServer
 	tc  *temporalclient.Client
 	as  *captenstore.Store
 	log logging.Logger
@@ -50,33 +48,4 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
 func (a *Agent) Ping(ctx context.Context, request *agentpb.PingRequest) (*agentpb.PingResponse, error) {
 	a.log.Infof("Ping request received")
 	return &agentpb.PingResponse{Status: agentpb.StatusCode_OK}, nil
-}
-
-func (a *Agent) SubmitJob(ctx context.Context, request *agentpb.JobRequest) (*agentpb.JobResponse, error) {
-	a.log.Infof("Recieved event %+v", request)
-	worker, err := a.getWorker(request.Operation)
-	if err != nil {
-		return &agentpb.JobResponse{}, err
-	}
-
-	run, err := worker.SendEvent(ctx, request.Payload.GetValue())
-	if err != nil {
-		return &agentpb.JobResponse{}, err
-	}
-
-	return prepareJobResponse(run, worker.GetWorkflowName()), err
-}
-
-func (a *Agent) getWorker(operatoin string) (workers.Worker, error) {
-	switch operatoin {
-	default:
-		return nil, fmt.Errorf("unsupported operation %s", operatoin)
-	}
-}
-
-func prepareJobResponse(run client.WorkflowRun, name string) *agentpb.JobResponse {
-	if run != nil {
-		return &agentpb.JobResponse{Id: run.GetID(), RunID: run.GetRunID(), WorkflowName: name}
-	}
-	return &agentpb.JobResponse{}
 }
