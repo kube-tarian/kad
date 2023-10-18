@@ -1,0 +1,55 @@
+
+syntax = "proto3";
+
+import "google/protobuf/any.proto";
+
+option go_package = "/capten_plugins";
+
+package capten_plugins;
+
+
+service capten_plugins {
+    rpc RegisterArgoCDProject(RegisterArgoCDProjectRequest) returns (RegisterArgoCDProjectResponse) {}
+    rpc GetArgoCDProjects(GetArgoCDProjectsRequest) returns (GetArgoCDProjectsResponse) {}
+    rpc UnRegisterArgoCDProject(UnRegisterArgoCDProjectRequest) returns (UnRegisterArgoCDProjectResponse) {}
+}
+
+enum StatusCode {
+    OK = 0;
+    INTERNRAL_ERROR = 1;
+    INVALID_ARGUMENT = 2;
+    NOT_FOUND = 3;
+  }
+
+message RegisterArgoCDProjectRequest {
+    string id = 1;
+  }
+  
+  message RegisterArgoCDProjectResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+  }
+
+  message GetArgoCDProjectsRequest {
+  }
+  
+  message GetArgoCDProjectsResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+    repeated ArgoCDProject data = 3; 
+  }
+
+  message UnRegisterArgoCDProjectRequest {
+    string id = 1;
+  }
+  
+  message UnRegisterArgoCDProjectResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+  }
+
+  message ArgoCDProject {
+     string id =1;
+     string projectUrl =2;
+     string status =3;
+  }
