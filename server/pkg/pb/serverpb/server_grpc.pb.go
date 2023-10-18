@@ -40,6 +40,9 @@ const (
 	Server_SetClusterGitoptsProject_FullMethodName    = "/serverpb.Server/SetClusterGitoptsProject"
 	Server_GetClusterGitoptsProject_FullMethodName    = "/serverpb.Server/GetClusterGitoptsProject"
 	Server_DeleteClusterGitoptsProject_FullMethodName = "/serverpb.Server/DeleteClusterGitoptsProject"
+	Server_RegisterTektonProjectApp_FullMethodName    = "/serverpb.Server/RegisterTektonProjectApp"
+	Server_GetTektonProjectApp_FullMethodName         = "/serverpb.Server/GetTektonProjectApp"
+	Server_UnRegisterTektonProjectApp_FullMethodName  = "/serverpb.Server/UnRegisterTektonProjectApp"
 )
 
 // ServerClient is the client API for Server service.
@@ -67,6 +70,9 @@ type ServerClient interface {
 	SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error)
 	GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error)
 	DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error)
+	RegisterTektonProjectApp(ctx context.Context, in *RegisterTektonProject, opts ...grpc.CallOption) (*RegisterTektonProjectResponse, error)
+	GetTektonProjectApp(ctx context.Context, in *GetTektonProjectRequest, opts ...grpc.CallOption) (*GetTektonProjectResponse, error)
+	UnRegisterTektonProjectApp(ctx context.Context, in *UnRegisterTektonProject, opts ...grpc.CallOption) (*UnRegisterTektonProject, error)
 }
 
 type serverClient struct {
@@ -266,6 +272,33 @@ func (c *serverClient) DeleteClusterGitoptsProject(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *serverClient) RegisterTektonProjectApp(ctx context.Context, in *RegisterTektonProject, opts ...grpc.CallOption) (*RegisterTektonProjectResponse, error) {
+	out := new(RegisterTektonProjectResponse)
+	err := c.cc.Invoke(ctx, Server_RegisterTektonProjectApp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serverClient) GetTektonProjectApp(ctx context.Context, in *GetTektonProjectRequest, opts ...grpc.CallOption) (*GetTektonProjectResponse, error) {
+	out := new(GetTektonProjectResponse)
+	err := c.cc.Invoke(ctx, Server_GetTektonProjectApp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serverClient) UnRegisterTektonProjectApp(ctx context.Context, in *UnRegisterTektonProject, opts ...grpc.CallOption) (*UnRegisterTektonProject, error) {
+	out := new(UnRegisterTektonProject)
+	err := c.cc.Invoke(ctx, Server_UnRegisterTektonProjectApp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ServerServer is the server API for Server service.
 // All implementations must embed UnimplementedServerServer
 // for forward compatibility
@@ -291,6 +324,9 @@ type ServerServer interface {
 	SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error)
 	GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error)
 	DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error)
+	RegisterTektonProjectApp(context.Context, *RegisterTektonProject) (*RegisterTektonProjectResponse, error)
+	GetTektonProjectApp(context.Context, *GetTektonProjectRequest) (*GetTektonProjectResponse, error)
+	UnRegisterTektonProjectApp(context.Context, *UnRegisterTektonProject) (*UnRegisterTektonProject, error)
 	mustEmbedUnimplementedServerServer()
 }
 
@@ -360,6 +396,15 @@ func (UnimplementedServerServer) GetClusterGitoptsProject(context.Context, *GetC
 }
 func (UnimplementedServerServer) DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteClusterGitoptsProject not implemented")
+}
+func (UnimplementedServerServer) RegisterTektonProjectApp(context.Context, *RegisterTektonProject) (*RegisterTektonProjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterTektonProjectApp not implemented")
+}
+func (UnimplementedServerServer) GetTektonProjectApp(context.Context, *GetTektonProjectRequest) (*GetTektonProjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTektonProjectApp not implemented")
+}
+func (UnimplementedServerServer) UnRegisterTektonProjectApp(context.Context, *UnRegisterTektonProject) (*UnRegisterTektonProject, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnRegisterTektonProjectApp not implemented")
 }
 func (UnimplementedServerServer) mustEmbedUnimplementedServerServer() {}
 
@@ -752,6 +797,60 @@ func _Server_DeleteClusterGitoptsProject_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Server_RegisterTektonProjectApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterTektonProject)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).RegisterTektonProjectApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Server_RegisterTektonProjectApp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).RegisterTektonProjectApp(ctx, req.(*RegisterTektonProject))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Server_GetTektonProjectApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTektonProjectRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).GetTektonProjectApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Server_GetTektonProjectApp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).GetTektonProjectApp(ctx, req.(*GetTektonProjectRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Server_UnRegisterTektonProjectApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnRegisterTektonProject)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).UnRegisterTektonProjectApp(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Server_UnRegisterTektonProjectApp_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).UnRegisterTektonProjectApp(ctx, req.(*UnRegisterTektonProject))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Server_ServiceDesc is the grpc.ServiceDesc for Server service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -842,6 +941,18 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteClusterGitoptsProject",
 			Handler:    _Server_DeleteClusterGitoptsProject_Handler,
+		},
+		{
+			MethodName: "RegisterTektonProjectApp",
+			Handler:    _Server_RegisterTektonProjectApp_Handler,
+		},
+		{
+			MethodName: "GetTektonProjectApp",
+			Handler:    _Server_GetTektonProjectApp_Handler,
+		},
+		{
+			MethodName: "UnRegisterTektonProjectApp",
+			Handler:    _Server_UnRegisterTektonProjectApp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

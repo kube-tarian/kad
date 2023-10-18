@@ -33,6 +33,10 @@ service Server {
   rpc SetClusterGitoptsProject (SetClusterGitoptsProjectRequest) returns (SetClusterGitoptsProjectResponse) {}
   rpc GetClusterGitoptsProject (GetClusterGitoptsProjectRequest) returns (GetClusterGitoptsProjectResponse) {}
   rpc DeleteClusterGitoptsProject (DeleteClusterGitoptsProjectRequest) returns (DeleteClusterGitoptsProjectResponse){}
+
+  rpc RegisterTektonProjectApp (RegisterTektonProject) returns (RegisterTektonProjectResponse) {}
+  rpc GetTektonProjectApp (GetTektonProjectRequest) returns (GetTektonProjectResponse) {}
+  rpc UnRegisterTektonProjectApp (UnRegisterTektonProject) returns (UnRegisterTektonProject) {}
 }
 
 enum StatusCode {
@@ -346,4 +350,38 @@ message DeleteClusterGitoptsProjectRequest {
 message DeleteClusterGitoptsProjectResponse {
   StatusCode status = 1;
   string statusMessage = 2;
+}
+
+message RegisterTektonProject {
+  string clusterID = 1;
+  string id = 2;
+}
+
+message RegisterTektonProjectResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UnRegisterTektonProject {
+  string clusterID = 1;
+  string id = 2;
+}
+
+message DeleteTektonProjectResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message TektonProject {
+  string id = 1;
+  string gitProjectUrl = 2;
+  string status = 3;
+}
+
+message GetTektonProjectRequest {
+  string clusterID = 1;
+}
+
+message GetTektonProjectResponse {
+  repeated TektonProject project = 1;
 }

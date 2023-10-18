@@ -42,9 +42,9 @@ const (
 	Agent_DeleteClusterGitoptsProject_FullMethodName = "/agentpb.Agent/DeleteClusterGitoptsProject"
 	Agent_UpgradeApp_FullMethodName                  = "/agentpb.Agent/UpgradeApp"
 	Agent_UpdateAppValues_FullMethodName             = "/agentpb.Agent/UpdateAppValues"
-	Agent_AddTektonProjectApp_FullMethodName         = "/agentpb.Agent/AddTektonProjectApp"
+	Agent_RegisterTektonProjectApp_FullMethodName    = "/agentpb.Agent/RegisterTektonProjectApp"
 	Agent_GetTektonProjectApp_FullMethodName         = "/agentpb.Agent/GetTektonProjectApp"
-	Agent_DeleteTektonProjectApp_FullMethodName      = "/agentpb.Agent/DeleteTektonProjectApp"
+	Agent_UnRegisterTektonProjectApp_FullMethodName  = "/agentpb.Agent/UnRegisterTektonProjectApp"
 )
 
 // AgentClient is the client API for Agent service.
@@ -74,9 +74,9 @@ type AgentClient interface {
 	DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error)
 	UpgradeApp(ctx context.Context, in *UpgradeAppRequest, opts ...grpc.CallOption) (*UpgradeAppResponse, error)
 	UpdateAppValues(ctx context.Context, in *UpdateAppValuesRequest, opts ...grpc.CallOption) (*UpdateAppValuesResponse, error)
-	AddTektonProjectApp(ctx context.Context, in *AddTektonProject, opts ...grpc.CallOption) (*AddTektonProjectResponse, error)
+	RegisterTektonProjectApp(ctx context.Context, in *RegisterTektonProject, opts ...grpc.CallOption) (*RegisterTektonProjectResponse, error)
 	GetTektonProjectApp(ctx context.Context, in *GetTektonProjectRequest, opts ...grpc.CallOption) (*GetTektonProjectResponse, error)
-	DeleteTektonProjectApp(ctx context.Context, in *DeleteTektonProjectRequest, opts ...grpc.CallOption) (*DeleteTektonProjectResponse, error)
+	UnRegisterTektonProjectApp(ctx context.Context, in *UnRegisterTektonProject, opts ...grpc.CallOption) (*UnRegisterTektonProject, error)
 }
 
 type agentClient struct {
@@ -294,9 +294,9 @@ func (c *agentClient) UpdateAppValues(ctx context.Context, in *UpdateAppValuesRe
 	return out, nil
 }
 
-func (c *agentClient) AddTektonProjectApp(ctx context.Context, in *AddTektonProject, opts ...grpc.CallOption) (*AddTektonProjectResponse, error) {
-	out := new(AddTektonProjectResponse)
-	err := c.cc.Invoke(ctx, Agent_AddTektonProjectApp_FullMethodName, in, out, opts...)
+func (c *agentClient) RegisterTektonProjectApp(ctx context.Context, in *RegisterTektonProject, opts ...grpc.CallOption) (*RegisterTektonProjectResponse, error) {
+	out := new(RegisterTektonProjectResponse)
+	err := c.cc.Invoke(ctx, Agent_RegisterTektonProjectApp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -312,9 +312,9 @@ func (c *agentClient) GetTektonProjectApp(ctx context.Context, in *GetTektonProj
 	return out, nil
 }
 
-func (c *agentClient) DeleteTektonProjectApp(ctx context.Context, in *DeleteTektonProjectRequest, opts ...grpc.CallOption) (*DeleteTektonProjectResponse, error) {
-	out := new(DeleteTektonProjectResponse)
-	err := c.cc.Invoke(ctx, Agent_DeleteTektonProjectApp_FullMethodName, in, out, opts...)
+func (c *agentClient) UnRegisterTektonProjectApp(ctx context.Context, in *UnRegisterTektonProject, opts ...grpc.CallOption) (*UnRegisterTektonProject, error) {
+	out := new(UnRegisterTektonProject)
+	err := c.cc.Invoke(ctx, Agent_UnRegisterTektonProjectApp_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -348,9 +348,9 @@ type AgentServer interface {
 	DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error)
 	UpgradeApp(context.Context, *UpgradeAppRequest) (*UpgradeAppResponse, error)
 	UpdateAppValues(context.Context, *UpdateAppValuesRequest) (*UpdateAppValuesResponse, error)
-	AddTektonProjectApp(context.Context, *AddTektonProject) (*AddTektonProjectResponse, error)
+	RegisterTektonProjectApp(context.Context, *RegisterTektonProject) (*RegisterTektonProjectResponse, error)
 	GetTektonProjectApp(context.Context, *GetTektonProjectRequest) (*GetTektonProjectResponse, error)
-	DeleteTektonProjectApp(context.Context, *DeleteTektonProjectRequest) (*DeleteTektonProjectResponse, error)
+	UnRegisterTektonProjectApp(context.Context, *UnRegisterTektonProject) (*UnRegisterTektonProject, error)
 	mustEmbedUnimplementedAgentServer()
 }
 
@@ -427,14 +427,14 @@ func (UnimplementedAgentServer) UpgradeApp(context.Context, *UpgradeAppRequest) 
 func (UnimplementedAgentServer) UpdateAppValues(context.Context, *UpdateAppValuesRequest) (*UpdateAppValuesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppValues not implemented")
 }
-func (UnimplementedAgentServer) AddTektonProjectApp(context.Context, *AddTektonProject) (*AddTektonProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddTektonProjectApp not implemented")
+func (UnimplementedAgentServer) RegisterTektonProjectApp(context.Context, *RegisterTektonProject) (*RegisterTektonProjectResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterTektonProjectApp not implemented")
 }
 func (UnimplementedAgentServer) GetTektonProjectApp(context.Context, *GetTektonProjectRequest) (*GetTektonProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTektonProjectApp not implemented")
 }
-func (UnimplementedAgentServer) DeleteTektonProjectApp(context.Context, *DeleteTektonProjectRequest) (*DeleteTektonProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteTektonProjectApp not implemented")
+func (UnimplementedAgentServer) UnRegisterTektonProjectApp(context.Context, *UnRegisterTektonProject) (*UnRegisterTektonProject, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnRegisterTektonProjectApp not implemented")
 }
 func (UnimplementedAgentServer) mustEmbedUnimplementedAgentServer() {}
 
@@ -863,20 +863,20 @@ func _Agent_UpdateAppValues_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Agent_AddTektonProjectApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddTektonProject)
+func _Agent_RegisterTektonProjectApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterTektonProject)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentServer).AddTektonProjectApp(ctx, in)
+		return srv.(AgentServer).RegisterTektonProjectApp(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Agent_AddTektonProjectApp_FullMethodName,
+		FullMethod: Agent_RegisterTektonProjectApp_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).AddTektonProjectApp(ctx, req.(*AddTektonProject))
+		return srv.(AgentServer).RegisterTektonProjectApp(ctx, req.(*RegisterTektonProject))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -899,20 +899,20 @@ func _Agent_GetTektonProjectApp_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Agent_DeleteTektonProjectApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTektonProjectRequest)
+func _Agent_UnRegisterTektonProjectApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnRegisterTektonProject)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(AgentServer).DeleteTektonProjectApp(ctx, in)
+		return srv.(AgentServer).UnRegisterTektonProjectApp(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Agent_DeleteTektonProjectApp_FullMethodName,
+		FullMethod: Agent_UnRegisterTektonProjectApp_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).DeleteTektonProjectApp(ctx, req.(*DeleteTektonProjectRequest))
+		return srv.(AgentServer).UnRegisterTektonProjectApp(ctx, req.(*UnRegisterTektonProject))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1017,16 +1017,16 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Agent_UpdateAppValues_Handler,
 		},
 		{
-			MethodName: "AddTektonProjectApp",
-			Handler:    _Agent_AddTektonProjectApp_Handler,
+			MethodName: "RegisterTektonProjectApp",
+			Handler:    _Agent_RegisterTektonProjectApp_Handler,
 		},
 		{
 			MethodName: "GetTektonProjectApp",
 			Handler:    _Agent_GetTektonProjectApp_Handler,
 		},
 		{
-			MethodName: "DeleteTektonProjectApp",
-			Handler:    _Agent_DeleteTektonProjectApp_Handler,
+			MethodName: "UnRegisterTektonProjectApp",
+			Handler:    _Agent_UnRegisterTektonProjectApp_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
