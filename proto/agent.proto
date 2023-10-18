@@ -39,7 +39,7 @@ service Agent {
 
   rpc UpgradeApp (UpgradeAppRequest) returns (UpgradeAppResponse) {}
   rpc UpdateAppValues (UpdateAppValuesRequest) returns (UpdateAppValuesResponse) {}
-  
+
   rpc RegisterTektonProjectApp (RegisterTektonProject) returns (RegisterTektonProjectResponse) {}
   rpc GetTektonProjectApp (GetTektonProjectRequest) returns (GetTektonProjectResponse) {}
   rpc UnRegisterTektonProjectApp (UnRegisterTektonProject) returns (UnRegisterTektonProject) {}
