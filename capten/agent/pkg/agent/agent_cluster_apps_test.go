@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"

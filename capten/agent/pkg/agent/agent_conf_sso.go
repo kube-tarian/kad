@@ -3,8 +3,8 @@ package agent
 import (
 	"context"
 
-	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/credential"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )

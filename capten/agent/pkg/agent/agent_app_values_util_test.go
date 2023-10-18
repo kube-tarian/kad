@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
 )

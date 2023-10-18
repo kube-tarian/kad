@@ -1,22 +1,12 @@
 
 syntax = "proto3";
 
-import "google/protobuf/any.proto";
-
 option go_package = "/agentpb";
 
 package agentpb;
 
 // The greeting service definition.
 service Agent {
-  rpc SubmitJob (JobRequest) returns (JobResponse) {}
-  rpc ClusterAdd (ClusterRequest) returns (JobResponse) {}
-  rpc ClusterDelete (ClusterRequest) returns (JobResponse) {}
-  rpc RepositoryAdd (RepositoryAddRequest) returns (JobResponse) {}
-  rpc RepositoryDelete (RepositoryDeleteRequest) returns (JobResponse) {}
-  rpc ProjectAdd (ProjectAddRequest) returns (JobResponse) {}
-  rpc ProjectDelete (ProjectDeleteRequest) returns (JobResponse) {}
-
   rpc Ping (PingRequest) returns (PingResponse) {}
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
 
@@ -91,11 +81,6 @@ message ProjectAddRequest {
 message ProjectDeleteRequest {
   string plugin_name = 1;
   string project_name = 2;
-}
-
-message JobRequest {
-  string operation = 1;
-  google.protobuf.Any payload   = 2;
 }
 
 message JobResponse {

@@ -10,6 +10,7 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/config"
 	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
+	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/store"
 	"google.golang.org/grpc/metadata"
@@ -24,6 +25,7 @@ const (
 
 type Server struct {
 	serverpb.UnimplementedServerServer
+	captenpluginspb.UnimplementedCaptenPluginsServer
 	serverStore   store.ServerStore
 	agentHandeler *agent.AgentHandler
 	log           logging.Logger

@@ -10,7 +10,7 @@ $ make start-kind
 # Reference: https://github.com/temporalio/helm-charts
 
 $ cd ~/go/src/github.com/temporalio/helm-charts
-$ helm install     --set server.replicaCount=1     --set cassandra.config.cluster_size=1     --set prometheus.enabled=false     --set grafana.enabled=false     --set elasticsearch.enabled=false     temporal . --timeout 8m 
+$ helm install     --set server.replicaCount=1     --set cassandra.config.cluster_size=1     --set prometheus.enabled=false     --set grafana.enabled=false     --set elasticsearch.enabled=false     temporal . --timeout 8m
 ```
 
 ## Expose temporal
@@ -57,8 +57,6 @@ deployment_worker:
   repository: kad-deployment-worker
 config_worker:
   repository: kad-config-worker
-climon:
-  repository: kad-climon
 
 ingressroute:
   enabled: false
@@ -73,9 +71,6 @@ $ helm install kad . -f /tmp/kad-values.yaml
 # Install argo-cd using integrator framework helm plugin
 
 ```
-$ cd integrator
-$ curl -X POST http://127.0.0.1:9092/climon -H "content-type: application/json" -d @tests/argocd-helm-plugin.json 
-
 # Open temporal web UI (http://127.0.0.1:9082) and check the workflow activity of this action
 ```
 
@@ -97,27 +92,13 @@ $ export PASSWORD=$(kubectl -n default get secret argocd-initial-admin-secret -o
 ```
 # make kind-integration-argocd-test
 
-$ curl -X POST http://127.0.0.1:9092/deployer -H "content-type: application/json" -d @tests/hello-world-argocd-plugin.json 
-
 # Open temporal web UI (http://127.0.0.1:9082) and check the workflow activity of this action
-```
-
-# Delete hello-world using climon
-
-```
-# make kind-integration-argocd-delete-test
-
-$ curl -X DELETE http://127.0.0.1:9092/deployer -H "content-type: application/json" -d @tests/hello-world-argocd-plugin-delete.json
-
-# Open temporal web UI and check the workflow activity of this action
 ```
 
 # Delete argocd using deployer
 
 ```
 # make kind-integration-helm-delete-test
-
-$ curl -X POST http://127.0.0.1:9092/climon -H "content-type: application/json" -d @tests/argocd-helm-plugin-delete.json 
 
 # Open temporal web UI and check the workflow activity of this action
 ```

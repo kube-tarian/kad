@@ -1,6 +1,0 @@
-package: api
-generate:
-  chi-server: true
-  models: true
-  embedded-spec: true
-output: climon/api/climon.gen.go

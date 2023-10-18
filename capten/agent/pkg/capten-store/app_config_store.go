@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gocql/gocql"
-	"github.com/kube-tarian/kad/capten/agent/pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
 	"github.com/pkg/errors"
 )
 

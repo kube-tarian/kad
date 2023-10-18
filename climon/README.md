@@ -1,2 +1,0 @@
-# cilmon
-cilmon temporal worker
