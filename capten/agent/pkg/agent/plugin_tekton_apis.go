@@ -11,12 +11,14 @@ import (
 )
 
 const (
-	tekton string = "tekton"
+	tekton     string = "tekton"
+	gitProject string = "git-project"
 )
 
 func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenpluginspb.RegisterTektonProjectRequest) (
 	*captenpluginspb.RegisterTektonProjectResponse, error) {
 	// get the corressponding git url from the DB.
+	// Currently this is dummy to get the project urls
 	projectUrl := os.Getenv("ProjectURL")
 	accessToken := os.Getenv("accessToken")
 	regTekton := &model.RegisterTekton{Id: request.Id, ProjectUrl: projectUrl, Status: "in-progress"}
@@ -27,7 +29,7 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 			StatusMessage: "inserting data to tekton db got failed",
 		}, err
 	}
-	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, tekton, tekton)
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProject, request.Id)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentails client for %s", credPath)
@@ -38,8 +40,8 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		}, err
 	}
 
-	err = credAdmin.PutCredential(ctx, credentials.GenericCredentialType, tekton,
-		tekton, map[string]string{"accessToken": accessToken})
+	err = credAdmin.PutCredential(ctx, credentials.GenericCredentialType, gitProject,
+		request.Id, map[string]string{"accessToken": accessToken})
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to store credentail for %s", credPath)
 		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)

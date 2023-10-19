@@ -1,9 +1,8 @@
 CREATE TABLE tekton (
-    id uuid,
-    project_url text,
+    git_project_id uuid,
     status text,
     lastUpdateTime uuid,
-    PRIMARY KEY (id)
+    PRIMARY KEY (git_project_id)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''

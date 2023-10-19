@@ -21,8 +21,8 @@ const (
 	insertOnboardingIntegrationQuery  = "INSERT INTO %s.OnboardIntegrations(usecase, project_url, status, details) VALUES (?,?,?,?);"
 	updateOnboardingIntegrationQuery  = "UPDATE %s.OnboardIntegrations SET %s WHERE usecase='%s';"
 	deleteOnboardingIntegrationQuery  = "DELETE FROM %s.OnboardIntegrations WHERE usecase='%s';"
-	insertTektonQuery                 = "INSERT INTO %s.tekton(id, project_url, status, lastUpdateTime) VALUES (?,?,?,?);"
-	updateTektonQuery                 = "UPDATE %s.tekton SET status='%s', lastUpdateTime='%s' WHERE id='%s';"
+	insertTektonQuery                 = "INSERT INTO %s.tekton(git_project_id, status, lastUpdateTime) VALUES (?,?,?);"
+	updateTektonQuery                 = "UPDATE %s.tekton SET status='%s', lastUpdateTime='%s' WHERE git_project_id='%s';"
 )
 
 func CreateSelectByFieldNameQuery(keyspace, field string) string {
@@ -326,7 +326,7 @@ func (a *Store) DeleteOnboardingIntegration(usecase, onboardingProjectUrl string
 func (a *Store) AddTektonProject(payload *model.RegisterTekton) error {
 
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertTektonQuery, a.keyspace), payload.Id, payload.ProjectUrl, payload.Status, gocql.TimeUUID().String())
+	batch.Query(fmt.Sprintf(insertTektonQuery, a.keyspace), payload.Id, payload.Status, gocql.TimeUUID().String())
 
 	err := a.client.Session().ExecuteBatch(batch)
 
