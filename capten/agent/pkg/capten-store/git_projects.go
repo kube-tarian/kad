@@ -88,6 +88,7 @@ func (a *Store) GetGitProjectsByLabels(searchLabels []string) ([]*captenpluginsp
 		labelContains = append(labelContains, fmt.Sprintf("labels CONTAINS '%s'", label))
 	}
 	whereLabelsClause := strings.Join(labelContains, " OR ")
+	whereLabelsClause += " ALLOW FILTERING"
 	query := fmt.Sprintf(selectAllGitProjectsByLabels, a.keyspace, whereLabelsClause)
 
 	selectQuery := a.client.Session().Query(query)
