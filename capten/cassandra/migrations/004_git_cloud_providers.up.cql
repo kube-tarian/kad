@@ -1,7 +1,7 @@
 
 CREATE TABLE CloudProviders (
     id text,
-    labels text,
+    labels set<text>,
     last_update_time text,
     PRIMARY KEY (id)
 ) WITH bloom_filter_fp_chance = 0.01

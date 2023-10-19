@@ -140,7 +140,7 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenpluginspb.GetGitProjectsForLabelsRequest) (
 	*captenpluginspb.GetGitProjectsForLabelsResponse, error) {
 
-	res, err := a.as.GetGitProjects()
+	res, err := a.as.GetGitProjectsByLabels(request.Labels)
 	if err != nil {
 		return &captenpluginspb.GetGitProjectsForLabelsResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -148,30 +148,22 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 		}, nil
 	}
 
-	filteredRes := make([]*captenpluginspb.GitProject, 0)
 	for _, r := range res {
-		if atleastOneLabelsMatch(request.Labels, r.Labels) {
-			// fetch cred
-			accessToken, err := a.getAccesToken(ctx, r.Id)
-			if err != nil {
-				return &captenpluginspb.GetGitProjectsForLabelsResponse{
-					Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-					StatusMessage: "failed to fetch git projects",
-				}, nil
-			}
-			filteredRes = append(filteredRes, &captenpluginspb.GitProject{
-				Id:          r.Id,
-				ProjectUrl:  r.ProjectUrl,
-				Labels:      r.Labels,
-				AccessToken: accessToken,
-			})
+		// fetch cred
+		accessToken, err := a.getAccesToken(ctx, r.Id)
+		if err != nil {
+			return &captenpluginspb.GetGitProjectsForLabelsResponse{
+				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch git projects",
+			}, nil
 		}
+		r.AccessToken = accessToken
 	}
 
 	return &captenpluginspb.GetGitProjectsForLabelsResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "successful",
-		Projects:      filteredRes,
+		Projects:      res,
 	}, nil
 }
 
@@ -215,15 +207,4 @@ func (a *Agent) storeAccesToken(ctx context.Context, id string, accessToken stri
 	a.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
 	a.log.Infof("stored credential for entity %s", credPath)
 	return nil
-}
-
-func atleastOneLabelsMatch(arr1, arr2 []string) bool {
-	for _, key1 := range arr1 {
-		for _, key2 := range arr2 {
-			if key1 == key2 {
-				return true
-			}
-		}
-	}
-	return false
 }
