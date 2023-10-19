@@ -9,13 +9,13 @@ service capten_plugins {
     rpc UpdateGitProject(UpdateGitProjectRequest) returns (UpdateGitProjectResponse) {}
     rpc DeleteGitProject(DeleteGitProjectRequest) returns (DeleteGitProjectResponse) {}
     rpc GetGitProjects(GetGitProjectsRequest) returns (GetGitProjectsResponse) {}
-    rpc GetGitProjectsForLabels(GetGitProjectsForLabelsRequest) returns (GetGitProjectsForLabelsResponse) {}
+    rpc GetGitProjectsForLabel(GetGitProjectsForLabelRequest) returns (GetGitProjectsForLabelResponse) {}
 
     rpc AddCloudProvider(AddCloudProviderRequest) returns (AddCloudProviderResponse) {}
     rpc UpdateCloudProvider(UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
     rpc DeleteCloudProvider(DeleteCloudProviderRequest) returns (DeleteCloudProviderResponse) {}
     rpc GetCloudProviders(GetCloudProvidersRequest) returns (GetCloudProvidersResponse) {}
-    rpc GetCloudProvidersForLabel(GetCloudProvidersForLabelsRequest) returns (GetCloudProvidersForLabelsResponse) {}
+    rpc GetCloudProvidersForLabel(GetCloudProvidersForLabelRequest) returns (GetCloudProvidersForLabelResponse) {}
 
     rpc RegisterArgoCDProject(RegisterArgoCDProjectRequest) returns (RegisterArgoCDProjectResponse) {}
     rpc GetArgoCDProjects(GetArgoCDProjectsRequest) returns (GetArgoCDProjectsResponse) {}
@@ -85,11 +85,11 @@ message GetGitProjectsResponse {
     string statusMessage = 3;
 }
 
-message GetGitProjectsForLabelsRequest {
-    repeated string labels = 1;
+message GetGitProjectsForLabelRequest {
+    string label = 1;
 }
 
-message GetGitProjectsForLabelsResponse {
+message GetGitProjectsForLabelResponse {
     repeated GitProject projects = 1;
     StatusCode status = 2;
     string statusMessage = 3;
@@ -147,11 +147,11 @@ message GetCloudProvidersResponse {
     string statusMessage = 3;
 }
 
-message GetCloudProvidersForLabelsRequest {
-    repeated string labels = 1;
+message GetCloudProvidersForLabelRequest {
+    string label = 1;
 }
 
-message GetCloudProvidersForLabelsResponse {
+message GetCloudProvidersForLabelResponse {
     repeated CloudProvider cloudProviders = 1;
     StatusCode status = 2;
     string statusMessage = 3;

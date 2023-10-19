@@ -39,9 +39,9 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 	}, fmt.Errorf("not implemented")
 }
 
-func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenpluginspb.GetGitProjectsForLabelsRequest) (
-	*captenpluginspb.GetGitProjectsForLabelsResponse, error) {
-	return &captenpluginspb.GetGitProjectsForLabelsResponse{
+func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenpluginspb.GetGitProjectsForLabelRequest) (
+	*captenpluginspb.GetGitProjectsForLabelResponse, error) {
+	return &captenpluginspb.GetGitProjectsForLabelResponse{
 		Status:        captenpluginspb.StatusCode_NOT_FOUND,
 		StatusMessage: "not implemented",
 	}, fmt.Errorf("not implemented")

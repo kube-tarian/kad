@@ -39,9 +39,9 @@ func (a *Agent) GetCloudProviders(ctx context.Context, request *captenpluginspb.
 	}, fmt.Errorf("not implemented")
 }
 
-func (a *Agent) GetCloudProvidersForLabels(ctx context.Context, request *captenpluginspb.GetCloudProvidersForLabelsRequest) (
-	*captenpluginspb.GetCloudProvidersForLabelsResponse, error) {
-	return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+func (a *Agent) GetCloudProvidersForLabels(ctx context.Context, request *captenpluginspb.GetCloudProvidersForLabelRequest) (
+	*captenpluginspb.GetCloudProvidersForLabelResponse, error) {
+	return &captenpluginspb.GetCloudProvidersForLabelResponse{
 		Status:        captenpluginspb.StatusCode_NOT_FOUND,
 		StatusMessage: "not implemented",
 	}, fmt.Errorf("not implemented")

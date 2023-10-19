@@ -23,7 +23,7 @@ const (
 	CaptenPlugins_UpdateGitProject_FullMethodName          = "/captenpluginspb.capten_plugins/UpdateGitProject"
 	CaptenPlugins_DeleteGitProject_FullMethodName          = "/captenpluginspb.capten_plugins/DeleteGitProject"
 	CaptenPlugins_GetGitProjects_FullMethodName            = "/captenpluginspb.capten_plugins/GetGitProjects"
-	CaptenPlugins_GetGitProjectsForLabels_FullMethodName   = "/captenpluginspb.capten_plugins/GetGitProjectsForLabels"
+	CaptenPlugins_GetGitProjectsForLabel_FullMethodName    = "/captenpluginspb.capten_plugins/GetGitProjectsForLabel"
 	CaptenPlugins_AddCloudProvider_FullMethodName          = "/captenpluginspb.capten_plugins/AddCloudProvider"
 	CaptenPlugins_UpdateCloudProvider_FullMethodName       = "/captenpluginspb.capten_plugins/UpdateCloudProvider"
 	CaptenPlugins_DeleteCloudProvider_FullMethodName       = "/captenpluginspb.capten_plugins/DeleteCloudProvider"
@@ -45,12 +45,12 @@ type CaptenPluginsClient interface {
 	UpdateGitProject(ctx context.Context, in *UpdateGitProjectRequest, opts ...grpc.CallOption) (*UpdateGitProjectResponse, error)
 	DeleteGitProject(ctx context.Context, in *DeleteGitProjectRequest, opts ...grpc.CallOption) (*DeleteGitProjectResponse, error)
 	GetGitProjects(ctx context.Context, in *GetGitProjectsRequest, opts ...grpc.CallOption) (*GetGitProjectsResponse, error)
-	GetGitProjectsForLabels(ctx context.Context, in *GetGitProjectsForLabelsRequest, opts ...grpc.CallOption) (*GetGitProjectsForLabelsResponse, error)
+	GetGitProjectsForLabel(ctx context.Context, in *GetGitProjectsForLabelRequest, opts ...grpc.CallOption) (*GetGitProjectsForLabelResponse, error)
 	AddCloudProvider(ctx context.Context, in *AddCloudProviderRequest, opts ...grpc.CallOption) (*AddCloudProviderResponse, error)
 	UpdateCloudProvider(ctx context.Context, in *UpdateCloudProviderRequest, opts ...grpc.CallOption) (*UpdateCloudProviderResponse, error)
 	DeleteCloudProvider(ctx context.Context, in *DeleteCloudProviderRequest, opts ...grpc.CallOption) (*DeleteCloudProviderResponse, error)
 	GetCloudProviders(ctx context.Context, in *GetCloudProvidersRequest, opts ...grpc.CallOption) (*GetCloudProvidersResponse, error)
-	GetCloudProvidersForLabel(ctx context.Context, in *GetCloudProvidersForLabelsRequest, opts ...grpc.CallOption) (*GetCloudProvidersForLabelsResponse, error)
+	GetCloudProvidersForLabel(ctx context.Context, in *GetCloudProvidersForLabelRequest, opts ...grpc.CallOption) (*GetCloudProvidersForLabelResponse, error)
 	RegisterArgoCDProject(ctx context.Context, in *RegisterArgoCDProjectRequest, opts ...grpc.CallOption) (*RegisterArgoCDProjectResponse, error)
 	GetArgoCDProjects(ctx context.Context, in *GetArgoCDProjectsRequest, opts ...grpc.CallOption) (*GetArgoCDProjectsResponse, error)
 	UnRegisterArgoCDProject(ctx context.Context, in *UnRegisterArgoCDProjectRequest, opts ...grpc.CallOption) (*UnRegisterArgoCDProjectResponse, error)
@@ -103,9 +103,9 @@ func (c *captenPluginsClient) GetGitProjects(ctx context.Context, in *GetGitProj
 	return out, nil
 }
 
-func (c *captenPluginsClient) GetGitProjectsForLabels(ctx context.Context, in *GetGitProjectsForLabelsRequest, opts ...grpc.CallOption) (*GetGitProjectsForLabelsResponse, error) {
-	out := new(GetGitProjectsForLabelsResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_GetGitProjectsForLabels_FullMethodName, in, out, opts...)
+func (c *captenPluginsClient) GetGitProjectsForLabel(ctx context.Context, in *GetGitProjectsForLabelRequest, opts ...grpc.CallOption) (*GetGitProjectsForLabelResponse, error) {
+	out := new(GetGitProjectsForLabelResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_GetGitProjectsForLabel_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -148,8 +148,8 @@ func (c *captenPluginsClient) GetCloudProviders(ctx context.Context, in *GetClou
 	return out, nil
 }
 
-func (c *captenPluginsClient) GetCloudProvidersForLabel(ctx context.Context, in *GetCloudProvidersForLabelsRequest, opts ...grpc.CallOption) (*GetCloudProvidersForLabelsResponse, error) {
-	out := new(GetCloudProvidersForLabelsResponse)
+func (c *captenPluginsClient) GetCloudProvidersForLabel(ctx context.Context, in *GetCloudProvidersForLabelRequest, opts ...grpc.CallOption) (*GetCloudProvidersForLabelResponse, error) {
+	out := new(GetCloudProvidersForLabelResponse)
 	err := c.cc.Invoke(ctx, CaptenPlugins_GetCloudProvidersForLabel_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -219,12 +219,12 @@ type CaptenPluginsServer interface {
 	UpdateGitProject(context.Context, *UpdateGitProjectRequest) (*UpdateGitProjectResponse, error)
 	DeleteGitProject(context.Context, *DeleteGitProjectRequest) (*DeleteGitProjectResponse, error)
 	GetGitProjects(context.Context, *GetGitProjectsRequest) (*GetGitProjectsResponse, error)
-	GetGitProjectsForLabels(context.Context, *GetGitProjectsForLabelsRequest) (*GetGitProjectsForLabelsResponse, error)
+	GetGitProjectsForLabel(context.Context, *GetGitProjectsForLabelRequest) (*GetGitProjectsForLabelResponse, error)
 	AddCloudProvider(context.Context, *AddCloudProviderRequest) (*AddCloudProviderResponse, error)
 	UpdateCloudProvider(context.Context, *UpdateCloudProviderRequest) (*UpdateCloudProviderResponse, error)
 	DeleteCloudProvider(context.Context, *DeleteCloudProviderRequest) (*DeleteCloudProviderResponse, error)
 	GetCloudProviders(context.Context, *GetCloudProvidersRequest) (*GetCloudProvidersResponse, error)
-	GetCloudProvidersForLabel(context.Context, *GetCloudProvidersForLabelsRequest) (*GetCloudProvidersForLabelsResponse, error)
+	GetCloudProvidersForLabel(context.Context, *GetCloudProvidersForLabelRequest) (*GetCloudProvidersForLabelResponse, error)
 	RegisterArgoCDProject(context.Context, *RegisterArgoCDProjectRequest) (*RegisterArgoCDProjectResponse, error)
 	GetArgoCDProjects(context.Context, *GetArgoCDProjectsRequest) (*GetArgoCDProjectsResponse, error)
 	UnRegisterArgoCDProject(context.Context, *UnRegisterArgoCDProjectRequest) (*UnRegisterArgoCDProjectResponse, error)
@@ -250,8 +250,8 @@ func (UnimplementedCaptenPluginsServer) DeleteGitProject(context.Context, *Delet
 func (UnimplementedCaptenPluginsServer) GetGitProjects(context.Context, *GetGitProjectsRequest) (*GetGitProjectsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGitProjects not implemented")
 }
-func (UnimplementedCaptenPluginsServer) GetGitProjectsForLabels(context.Context, *GetGitProjectsForLabelsRequest) (*GetGitProjectsForLabelsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGitProjectsForLabels not implemented")
+func (UnimplementedCaptenPluginsServer) GetGitProjectsForLabel(context.Context, *GetGitProjectsForLabelRequest) (*GetGitProjectsForLabelResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGitProjectsForLabel not implemented")
 }
 func (UnimplementedCaptenPluginsServer) AddCloudProvider(context.Context, *AddCloudProviderRequest) (*AddCloudProviderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddCloudProvider not implemented")
@@ -265,7 +265,7 @@ func (UnimplementedCaptenPluginsServer) DeleteCloudProvider(context.Context, *De
 func (UnimplementedCaptenPluginsServer) GetCloudProviders(context.Context, *GetCloudProvidersRequest) (*GetCloudProvidersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCloudProviders not implemented")
 }
-func (UnimplementedCaptenPluginsServer) GetCloudProvidersForLabel(context.Context, *GetCloudProvidersForLabelsRequest) (*GetCloudProvidersForLabelsResponse, error) {
+func (UnimplementedCaptenPluginsServer) GetCloudProvidersForLabel(context.Context, *GetCloudProvidersForLabelRequest) (*GetCloudProvidersForLabelResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCloudProvidersForLabel not implemented")
 }
 func (UnimplementedCaptenPluginsServer) RegisterArgoCDProject(context.Context, *RegisterArgoCDProjectRequest) (*RegisterArgoCDProjectResponse, error) {
@@ -371,20 +371,20 @@ func _CaptenPlugins_GetGitProjects_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CaptenPlugins_GetGitProjectsForLabels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetGitProjectsForLabelsRequest)
+func _CaptenPlugins_GetGitProjectsForLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetGitProjectsForLabelRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CaptenPluginsServer).GetGitProjectsForLabels(ctx, in)
+		return srv.(CaptenPluginsServer).GetGitProjectsForLabel(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: CaptenPlugins_GetGitProjectsForLabels_FullMethodName,
+		FullMethod: CaptenPlugins_GetGitProjectsForLabel_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).GetGitProjectsForLabels(ctx, req.(*GetGitProjectsForLabelsRequest))
+		return srv.(CaptenPluginsServer).GetGitProjectsForLabel(ctx, req.(*GetGitProjectsForLabelRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -462,7 +462,7 @@ func _CaptenPlugins_GetCloudProviders_Handler(srv interface{}, ctx context.Conte
 }
 
 func _CaptenPlugins_GetCloudProvidersForLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetCloudProvidersForLabelsRequest)
+	in := new(GetCloudProvidersForLabelRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -474,7 +474,7 @@ func _CaptenPlugins_GetCloudProvidersForLabel_Handler(srv interface{}, ctx conte
 		FullMethod: CaptenPlugins_GetCloudProvidersForLabel_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).GetCloudProvidersForLabel(ctx, req.(*GetCloudProvidersForLabelsRequest))
+		return srv.(CaptenPluginsServer).GetCloudProvidersForLabel(ctx, req.(*GetCloudProvidersForLabelRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -611,8 +611,8 @@ var CaptenPlugins_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CaptenPlugins_GetGitProjects_Handler,
 		},
 		{
-			MethodName: "GetGitProjectsForLabels",
-			Handler:    _CaptenPlugins_GetGitProjectsForLabels_Handler,
+			MethodName: "GetGitProjectsForLabel",
+			Handler:    _CaptenPlugins_GetGitProjectsForLabel_Handler,
 		},
 		{
 			MethodName: "AddCloudProvider",
