@@ -57,7 +57,7 @@ func (a *Agent) SetClusterGitoptsProject(ctx context.Context, request *agentpb.S
 	a.log.Infof("stored credentail for entity %s", credPath)
 
 	// start the config-worker routine
-	go a.configureGitRepo(*confi)
+	//go a.configureGitRepo(*confi, "")
 
 	return &agentpb.SetClusterGitoptsProjectResponse{
 		Status:        agentpb.StatusCode_OK,
@@ -126,13 +126,13 @@ func (a *Agent) DeleteClusterGitoptsProject(ctx context.Context, request *agentp
 	}, nil
 }
 
-func (a *Agent) configureGitRepo(req model.ClusterGitoptsConfig) {
-	ci := topmodel.UseCase{Type: req.Usecase, RepoURL: req.ProjectUrl, VaultCredIdentifier: req.Usecase}
+func (a *Agent) configureGitRepo(req *model.RegisterTekton, appName string) {
+	ci := topmodel.UseCase{Type: appName, RepoURL: req.ProjectUrl, VaultCredIdentifier: appName}
 	wd := workers.NewConfig(a.tc, a.log)
-	_, err := wd.SendEvent(context.TODO(), &topmodel.ConfigureParameters{Resource: req.Usecase}, ci)
+	_, err := wd.SendEvent(context.TODO(), &topmodel.ConfigureParameters{Resource: appName}, ci)
 	if err != nil {
 		req.Status = "failed"
-		if err := a.as.AddOrUpdateOnboardingIntegration(&req); err != nil {
+		if err := a.as.UpdateTektonProject(req); err != nil {
 			a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 			return
 		}
@@ -141,7 +141,7 @@ func (a *Agent) configureGitRepo(req model.ClusterGitoptsConfig) {
 	}
 
 	req.Status = "completed"
-	if err := a.as.AddOrUpdateOnboardingIntegration(&req); err != nil {
+	if err := a.as.UpdateTektonProject(req); err != nil {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		return
 	}
