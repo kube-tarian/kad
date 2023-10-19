@@ -111,6 +111,7 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 
 	res, err := a.as.GetGitProjects()
 	if err != nil {
+		a.log.Errorf("failed to get gitProjects from db, %v", err)
 		return &captenpluginspb.GetGitProjectsResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch git projects",
@@ -120,6 +121,7 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 	for _, r := range res {
 		accessToken, err := a.getAccesToken(ctx, r.Id)
 		if err != nil {
+			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetGitProjectsResponse{
 				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 				StatusMessage: "failed to fetch git projects",
@@ -142,6 +144,7 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 
 	res, err := a.as.GetGitProjectsByLabels(request.Labels)
 	if err != nil {
+		a.log.Errorf("failed to get gitProjects for labels from db, %v", err)
 		return &captenpluginspb.GetGitProjectsForLabelsResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch git projects",
@@ -152,6 +155,7 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 		// fetch cred
 		accessToken, err := a.getAccesToken(ctx, r.Id)
 		if err != nil {
+			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetGitProjectsForLabelsResponse{
 				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 				StatusMessage: "failed to fetch git projects",
