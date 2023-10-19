@@ -26,6 +26,7 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 		return respPayload, fmt.Errorf("Wrong payload: %v, recieved for configuring git", payload)
 	}
 
+	config, _ := GetConfig()
 	// read from the vault
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
@@ -35,10 +36,10 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	}
 
 	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
-		req.VaultCredIdentifier, req.VaultCredIdentifier)
+		config.VaultEntityName, req.VaultCredIdentifier)
 	if err != nil {
 		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
-			req.VaultCredIdentifier, req.VaultCredIdentifier)
+			config.VaultEntityName, req.VaultCredIdentifier)
 		return model.ResponsePayload{Status: "Failed",
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
 	}

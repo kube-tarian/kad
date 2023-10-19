@@ -127,7 +127,7 @@ func (a *Agent) DeleteClusterGitoptsProject(ctx context.Context, request *agentp
 }
 
 func (a *Agent) configureGitRepo(req *model.RegisterTekton, appName string) {
-	ci := topmodel.UseCase{Type: appName, RepoURL: req.ProjectUrl, VaultCredIdentifier: appName}
+	ci := topmodel.UseCase{Type: appName, RepoURL: req.ProjectUrl, VaultCredIdentifier: req.Id}
 	wd := workers.NewConfig(a.tc, a.log)
 	_, err := wd.SendEvent(context.TODO(), &topmodel.ConfigureParameters{Resource: appName}, ci)
 	if err != nil {
