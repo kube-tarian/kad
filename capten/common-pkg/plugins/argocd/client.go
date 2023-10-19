@@ -7,10 +7,11 @@ import (
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/util/io"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/fetcher"
 	"github.com/kube-tarian/kad/capten/model"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -207,5 +208,26 @@ func (a *ArgoCDCLient) List(req *model.ListRequestPayload) (json.RawMessage, err
 	if err != nil {
 		return nil, err
 	}
+	return listMsg, nil
+}
+
+func (a *ArgoCDCLient) ListRepositories(ctx context.Context) (json.RawMessage, error) {
+	conn, appClient, err := a.client.NewRepoClient()
+	if err != nil {
+		return nil, err
+	}
+	defer io.Close(conn)
+
+	list, err := appClient.ListRepositories(ctx, &repository.RepoQuery{})
+	if err != nil {
+		return nil, err
+	}
+
+	listMsg, err := json.Marshal(list)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("Printle => ", string(listMsg))
 	return listMsg, nil
 }
