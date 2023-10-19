@@ -31,11 +31,11 @@ type Config struct {
 }
 
 type Agent struct {
-	cfg                *Config
-	connection         *grpc.ClientConn
-	client             agentpb.AgentClient
-	captenPluginClient captenpluginspb.CaptenPluginsClient
-	log                logging.Logger
+	cfg                 *Config
+	connection          *grpc.ClientConn
+	agentClient         agentpb.AgentClient
+	captenPluginsClient captenpluginspb.CaptenPluginsClient
+	log                 logging.Logger
 }
 
 func NewAgent(log logging.Logger, cfg *Config, oryClient oryclient.OryClient) (*Agent, error) {
@@ -54,17 +54,17 @@ func NewAgent(log logging.Logger, cfg *Config, oryClient oryclient.OryClient) (*
 		return nil, errors.WithMessage(err, "ping failed")
 	}
 
-	captenPluginClient := captenpluginspb.NewCaptenPluginsClient(conn)
-	if captenPluginClient == nil {
-		return nil, errors.WithMessage(err, "failed to get captenPluginClient")
+	captenPluginsClient := captenpluginspb.NewCaptenPluginsClient(conn)
+	if captenPluginsClient == nil {
+		return nil, errors.WithMessage(err, "failed to get agent capten plugins client")
 	}
 
 	return &Agent{
-		log:                log,
-		cfg:                cfg,
-		connection:         conn,
-		client:             agentClient,
-		captenPluginClient: captenPluginClient,
+		log:                 log,
+		cfg:                 cfg,
+		connection:          conn,
+		agentClient:         agentClient,
+		captenPluginsClient: captenPluginsClient,
 	}, nil
 }
 
@@ -94,11 +94,11 @@ func getConnection(cfg *Config, oryClient oryclient.OryClient) (*grpc.ClientConn
 }
 
 func (a *Agent) GetClient() agentpb.AgentClient {
-	return a.client
+	return a.agentClient
 }
 
-func (a *Agent) GetCaptenPluginClient() captenpluginspb.CaptenPluginsClient {
-	return a.captenPluginClient
+func (a *Agent) GetCaptenPluginsClient() captenpluginspb.CaptenPluginsClient {
+	return a.captenPluginsClient
 }
 
 func (a *Agent) Close() {

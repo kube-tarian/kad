@@ -21,7 +21,6 @@ const (
 // labels CONTAINS ? OR labels CONTAINS ?
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
-
 	kvPairs, isEmptyUpdate := formUpdateKvPairsForGitProject(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(insertGitProjectId, a.keyspace), config.Id)
@@ -32,53 +31,21 @@ func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 }
 
 func (a *Store) DeleteGitProjectById(id string) error {
-
 	deleteAction := a.client.Session().Query(fmt.Sprintf(deleteGitProjectById,
 		a.keyspace), id)
-
 	err := deleteAction.Exec()
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
 func (a *Store) GetGitProjects() ([]*captenpluginspb.GitProject, error) {
-
 	query := fmt.Sprintf(selectAllGitProjects, a.keyspace)
-
-	selectQuery := a.client.Session().Query(query)
-	iter := selectQuery.Iter()
-
-	config := captenpluginspb.GitProject{}
-	var labels []string
-
-	ret := make([]*captenpluginspb.GitProject, 0)
-	for iter.Scan(
-		&config.Id, &config.ProjectUrl,
-		&labels, &config.LastUpdateTime,
-	) {
-		labelsTmp := make([]string, len(labels))
-		copy(labelsTmp, labels)
-		gitProject := &captenpluginspb.GitProject{
-			Id:             config.Id,
-			ProjectUrl:     config.ProjectUrl,
-			Labels:         labelsTmp,
-			LastUpdateTime: config.LastUpdateTime,
-		}
-		ret = append(ret, gitProject)
-	}
-
-	if err := iter.Close(); err != nil {
-		return nil, errors.WithMessage(err, "failed to iterate through results:")
-	}
-
-	return ret, nil
+	return a.executeSelectQuery(query)
 }
 
 func (a *Store) GetGitProjectsByLabels(searchLabels []string) ([]*captenpluginspb.GitProject, error) {
-
 	if len(searchLabels) == 0 {
 		return nil, fmt.Errorf("searchLabels empty")
 	}
@@ -90,7 +57,10 @@ func (a *Store) GetGitProjectsByLabels(searchLabels []string) ([]*captenpluginsp
 	whereLabelsClause := strings.Join(labelContains, " OR ")
 	whereLabelsClause += " ALLOW FILTERING"
 	query := fmt.Sprintf(selectAllGitProjectsByLabels, a.keyspace, whereLabelsClause)
+	return a.executeSelectQuery(query)
+}
 
+func (a *Store) executeSelectQuery(query string) ([]*captenpluginspb.GitProject, error) {
 	selectQuery := a.client.Session().Query(query)
 	iter := selectQuery.Iter()
 

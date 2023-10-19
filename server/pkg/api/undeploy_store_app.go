@@ -9,7 +9,7 @@ import (
 
 func (s *Server) UnDeployStoreApp(ctx context.Context, request *serverpb.UnDeployStoreAppRequest) (
 	*serverpb.UnDeployStoreAppResponse, error) {
-	orgId, err := validateRequest(ctx, request.ClusterID, request.ReleaseName)
+	orgId, err := validateOrgWithArgs(ctx, request.ClusterID, request.ReleaseName)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.UnDeployStoreAppResponse{

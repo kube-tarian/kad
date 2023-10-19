@@ -1,6 +1,7 @@
 
 CREATE TABLE CloudProviders (
     id text,
+    cloud_type text,
     labels set<text>,
     last_update_time text,
     PRIMARY KEY (id)

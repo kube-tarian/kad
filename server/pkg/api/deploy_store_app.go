@@ -11,7 +11,7 @@ import (
 
 func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeployStoreAppRequest) (
 	*serverpb.DeployStoreAppResponse, error) {
-	orgId, err := validateRequest(ctx, request.ClusterID, request.AppName, request.Version)
+	orgId, err := validateOrgWithArgs(ctx, request.ClusterID, request.AppName, request.Version)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.DeployStoreAppResponse{

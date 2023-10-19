@@ -13,19 +13,24 @@ const gitProjectEntityName = "gitproject"
 
 func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddGitProjectRequest) (
 	*captenpluginspb.AddGitProjectResponse, error) {
-
-	// create new id
-	id := uuid.New()
-
-	// save to vault
-	if err := a.storeAccesToken(ctx, id.String(), request.AccessToken); err != nil {
+	if err := validateArgs(request.ProjectUrl, request.AccessToken); err != nil {
+		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.AddGitProjectResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: err.Error(),
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
 		}, nil
 	}
 
-	// save to db
+	a.log.Infof("Add Git project %s request recieved", request.ProjectUrl)
+
+	id := uuid.New()
+	if err := a.storeGitProjectCredential(ctx, id.String(), request.AccessToken); err != nil {
+		return &captenpluginspb.AddGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add gitProject credential in vault",
+		}, nil
+	}
+
 	gitProject := captenpluginspb.GitProject{
 		Id:             id.String(),
 		ProjectUrl:     request.ProjectUrl,
@@ -33,13 +38,14 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 		LastUpdateTime: request.LastUpdateTime,
 	}
 	if err := a.as.UpsertGitProject(&gitProject); err != nil {
-		a.log.Errorf("failed to add gitProject in db, %v", err)
+		a.log.Errorf("failed to store git project to DB, %v", err)
 		return &captenpluginspb.AddGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add gitProject in db",
 		}, nil
 	}
 
+	a.log.Infof("Git project %s added with id", request.ProjectUrl, id)
 	return &captenpluginspb.AddGitProjectResponse{
 		Id:            id.String(),
 		Status:        captenpluginspb.StatusCode_OK,
@@ -49,27 +55,31 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 
 func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.UpdateGitProjectRequest) (
 	*captenpluginspb.UpdateGitProjectResponse, error) {
+	if err := validateArgs(request.ProjectUrl, request.AccessToken, request.Id); err != nil {
+		a.log.Infof("request validation failed", err)
+		return &captenpluginspb.UpdateGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+	a.log.Infof("Update Git project %s, %s request recieved", request.ProjectUrl, request.Id)
 
-	// validate id
 	id, err := uuid.Parse(request.Id)
 	if err != nil {
+		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.UpdateGitProjectResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: fmt.Sprintf("invalid uuid: %s", request.Id),
 		}, nil
 	}
 
-	if request.AccessToken != "" {
-		// save to vault
-		if err := a.storeAccesToken(ctx, request.Id, request.AccessToken); err != nil {
-			return &captenpluginspb.UpdateGitProjectResponse{
-				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-				StatusMessage: err.Error(),
-			}, nil
-		}
+	if err := a.storeGitProjectCredential(ctx, request.Id, request.AccessToken); err != nil {
+		return &captenpluginspb.UpdateGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add gitProject credential in vault",
+		}, nil
 	}
 
-	// save to db
 	gitProject := captenpluginspb.GitProject{
 		Id:             id.String(),
 		ProjectUrl:     request.ProjectUrl,
@@ -84,6 +94,7 @@ func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.U
 		}, nil
 	}
 
+	a.log.Infof("Git project %s, %s updated", request.ProjectUrl, request.Id)
 	return &captenpluginspb.UpdateGitProjectResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "ok",
@@ -92,6 +103,15 @@ func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.U
 
 func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.DeleteGitProjectRequest) (
 	*captenpluginspb.DeleteGitProjectResponse, error) {
+	if err := validateArgs(request.Id); err != nil {
+		a.log.Infof("request validation failed", err)
+		return &captenpluginspb.DeleteGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+	a.log.Infof("Delete Git project %s request recieved", request.Id)
+
 	if err := a.as.DeleteGitProjectById(request.Id); err != nil {
 		a.log.Errorf("failed to delete gitProject from db, %v", err)
 		return &captenpluginspb.DeleteGitProjectResponse{
@@ -100,6 +120,7 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 		}, nil
 	}
 
+	a.log.Infof("Git project %s deleted", request.Id)
 	return &captenpluginspb.DeleteGitProjectResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "ok",
@@ -108,7 +129,7 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 
 func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.GetGitProjectsRequest) (
 	*captenpluginspb.GetGitProjectsResponse, error) {
-
+	a.log.Infof("Get Git projects request recieved")
 	res, err := a.as.GetGitProjects()
 	if err != nil {
 		a.log.Errorf("failed to get gitProjects from db, %v", err)
@@ -119,7 +140,7 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 	}
 
 	for _, r := range res {
-		accessToken, err := a.getAccesToken(ctx, r.Id)
+		accessToken, err := a.getGitProjectCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetGitProjectsResponse{
@@ -130,17 +151,25 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 		r.AccessToken = accessToken
 	}
 
-	a.log.Infof("Found %d gitProjects", len(res))
+	a.log.Infof("Found %d git projects", len(res))
 	return &captenpluginspb.GetGitProjectsResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "successful",
-		GitProjects:   res,
+		Projects:      res,
 	}, nil
 
 }
 
 func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenpluginspb.GetGitProjectsForLabelsRequest) (
 	*captenpluginspb.GetGitProjectsForLabelsResponse, error) {
+	if len(request.Labels) == 0 {
+		a.log.Infof("request validation failed")
+		return &captenpluginspb.GetGitProjectsForLabelsResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+	a.log.Infof("Get Git projects with labels %v request recieved", request.Labels)
 
 	res, err := a.as.GetGitProjectsByLabels(request.Labels)
 	if err != nil {
@@ -152,8 +181,7 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 	}
 
 	for _, r := range res {
-		// fetch cred
-		accessToken, err := a.getAccesToken(ctx, r.Id)
+		accessToken, err := a.getGitProjectCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetGitProjectsForLabelsResponse{
@@ -164,6 +192,7 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 		r.AccessToken = accessToken
 	}
 
+	a.log.Infof("Found %d git projects for lables %v", len(res), request.Labels)
 	return &captenpluginspb.GetGitProjectsForLabelsResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "successful",
@@ -171,7 +200,7 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 	}, nil
 }
 
-func (a *Agent) getAccesToken(ctx context.Context, id string) (string, error) {
+func (a *Agent) getGitProjectCredential(ctx context.Context, id string) (string, error) {
 	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProjectEntityName, id)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
@@ -188,7 +217,7 @@ func (a *Agent) getAccesToken(ctx context.Context, id string) (string, error) {
 	return cred["accessToken"], nil
 }
 
-func (a *Agent) storeAccesToken(ctx context.Context, id string, accessToken string) error {
+func (a *Agent) storeGitProjectCredential(ctx context.Context, id string, accessToken string) error {
 	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProjectEntityName, id)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {

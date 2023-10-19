@@ -80,7 +80,7 @@ message GitProject {
 }
 
 message GetGitProjectsResponse {
-    repeated GitProject gitProjects = 1;
+    repeated GitProject projects = 1;
     StatusCode status = 2;
     string statusMessage = 3;
 }
@@ -96,10 +96,11 @@ message GetGitProjectsForLabelsResponse {
 }
 
 message AddCloudProviderRequest {
-    repeated string labels = 1;
-    string lastUpdateTime = 2;
-    string accessKey = 3;
-    string secretKey = 4;
+    string cloudType = 1;
+    repeated string labels = 2;
+    string lastUpdateTime = 3;
+    string accessKey = 4;
+    string secretKey = 5;
 }
 
 message AddCloudProviderResponse {
@@ -110,10 +111,11 @@ message AddCloudProviderResponse {
 
 message UpdateCloudProviderRequest {
     string id = 1;
-    repeated string labels = 2;
-    string lastUpdateTime = 3;
-    string accessKey = 4;
-    string secretKey = 5;
+    string cloudType = 2;
+    repeated string labels = 3;
+    string lastUpdateTime = 4;
+    string accessKey = 5;
+    string secretKey = 6;
 }
 
 message UpdateCloudProviderResponse {
@@ -135,10 +137,11 @@ message GetCloudProvidersRequest {
 
 message CloudProvider {
     string id = 1;
-    repeated string labels = 2;
-    string lastUpdateTime = 3;
-    string accessKey = 4;
-    string secretKey = 5;
+    string cloudType = 2;
+    repeated string labels = 3;
+    string lastUpdateTime = 4;
+    string accessKey = 5;
+    string secretKey = 6;
 }
 
 message GetCloudProvidersResponse {
