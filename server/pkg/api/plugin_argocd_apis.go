@@ -2,30 +2,22 @@ package api
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
 )
 
 func (s *Server) RegisterArgoCDProject(ctx context.Context, request *captenpluginspb.RegisterArgoCDProjectRequest) (
 	*captenpluginspb.RegisterArgoCDProjectResponse, error) {
-
-	metadataMap := metadataContextToMap(ctx)
-	orgId, clusterId := metadataMap[organizationIDAttribute], metadataMap[clusterIDAttribute]
-	if orgId == "" || clusterId == "" {
-		s.log.Errorf("organizationid or clusterid is missing in the request")
+	orgId, clusterId, err := validateOrgClusterWithArgs(ctx, request.Id)
+	if err != nil {
+		s.log.Infof("request validation failed", err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "Organization Id or Cluster Id is missing",
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
 		}, nil
 	}
-
-	if request.Id == "" {
-		return &captenpluginspb.RegisterArgoCDProjectResponse{
-			Status:        captenpluginspb.StatusCode_NOT_FOUND,
-			StatusMessage: "Github Project Id is required",
-		}, fmt.Errorf("Github Project Id is required")
-	}
+	s.log.Infof("Register ArgoCD Git project %s request for cluster %s recieved, [org: %s]",
+		request.Id, clusterId, orgId)
 
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
@@ -35,7 +27,9 @@ func (s *Server) RegisterArgoCDProject(ctx context.Context, request *captenplugi
 			StatusMessage: "failed to Register the ArgoCD Project",
 		}, err
 	}
-	response, err := agent.GetCaptenPluginsClient().RegisterArgoCDProject(context.Background(), &captenpluginspb.RegisterArgoCDProjectRequest{Id: request.Id})
+
+	response, err := agent.GetCaptenPluginsClient().RegisterArgoCDProject(context.Background(),
+		&captenpluginspb.RegisterArgoCDProjectRequest{Id: request.Id})
 	if err != nil {
 		s.log.Errorf("failed to Register the ArgoCD Project, %v", err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
@@ -44,6 +38,8 @@ func (s *Server) RegisterArgoCDProject(ctx context.Context, request *captenplugi
 		}, err
 	}
 
+	s.log.Infof("ArgoCD Git project %s request for cluster %s Registered, [org: %s]",
+		request.Id, clusterId, orgId)
 	return &captenpluginspb.RegisterArgoCDProjectResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: response.StatusMessage,
@@ -52,23 +48,16 @@ func (s *Server) RegisterArgoCDProject(ctx context.Context, request *captenplugi
 
 func (s *Server) UnRegisterArgoCDProject(ctx context.Context, request *captenpluginspb.UnRegisterArgoCDProjectRequest) (
 	*captenpluginspb.UnRegisterArgoCDProjectResponse, error) {
-
-	metadataMap := metadataContextToMap(ctx)
-	orgId, clusterId := metadataMap[organizationIDAttribute], metadataMap[clusterIDAttribute]
-	if orgId == "" || clusterId == "" {
-		s.log.Errorf("organizationid or clusterid is missing in the request")
+	orgId, clusterId, err := validateOrgClusterWithArgs(ctx, request.Id)
+	if err != nil {
+		s.log.Infof("request validation failed", err)
 		return &captenpluginspb.UnRegisterArgoCDProjectResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "Organization Id or Cluster Id is missing",
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
 		}, nil
 	}
-
-	if request.Id == "" {
-		return &captenpluginspb.UnRegisterArgoCDProjectResponse{
-			Status:        captenpluginspb.StatusCode_NOT_FOUND,
-			StatusMessage: "Github Project Id is required",
-		}, fmt.Errorf("Github Project Id is required")
-	}
+	s.log.Infof("UnRegister ArgoCD Git project %s request for cluster %s recieved, [org: %s]",
+		request.Id, clusterId, orgId)
 
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
@@ -78,7 +67,9 @@ func (s *Server) UnRegisterArgoCDProject(ctx context.Context, request *captenplu
 			StatusMessage: "failed to Unregister the ArgoCD Project",
 		}, err
 	}
-	response, err := agent.GetCaptenPluginsClient().UnRegisterArgoCDProject(context.Background(), &captenpluginspb.UnRegisterArgoCDProjectRequest{Id: request.Id})
+
+	response, err := agent.GetCaptenPluginsClient().UnRegisterArgoCDProject(context.Background(),
+		&captenpluginspb.UnRegisterArgoCDProjectRequest{Id: request.Id})
 	if err != nil {
 		s.log.Errorf("failed to Unregister the ArgoCD Project, %v", err)
 		return &captenpluginspb.UnRegisterArgoCDProjectResponse{
@@ -87,6 +78,8 @@ func (s *Server) UnRegisterArgoCDProject(ctx context.Context, request *captenplu
 		}, err
 	}
 
+	s.log.Infof("ArgoCD Git project %s request for cluster %s UnRegistered, [org: %s]",
+		request.Id, clusterId, orgId)
 	return &captenpluginspb.UnRegisterArgoCDProjectResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: response.StatusMessage,
@@ -95,16 +88,16 @@ func (s *Server) UnRegisterArgoCDProject(ctx context.Context, request *captenplu
 
 func (s *Server) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.GetArgoCDProjectsRequest) (
 	*captenpluginspb.GetArgoCDProjectsResponse, error) {
-
-	metadataMap := metadataContextToMap(ctx)
-	orgId, clusterId := metadataMap[organizationIDAttribute], metadataMap[clusterIDAttribute]
-	if orgId == "" || clusterId == "" {
-		s.log.Errorf("organizationid or clusterid is missing in the request")
+	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
+	if err != nil {
+		s.log.Infof("request validation failed", err)
 		return &captenpluginspb.GetArgoCDProjectsResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "Organization Id or Cluster Id is missing",
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
 		}, nil
 	}
+	s.log.Infof("Get ArgoCD Git projects request for cluster %s recieved, [org: %s]",
+		clusterId, orgId)
 
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
@@ -115,7 +108,8 @@ func (s *Server) GetArgoCDProjects(ctx context.Context, request *captenpluginspb
 		}, err
 	}
 
-	response, err := agent.GetCaptenPluginsClient().GetArgoCDProjects(context.Background(), &captenpluginspb.GetArgoCDProjectsRequest{})
+	response, err := agent.GetCaptenPluginsClient().GetArgoCDProjects(context.Background(),
+		&captenpluginspb.GetArgoCDProjectsRequest{})
 	if err != nil {
 		s.log.Errorf("failed to fetch ArgoCD projects, %v", err)
 		return &captenpluginspb.GetArgoCDProjectsResponse{
@@ -124,6 +118,8 @@ func (s *Server) GetArgoCDProjects(ctx context.Context, request *captenpluginspb
 		}, err
 	}
 
+	s.log.Infof("Fetch %d ArgoCD Git projects for cluster %s, [org: %s]",
+		len(response.Projects), clusterId, orgId)
 	return &captenpluginspb.GetArgoCDProjectsResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: response.StatusMessage,
