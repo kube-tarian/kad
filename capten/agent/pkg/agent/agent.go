@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
@@ -48,4 +49,13 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
 func (a *Agent) Ping(ctx context.Context, request *agentpb.PingRequest) (*agentpb.PingResponse, error) {
 	a.log.Infof("Ping request received")
 	return &agentpb.PingResponse{Status: agentpb.StatusCode_OK}, nil
+}
+
+func validateArgs(args ...string) error {
+	for _, arg := range args {
+		if len(arg) == 0 {
+			return fmt.Errorf("mandatory argument is empty")
+		}
+	}
+	return nil
 }

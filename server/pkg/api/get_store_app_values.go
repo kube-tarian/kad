@@ -9,7 +9,7 @@ import (
 
 func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetStoreAppValuesRequest) (
 	*serverpb.GetStoreAppValuesResponse, error) {
-	orgId, err := validateRequest(ctx, request.ClusterID)
+	orgId, err := validateOrgWithArgs(ctx, request.ClusterID)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.GetStoreAppValuesResponse{

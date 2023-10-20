@@ -9,7 +9,7 @@ import (
 
 func (s *Server) GetClusterApps(ctx context.Context, request *serverpb.GetClusterAppsRequest) (
 	*serverpb.GetClusterAppsResponse, error) {
-	orgId, err := validateRequest(ctx, request.ClusterID)
+	orgId, err := validateOrgWithArgs(ctx, request.ClusterID)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.GetClusterAppsResponse{

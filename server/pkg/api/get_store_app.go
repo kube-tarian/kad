@@ -9,7 +9,7 @@ import (
 
 func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppRequest) (
 	*serverpb.GetStoreAppResponse, error) {
-	_, err := validateRequest(ctx, request.AppName, request.Version)
+	_, err := validateOrgWithArgs(ctx, request.AppName, request.Version)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.GetStoreAppResponse{

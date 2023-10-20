@@ -11,7 +11,7 @@ import (
 
 func (s *Server) NewClusterRegistration(ctx context.Context, request *serverpb.NewClusterRegistrationRequest) (
 	*serverpb.NewClusterRegistrationResponse, error) {
-	orgId, err := validateRequest(ctx)
+	orgId, err := validateOrgWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.NewClusterRegistrationResponse{

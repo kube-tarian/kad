@@ -8,7 +8,7 @@ import (
 
 func (s *Server) DeleteStoreApp(ctx context.Context, request *serverpb.DeleteStoreAppRequest) (
 	*serverpb.DeleteStoreAppResponse, error) {
-	_, err := validateRequest(ctx, request.AppName, request.Version)
+	err := validateArgs(request.AppName, request.Version)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.DeleteStoreAppResponse{
