@@ -15,6 +15,7 @@ type Config struct {
 	ServiceRolesConfigFilePath   string `envconfig:"SERVICE_ROLES_CONFIG_FILE_PATH" default:"/data/service-config/roles.yaml"`
 	CerbosResourcePolicyFilePath string `envconfig:"SERVICE_ROLES_CONFIG_FILE_PATH" default:"/data/cerbos-policy-config/resource-policy.yaml"`
 	PolicyRegister               bool   `envconfig:"CERBOS_POLICY_REGISTER" default:"true"`
+	InterceptorYamlPath          string `envconfig:"SERVICE_ROLES_CONFIG_FILE_PATH" default:"/data/interceptor-config/interceptor.yaml"`
 }
 
 func NewConfig() (Config, error) {

@@ -145,8 +145,9 @@ func (c *Client) Interceptor() (*cm.ClientsAndConfigs, error) {
 		cm.WithGrpcDialOption(grpcOpts...),
 		cm.WithIamAddress(c.cfg.IAMURL),
 		cm.WithCerbosYamlPath(c.cfg.CerbosResourcePolicyFilePath),
+		cm.WithInterceptorYamlPath(c.cfg.InterceptorYamlPath),
 		cm.WithOryCreds(c.oryClient.GetURL(), c.oryClient.GetPAT()),
-		cm.WithScope("capten-server"),
+		cm.WithScope(c.cfg.ServiceName),
 		cm.WithCerbosCreds("cerbosUrl", "cerbosUsername", "cerbosPassword"),
 	)
 	if err := iamConn.InitializeOrySdk(); err != nil {
