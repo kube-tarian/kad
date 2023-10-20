@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
@@ -211,7 +212,7 @@ func (a *ArgoCDCLient) List(req *model.ListRequestPayload) (json.RawMessage, err
 	return listMsg, nil
 }
 
-func (a *ArgoCDCLient) ListRepositories(ctx context.Context) (json.RawMessage, error) {
+func (a *ArgoCDCLient) ListRepositories(ctx context.Context) (*v1alpha1.RepositoryList, error) {
 	conn, appClient, err := a.client.NewRepoClient()
 	if err != nil {
 		return nil, err
@@ -223,11 +224,47 @@ func (a *ArgoCDCLient) ListRepositories(ctx context.Context) (json.RawMessage, e
 		return nil, err
 	}
 
-	listMsg, err := json.Marshal(list)
+	return list, nil
+}
+
+func (a *ArgoCDCLient) CreateRepository(ctx context.Context, repo *Repository) (*v1alpha1.Repository, error) {
+	conn, appClient, err := a.client.NewRepoClient()
+	if err != nil {
+		return nil, err
+	}
+	defer io.Close(conn)
+
+	resp, err := appClient.CreateRepository(ctx, &repository.RepoCreateRequest{
+		Repo: &v1alpha1.Repository{
+			Project:       repo.Project,
+			Repo:          repo.Repo,
+			SSHPrivateKey: repo.SSHPrivateKey,
+			Type:          repo.Type,
+			ConnectionState: v1alpha1.ConnectionState{
+				Status:  repo.ConnectionState.Status,
+				Message: repo.ConnectionState.Message,
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (a *ArgoCDCLient) DeleteRepository(ctx context.Context, repo string) (*repository.RepoResponse, error) {
+	conn, appClient, err := a.client.NewRepoClient()
+	if err != nil {
+		return nil, err
+	}
+	defer io.Close(conn)
+
+	encodedRepo := url.QueryEscape(repo)
+
+	resp, err := appClient.DeleteRepository(ctx, &repository.RepoQuery{Repo: encodedRepo})
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("Printle => ", string(listMsg))
-	return listMsg, nil
+	return resp, nil
 }

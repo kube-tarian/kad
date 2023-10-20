@@ -65,3 +65,10 @@ type TektonProject struct {
 	Status         string
 	LastUpdateTime string
 }
+
+type ArgoCDProjectsData struct {
+	Id             string `json:"id,omitempty"`
+	GitProjectID   string `json:"git_project_id,omitempty"`
+	Status         string `json:"status,omitempty"`
+	LastUpdateTime string `json:"last_update_time,omitempty"`
+}
