@@ -1,6 +1,7 @@
 package iamclient
 
 import (
+	cm "github.com/intelops/go-common/iam"
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
@@ -81,4 +82,28 @@ func RegisterCerbosPolicy(log logging.Logger) error {
 	}
 	log.Infof("cerbos policy registration successful")
 	return nil
+}
+
+func Interceptor(log logging.Logger) (*cm.ClientsAndConfigs, error) {
+	cfg, err := NewConfig()
+	if err != nil {
+		return nil, err
+	}
+	oryclient, err := oryclient.NewOryClient(log)
+	if err != nil {
+		log.Errorf("OryClient initialization failed %v", err)
+		return nil, errors.WithMessage(err, "OryClient initialization failed")
+	}
+
+	iamClient, err := NewClient(log, oryclient, cfg)
+	if err != nil {
+		log.Errorf("Error occured while created IAM client %v", err)
+		return nil, errors.WithMessage(err, "Error occured while created IAM client")
+	}
+	interceptor, err := iamClient.Interceptor()
+	if err != nil {
+		log.Errorf("Error occured while creating Unary Interceptor %v", err)
+		return nil, errors.WithMessage(err, "Error occured while creating Unary Interceptor")
+	}
+	return interceptor, nil
 }

@@ -40,6 +40,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
+	unary, err := iamclient.Interceptor(log)
+	if err != nil {
+		log.Fatalf("%v", err)
+	}
 
 	serverStore, err := store.NewStore(cfg.Database)
 	if err != nil {
@@ -84,7 +88,8 @@ func main() {
 	var grpcServer *grpc.Server
 	if cfg.AuthEnabled {
 		log.Info("Server Authentication enabled")
-		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(rpcServer.AuthInterceptor))
+		// grpcServer = grpc.NewServer(grpc.UnaryInterceptor(rpcServer.AuthInterceptor))
+		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(unary.UnaryInterceptor))
 	} else {
 		log.Info("Server Authentication disabled")
 		grpcServer = grpc.NewServer()

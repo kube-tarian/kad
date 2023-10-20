@@ -65,8 +65,11 @@ func (c *Client) RegisterRolesActions() error {
 		cm.WithGrpcDialOption(grpcOpts...),
 		cm.WithIamAddress(c.cfg.IAMURL),
 		cm.WithIamYamlPath(c.cfg.ServiceRolesConfigFilePath),
+		cm.WithOryCreds(c.oryClient.GetURL(), c.oryClient.GetPAT()),
 	)
-
+	if err := iamConn.InitializeOrySdk(); err != nil {
+		return err
+	}
 	ctx := context.Background()
 	oauthCred, err := c.oryClient.GetServiceOauthCredential(ctx, c.cfg.ServiceName)
 	if err != nil {
@@ -74,7 +77,7 @@ func (c *Client) RegisterRolesActions() error {
 	}
 
 	newCtx := metadata.AppendToOutgoingContext(context.Background(),
-		"oauth_token", oauthCred.AccessToken, "ory_url", c.oryClient.GetURL(), "ory_pat", c.oryClient.GetPAT())
+		"oauth_token", oauthCred.AccessToken)
 
 	err = iamConn.UpdateActionRoles(newCtx)
 	if err != nil {
@@ -108,25 +111,52 @@ func (c *Client) RegisterCerbosPolicy() error {
 	grpcOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
-
-	iamConn := cm.NewIamConn(
-		cm.WithGrpcDialOption(grpcOpts...),
-		cm.WithIamAddress(c.cfg.IAMURL),
-		cm.WithCerbosYamlPath(c.cfg.CerbosResourcePolicyFilePath),
-	)
-
 	ctx := context.Background()
 	oauthCred, err := c.oryClient.GetServiceOauthCredential(ctx, c.cfg.ServiceName)
 	if err != nil {
 		return errors.WithMessage(err, "error while getting service oauth token")
 	}
 
+	iamConn := cm.NewIamConn(
+		cm.WithGrpcDialOption(grpcOpts...),
+		cm.WithIamAddress(c.cfg.IAMURL),
+		cm.WithCerbosYamlPath(c.cfg.CerbosResourcePolicyFilePath),
+		cm.WithOryCreds(c.oryClient.GetURL(), c.oryClient.GetPAT()),
+	)
+	if err := iamConn.InitializeOrySdk(); err != nil {
+		return err
+	}
+
 	newCtx := metadata.AppendToOutgoingContext(context.Background(),
-		"oauth_token", oauthCred.AccessToken, "ory_url", c.oryClient.GetURL(), "ory_pat", c.oryClient.GetPAT())
+		"oauth_token", oauthCred.AccessToken)
 
 	err = iamConn.RegisterCerbosResourcePolicies(newCtx)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to update action roles")
 	}
 	return nil
+}
+
+func (c *Client) Interceptor() (*cm.ClientsAndConfigs, error) {
+	grpcOpts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+	iamConn := cm.NewIamConn(
+		cm.WithGrpcDialOption(grpcOpts...),
+		cm.WithIamAddress(c.cfg.IAMURL),
+		cm.WithCerbosYamlPath(c.cfg.CerbosResourcePolicyFilePath),
+		cm.WithOryCreds(c.oryClient.GetURL(), c.oryClient.GetPAT()),
+		cm.WithScope("capten-server"),
+		cm.WithCerbosCreds("cerbosUrl", "cerbosUsername", "cerbosPassword"),
+	)
+	if err := iamConn.InitializeOrySdk(); err != nil {
+		return nil, err
+	}
+
+	if err := iamConn.IntializeCerbosSdk(); err != nil {
+		return nil, err
+	}
+
+	return iamConn, nil
+
 }
