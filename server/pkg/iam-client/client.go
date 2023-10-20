@@ -19,6 +19,12 @@ type IAMRegister interface {
 	GetOAuthURL() string
 }
 
+type CerbosEnv struct {
+	CerbosUrl        string `envconfig:"CERBOS_URL" required:"true"`
+	CerbosUsername   string `envconfig:"CERBOS_USERNAME" required:"true"`
+	CerbosEntityName string `envconfig:"CERBOS_ENTITY_NAME" required:"true"`
+}
+
 type Client struct {
 	oryClient oryclient.OryClient
 	log       logging.Logger
@@ -31,6 +37,13 @@ func NewClient(log logging.Logger, ory oryclient.OryClient, cfg Config) (*Client
 		log:       log,
 		cfg:       cfg,
 	}, nil
+}
+func GetCerbosEnv() (*CerbosEnv, error) {
+	cfg := &CerbosEnv{}
+	if err := envconfig.Process("", cfg); err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
 
 func (c *Client) RegisterService() error {
@@ -138,9 +151,20 @@ func (c *Client) RegisterCerbosPolicy() error {
 }
 
 func (c *Client) Interceptor() (*cm.ClientsAndConfigs, error) {
+	cfg, err := GetCerbosEnv()
+	if err != nil {
+		return nil, err
+	}
 	grpcOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
+	serviceCredential, err := credential.GetServiceUserCredential(context.Background(),
+		cfg.CerbosEntityName, cfg.CerbosUsername)
+	if err != nil {
+		return nil, err
+	}
+	cerbosPassword:=serviceCredential.Password
+
 	iamConn := cm.NewIamConn(
 		cm.WithGrpcDialOption(grpcOpts...),
 		cm.WithIamAddress(c.cfg.IAMURL),
@@ -148,7 +172,7 @@ func (c *Client) Interceptor() (*cm.ClientsAndConfigs, error) {
 		cm.WithInterceptorYamlPath(c.cfg.InterceptorYamlPath),
 		cm.WithOryCreds(c.oryClient.GetURL(), c.oryClient.GetPAT()),
 		cm.WithScope(c.cfg.ServiceName),
-		cm.WithCerbosCreds("cerbosUrl", "cerbosUsername", "cerbosPassword"),
+		cm.WithCerbosCreds(cfg.CerbosUrl, cfg.CerbosUsername, cerbosPassword),
 	)
 	if err := iamConn.InitializeOrySdk(); err != nil {
 		return nil, err

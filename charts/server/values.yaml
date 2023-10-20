@@ -32,6 +32,11 @@ ory:
   entityName: ory
   captenOAuthURL: https://alpha.optimizor.app/api/.ory
 
+cerbos:
+  url: "cerbos:3592"
+  userName: cerbos
+  entityName: cerbos
+
 env:
   logLevel: info
   database: astra

@@ -77,6 +77,12 @@ spec:
               value: {{.Values.iam.address}}
             - name: CAPTEN_OAUTH_URL
               value: {{.Values.ory.captenOAuthURL}}
+            - name: CERBOS_URL
+              value: {{ .Values.cerbos.url }}
+            - name: CERBOS_USERNAME
+              value: {{ .Values.cerbos.userName }}
+            - name: CERBOS_ENTITY_NAME
+              value: {{ .Values.cerbos.entityName }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
