@@ -11,10 +11,10 @@ import (
 
 const (
 	getTektonProjectsQuery      = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects;"
-	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects WHERE id=%s and git_project_id=%s;"
+	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects WHERE id=%s;"
 	insertTektonProjectQuery    = "INSERT INTO %s.TektonProjects(id, git_project_id, status, last_update_time) VALUES (?,?,?,?);"
-	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s' WHERE id=%s and git_project_id=%s;"
-	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id=%s and git_project_id=%s;"
+	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s' WHERE id=%s;"
+	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id=%s;"
 )
 
 func (a *Store) UpsertTektonProject(payload *model.TektonProject) error {
@@ -23,7 +23,7 @@ func (a *Store) UpsertTektonProject(payload *model.TektonProject) error {
 	batch.Query(fmt.Sprintf(insertTektonProjectQuery, a.keyspace), payload.Id, payload.GitProjectId, payload.Status, payload.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		batch.Query(fmt.Sprintf(updateTektonProjectQuery, a.keyspace, payload.Status, payload.LastUpdateTime, payload.Id, payload.GitProjectId))
+		batch.Query(fmt.Sprintf(updateTektonProjectQuery, a.keyspace, payload.Status, payload.LastUpdateTime, payload.Id))
 		err = a.client.Session().ExecuteBatch(batch)
 	}
 	return err
@@ -31,13 +31,13 @@ func (a *Store) UpsertTektonProject(payload *model.TektonProject) error {
 
 func (a *Store) DeleteTektonProject(id string) error {
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(deleteTektonProjectQuery, a.keyspace, id, id))
+	batch.Query(fmt.Sprintf(deleteTektonProjectQuery, a.keyspace, id))
 	err := a.client.Session().ExecuteBatch(batch)
 	return err
 }
 
 func (a *Store) GetTektonProjectForID(id string) (*model.TektonProject, error) {
-	query := fmt.Sprintf(getTektonProjectsForIDQuery, a.keyspace, id, id)
+	query := fmt.Sprintf(getTektonProjectsForIDQuery, a.keyspace, id)
 	projects, err := a.executeTektonProjectsSelectQuery(query)
 	if err != nil {
 		return nil, err
