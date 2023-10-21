@@ -4,13 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
+	"github.com/argoproj/argo-cd/v2/pkg/apiclient/repository"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/util/io"
-	"github.com/kelseyhightower/envconfig"
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/fetcher"
 	"github.com/kube-tarian/kad/capten/model"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -208,4 +210,61 @@ func (a *ArgoCDCLient) List(req *model.ListRequestPayload) (json.RawMessage, err
 		return nil, err
 	}
 	return listMsg, nil
+}
+
+func (a *ArgoCDCLient) ListRepositories(ctx context.Context) (*v1alpha1.RepositoryList, error) {
+	conn, appClient, err := a.client.NewRepoClient()
+	if err != nil {
+		return nil, err
+	}
+	defer io.Close(conn)
+
+	list, err := appClient.ListRepositories(ctx, &repository.RepoQuery{})
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
+func (a *ArgoCDCLient) CreateRepository(ctx context.Context, repo *Repository) (*v1alpha1.Repository, error) {
+	conn, appClient, err := a.client.NewRepoClient()
+	if err != nil {
+		return nil, err
+	}
+	defer io.Close(conn)
+
+	resp, err := appClient.CreateRepository(ctx, &repository.RepoCreateRequest{
+		Repo: &v1alpha1.Repository{
+			Project:       repo.Project,
+			Repo:          repo.Repo,
+			SSHPrivateKey: repo.SSHPrivateKey,
+			Type:          repo.Type,
+			ConnectionState: v1alpha1.ConnectionState{
+				Status:  repo.ConnectionState.Status,
+				Message: repo.ConnectionState.Message,
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (a *ArgoCDCLient) DeleteRepository(ctx context.Context, repo string) (*repository.RepoResponse, error) {
+	conn, appClient, err := a.client.NewRepoClient()
+	if err != nil {
+		return nil, err
+	}
+	defer io.Close(conn)
+
+	encodedRepo := url.QueryEscape(repo)
+
+	resp, err := appClient.DeleteRepository(ctx, &repository.RepoQuery{Repo: encodedRepo})
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }
