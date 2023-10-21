@@ -17,7 +17,7 @@ const (
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"
 	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects"
 	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE %s"
-	selectGetGitProjectById      = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE id='%s'"
+	selectGetGitProjectById      = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE id=%s;"
 )
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {

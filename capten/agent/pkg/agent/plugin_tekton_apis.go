@@ -34,7 +34,7 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	tektonProject.Status = "in-progress"
+	tektonProject.Status = "configuration-ongoing"
 	if err := a.as.UpsertTektonProject(tektonProject); err != nil {
 		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
 		return &captenpluginspb.RegisterTektonProjectResponse{
@@ -115,7 +115,7 @@ func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
 
 	run, err := wd.SendEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: tektonConfigUseCase}, ci)
 	if err != nil {
-		req.Status = "failed"
+		req.Status = "configuration-failed"
 		if err := a.as.UpsertTektonProject(req); err != nil {
 			a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 			return
@@ -125,7 +125,7 @@ func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
 	}
 	a.log.Infof("Tekton Git project %s config workflow event %s created", run.GetID())
 
-	req.Status = "completed"
+	req.Status = "configured"
 	if err := a.as.UpsertTektonProject(req); err != nil {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		return
