@@ -36,8 +36,7 @@ enum StatusCode {
 message AddGitProjectRequest {
     string projectUrl = 1;
     repeated string labels = 2;
-    string lastUpdateTime = 3;
-    string accessToken = 4;
+    string accessToken = 3;
 }
 
 message AddGitProjectResponse {
@@ -50,8 +49,7 @@ message UpdateGitProjectRequest {
     string id = 1;
     string projectUrl = 2;
     repeated string labels = 3;
-    string lastUpdateTime = 4;
-    string accessToken = 5;
+    string accessToken = 4;
 }
 
 message UpdateGitProjectResponse {
@@ -98,9 +96,8 @@ message GetGitProjectsForLabelsResponse {
 message AddCloudProviderRequest {
     string cloudType = 1;
     repeated string labels = 2;
-    string lastUpdateTime = 3;
-    string accessKey = 4;
-    string secretKey = 5;
+    string accessKey = 3;
+    string secretKey = 4;
 }
 
 message AddCloudProviderResponse {
@@ -113,9 +110,8 @@ message UpdateCloudProviderRequest {
     string id = 1;
     string cloudType = 2;
     repeated string labels = 3;
-    string lastUpdateTime = 4;
-    string accessKey = 5;
-    string secretKey = 6;
+    string accessKey = 4;
+    string secretKey = 5;
 }
 
 message UpdateCloudProviderResponse {
@@ -191,6 +187,7 @@ message ArgoCDProject {
     string id = 1;
     string projectUrl = 2;
     string status = 3;
+    string lastUpdateTime = 4;
 }
 
 message RegisterTektonProjectRequest {
@@ -215,6 +212,7 @@ message TektonProject {
     string id = 1;
     string gitProjectUrl = 2;
     string status = 3;
+    string lastUpdateTime = 4;
 }
 
 message GetTektonProjectsRequest {

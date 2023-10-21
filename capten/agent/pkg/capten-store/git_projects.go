@@ -3,6 +3,7 @@ package captenstore
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gocql/gocql"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
@@ -18,9 +19,8 @@ const (
 	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE %s"
 )
 
-// labels CONTAINS ? OR labels CONTAINS ?
-
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
+	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 	kvPairs, isEmptyUpdate := formUpdateKvPairsForGitProject(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(insertGitProjectId, a.keyspace), config.Id)
