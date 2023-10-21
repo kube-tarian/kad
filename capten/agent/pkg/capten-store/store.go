@@ -1,8 +1,14 @@
 package captenstore
 
 import (
+	"strings"
+
 	"github.com/intelops/go-common/logging"
 	dbclient "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-client"
+)
+
+const (
+	objectNotFoundErrorMessage = "object not found"
 )
 
 type Store struct {
@@ -17,4 +23,15 @@ func NewStore(log logging.Logger) (*Store, error) {
 		return nil, err
 	}
 	return &Store{log: log, client: client, keyspace: client.Keyspace()}, nil
+}
+
+func IsObjectNotFound(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if strings.Contains(err.Error(), objectNotFoundErrorMessage) {
+		return true
+	}
+	return false
 }
