@@ -19,22 +19,19 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Agent_Ping_FullMethodName                        = "/agentpb.Agent/Ping"
-	Agent_StoreCredential_FullMethodName             = "/agentpb.Agent/StoreCredential"
-	Agent_SyncApp_FullMethodName                     = "/agentpb.Agent/SyncApp"
-	Agent_GetClusterApps_FullMethodName              = "/agentpb.Agent/GetClusterApps"
-	Agent_GetClusterAppLaunches_FullMethodName       = "/agentpb.Agent/GetClusterAppLaunches"
-	Agent_ConfigureAppSSO_FullMethodName             = "/agentpb.Agent/ConfigureAppSSO"
-	Agent_GetClusterAppConfig_FullMethodName         = "/agentpb.Agent/GetClusterAppConfig"
-	Agent_GetClusterAppValues_FullMethodName         = "/agentpb.Agent/GetClusterAppValues"
-	Agent_GetClusterGlobalValues_FullMethodName      = "/agentpb.Agent/GetClusterGlobalValues"
-	Agent_InstallApp_FullMethodName                  = "/agentpb.Agent/InstallApp"
-	Agent_UnInstallApp_FullMethodName                = "/agentpb.Agent/UnInstallApp"
-	Agent_SetClusterGitoptsProject_FullMethodName    = "/agentpb.Agent/SetClusterGitoptsProject"
-	Agent_GetClusterGitoptsProject_FullMethodName    = "/agentpb.Agent/GetClusterGitoptsProject"
-	Agent_DeleteClusterGitoptsProject_FullMethodName = "/agentpb.Agent/DeleteClusterGitoptsProject"
-	Agent_UpgradeApp_FullMethodName                  = "/agentpb.Agent/UpgradeApp"
-	Agent_UpdateAppValues_FullMethodName             = "/agentpb.Agent/UpdateAppValues"
+	Agent_Ping_FullMethodName                   = "/agentpb.Agent/Ping"
+	Agent_StoreCredential_FullMethodName        = "/agentpb.Agent/StoreCredential"
+	Agent_SyncApp_FullMethodName                = "/agentpb.Agent/SyncApp"
+	Agent_GetClusterApps_FullMethodName         = "/agentpb.Agent/GetClusterApps"
+	Agent_GetClusterAppLaunches_FullMethodName  = "/agentpb.Agent/GetClusterAppLaunches"
+	Agent_ConfigureAppSSO_FullMethodName        = "/agentpb.Agent/ConfigureAppSSO"
+	Agent_GetClusterAppConfig_FullMethodName    = "/agentpb.Agent/GetClusterAppConfig"
+	Agent_GetClusterAppValues_FullMethodName    = "/agentpb.Agent/GetClusterAppValues"
+	Agent_GetClusterGlobalValues_FullMethodName = "/agentpb.Agent/GetClusterGlobalValues"
+	Agent_InstallApp_FullMethodName             = "/agentpb.Agent/InstallApp"
+	Agent_UnInstallApp_FullMethodName           = "/agentpb.Agent/UnInstallApp"
+	Agent_UpgradeApp_FullMethodName             = "/agentpb.Agent/UpgradeApp"
+	Agent_UpdateAppValues_FullMethodName        = "/agentpb.Agent/UpdateAppValues"
 )
 
 // AgentClient is the client API for Agent service.
@@ -52,9 +49,6 @@ type AgentClient interface {
 	GetClusterGlobalValues(ctx context.Context, in *GetClusterGlobalValuesRequest, opts ...grpc.CallOption) (*GetClusterGlobalValuesResponse, error)
 	InstallApp(ctx context.Context, in *InstallAppRequest, opts ...grpc.CallOption) (*InstallAppResponse, error)
 	UnInstallApp(ctx context.Context, in *UnInstallAppRequest, opts ...grpc.CallOption) (*UnInstallAppResponse, error)
-	SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error)
-	GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error)
-	DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error)
 	UpgradeApp(ctx context.Context, in *UpgradeAppRequest, opts ...grpc.CallOption) (*UpgradeAppResponse, error)
 	UpdateAppValues(ctx context.Context, in *UpdateAppValuesRequest, opts ...grpc.CallOption) (*UpdateAppValuesResponse, error)
 }
@@ -166,33 +160,6 @@ func (c *agentClient) UnInstallApp(ctx context.Context, in *UnInstallAppRequest,
 	return out, nil
 }
 
-func (c *agentClient) SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error) {
-	out := new(SetClusterGitoptsProjectResponse)
-	err := c.cc.Invoke(ctx, Agent_SetClusterGitoptsProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentClient) GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error) {
-	out := new(GetClusterGitoptsProjectResponse)
-	err := c.cc.Invoke(ctx, Agent_GetClusterGitoptsProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *agentClient) DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error) {
-	out := new(DeleteClusterGitoptsProjectResponse)
-	err := c.cc.Invoke(ctx, Agent_DeleteClusterGitoptsProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *agentClient) UpgradeApp(ctx context.Context, in *UpgradeAppRequest, opts ...grpc.CallOption) (*UpgradeAppResponse, error) {
 	out := new(UpgradeAppResponse)
 	err := c.cc.Invoke(ctx, Agent_UpgradeApp_FullMethodName, in, out, opts...)
@@ -226,9 +193,6 @@ type AgentServer interface {
 	GetClusterGlobalValues(context.Context, *GetClusterGlobalValuesRequest) (*GetClusterGlobalValuesResponse, error)
 	InstallApp(context.Context, *InstallAppRequest) (*InstallAppResponse, error)
 	UnInstallApp(context.Context, *UnInstallAppRequest) (*UnInstallAppResponse, error)
-	SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error)
-	GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error)
-	DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error)
 	UpgradeApp(context.Context, *UpgradeAppRequest) (*UpgradeAppResponse, error)
 	UpdateAppValues(context.Context, *UpdateAppValuesRequest) (*UpdateAppValuesResponse, error)
 	mustEmbedUnimplementedAgentServer()
@@ -270,15 +234,6 @@ func (UnimplementedAgentServer) InstallApp(context.Context, *InstallAppRequest) 
 }
 func (UnimplementedAgentServer) UnInstallApp(context.Context, *UnInstallAppRequest) (*UnInstallAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnInstallApp not implemented")
-}
-func (UnimplementedAgentServer) SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetClusterGitoptsProject not implemented")
-}
-func (UnimplementedAgentServer) GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetClusterGitoptsProject not implemented")
-}
-func (UnimplementedAgentServer) DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteClusterGitoptsProject not implemented")
 }
 func (UnimplementedAgentServer) UpgradeApp(context.Context, *UpgradeAppRequest) (*UpgradeAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpgradeApp not implemented")
@@ -497,60 +452,6 @@ func _Agent_UnInstallApp_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Agent_SetClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetClusterGitoptsProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServer).SetClusterGitoptsProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Agent_SetClusterGitoptsProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).SetClusterGitoptsProject(ctx, req.(*SetClusterGitoptsProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Agent_GetClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetClusterGitoptsProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServer).GetClusterGitoptsProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Agent_GetClusterGitoptsProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).GetClusterGitoptsProject(ctx, req.(*GetClusterGitoptsProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Agent_DeleteClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteClusterGitoptsProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AgentServer).DeleteClusterGitoptsProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Agent_DeleteClusterGitoptsProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AgentServer).DeleteClusterGitoptsProject(ctx, req.(*DeleteClusterGitoptsProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Agent_UpgradeApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpgradeAppRequest)
 	if err := dec(in); err != nil {
@@ -637,18 +538,6 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnInstallApp",
 			Handler:    _Agent_UnInstallApp_Handler,
-		},
-		{
-			MethodName: "SetClusterGitoptsProject",
-			Handler:    _Agent_SetClusterGitoptsProject_Handler,
-		},
-		{
-			MethodName: "GetClusterGitoptsProject",
-			Handler:    _Agent_GetClusterGitoptsProject_Handler,
-		},
-		{
-			MethodName: "DeleteClusterGitoptsProject",
-			Handler:    _Agent_DeleteClusterGitoptsProject_Handler,
 		},
 		{
 			MethodName: "UpgradeApp",

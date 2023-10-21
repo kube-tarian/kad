@@ -17,6 +17,8 @@ const (
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"
 	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects"
 	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE %s"
+
+	getGitProjectsById = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE id='%s'"
 )
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
@@ -40,9 +42,22 @@ func (a *Store) DeleteGitProjectById(id string) error {
 	return nil
 }
 
+func (a *Store) GetGitProjectForID(id string) (*captenpluginspb.GitProject, error) {
+	query := fmt.Sprintf(getGitProjectsById, a.keyspace, id)
+	projects, err := a.executeGitProjectsSelectQuery(query)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(projects) != 1 {
+		return nil, fmt.Errorf("project not found")
+	}
+	return projects[0], nil
+}
+
 func (a *Store) GetGitProjects() ([]*captenpluginspb.GitProject, error) {
 	query := fmt.Sprintf(selectAllGitProjects, a.keyspace)
-	return a.executeSelectQuery(query)
+	return a.executeGitProjectsSelectQuery(query)
 }
 
 func (a *Store) GetGitProjectsByLabels(searchLabels []string) ([]*captenpluginspb.GitProject, error) {
@@ -57,28 +72,28 @@ func (a *Store) GetGitProjectsByLabels(searchLabels []string) ([]*captenpluginsp
 	whereLabelsClause := strings.Join(labelContains, " OR ")
 	whereLabelsClause += " ALLOW FILTERING"
 	query := fmt.Sprintf(selectAllGitProjectsByLabels, a.keyspace, whereLabelsClause)
-	return a.executeSelectQuery(query)
+	return a.executeGitProjectsSelectQuery(query)
 }
 
-func (a *Store) executeSelectQuery(query string) ([]*captenpluginspb.GitProject, error) {
+func (a *Store) executeGitProjectsSelectQuery(query string) ([]*captenpluginspb.GitProject, error) {
 	selectQuery := a.client.Session().Query(query)
 	iter := selectQuery.Iter()
 
-	config := captenpluginspb.GitProject{}
+	project := captenpluginspb.GitProject{}
 	var labels []string
 
 	ret := make([]*captenpluginspb.GitProject, 0)
 	for iter.Scan(
-		&config.Id, &config.ProjectUrl,
-		&labels, &config.LastUpdateTime,
+		&project.Id, &project.ProjectUrl,
+		&labels, &project.LastUpdateTime,
 	) {
 		labelsTmp := make([]string, len(labels))
 		copy(labelsTmp, labels)
 		gitProject := &captenpluginspb.GitProject{
-			Id:             config.Id,
-			ProjectUrl:     config.ProjectUrl,
+			Id:             project.Id,
+			ProjectUrl:     project.ProjectUrl,
 			Labels:         labelsTmp,
-			LastUpdateTime: config.LastUpdateTime,
+			LastUpdateTime: project.LastUpdateTime,
 		}
 		ret = append(ret, gitProject)
 	}

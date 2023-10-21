@@ -3,7 +3,6 @@ package model
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 )
 
 type AppConfig struct {
@@ -59,9 +58,10 @@ type ClusterGitoptsConfig struct {
 	Status     string `json:"status,omitempty"`
 }
 
-type GitProjectData struct {
-	Id             string    `json:"id,omitempty"`
-	ProjectUrl     string    `json:"projectUrl,omitempty"`
-	Labels         []string  `json:"labels,omitempty"`
-	LastUpdateTime time.Time `json:"lastUpdateTime,omitempty"`
+type TektonProject struct {
+	Id             string
+	GitProjectId   string
+	GitProjectUrl  string
+	Status         string
+	LastUpdateTime string
 }

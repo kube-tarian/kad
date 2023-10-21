@@ -19,28 +19,25 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Server_NewClusterRegistration_FullMethodName      = "/serverpb.Server/NewClusterRegistration"
-	Server_UpdateClusterRegistration_FullMethodName   = "/serverpb.Server/UpdateClusterRegistration"
-	Server_DeleteClusterRegistration_FullMethodName   = "/serverpb.Server/DeleteClusterRegistration"
-	Server_GetClusters_FullMethodName                 = "/serverpb.Server/GetClusters"
-	Server_GetCluster_FullMethodName                  = "/serverpb.Server/GetCluster"
-	Server_GetClusterApps_FullMethodName              = "/serverpb.Server/GetClusterApps"
-	Server_GetClusterAppLaunchConfigs_FullMethodName  = "/serverpb.Server/GetClusterAppLaunchConfigs"
-	Server_GetClusterApp_FullMethodName               = "/serverpb.Server/GetClusterApp"
-	Server_GetClusterDetails_FullMethodName           = "/serverpb.Server/GetClusterDetails"
-	Server_AddStoreApp_FullMethodName                 = "/serverpb.Server/AddStoreApp"
-	Server_UpdateStoreApp_FullMethodName              = "/serverpb.Server/UpdateStoreApp"
-	Server_DeleteStoreApp_FullMethodName              = "/serverpb.Server/DeleteStoreApp"
-	Server_GetStoreApp_FullMethodName                 = "/serverpb.Server/GetStoreApp"
-	Server_GetStoreApps_FullMethodName                = "/serverpb.Server/GetStoreApps"
-	Server_GetStoreAppValues_FullMethodName           = "/serverpb.Server/GetStoreAppValues"
-	Server_DeployStoreApp_FullMethodName              = "/serverpb.Server/DeployStoreApp"
-	Server_UnDeployStoreApp_FullMethodName            = "/serverpb.Server/UnDeployStoreApp"
-	Server_UpgradeStoreApp_FullMethodName             = "/serverpb.Server/UpgradeStoreApp"
-	Server_StoreCredential_FullMethodName             = "/serverpb.Server/StoreCredential"
-	Server_SetClusterGitoptsProject_FullMethodName    = "/serverpb.Server/SetClusterGitoptsProject"
-	Server_GetClusterGitoptsProject_FullMethodName    = "/serverpb.Server/GetClusterGitoptsProject"
-	Server_DeleteClusterGitoptsProject_FullMethodName = "/serverpb.Server/DeleteClusterGitoptsProject"
+	Server_NewClusterRegistration_FullMethodName     = "/serverpb.Server/NewClusterRegistration"
+	Server_UpdateClusterRegistration_FullMethodName  = "/serverpb.Server/UpdateClusterRegistration"
+	Server_DeleteClusterRegistration_FullMethodName  = "/serverpb.Server/DeleteClusterRegistration"
+	Server_GetClusters_FullMethodName                = "/serverpb.Server/GetClusters"
+	Server_GetCluster_FullMethodName                 = "/serverpb.Server/GetCluster"
+	Server_GetClusterApps_FullMethodName             = "/serverpb.Server/GetClusterApps"
+	Server_GetClusterAppLaunchConfigs_FullMethodName = "/serverpb.Server/GetClusterAppLaunchConfigs"
+	Server_GetClusterApp_FullMethodName              = "/serverpb.Server/GetClusterApp"
+	Server_GetClusterDetails_FullMethodName          = "/serverpb.Server/GetClusterDetails"
+	Server_AddStoreApp_FullMethodName                = "/serverpb.Server/AddStoreApp"
+	Server_UpdateStoreApp_FullMethodName             = "/serverpb.Server/UpdateStoreApp"
+	Server_DeleteStoreApp_FullMethodName             = "/serverpb.Server/DeleteStoreApp"
+	Server_GetStoreApp_FullMethodName                = "/serverpb.Server/GetStoreApp"
+	Server_GetStoreApps_FullMethodName               = "/serverpb.Server/GetStoreApps"
+	Server_GetStoreAppValues_FullMethodName          = "/serverpb.Server/GetStoreAppValues"
+	Server_DeployStoreApp_FullMethodName             = "/serverpb.Server/DeployStoreApp"
+	Server_UnDeployStoreApp_FullMethodName           = "/serverpb.Server/UnDeployStoreApp"
+	Server_UpgradeStoreApp_FullMethodName            = "/serverpb.Server/UpgradeStoreApp"
+	Server_StoreCredential_FullMethodName            = "/serverpb.Server/StoreCredential"
 )
 
 // ServerClient is the client API for Server service.
@@ -66,9 +63,6 @@ type ServerClient interface {
 	UnDeployStoreApp(ctx context.Context, in *UnDeployStoreAppRequest, opts ...grpc.CallOption) (*UnDeployStoreAppResponse, error)
 	UpgradeStoreApp(ctx context.Context, in *UpgradeStoreAppRequest, opts ...grpc.CallOption) (*UpgradeStoreAppResponse, error)
 	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
-	SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error)
-	GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error)
-	DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error)
 }
 
 type serverClient struct {
@@ -250,33 +244,6 @@ func (c *serverClient) StoreCredential(ctx context.Context, in *StoreCredentialR
 	return out, nil
 }
 
-func (c *serverClient) SetClusterGitoptsProject(ctx context.Context, in *SetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*SetClusterGitoptsProjectResponse, error) {
-	out := new(SetClusterGitoptsProjectResponse)
-	err := c.cc.Invoke(ctx, Server_SetClusterGitoptsProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) GetClusterGitoptsProject(ctx context.Context, in *GetClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*GetClusterGitoptsProjectResponse, error) {
-	out := new(GetClusterGitoptsProjectResponse)
-	err := c.cc.Invoke(ctx, Server_GetClusterGitoptsProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) DeleteClusterGitoptsProject(ctx context.Context, in *DeleteClusterGitoptsProjectRequest, opts ...grpc.CallOption) (*DeleteClusterGitoptsProjectResponse, error) {
-	out := new(DeleteClusterGitoptsProjectResponse)
-	err := c.cc.Invoke(ctx, Server_DeleteClusterGitoptsProject_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // ServerServer is the server API for Server service.
 // All implementations must embed UnimplementedServerServer
 // for forward compatibility
@@ -300,9 +267,6 @@ type ServerServer interface {
 	UnDeployStoreApp(context.Context, *UnDeployStoreAppRequest) (*UnDeployStoreAppResponse, error)
 	UpgradeStoreApp(context.Context, *UpgradeStoreAppRequest) (*UpgradeStoreAppResponse, error)
 	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
-	SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error)
-	GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error)
-	DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error)
 	mustEmbedUnimplementedServerServer()
 }
 
@@ -366,15 +330,6 @@ func (UnimplementedServerServer) UpgradeStoreApp(context.Context, *UpgradeStoreA
 }
 func (UnimplementedServerServer) StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreCredential not implemented")
-}
-func (UnimplementedServerServer) SetClusterGitoptsProject(context.Context, *SetClusterGitoptsProjectRequest) (*SetClusterGitoptsProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetClusterGitoptsProject not implemented")
-}
-func (UnimplementedServerServer) GetClusterGitoptsProject(context.Context, *GetClusterGitoptsProjectRequest) (*GetClusterGitoptsProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetClusterGitoptsProject not implemented")
-}
-func (UnimplementedServerServer) DeleteClusterGitoptsProject(context.Context, *DeleteClusterGitoptsProjectRequest) (*DeleteClusterGitoptsProjectResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteClusterGitoptsProject not implemented")
 }
 func (UnimplementedServerServer) mustEmbedUnimplementedServerServer() {}
 
@@ -731,60 +686,6 @@ func _Server_StoreCredential_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Server_SetClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetClusterGitoptsProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).SetClusterGitoptsProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_SetClusterGitoptsProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).SetClusterGitoptsProject(ctx, req.(*SetClusterGitoptsProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_GetClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetClusterGitoptsProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).GetClusterGitoptsProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_GetClusterGitoptsProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).GetClusterGitoptsProject(ctx, req.(*GetClusterGitoptsProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_DeleteClusterGitoptsProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteClusterGitoptsProjectRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).DeleteClusterGitoptsProject(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_DeleteClusterGitoptsProject_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).DeleteClusterGitoptsProject(ctx, req.(*DeleteClusterGitoptsProjectRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Server_ServiceDesc is the grpc.ServiceDesc for Server service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -867,18 +768,6 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StoreCredential",
 			Handler:    _Server_StoreCredential_Handler,
-		},
-		{
-			MethodName: "SetClusterGitoptsProject",
-			Handler:    _Server_SetClusterGitoptsProject_Handler,
-		},
-		{
-			MethodName: "GetClusterGitoptsProject",
-			Handler:    _Server_GetClusterGitoptsProject_Handler,
-		},
-		{
-			MethodName: "DeleteClusterGitoptsProject",
-			Handler:    _Server_DeleteClusterGitoptsProject_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

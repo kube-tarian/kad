@@ -45,7 +45,7 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	}
 
 	switch req.Type {
-	case "CICD":
+	case "tekton":
 		err = configureCICD(ctx, req, cred["accessToken"])
 		// Once we finalize what needs to be replaced then we can come and work here.
 	default:
@@ -90,7 +90,7 @@ func configureCICD(ctx context.Context, params *model.UseCase, token string) err
 		return err
 	}
 
-	for _, dir := range strings.Split(config.CICDAppsToConfigure, ",") {
+	for _, dir := range strings.Split(params.Type, ",") {
 		err = cp.Copy(filepath.Join(templateDir, dir), filepath.Join(reqRepo, dir))
 		if err != nil {
 			return err
@@ -103,7 +103,7 @@ func configureCICD(ctx context.Context, params *model.UseCase, token string) err
 		return err
 	}
 
-	if err := configPlugin.Push(branchName, token); err != nil {
+	if err := configPlugin.Push(branchName+"-"+params.Type, token); err != nil {
 		return err
 	}
 
@@ -111,7 +111,7 @@ func configureCICD(ctx context.Context, params *model.UseCase, token string) err
 	if err != nil {
 		return err
 	}
-	_, err = createPR(ctx, params.RepoURL, branchName, defaultBranch, token)
+	_, err = createPR(ctx, params.RepoURL, branchName+"-"+params.Type, defaultBranch, token)
 	if err != nil {
 		return err
 	}
