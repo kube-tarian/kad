@@ -14,7 +14,7 @@ const (
 	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects WHERE id='%s';"
 	insertTektonProjectQuery    = "INSERT INTO %s.TektonProjects(id, git_project_id, status, last_update_time) VALUES (?,?,?,?);"
 	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s' WHERE id='%s' and git_project_id='%s';"
-	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id='%s';"
+	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id='%s' and git_project_id='%s';"
 )
 
 func (a *Store) UpsertTektonProject(payload *model.TektonProject) error {
@@ -31,7 +31,7 @@ func (a *Store) UpsertTektonProject(payload *model.TektonProject) error {
 
 func (a *Store) DeleteTektonProject(id string) error {
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(deleteTektonProjectQuery, a.keyspace, id))
+	batch.Query(fmt.Sprintf(deleteTektonProjectQuery, a.keyspace, id, id))
 	err := a.client.Session().ExecuteBatch(batch)
 	return err
 }
@@ -97,7 +97,7 @@ func (a *Store) executeTektonProjectsSelectQuery(query string) ([]*model.TektonP
 
 	ret := make([]*model.TektonProject, 0)
 	for iter.Scan(
-		&project.Id, project.Status, &project.LastUpdateTime) {
+		&project.Id, &project.GitProjectId, project.Status, &project.LastUpdateTime) {
 		gitProject, err := a.GetGitProjectForID(project.Id)
 		if err != nil {
 			a.log.Errorf("tekton project %s not exist in git projects", project.Id)
