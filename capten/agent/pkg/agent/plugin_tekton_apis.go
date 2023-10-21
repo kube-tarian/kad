@@ -3,9 +3,7 @@ package agent
 import (
 	"context"
 	"fmt"
-	"os"
 
-	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 )
@@ -17,11 +15,12 @@ const (
 
 func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenpluginspb.RegisterTektonProjectRequest) (
 	*captenpluginspb.RegisterTektonProjectResponse, error) {
-	// get the corressponding git url from the DB.
-	// Currently this is dummy to get the project urls
-	projectUrl := os.Getenv("ProjectURL")
-	accessToken := os.Getenv("accessToken")
-	regTekton := &model.RegisterTekton{Id: request.Id, ProjectUrl: projectUrl, Status: "in-progress"}
+	gitProject, err := a.as.GetGitProject(request.Id)
+	if err != nil || len(gitProject) == 0 {
+		return nil, fmt.Errorf("git project not found or error occured: %v", err)
+	}
+
+	regTekton := &model.RegisterTekton{Id: request.Id, ProjectUrl: gitProject[0].ProjectUrl, Status: "in-progress"}
 	if err := a.as.AddTektonProject(regTekton); err != nil {
 		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
 		return &captenpluginspb.RegisterTektonProjectResponse{
@@ -29,29 +28,6 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 			StatusMessage: "inserting data to tekton db got failed",
 		}, err
 	}
-	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProject, request.Id)
-	credAdmin, err := credentials.NewCredentialAdmin(ctx)
-	if err != nil {
-		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentails client for %s", credPath)
-		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
-		return &captenpluginspb.RegisterTektonProjectResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "",
-		}, err
-	}
-
-	err = credAdmin.PutCredential(ctx, credentials.GenericCredentialType, gitProject,
-		request.Id, map[string]string{"accessToken": accessToken})
-	if err != nil {
-		a.log.Audit("security", "storecred", "failed", "system", "failed to store credentail for %s", credPath)
-		a.log.Errorf("failed to store credentail for %s, %v", credPath, err)
-		return &captenpluginspb.RegisterTektonProjectResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "",
-		}, err
-	}
-	a.log.Audit("security", "storecred", "success", "system", "credentail stored for %s", credPath)
-	a.log.Infof("stored credentail for entity %s", credPath)
 
 	// start the config-worker routine
 	go a.configureGitRepo(regTekton, tekton)
@@ -64,16 +40,32 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 
 func (a *Agent) UnRegisterTektonProject(ctx context.Context, request *captenpluginspb.UnRegisterTektonProjectRequest) (
 	*captenpluginspb.UnRegisterTektonProjectResponse, error) {
+	if err := a.as.DeleteTektonProject(request.Id); err != nil {
+		return &captenpluginspb.UnRegisterTektonProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete the tekton project",
+		}, fmt.Errorf("failed to delete the tekton project")
+	}
 	return &captenpluginspb.UnRegisterTektonProjectResponse{
-		Status:        captenpluginspb.StatusCode_NOT_FOUND,
-		StatusMessage: "not implemented",
-	}, fmt.Errorf("not implemented")
+		Status:        captenpluginspb.StatusCode_OK,
+		StatusMessage: "successfully delete the tekton project",
+	}, nil
 }
 
 func (a *Agent) GetTektonProjects(ctx context.Context, request *captenpluginspb.GetTektonProjectsRequest) (
 	*captenpluginspb.GetTektonProjectsResponse, error) {
+	projects, err := a.as.GetTektonProjects()
+	if err != nil {
+		a.log.Errorf("failed to get tekton Project, %v", err)
+		return &captenpluginspb.GetTektonProjectsResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get tekton Project",
+		}, err
+	}
+
 	return &captenpluginspb.GetTektonProjectsResponse{
-		Status:        captenpluginspb.StatusCode_NOT_FOUND,
-		StatusMessage: "not implemented",
-	}, fmt.Errorf("not implemented")
+		Status:        captenpluginspb.StatusCode_OK,
+		StatusMessage: "successfully fetched the tekton projects",
+		Projects:      projects,
+	}, nil
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gocql/gocql"
+	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 	"github.com/pkg/errors"
 )
@@ -17,6 +18,12 @@ const (
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"
 	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects"
 	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE %s"
+
+	getGitProjectsById = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE id='%s'"
+	getTektonQuery     = "SELECT git_project_id, status, status FROM %s.tekton;"
+	insertTektonQuery  = "INSERT INTO %s.tekton(git_project_id, status, lastUpdateTime) VALUES (?,?,?);"
+	updateTektonQuery  = "UPDATE %s.tekton SET status='%s', lastUpdateTime='%s' WHERE git_project_id='%s';"
+	deleteTektonQuery  = "DELETE FROM %s.tekton WHERE git_project_id='%s';"
 )
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
@@ -38,6 +45,11 @@ func (a *Store) DeleteGitProjectById(id string) error {
 		return err
 	}
 	return nil
+}
+
+func (a *Store) GetGitProject(id string) ([]*captenpluginspb.GitProject, error) {
+	query := fmt.Sprintf(getGitProjectsById, a.keyspace, id)
+	return a.executeSelectQuery(query)
 }
 
 func (a *Store) GetGitProjects() ([]*captenpluginspb.GitProject, error) {
@@ -119,4 +131,61 @@ func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (kvPairs
 		return "", true
 	}
 	return strings.Join(params, ", "), false
+}
+
+func (a *Store) AddTektonProject(payload *model.RegisterTekton) error {
+
+	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
+	batch.Query(fmt.Sprintf(insertTektonQuery, a.keyspace), payload.Id, payload.Status, gocql.TimeUUID().String())
+
+	err := a.client.Session().ExecuteBatch(batch)
+
+	return err
+}
+
+func (a *Store) UpdateTektonProject(payload *model.RegisterTekton) error {
+	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
+	batch.Query(fmt.Sprintf(updateTektonQuery, a.keyspace, payload.Status, gocql.TimeUUID().String(), payload.Id))
+	err := a.client.Session().ExecuteBatch(batch)
+
+	return err
+}
+
+func (a *Store) DeleteTektonProject(id string) error {
+	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
+	batch.Query(fmt.Sprintf(deleteTektonQuery, a.keyspace, id))
+	err := a.client.Session().ExecuteBatch(batch)
+
+	return err
+}
+
+func (a *Store) GetTektonProjects() ([]*captenpluginspb.TektonProject, error) {
+	selectAllQuery := a.client.Session().Query(fmt.Sprintf(getTektonQuery, a.keyspace))
+	iter := selectAllQuery.Iter()
+
+	config := model.RegisterTekton{}
+
+	ret := make([]*captenpluginspb.TektonProject, 0)
+	for iter.Scan(
+		&config.Id, config.Status, &config.LastUpdateTime) {
+		configCopy := config
+		project, err := a.GetGitProject(configCopy.Id)
+		if err != nil || len(project) != 1 {
+			return nil, errors.WithMessage(err, "failed to get git projects:")
+		}
+
+		a := &captenpluginspb.TektonProject{
+			Id: configCopy.Id, Status: configCopy.Status,
+			GitProjectUrl: project[0].ProjectUrl,
+		}
+
+		ret = append(ret, a)
+	}
+
+	if err := iter.Close(); err != nil {
+		return nil, errors.WithMessage(err, "failed to iterate through results:")
+	}
+
+	return ret, nil
+
 }
