@@ -17,8 +17,7 @@ const (
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"
 	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects"
 	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE %s"
-
-	getGitProjectsById = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE id=%s;"
+	selectGetGitProjectById      = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE id=%s;"
 )
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
@@ -43,7 +42,7 @@ func (a *Store) DeleteGitProjectById(id string) error {
 }
 
 func (a *Store) GetGitProjectForID(id string) (*captenpluginspb.GitProject, error) {
-	query := fmt.Sprintf(getGitProjectsById, a.keyspace, id)
+	query := fmt.Sprintf(selectGetGitProjectById, a.keyspace, id)
 	projects, err := a.executeGitProjectsSelectQuery(query)
 	if err != nil {
 		return nil, err
