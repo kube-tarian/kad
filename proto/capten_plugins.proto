@@ -191,8 +191,7 @@ message ArgoCDProject {
 }
 
 message RegisterTektonProjectRequest {
-    string clusterID = 1;
-    string id = 2;
+    string id = 1;
 }
 
 message RegisterTektonProjectResponse {
@@ -201,8 +200,7 @@ message RegisterTektonProjectResponse {
 }
 
 message UnRegisterTektonProjectRequest {
-    string clusterID = 1;
-    string id = 2;
+    string id = 1;
 }
 
 message UnRegisterTektonProjectResponse {
@@ -218,7 +216,6 @@ message TektonProject {
 }
 
 message GetTektonProjectsRequest {
-    string clusterID = 1;
 }
 
 message GetTektonProjectsResponse {
