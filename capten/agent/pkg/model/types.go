@@ -58,9 +58,10 @@ type ClusterGitoptsConfig struct {
 	Status     string `json:"status,omitempty"`
 }
 
-type RegisterTekton struct {
+type TektonProject struct {
 	Id             string
-	ProjectUrl     string
+	GitProjectId   string
+	GitProjectUrl  string
 	Status         string
 	LastUpdateTime string
 }

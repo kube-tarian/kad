@@ -10,6 +10,7 @@ import (
 
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
 	"github.com/pkg/errors"
 
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
