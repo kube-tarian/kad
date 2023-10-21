@@ -61,9 +61,9 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 		return nil, err
 	}
 
-	regTektonProjects, err := a.GetTektonProjects()
+	query := fmt.Sprintf(getTektonProjectsQuery, a.keyspace)
+	regTektonProjects, err := a.executeTektonProjectsSelectQuery(query)
 	if err != nil {
-		a.log.Errorf("failed to fetch tekton projects, :%v", err)
 		return nil, err
 	}
 
