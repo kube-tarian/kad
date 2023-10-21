@@ -12,7 +12,7 @@ import (
 const (
 	getTektonProjectsQuery      = "SELECT id, git_project_id, status, lastUpdateTime FROM %s.tekton;"
 	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, lastUpdateTime FROM %s.tekton WHERE id='%s';"
-	insertTektonProjectQuery    = "INSERT INTO %s.tekton(id, git_project_id, status, lastUpdateTime) VALUES (?,?,?);"
+	insertTektonProjectQuery    = "INSERT INTO %s.tekton(id, git_project_id, status, lastUpdateTime) VALUES (?,?,?,?);"
 	updateTektonProjectQuery    = "UPDATE %s.tekton SET status='%s', lastUpdateTime='%s' WHERE id='%s' and git_project_id='%s';"
 	deleteTektonProjectQuery    = "DELETE FROM %s.tekton WHERE id='%s';"
 )
@@ -50,8 +50,44 @@ func (a *Store) GetTektonProjectForID(id string) (*model.TektonProject, error) {
 }
 
 func (a *Store) GetTektonProjects() ([]*model.TektonProject, error) {
-	query := fmt.Sprintf(getTektonProjectsQuery, a.keyspace)
-	return a.executeTektonProjectsSelectQuery(query)
+	return a.updateTektonProjects()
+}
+
+// tektonProjects, err := a.GetGitProjectsByLabels([]string{"tekton"})
+func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
+	allTektonProjects, err := a.GetGitProjectsByLabels([]string{"tekton"})
+	if err != nil {
+		a.log.Errorf("failed to fetch all tekton projects, :%v", err)
+		return nil, err
+	}
+
+	regTektonProjects, err := a.GetTektonProjects()
+	if err != nil {
+		a.log.Errorf("failed to fetch tekton projects, :%v", err)
+		return nil, err
+	}
+
+	regTektonProjectId := make(map[string]*model.TektonProject)
+	for _, tekPro := range regTektonProjects {
+		regTektonProjectId[tekPro.Id] = tekPro
+	}
+
+	ret := make([]*model.TektonProject, 0)
+	for _, allTekProject := range allTektonProjects {
+		tekModel := &model.TektonProject{Id: allTekProject.Id, GitProjectId: allTekProject.Id,
+			GitProjectUrl: allTekProject.ProjectUrl}
+		if _, ok := regTektonProjectId[allTekProject.Id]; !ok {
+			tekModel.Status = "available"
+			if err := a.UpsertTektonProject(tekModel); err != nil {
+				return nil, err
+			}
+		} else {
+			tekModel.Status = regTektonProjectId[allTekProject.Id].Status
+		}
+		ret = append(ret, tekModel)
+	}
+
+	return ret, nil
 }
 
 func (a *Store) executeTektonProjectsSelectQuery(query string) ([]*model.TektonProject, error) {
