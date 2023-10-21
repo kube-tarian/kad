@@ -11,10 +11,10 @@ import (
 
 const (
 	getTektonProjectsQuery      = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects;"
-	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects WHERE id='%s';"
+	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects WHERE id=%s and git_project_id=%s;"
 	insertTektonProjectQuery    = "INSERT INTO %s.TektonProjects(id, git_project_id, status, last_update_time) VALUES (?,?,?,?);"
-	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s' WHERE id='%s' and git_project_id='%s';"
-	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id='%s' and git_project_id='%s';"
+	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s' WHERE id=%s and git_project_id=%s;"
+	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id=%s and git_project_id=%s;"
 )
 
 func (a *Store) UpsertTektonProject(payload *model.TektonProject) error {
@@ -37,7 +37,7 @@ func (a *Store) DeleteTektonProject(id string) error {
 }
 
 func (a *Store) GetTektonProjectForID(id string) (*model.TektonProject, error) {
-	query := fmt.Sprintf(getTektonProjectsForIDQuery, a.keyspace, id)
+	query := fmt.Sprintf(getTektonProjectsForIDQuery, a.keyspace, id, id)
 	projects, err := a.executeTektonProjectsSelectQuery(query)
 	if err != nil {
 		return nil, err
