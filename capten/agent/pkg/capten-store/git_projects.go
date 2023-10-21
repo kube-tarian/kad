@@ -18,7 +18,7 @@ const (
 	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects"
 	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE %s"
 
-	getGitProjectsById = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE id='%s'"
+	getGitProjectsById = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE id=%s;"
 )
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
