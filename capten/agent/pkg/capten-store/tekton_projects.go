@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	getTektonProjectsQuery      = "SELECT id, git_project_id, status, lastUpdateTime FROM %s.TektonProjects;"
-	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, lastUpdateTime FROM %s.TektonProjects WHERE id='%s';"
-	insertTektonProjectQuery    = "INSERT INTO %s.TektonProjects(id, git_project_id, status, lastUpdateTime) VALUES (?,?,?,?);"
-	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', lastUpdateTime='%s' WHERE id='%s' and git_project_id='%s';"
+	getTektonProjectsQuery      = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects;"
+	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects WHERE id='%s';"
+	insertTektonProjectQuery    = "INSERT INTO %s.TektonProjects(id, git_project_id, status, last_update_time) VALUES (?,?,?,?);"
+	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s' WHERE id='%s' and git_project_id='%s';"
 	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id='%s';"
 )
 
