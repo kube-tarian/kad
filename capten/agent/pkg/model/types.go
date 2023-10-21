@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 )
 
 type AppConfig struct {
@@ -56,4 +57,11 @@ type ClusterGitoptsConfig struct {
 	Usecase    string `json:"usecase,omitempty"`
 	ProjectUrl string `json:"project_url,omitempty"`
 	Status     string `json:"status,omitempty"`
+}
+
+type GitProjectData struct {
+	Id             string    `json:"id,omitempty"`
+	ProjectUrl     string    `json:"projectUrl,omitempty"`
+	Labels         []string  `json:"labels,omitempty"`
+	LastUpdateTime time.Time `json:"lastUpdateTime,omitempty"`
 }

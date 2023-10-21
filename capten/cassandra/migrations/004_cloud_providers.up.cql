@@ -1,9 +1,9 @@
 
 CREATE TABLE CloudProviders (
-    id text,
-    cloud_type text,
-    labels set<text>,
-    last_update_time text,
+    id UUID,
+    cloud_type TEXT,
+    labels set<TEXT>,
+    last_update_time TEXT,
     PRIMARY KEY (id)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}

@@ -32,10 +32,9 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 	}
 
 	gitProject := captenpluginspb.GitProject{
-		Id:             id.String(),
-		ProjectUrl:     request.ProjectUrl,
-		Labels:         request.Labels,
-		LastUpdateTime: request.LastUpdateTime,
+		Id:         id.String(),
+		ProjectUrl: request.ProjectUrl,
+		Labels:     request.Labels,
 	}
 	if err := a.as.UpsertGitProject(&gitProject); err != nil {
 		a.log.Errorf("failed to store git project to DB, %v", err)
@@ -45,7 +44,7 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 		}, nil
 	}
 
-	a.log.Infof("Git project %s added with id", request.ProjectUrl, id)
+	a.log.Infof("Git project %s added with id %s", request.ProjectUrl, id.String())
 	return &captenpluginspb.AddGitProjectResponse{
 		Id:            id.String(),
 		Status:        captenpluginspb.StatusCode_OK,
@@ -81,10 +80,9 @@ func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.U
 	}
 
 	gitProject := captenpluginspb.GitProject{
-		Id:             id.String(),
-		ProjectUrl:     request.ProjectUrl,
-		Labels:         request.Labels,
-		LastUpdateTime: request.LastUpdateTime,
+		Id:         id.String(),
+		ProjectUrl: request.ProjectUrl,
+		Labels:     request.Labels,
 	}
 	if err := a.as.UpsertGitProject(&gitProject); err != nil {
 		a.log.Errorf("failed to update gitProject in db, %v", err)

@@ -1,10 +1,10 @@
 
-CREATE TABLE GitProjects (
+CREATE TABLE TektonProjects (
     id UUID,
-    project_url TEXT,
-    labels set<TEXT>,
+    git_project_id UUID,
+    status TEXT,
     last_update_time TEXT,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id, git_project_id)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
