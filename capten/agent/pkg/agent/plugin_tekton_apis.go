@@ -2,7 +2,6 @@ package agent
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
@@ -34,7 +33,7 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	tektonProject.Status = "configuration-ongoing"
+	tektonProject.Status = string(model.TektonProjectConfigurationOngoing)
 	if err := a.as.UpsertTektonProject(tektonProject); err != nil {
 		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
 		return &captenpluginspb.RegisterTektonProjectResponse{
@@ -64,11 +63,22 @@ func (a *Agent) UnRegisterTektonProject(ctx context.Context, request *captenplug
 	}
 	a.log.Infof("UnRegister Tekton Git project %s request recieved", request.Id)
 
-	if err := a.as.DeleteTektonProject(request.Id); err != nil {
+	tektonProject, err := a.as.GetTektonProjectForID(request.Id)
+	if err != nil {
+		a.log.Infof("faile to get git project %s, %v", request.Id, err)
+		return &captenpluginspb.UnRegisterTektonProjectResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+
+	tektonProject.Status = string(model.TektonProjectAvailable)
+	if err := a.as.UpsertTektonProject(tektonProject); err != nil {
+		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
 		return &captenpluginspb.UnRegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to delete the tekton project",
-		}, fmt.Errorf("failed to delete the tekton project")
+			StatusMessage: "inserting data to tekton db got failed",
+		}, err
 	}
 
 	a.log.Infof("UnRegister Tekton Git project %s request processed", request.Id)
@@ -115,7 +125,7 @@ func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
 
 	run, err := wd.SendEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: tektonConfigUseCase}, ci)
 	if err != nil {
-		req.Status = "configuration-failed"
+		req.Status = string(model.TektonProjectConfigurationFailed)
 		if err := a.as.UpsertTektonProject(req); err != nil {
 			a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 			return
@@ -125,7 +135,7 @@ func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
 	}
 	a.log.Infof("Tekton Git project %s config workflow event %s created", run.GetID())
 
-	req.Status = "configured"
+	req.Status = string(model.TektonProjectConfigured)
 	if err := a.as.UpsertTektonProject(req); err != nil {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		return

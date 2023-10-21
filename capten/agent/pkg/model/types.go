@@ -5,6 +5,23 @@ import (
 	"fmt"
 )
 
+type ArgoCDProjectStatus string
+
+const (
+	ArgoCDProjectAvailable           ArgoCDProjectStatus = "available"
+	ArgoCDProjectConfigured          ArgoCDProjectStatus = "configured"
+	ArgoCDProjectConfigurationFailed ArgoCDProjectStatus = "configuration-failed"
+)
+
+type TektonProjectStatus string
+
+const (
+	TektonProjectAvailable            TektonProjectStatus = "available"
+	TektonProjectConfigured           TektonProjectStatus = "configured"
+	TektonProjectConfigurationOngoing TektonProjectStatus = "configuration-ongoing"
+	TektonProjectConfigurationFailed  TektonProjectStatus = "configuration-failed"
+)
+
 type AppConfig struct {
 	AppName             string `json:"AppName,omitempty"`
 	Version             string `json:"Version,omitempty"`

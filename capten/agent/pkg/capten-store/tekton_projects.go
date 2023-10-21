@@ -17,13 +17,13 @@ const (
 	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id=%s;"
 )
 
-func (a *Store) UpsertTektonProject(payload *model.TektonProject) error {
-	payload.LastUpdateTime = time.Now().Format(time.RFC3339)
+func (a *Store) UpsertTektonProject(project *model.TektonProject) error {
+	project.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertTektonProjectQuery, a.keyspace), payload.Id, payload.GitProjectId, payload.Status, payload.LastUpdateTime)
+	batch.Query(fmt.Sprintf(insertTektonProjectQuery, a.keyspace), project.Id, project.GitProjectId, project.Status, project.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		batch.Query(fmt.Sprintf(updateTektonProjectQuery, a.keyspace, payload.Status, payload.LastUpdateTime, payload.Id))
+		batch.Query(fmt.Sprintf(updateTektonProjectQuery, a.keyspace, project.Status, project.LastUpdateTime, project.Id))
 		err = a.client.Session().ExecuteBatch(batch)
 	}
 	return err
@@ -44,7 +44,7 @@ func (a *Store) GetTektonProjectForID(id string) (*model.TektonProject, error) {
 	}
 
 	if len(projects) != 1 {
-		return nil, fmt.Errorf("project not found")
+		return nil, fmt.Errorf(objectNotFoundErrorMessage)
 	}
 	return projects[0], nil
 }
@@ -74,17 +74,17 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 
 	ret := make([]*model.TektonProject, 0)
 	for _, allTekProject := range allTektonProjects {
-		tekModel := &model.TektonProject{Id: allTekProject.Id, GitProjectId: allTekProject.Id,
+		project := &model.TektonProject{Id: allTekProject.Id, GitProjectId: allTekProject.Id,
 			GitProjectUrl: allTekProject.ProjectUrl}
 		if _, ok := regTektonProjectId[allTekProject.Id]; !ok {
-			tekModel.Status = "available"
-			if err := a.UpsertTektonProject(tekModel); err != nil {
+			project.Status = "available"
+			if err := a.UpsertTektonProject(project); err != nil {
 				return nil, err
 			}
 		} else {
-			tekModel.Status = regTektonProjectId[allTekProject.Id].Status
+			project.Status = regTektonProjectId[allTekProject.Id].Status
 		}
-		ret = append(ret, tekModel)
+		ret = append(ret, project)
 	}
 
 	return ret, nil

@@ -11,10 +11,10 @@ import (
 
 const (
 	getArgocdProjectsQuery      = "SELECT id, git_project_id, status, last_update_time FROM %s.ArgocdProjects;"
-	getArgocdProjectsForIdQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.ArgocdProjects WHERE id='%s';"
-	insertArgocdProjectQuery    = "INSERT INTO %s.ArgocdProjects(id, git_project_id, status, last_update_time) VALUES (?,?,?);"
-	updateArgocdProjectQuery    = "UPDATE %s.ArgocdProjects SET status='%s', lastUpdateTime='%s' WHERE id='%s' and git_project_id='%s';"
-	deleteArgocdProjectQuery    = "DELETE FROM %s.ArgocdProjects WHERE id='%s';"
+	getArgocdProjectsForIdQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.ArgocdProjects WHERE id=%s;"
+	insertArgocdProjectQuery    = "INSERT INTO %s.ArgocdProjects(id, git_project_id, status, last_update_time) VALUES (?,?,?,?);"
+	updateArgocdProjectQuery    = "UPDATE %s.ArgocdProjects SET status='%s', last_update_time='%s' WHERE id=%s;"
+	deleteArgocdProjectQuery    = "DELETE FROM %s.ArgocdProjects WHERE id=%s;"
 )
 
 func (a *Store) UpsertArgoCDProject(project *model.ArgoCDProject) error {
@@ -23,7 +23,7 @@ func (a *Store) UpsertArgoCDProject(project *model.ArgoCDProject) error {
 	batch.Query(fmt.Sprintf(insertArgocdProjectQuery, a.keyspace), project.Id, project.GitProjectId, project.Status, project.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		batch.Query(fmt.Sprintf(updateArgocdProjectQuery, a.keyspace, project.Status, project.LastUpdateTime, project.Id, project.GitProjectId))
+		batch.Query(fmt.Sprintf(updateArgocdProjectQuery, a.keyspace, project.Status, project.LastUpdateTime, project.Id))
 		err = a.client.Session().ExecuteBatch(batch)
 	}
 	return err
@@ -37,7 +37,7 @@ func (a *Store) GetArgoCDProjectForID(id string) (*model.ArgoCDProject, error) {
 	}
 
 	if len(projects) != 1 {
-		return nil, fmt.Errorf("project not found")
+		return nil, fmt.Errorf(objectNotFoundErrorMessage)
 	}
 	return projects[0], nil
 }
@@ -63,7 +63,7 @@ func (a *Store) executeArgoCDProjectsSelectQuery(query string) ([]*model.ArgoCDP
 
 	ret := make([]*model.ArgoCDProject, 0)
 	for iter.Scan(
-		&project.Id, project.GitProjectId, project.Status, &project.LastUpdateTime) {
+		&project.Id, &project.GitProjectId, &project.Status, &project.LastUpdateTime) {
 		gitProject, err := a.GetGitProjectForID(project.GitProjectId)
 		if err != nil {
 			a.log.Errorf("argocd project %s not exist in git projects", project.GitProjectId)
@@ -109,7 +109,7 @@ func (a *Store) updateArgoCDProjects() ([]*model.ArgoCDProject, error) {
 		project := &model.ArgoCDProject{Id: gitProject.Id, GitProjectId: gitProject.Id,
 			GitProjectUrl: gitProject.ProjectUrl}
 		if _, ok := argoCDProjects[gitProject.Id]; !ok {
-			project.Status = "available"
+			project.Status = string(model.ArgoCDProjectAvailable)
 			if err := a.UpsertArgoCDProject(project); err != nil {
 				return nil, err
 			}

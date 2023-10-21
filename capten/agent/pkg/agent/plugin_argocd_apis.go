@@ -4,14 +4,10 @@ import (
 	"context"
 
 	"github.com/intelops/go-common/logging"
+	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
+	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
-)
-
-const (
-	argoCDProjectAvailable           = "available"
-	argoCDProjectConfigured          = "configured"
-	argoCDProjectConfigurationFailed = "configuration-failed"
 )
 
 func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenpluginspb.RegisterArgoCDProjectRequest) (
@@ -34,33 +30,15 @@ func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	argocdClient, err := argocd.NewClient(&logging.Logging{})
-	if err != nil {
-		a.log.Errorf("failed to get ArgoCD client, %v ", err)
+	if err := a.addProjectFromArgoCD(ctx, argoCDProject.GitProjectUrl); err != nil {
+		a.log.Errorf("failed to add ArgoCD Repository: %v ", err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
 			Status:        captenpluginspb.StatusCode_NOT_FOUND,
-			StatusMessage: "Error occured while getting ArgoCD client",
+			StatusMessage: "Error occured while adding Repository",
 		}, err
 	}
 
-	// fetch Github project details with ID and fill those details to repository
-	repo := &argocd.Repository{
-		Project:       "Default",
-		SSHPrivateKey: "",
-		Type:          "git",
-		Repo:          argoCDProject.GitProjectUrl,
-	}
-
-	_, err = argocdClient.CreateRepository(ctx, repo)
-	if err != nil {
-		a.log.Errorf("failed to configure git Project %s to argoCD, %v ", argoCDProject.GitProjectUrl, err)
-		return &captenpluginspb.RegisterArgoCDProjectResponse{
-			Status:        captenpluginspb.StatusCode_NOT_FOUND,
-			StatusMessage: "Error occured while registering ArgoCD Repository",
-		}, err
-	}
-
-	argoCDProject.Status = argoCDProjectConfigured
+	argoCDProject.Status = string(model.ArgoCDProjectConfigured)
 	if err := a.as.UpsertArgoCDProject(argoCDProject); err != nil {
 		a.log.Errorf("failed to store argoCD git Project %s, %v ", argoCDProject.GitProjectUrl, err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
@@ -89,23 +67,16 @@ func (a *Agent) UnRegisterArgoCDProject(ctx context.Context, request *captenplug
 
 	argoCDProject, err := a.as.GetArgoCDProjectForID(request.Id)
 	if err != nil {
-		a.log.Infof("faile to get argocd project %s, %v", request.Id, err)
-		return &captenpluginspb.UnRegisterArgoCDProjectResponse{
-			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
-			StatusMessage: "request validation failed",
-		}, nil
+		if !captenstore.IsObjectNotFound(err) {
+			a.log.Infof("faile to get argocd project %s, %v", request.Id, err)
+			return &captenpluginspb.UnRegisterArgoCDProjectResponse{
+				Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+				StatusMessage: "request validation failed",
+			}, nil
+		}
 	}
 
-	argocdClient, err := argocd.NewClient(&logging.Logging{})
-	if err != nil {
-		a.log.Errorf("failed to get ArgoCD client, %v ", err)
-		return &captenpluginspb.UnRegisterArgoCDProjectResponse{
-			Status:        captenpluginspb.StatusCode_NOT_FOUND,
-			StatusMessage: "Error occured while getting ArgoCD client",
-		}, err
-	}
-	_, err = argocdClient.DeleteRepository(ctx, argoCDProject.GitProjectUrl)
-	if err != nil {
+	if err := a.deleteProjectFromArgoCD(ctx, argoCDProject.GitProjectUrl); err != nil {
 		a.log.Errorf("failed to delete ArgoCD Repository: %v ", err)
 		return &captenpluginspb.UnRegisterArgoCDProjectResponse{
 			Status:        captenpluginspb.StatusCode_NOT_FOUND,
@@ -113,7 +84,7 @@ func (a *Agent) UnRegisterArgoCDProject(ctx context.Context, request *captenplug
 		}, err
 	}
 
-	argoCDProject.Status = argoCDProjectAvailable
+	argoCDProject.Status = string(model.ArgoCDProjectAvailable)
 	if err := a.as.UpsertArgoCDProject(argoCDProject); err != nil {
 		a.log.Errorf("failed to store argoCD git Project %s, %v ", argoCDProject.GitProjectUrl, err)
 		return &captenpluginspb.UnRegisterArgoCDProjectResponse{
@@ -158,4 +129,36 @@ func (a *Agent) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.
 		StatusMessage: "Successfully fetched the Repositories",
 		Projects:      argocdProjects,
 	}, nil
+}
+
+func (a *Agent) addProjectFromArgoCD(ctx context.Context, projectUrl string) error {
+	argocdClient, err := argocd.NewClient(&logging.Logging{})
+	if err != nil {
+		return err
+	}
+
+	repo := &argocd.Repository{
+		Project:       "Default",
+		SSHPrivateKey: "",
+		Type:          "git",
+		Repo:          projectUrl,
+	}
+
+	_, err = argocdClient.CreateRepository(ctx, repo)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Agent) deleteProjectFromArgoCD(ctx context.Context, projectUrl string) error {
+	argocdClient, err := argocd.NewClient(&logging.Logging{})
+	if err != nil {
+		return err
+	}
+	_, err = argocdClient.DeleteRepository(ctx, projectUrl)
+	if err != nil {
+		return err
+	}
+	return nil
 }
