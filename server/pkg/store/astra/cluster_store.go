@@ -289,3 +289,41 @@ func (a *AstraServerStore) GetClusters(orgID string) ([]types.ClusterDetails, er
 
 	return clusterDetails, nil
 }
+
+func (a *AstraServerStore) GetClusterForOrg(orgID string) (*types.ClusterDetails, error) {
+	q := &pb.Query{
+		Cql: fmt.Sprintf(getClustersForOrgQuery, a.keyspace, orgID),
+	}
+
+	response, err := a.c.Session().ExecuteQuery(q)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cluster info from db: %w", err)
+	}
+
+	result := response.GetResultSet()
+	if len(result.Rows) == 0 {
+		return nil, fmt.Errorf("no cluster found")
+	}
+
+	cqlClusterID, err := client.ToUUID(result.Rows[0].Values[0])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get clusterID: %w", err)
+	}
+
+	cqlClusterName, err := client.ToString(result.Rows[0].Values[1])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get clusterName: %w", err)
+	}
+
+	cqlEndpoint, err := client.ToString(result.Rows[0].Values[2])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get clusterEndpoint: %w", err)
+	}
+
+	clusterDetails := types.ClusterDetails{
+		OrgID:       orgID,
+		ClusterID:   cqlClusterID.String(),
+		ClusterName: cqlClusterName, Endpoint: cqlEndpoint,
+	}
+	return &clusterDetails, nil
+}

@@ -27,6 +27,7 @@ const (
 	Server_GetClusterApps_FullMethodName              = "/serverpb.Server/GetClusterApps"
 	Server_GetClusterAppLaunchConfigs_FullMethodName  = "/serverpb.Server/GetClusterAppLaunchConfigs"
 	Server_GetClusterApp_FullMethodName               = "/serverpb.Server/GetClusterApp"
+	Server_GetClusterDetails_FullMethodName           = "/serverpb.Server/GetClusterDetails"
 	Server_AddStoreApp_FullMethodName                 = "/serverpb.Server/AddStoreApp"
 	Server_UpdateStoreApp_FullMethodName              = "/serverpb.Server/UpdateStoreApp"
 	Server_DeleteStoreApp_FullMethodName              = "/serverpb.Server/DeleteStoreApp"
@@ -54,6 +55,7 @@ type ServerClient interface {
 	GetClusterApps(ctx context.Context, in *GetClusterAppsRequest, opts ...grpc.CallOption) (*GetClusterAppsResponse, error)
 	GetClusterAppLaunchConfigs(ctx context.Context, in *GetClusterAppLaunchConfigsRequest, opts ...grpc.CallOption) (*GetClusterAppLaunchConfigsResponse, error)
 	GetClusterApp(ctx context.Context, in *GetClusterAppRequest, opts ...grpc.CallOption) (*GetClusterAppResponse, error)
+	GetClusterDetails(ctx context.Context, in *GetClusterDetailsRequest, opts ...grpc.CallOption) (*GetClusterDetailsResponse, error)
 	AddStoreApp(ctx context.Context, in *AddStoreAppRequest, opts ...grpc.CallOption) (*AddStoreAppResponse, error)
 	UpdateStoreApp(ctx context.Context, in *UpdateStoreAppRequest, opts ...grpc.CallOption) (*UpdateStoreAppRsponse, error)
 	DeleteStoreApp(ctx context.Context, in *DeleteStoreAppRequest, opts ...grpc.CallOption) (*DeleteStoreAppResponse, error)
@@ -143,6 +145,15 @@ func (c *serverClient) GetClusterAppLaunchConfigs(ctx context.Context, in *GetCl
 func (c *serverClient) GetClusterApp(ctx context.Context, in *GetClusterAppRequest, opts ...grpc.CallOption) (*GetClusterAppResponse, error) {
 	out := new(GetClusterAppResponse)
 	err := c.cc.Invoke(ctx, Server_GetClusterApp_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *serverClient) GetClusterDetails(ctx context.Context, in *GetClusterDetailsRequest, opts ...grpc.CallOption) (*GetClusterDetailsResponse, error) {
+	out := new(GetClusterDetailsResponse)
+	err := c.cc.Invoke(ctx, Server_GetClusterDetails_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -278,6 +289,7 @@ type ServerServer interface {
 	GetClusterApps(context.Context, *GetClusterAppsRequest) (*GetClusterAppsResponse, error)
 	GetClusterAppLaunchConfigs(context.Context, *GetClusterAppLaunchConfigsRequest) (*GetClusterAppLaunchConfigsResponse, error)
 	GetClusterApp(context.Context, *GetClusterAppRequest) (*GetClusterAppResponse, error)
+	GetClusterDetails(context.Context, *GetClusterDetailsRequest) (*GetClusterDetailsResponse, error)
 	AddStoreApp(context.Context, *AddStoreAppRequest) (*AddStoreAppResponse, error)
 	UpdateStoreApp(context.Context, *UpdateStoreAppRequest) (*UpdateStoreAppRsponse, error)
 	DeleteStoreApp(context.Context, *DeleteStoreAppRequest) (*DeleteStoreAppResponse, error)
@@ -321,6 +333,9 @@ func (UnimplementedServerServer) GetClusterAppLaunchConfigs(context.Context, *Ge
 }
 func (UnimplementedServerServer) GetClusterApp(context.Context, *GetClusterAppRequest) (*GetClusterAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClusterApp not implemented")
+}
+func (UnimplementedServerServer) GetClusterDetails(context.Context, *GetClusterDetailsRequest) (*GetClusterDetailsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetClusterDetails not implemented")
 }
 func (UnimplementedServerServer) AddStoreApp(context.Context, *AddStoreAppRequest) (*AddStoreAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddStoreApp not implemented")
@@ -514,6 +529,24 @@ func _Server_GetClusterApp_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ServerServer).GetClusterApp(ctx, req.(*GetClusterAppRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Server_GetClusterDetails_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetClusterDetailsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ServerServer).GetClusterDetails(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Server_GetClusterDetails_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ServerServer).GetClusterDetails(ctx, req.(*GetClusterDetailsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -790,6 +823,10 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetClusterApp",
 			Handler:    _Server_GetClusterApp_Handler,
+		},
+		{
+			MethodName: "GetClusterDetails",
+			Handler:    _Server_GetClusterDetails_Handler,
 		},
 		{
 			MethodName: "AddStoreApp",
