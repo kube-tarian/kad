@@ -25,8 +25,14 @@ type ArgoCDCLient struct {
 }
 
 func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
-	cfg, err := fetchConfiguration(logger)
-	if err != nil {
+	// cfg, err := fetchConfiguration(logger)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	cfg := &Configuration{}
+	err := envconfig.Process("", cfg)
+	if err == nil {
 		return nil, err
 	}
 
