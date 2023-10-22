@@ -20,6 +20,8 @@ func getNewAPIClient(cfg *Configuration) (apiclient.Client, error) {
 	v, _ := json.Marshal(cfg)
 	fmt.Println("Config valaues => " + string(v))
 	fmt.Println("getNewAPIClient start")
+	fmt.Println("cfg.ServiceURL => " + cfg.ServiceURL)
+	fmt.Println("!cfg.IsSSLEnabled => " + fmt.Sprintf("%v", !cfg.IsSSLEnabled))
 	client, err := apiclient.NewClient(&apiclient.ClientOptions{
 		ServerAddr: cfg.ServiceURL,
 		Insecure:   !cfg.IsSSLEnabled,
