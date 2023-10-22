@@ -96,8 +96,7 @@ message GetGitProjectsForLabelsResponse {
 message AddCloudProviderRequest {
     string cloudType = 1;
     repeated string labels = 2;
-    string accessKey = 3;
-    string secretKey = 4;
+    map<string, string> cloudAttributes = 3;
 }
 
 message AddCloudProviderResponse {
@@ -110,8 +109,7 @@ message UpdateCloudProviderRequest {
     string id = 1;
     string cloudType = 2;
     repeated string labels = 3;
-    string accessKey = 4;
-    string secretKey = 5;
+    map<string, string> cloudAttributes = 4;
 }
 
 message UpdateCloudProviderResponse {
@@ -136,8 +134,7 @@ message CloudProvider {
     string cloudType = 2;
     repeated string labels = 3;
     string lastUpdateTime = 4;
-    string accessKey = 5;
-    string secretKey = 6;
+    map<string, string> cloudAttributes = 5;
 }
 
 message GetCloudProvidersResponse {
