@@ -1,10 +1,10 @@
 exclude:
-
+ - /serverpb.Server/GetClusters 
+ - /serverpb.Server/GetStoreApp
 authenticate:
  - /serverpb.Server/NewClusterRegistration
  - /serverpb.Server/UpdateClusterRegistration
- - /serverpb.Server/DeleteClusterRegistration
- - /serverpb.Server/GetClusters 
+ - /serverpb.Server/DeleteClusterRegistration 
  - /serverpb.Server/GetCluster
  - /serverpb.Server/GetClusterApps
  - /serverpb.Server/GetClusterAppLaunchConfigs
@@ -12,7 +12,6 @@ authenticate:
  - /serverpb.Server/AddStoreApp 
  - /serverpb.Server/UpdateStoreApp
  - /serverpb.Server/DeleteStoreApp
- - /serverpb.Server/GetStoreApp
  - /serverpb.Server/GetStoreApps
  - /serverpb.Server/GetStoreAppValues
  - /serverpb.Server/DeployStoreApp
