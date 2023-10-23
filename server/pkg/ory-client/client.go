@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// Config holds the ory Entity name and Identifier
 type Config struct {
 	OryEntityName        string `envconfig:"ORY_ENTITY_NAME" required:"true"`
 	CredentialIdentifier string `envconfig:"ORY_CRED_IDENTIFIER" required:"true"`
