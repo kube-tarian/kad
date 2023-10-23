@@ -5,11 +5,13 @@ import (
 
 	cm "github.com/intelops/go-common/iam"
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/server/pkg/credential"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	iampb "github.com/kube-tarian/kad/server/pkg/pb/iampb"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
+
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
@@ -163,7 +165,7 @@ func (c *Client) Interceptor() (*cm.ClientsAndConfigs, error) {
 	if err != nil {
 		return nil, err
 	}
-	cerbosPassword:=serviceCredential.Password
+	cerbosPassword := serviceCredential.Password
 
 	iamConn := cm.NewIamConn(
 		cm.WithGrpcDialOption(grpcOpts...),
