@@ -16,20 +16,16 @@ authenticate:
  - /serverpb.Server/GetStoreApps
  - /serverpb.Server/GetStoreAppValues
  - /serverpb.Server/DeployStoreApp
-
  - /serverpb.Server/UnDeployStoreApp
  - /serverpb.Server/UpgradeStoreApp
  - /serverpb.Server/StoreCredential
  - /serverpb.Server/SetClusterGitoptsProject
  - /serverpb.Server/GetClusterGitoptsProject
  - /serverpb.Server/DeleteClusterGitoptsProject
-
-
  - /OauthService.OauthService/CreateOauthClient
  - /OauthService.OauthService/GetOauthToken
  - /OauthService.OauthService/ValidateOauthToken
  - /OauthService.OauthService/CreateClientCredentialsClient
-
  - /captenpluginspb.capten_plugins/AddGitProject
  - /captenpluginspb.capten_plugins/UpdateGitProject
  - /captenpluginspb.capten_plugins/DeleteGitProject
@@ -38,8 +34,6 @@ authenticate:
  - /captenpluginspb.capten_plugins/AddCloudProvider
  - /captenpluginspb.capten_plugins/UpdateCloudProvider
  - /captenpluginspb.capten_plugins/DeleteCloudProvider
-
-
  - /captenpluginspb.capten_plugins/GetCloudProviders
  - /captenpluginspb.capten_plugins/GetCloudProvidersForLabel
  - /captenpluginspb.capten_plugins/RegisterArgoCDProject
@@ -48,7 +42,9 @@ authenticate:
  - /captenpluginspb.capten_plugins/RegisterTektonProject
  - /captenpluginspb.capten_plugins/GetTektonProjects
  - /captenpluginspb.capten_plugins/UnRegisterTektonProject
-
-
 authenticate-authorize:
-- /OauthService.OauthService/ValidateOauthToken
+ - /serverpb.Server/GetClusters 
+ - /OauthService.OauthService/ValidateOauthToken
+ - /serverpb.Server/GetStoreApps
+ - /OauthService.OauthService/GetOauthToken
+ - /OauthService.OauthService/CreateOauthClient
