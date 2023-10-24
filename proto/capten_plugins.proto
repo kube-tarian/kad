@@ -15,7 +15,7 @@ service capten_plugins {
     rpc UpdateCloudProvider(UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
     rpc DeleteCloudProvider(DeleteCloudProviderRequest) returns (DeleteCloudProviderResponse) {}
     rpc GetCloudProviders(GetCloudProvidersRequest) returns (GetCloudProvidersResponse) {}
-    rpc GetCloudProvidersForLabel(GetCloudProvidersForLabelsRequest) returns (GetCloudProvidersForLabelsResponse) {}
+    rpc GetCloudProvidersForLabels(GetCloudProvidersForLabelsRequest) returns (GetCloudProvidersForLabelsResponse) {}
 
     rpc RegisterArgoCDProject(RegisterArgoCDProjectRequest) returns (RegisterArgoCDProjectResponse) {}
     rpc GetArgoCDProjects(GetArgoCDProjectsRequest) returns (GetArgoCDProjectsResponse) {}
