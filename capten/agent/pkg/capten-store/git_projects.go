@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	// insertGitProject             = "INSERT INTO %s.GitProjects(id, project_url, labels, last_update_time) VALUES (?)"
+	insertGitProject             = "INSERT INTO %s.GitProjects(id, project_url, labels, last_update_time) VALUES (?)"
 	insertGitProjectId           = "INSERT INTO %s.GitProjects(id) VALUES (?)"
 	updateGitProjectById         = "UPDATE %s.GitProjects SET %s WHERE id = ?"
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"

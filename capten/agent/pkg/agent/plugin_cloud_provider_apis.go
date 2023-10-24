@@ -13,7 +13,7 @@ const cloudProviderEntityName = "CloudProvider"
 
 func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.AddCloudProviderRequest) (
 	*captenpluginspb.AddCloudProviderResponse, error) {
-	if err := validateArgs(request.CloudType); err != nil {
+	if err := validateArgs(request.GetCloudType(), request.GetCloudAttributes()); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.AddCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
@@ -54,7 +54,7 @@ func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.A
 
 func (a *Agent) UpdateCloudProviders(ctx context.Context, request *captenpluginspb.UpdateCloudProviderRequest) (
 	*captenpluginspb.UpdateCloudProviderResponse, error) {
-	if err := validateArgs(request.CloudType, request.Id); err != nil {
+	if err := validateArgs(request.GetCloudType(), request.GetId(), request.GetCloudAttributes()); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.UpdateCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
@@ -101,7 +101,7 @@ func (a *Agent) UpdateCloudProviders(ctx context.Context, request *captenplugins
 
 func (a *Agent) DeleteCloudProvider(ctx context.Context, request *captenpluginspb.DeleteCloudProviderRequest) (
 	*captenpluginspb.DeleteCloudProviderResponse, error) {
-	if err := validateArgs(request.Id); err != nil {
+	if err := validateArgs(request.GetId()); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.DeleteCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
@@ -160,7 +160,7 @@ func (a *Agent) GetCloudProviders(ctx context.Context, request *captenpluginspb.
 
 func (a *Agent) GetCloudProvidersForLabels(ctx context.Context, request *captenpluginspb.GetCloudProvidersForLabelsRequest) (
 	*captenpluginspb.GetCloudProvidersForLabelsResponse, error) {
-	if len(request.Labels) == 0 {
+	if len(request.GetLabels()) == 0 {
 		a.log.Infof("request validation failed")
 		return &captenpluginspb.GetCloudProvidersForLabelsResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
