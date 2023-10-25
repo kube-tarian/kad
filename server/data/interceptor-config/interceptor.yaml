@@ -1,6 +1,8 @@
 exclude:
- - /serverpb.Server/GetClusters 
- - /serverpb.Server/GetStoreApp
+ - /serverpb.Server/StoreCredential
+ - /captenpluginspb.capten_plugins/GetGitProjectsForLabels
+ - /captenpluginspb.capten_plugins/GetTektonProjects
+ 
 authenticate:
  - /serverpb.Server/NewClusterRegistration
  - /serverpb.Server/UpdateClusterRegistration
@@ -17,7 +19,6 @@ authenticate:
  - /serverpb.Server/DeployStoreApp
  - /serverpb.Server/UnDeployStoreApp
  - /serverpb.Server/UpgradeStoreApp
- - /serverpb.Server/StoreCredential
  - /serverpb.Server/SetClusterGitoptsProject
  - /serverpb.Server/GetClusterGitoptsProject
  - /serverpb.Server/DeleteClusterGitoptsProject
@@ -29,7 +30,6 @@ authenticate:
  - /captenpluginspb.capten_plugins/UpdateGitProject
  - /captenpluginspb.capten_plugins/DeleteGitProject
  - /captenpluginspb.capten_plugins/GetGitProjects
- - /captenpluginspb.capten_plugins/GetGitProjectsForLabels
  - /captenpluginspb.capten_plugins/AddCloudProvider
  - /captenpluginspb.capten_plugins/UpdateCloudProvider
  - /captenpluginspb.capten_plugins/DeleteCloudProvider
@@ -39,10 +39,10 @@ authenticate:
  - /captenpluginspb.capten_plugins/GetArgoCDProjects
  - /captenpluginspb.capten_plugins/UnRegisterArgoCDProject
  - /captenpluginspb.capten_plugins/RegisterTektonProject
- - /captenpluginspb.capten_plugins/GetTektonProjects
  - /captenpluginspb.capten_plugins/UnRegisterTektonProject
 authenticate-authorize:
  - /serverpb.Server/GetClusters 
+ - /serverpb.Server/GetStoreApp
  - /OauthService.OauthService/ValidateOauthToken
  - /serverpb.Server/GetStoreApps
  - /OauthService.OauthService/GetOauthToken
