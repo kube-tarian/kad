@@ -5,6 +5,8 @@ option go_package = "/captenpluginspb";
 package captenpluginspb;
 
 service capten_plugins {
+    rpc GetCaptenPlugins(GetCaptenPluginsRequest) returns (GetCaptenPluginsResponse) {}
+
     rpc AddGitProject(AddGitProjectRequest) returns (AddGitProjectResponse) {}
     rpc UpdateGitProject(UpdateGitProjectRequest) returns (UpdateGitProjectResponse) {}
     rpc DeleteGitProject(DeleteGitProjectRequest) returns (DeleteGitProjectResponse) {}
@@ -24,6 +26,7 @@ service capten_plugins {
     rpc RegisterTektonProject(RegisterTektonProjectRequest) returns (RegisterTektonProjectResponse) {}
     rpc GetTektonProjects(GetTektonProjectsRequest) returns (GetTektonProjectsResponse) {}
     rpc UnRegisterTektonProject(UnRegisterTektonProjectRequest) returns (UnRegisterTektonProjectResponse) {}
+
 }
 
 enum StatusCode {
@@ -219,4 +222,20 @@ message GetTektonProjectsResponse {
     StatusCode status = 1;
     string statusMessage = 2;
     repeated TektonProject projects = 3;
+}
+
+message CaptenPlugin {
+    string pluginName = 1;
+    string pluginDescription = 2;
+    string launchURL = 3;
+    string launchIcon = 4;    
+}
+
+message GetCaptenPluginsRequest {
+}
+
+message GetCaptenPluginsResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+    repeated CaptenPlugin plugins = 3;
 }
