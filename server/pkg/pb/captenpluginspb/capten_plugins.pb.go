@@ -2112,6 +2112,194 @@ func (x *GetTektonProjectsResponse) GetProjects() []*TektonProject {
 	return nil
 }
 
+type CaptenPlugin struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PluginName        string `protobuf:"bytes,1,opt,name=pluginName,proto3" json:"pluginName,omitempty"`
+	PluginDescription string `protobuf:"bytes,2,opt,name=pluginDescription,proto3" json:"pluginDescription,omitempty"`
+	LaunchURL         string `protobuf:"bytes,3,opt,name=launchURL,proto3" json:"launchURL,omitempty"`
+	LaunchIcon        []byte `protobuf:"bytes,4,opt,name=launchIcon,proto3" json:"launchIcon,omitempty"`
+	InstallStatus     string `protobuf:"bytes,5,opt,name=installStatus,proto3" json:"installStatus,omitempty"`
+	RuntimeStatus     string `protobuf:"bytes,6,opt,name=runtimeStatus,proto3" json:"runtimeStatus,omitempty"`
+}
+
+func (x *CaptenPlugin) Reset() {
+	*x = CaptenPlugin{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_capten_plugins_proto_msgTypes[36]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CaptenPlugin) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CaptenPlugin) ProtoMessage() {}
+
+func (x *CaptenPlugin) ProtoReflect() protoreflect.Message {
+	mi := &file_capten_plugins_proto_msgTypes[36]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CaptenPlugin.ProtoReflect.Descriptor instead.
+func (*CaptenPlugin) Descriptor() ([]byte, []int) {
+	return file_capten_plugins_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *CaptenPlugin) GetPluginName() string {
+	if x != nil {
+		return x.PluginName
+	}
+	return ""
+}
+
+func (x *CaptenPlugin) GetPluginDescription() string {
+	if x != nil {
+		return x.PluginDescription
+	}
+	return ""
+}
+
+func (x *CaptenPlugin) GetLaunchURL() string {
+	if x != nil {
+		return x.LaunchURL
+	}
+	return ""
+}
+
+func (x *CaptenPlugin) GetLaunchIcon() []byte {
+	if x != nil {
+		return x.LaunchIcon
+	}
+	return nil
+}
+
+func (x *CaptenPlugin) GetInstallStatus() string {
+	if x != nil {
+		return x.InstallStatus
+	}
+	return ""
+}
+
+func (x *CaptenPlugin) GetRuntimeStatus() string {
+	if x != nil {
+		return x.RuntimeStatus
+	}
+	return ""
+}
+
+type GetCaptenPluginsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *GetCaptenPluginsRequest) Reset() {
+	*x = GetCaptenPluginsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_capten_plugins_proto_msgTypes[37]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetCaptenPluginsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCaptenPluginsRequest) ProtoMessage() {}
+
+func (x *GetCaptenPluginsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_capten_plugins_proto_msgTypes[37]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCaptenPluginsRequest.ProtoReflect.Descriptor instead.
+func (*GetCaptenPluginsRequest) Descriptor() ([]byte, []int) {
+	return file_capten_plugins_proto_rawDescGZIP(), []int{37}
+}
+
+type GetCaptenPluginsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Status        StatusCode      `protobuf:"varint,1,opt,name=status,proto3,enum=captenpluginspb.StatusCode" json:"status,omitempty"`
+	StatusMessage string          `protobuf:"bytes,2,opt,name=statusMessage,proto3" json:"statusMessage,omitempty"`
+	Plugins       []*CaptenPlugin `protobuf:"bytes,3,rep,name=plugins,proto3" json:"plugins,omitempty"`
+}
+
+func (x *GetCaptenPluginsResponse) Reset() {
+	*x = GetCaptenPluginsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_capten_plugins_proto_msgTypes[38]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetCaptenPluginsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCaptenPluginsResponse) ProtoMessage() {}
+
+func (x *GetCaptenPluginsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_capten_plugins_proto_msgTypes[38]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCaptenPluginsResponse.ProtoReflect.Descriptor instead.
+func (*GetCaptenPluginsResponse) Descriptor() ([]byte, []int) {
+	return file_capten_plugins_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *GetCaptenPluginsResponse) GetStatus() StatusCode {
+	if x != nil {
+		return x.Status
+	}
+	return StatusCode_OK
+}
+
+func (x *GetCaptenPluginsResponse) GetStatusMessage() string {
+	if x != nil {
+		return x.StatusMessage
+	}
+	return ""
+}
+
+func (x *GetCaptenPluginsResponse) GetPlugins() []*CaptenPlugin {
+	if x != nil {
+		return x.Plugins
+	}
+	return nil
+}
+
 var File_capten_plugins_proto protoreflect.FileDescriptor
 
 var file_capten_plugins_proto_rawDesc = []byte{
@@ -2391,13 +2579,47 @@ var file_capten_plugins_proto_rawDesc = []byte{
 	0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x70,
 	0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x70, 0x62, 0x2e, 0x54, 0x65, 0x6b, 0x74, 0x6f, 0x6e, 0x50,
 	0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x52, 0x08, 0x70, 0x72, 0x6f, 0x6a, 0x65, 0x63, 0x74, 0x73,
-	0x2a, 0x4d, 0x0a, 0x0a, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x06,
-	0x0a, 0x02, 0x4f, 0x4b, 0x10, 0x00, 0x12, 0x12, 0x0a, 0x0e, 0x49, 0x4e, 0x54, 0x45, 0x52, 0x4e,
-	0x41, 0x4c, 0x5f, 0x45, 0x52, 0x52, 0x4f, 0x52, 0x10, 0x01, 0x12, 0x14, 0x0a, 0x10, 0x49, 0x4e,
-	0x56, 0x41, 0x4c, 0x49, 0x44, 0x5f, 0x41, 0x52, 0x47, 0x55, 0x4d, 0x45, 0x4e, 0x54, 0x10, 0x02,
-	0x12, 0x0d, 0x0a, 0x09, 0x4e, 0x4f, 0x54, 0x5f, 0x46, 0x4f, 0x55, 0x4e, 0x44, 0x10, 0x03, 0x32,
-	0xc7, 0x0e, 0x0a, 0x0e, 0x63, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x5f, 0x70, 0x6c, 0x75, 0x67, 0x69,
-	0x6e, 0x73, 0x12, 0x60, 0x0a, 0x0d, 0x41, 0x64, 0x64, 0x47, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x6a,
+	0x22, 0xe6, 0x01, 0x0a, 0x0c, 0x43, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x50, 0x6c, 0x75, 0x67, 0x69,
+	0x6e, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x4e, 0x61, 0x6d,
+	0x65, 0x12, 0x2c, 0x0a, 0x11, 0x70, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x44, 0x65, 0x73, 0x63, 0x72,
+	0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11, 0x70, 0x6c,
+	0x75, 0x67, 0x69, 0x6e, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12,
+	0x1c, 0x0a, 0x09, 0x6c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x55, 0x52, 0x4c, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x09, 0x6c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x55, 0x52, 0x4c, 0x12, 0x1e, 0x0a,
+	0x0a, 0x6c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x49, 0x63, 0x6f, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x0c, 0x52, 0x0a, 0x6c, 0x61, 0x75, 0x6e, 0x63, 0x68, 0x49, 0x63, 0x6f, 0x6e, 0x12, 0x24, 0x0a,
+	0x0d, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x53, 0x74, 0x61,
+	0x74, 0x75, 0x73, 0x12, 0x24, 0x0a, 0x0d, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x53, 0x74,
+	0x61, 0x74, 0x75, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x72, 0x75, 0x6e, 0x74,
+	0x69, 0x6d, 0x65, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x22, 0x19, 0x0a, 0x17, 0x47, 0x65, 0x74,
+	0x43, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x50, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x22, 0xae, 0x01, 0x0a, 0x18, 0x47, 0x65, 0x74, 0x43, 0x61, 0x70, 0x74,
+	0x65, 0x6e, 0x50, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x33, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0e, 0x32, 0x1b, 0x2e, 0x63, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x70, 0x6c, 0x75, 0x67, 0x69, 0x6e,
+	0x73, 0x70, 0x62, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43, 0x6f, 0x64, 0x65, 0x52, 0x06,
+	0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x24, 0x0a, 0x0d, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73,
+	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x73,
+	0x74, 0x61, 0x74, 0x75, 0x73, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x12, 0x37, 0x0a, 0x07,
+	0x70, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e,
+	0x63, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x70, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x70, 0x62, 0x2e,
+	0x43, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x50, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x52, 0x07, 0x70, 0x6c,
+	0x75, 0x67, 0x69, 0x6e, 0x73, 0x2a, 0x4d, 0x0a, 0x0a, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x43,
+	0x6f, 0x64, 0x65, 0x12, 0x06, 0x0a, 0x02, 0x4f, 0x4b, 0x10, 0x00, 0x12, 0x12, 0x0a, 0x0e, 0x49,
+	0x4e, 0x54, 0x45, 0x52, 0x4e, 0x41, 0x4c, 0x5f, 0x45, 0x52, 0x52, 0x4f, 0x52, 0x10, 0x01, 0x12,
+	0x14, 0x0a, 0x10, 0x49, 0x4e, 0x56, 0x41, 0x4c, 0x49, 0x44, 0x5f, 0x41, 0x52, 0x47, 0x55, 0x4d,
+	0x45, 0x4e, 0x54, 0x10, 0x02, 0x12, 0x0d, 0x0a, 0x09, 0x4e, 0x4f, 0x54, 0x5f, 0x46, 0x4f, 0x55,
+	0x4e, 0x44, 0x10, 0x03, 0x32, 0xb2, 0x0f, 0x0a, 0x0e, 0x63, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x5f,
+	0x70, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x12, 0x69, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x43, 0x61,
+	0x70, 0x74, 0x65, 0x6e, 0x50, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x12, 0x28, 0x2e, 0x63, 0x61,
+	0x70, 0x74, 0x65, 0x6e, 0x70, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x70, 0x62, 0x2e, 0x47, 0x65,
+	0x74, 0x43, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x50, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x63, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x70, 0x6c,
+	0x75, 0x67, 0x69, 0x6e, 0x73, 0x70, 0x62, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x61, 0x70, 0x74, 0x65,
+	0x6e, 0x50, 0x6c, 0x75, 0x67, 0x69, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x00, 0x12, 0x60, 0x0a, 0x0d, 0x41, 0x64, 0x64, 0x47, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x6a,
 	0x65, 0x63, 0x74, 0x12, 0x25, 0x2e, 0x63, 0x61, 0x70, 0x74, 0x65, 0x6e, 0x70, 0x6c, 0x75, 0x67,
 	0x69, 0x6e, 0x73, 0x70, 0x62, 0x2e, 0x41, 0x64, 0x64, 0x47, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x6a,
 	0x65, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x63, 0x61, 0x70,
@@ -2530,7 +2752,7 @@ func file_capten_plugins_proto_rawDescGZIP() []byte {
 }
 
 var file_capten_plugins_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_capten_plugins_proto_msgTypes = make([]protoimpl.MessageInfo, 39)
+var file_capten_plugins_proto_msgTypes = make([]protoimpl.MessageInfo, 42)
 var file_capten_plugins_proto_goTypes = []interface{}{
 	(StatusCode)(0),                            // 0: captenpluginspb.StatusCode
 	(*AddGitProjectRequest)(nil),               // 1: captenpluginspb.AddGitProjectRequest
@@ -2569,9 +2791,12 @@ var file_capten_plugins_proto_goTypes = []interface{}{
 	(*TektonProject)(nil),                      // 34: captenpluginspb.TektonProject
 	(*GetTektonProjectsRequest)(nil),           // 35: captenpluginspb.GetTektonProjectsRequest
 	(*GetTektonProjectsResponse)(nil),          // 36: captenpluginspb.GetTektonProjectsResponse
-	nil,                                        // 37: captenpluginspb.AddCloudProviderRequest.CloudAttributesEntry
-	nil,                                        // 38: captenpluginspb.UpdateCloudProviderRequest.CloudAttributesEntry
-	nil,                                        // 39: captenpluginspb.CloudProvider.CloudAttributesEntry
+	(*CaptenPlugin)(nil),                       // 37: captenpluginspb.CaptenPlugin
+	(*GetCaptenPluginsRequest)(nil),            // 38: captenpluginspb.GetCaptenPluginsRequest
+	(*GetCaptenPluginsResponse)(nil),           // 39: captenpluginspb.GetCaptenPluginsResponse
+	nil,                                        // 40: captenpluginspb.AddCloudProviderRequest.CloudAttributesEntry
+	nil,                                        // 41: captenpluginspb.UpdateCloudProviderRequest.CloudAttributesEntry
+	nil,                                        // 42: captenpluginspb.CloudProvider.CloudAttributesEntry
 }
 var file_capten_plugins_proto_depIdxs = []int32{
 	0,  // 0: captenpluginspb.AddGitProjectResponse.status:type_name -> captenpluginspb.StatusCode
@@ -2581,12 +2806,12 @@ var file_capten_plugins_proto_depIdxs = []int32{
 	0,  // 4: captenpluginspb.GetGitProjectsResponse.status:type_name -> captenpluginspb.StatusCode
 	8,  // 5: captenpluginspb.GetGitProjectsForLabelsResponse.projects:type_name -> captenpluginspb.GitProject
 	0,  // 6: captenpluginspb.GetGitProjectsForLabelsResponse.status:type_name -> captenpluginspb.StatusCode
-	37, // 7: captenpluginspb.AddCloudProviderRequest.cloudAttributes:type_name -> captenpluginspb.AddCloudProviderRequest.CloudAttributesEntry
+	40, // 7: captenpluginspb.AddCloudProviderRequest.cloudAttributes:type_name -> captenpluginspb.AddCloudProviderRequest.CloudAttributesEntry
 	0,  // 8: captenpluginspb.AddCloudProviderResponse.status:type_name -> captenpluginspb.StatusCode
-	38, // 9: captenpluginspb.UpdateCloudProviderRequest.cloudAttributes:type_name -> captenpluginspb.UpdateCloudProviderRequest.CloudAttributesEntry
+	41, // 9: captenpluginspb.UpdateCloudProviderRequest.cloudAttributes:type_name -> captenpluginspb.UpdateCloudProviderRequest.CloudAttributesEntry
 	0,  // 10: captenpluginspb.UpdateCloudProviderResponse.status:type_name -> captenpluginspb.StatusCode
 	0,  // 11: captenpluginspb.DeleteCloudProviderResponse.status:type_name -> captenpluginspb.StatusCode
-	39, // 12: captenpluginspb.CloudProvider.cloudAttributes:type_name -> captenpluginspb.CloudProvider.CloudAttributesEntry
+	42, // 12: captenpluginspb.CloudProvider.cloudAttributes:type_name -> captenpluginspb.CloudProvider.CloudAttributesEntry
 	19, // 13: captenpluginspb.GetCloudProvidersResponse.cloudProviders:type_name -> captenpluginspb.CloudProvider
 	0,  // 14: captenpluginspb.GetCloudProvidersResponse.status:type_name -> captenpluginspb.StatusCode
 	19, // 15: captenpluginspb.GetCloudProvidersForLabelsResponse.cloudProviders:type_name -> captenpluginspb.CloudProvider
@@ -2599,43 +2824,47 @@ var file_capten_plugins_proto_depIdxs = []int32{
 	0,  // 22: captenpluginspb.UnRegisterTektonProjectResponse.status:type_name -> captenpluginspb.StatusCode
 	0,  // 23: captenpluginspb.GetTektonProjectsResponse.status:type_name -> captenpluginspb.StatusCode
 	34, // 24: captenpluginspb.GetTektonProjectsResponse.projects:type_name -> captenpluginspb.TektonProject
-	1,  // 25: captenpluginspb.capten_plugins.AddGitProject:input_type -> captenpluginspb.AddGitProjectRequest
-	3,  // 26: captenpluginspb.capten_plugins.UpdateGitProject:input_type -> captenpluginspb.UpdateGitProjectRequest
-	5,  // 27: captenpluginspb.capten_plugins.DeleteGitProject:input_type -> captenpluginspb.DeleteGitProjectRequest
-	7,  // 28: captenpluginspb.capten_plugins.GetGitProjects:input_type -> captenpluginspb.GetGitProjectsRequest
-	10, // 29: captenpluginspb.capten_plugins.GetGitProjectsForLabels:input_type -> captenpluginspb.GetGitProjectsForLabelsRequest
-	12, // 30: captenpluginspb.capten_plugins.AddCloudProvider:input_type -> captenpluginspb.AddCloudProviderRequest
-	14, // 31: captenpluginspb.capten_plugins.UpdateCloudProvider:input_type -> captenpluginspb.UpdateCloudProviderRequest
-	16, // 32: captenpluginspb.capten_plugins.DeleteCloudProvider:input_type -> captenpluginspb.DeleteCloudProviderRequest
-	18, // 33: captenpluginspb.capten_plugins.GetCloudProviders:input_type -> captenpluginspb.GetCloudProvidersRequest
-	21, // 34: captenpluginspb.capten_plugins.GetCloudProvidersForLabel:input_type -> captenpluginspb.GetCloudProvidersForLabelsRequest
-	23, // 35: captenpluginspb.capten_plugins.RegisterArgoCDProject:input_type -> captenpluginspb.RegisterArgoCDProjectRequest
-	25, // 36: captenpluginspb.capten_plugins.GetArgoCDProjects:input_type -> captenpluginspb.GetArgoCDProjectsRequest
-	27, // 37: captenpluginspb.capten_plugins.UnRegisterArgoCDProject:input_type -> captenpluginspb.UnRegisterArgoCDProjectRequest
-	30, // 38: captenpluginspb.capten_plugins.RegisterTektonProject:input_type -> captenpluginspb.RegisterTektonProjectRequest
-	35, // 39: captenpluginspb.capten_plugins.GetTektonProjects:input_type -> captenpluginspb.GetTektonProjectsRequest
-	32, // 40: captenpluginspb.capten_plugins.UnRegisterTektonProject:input_type -> captenpluginspb.UnRegisterTektonProjectRequest
-	2,  // 41: captenpluginspb.capten_plugins.AddGitProject:output_type -> captenpluginspb.AddGitProjectResponse
-	4,  // 42: captenpluginspb.capten_plugins.UpdateGitProject:output_type -> captenpluginspb.UpdateGitProjectResponse
-	6,  // 43: captenpluginspb.capten_plugins.DeleteGitProject:output_type -> captenpluginspb.DeleteGitProjectResponse
-	9,  // 44: captenpluginspb.capten_plugins.GetGitProjects:output_type -> captenpluginspb.GetGitProjectsResponse
-	11, // 45: captenpluginspb.capten_plugins.GetGitProjectsForLabels:output_type -> captenpluginspb.GetGitProjectsForLabelsResponse
-	13, // 46: captenpluginspb.capten_plugins.AddCloudProvider:output_type -> captenpluginspb.AddCloudProviderResponse
-	15, // 47: captenpluginspb.capten_plugins.UpdateCloudProvider:output_type -> captenpluginspb.UpdateCloudProviderResponse
-	17, // 48: captenpluginspb.capten_plugins.DeleteCloudProvider:output_type -> captenpluginspb.DeleteCloudProviderResponse
-	20, // 49: captenpluginspb.capten_plugins.GetCloudProviders:output_type -> captenpluginspb.GetCloudProvidersResponse
-	22, // 50: captenpluginspb.capten_plugins.GetCloudProvidersForLabel:output_type -> captenpluginspb.GetCloudProvidersForLabelsResponse
-	24, // 51: captenpluginspb.capten_plugins.RegisterArgoCDProject:output_type -> captenpluginspb.RegisterArgoCDProjectResponse
-	26, // 52: captenpluginspb.capten_plugins.GetArgoCDProjects:output_type -> captenpluginspb.GetArgoCDProjectsResponse
-	28, // 53: captenpluginspb.capten_plugins.UnRegisterArgoCDProject:output_type -> captenpluginspb.UnRegisterArgoCDProjectResponse
-	31, // 54: captenpluginspb.capten_plugins.RegisterTektonProject:output_type -> captenpluginspb.RegisterTektonProjectResponse
-	36, // 55: captenpluginspb.capten_plugins.GetTektonProjects:output_type -> captenpluginspb.GetTektonProjectsResponse
-	33, // 56: captenpluginspb.capten_plugins.UnRegisterTektonProject:output_type -> captenpluginspb.UnRegisterTektonProjectResponse
-	41, // [41:57] is the sub-list for method output_type
-	25, // [25:41] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	0,  // 25: captenpluginspb.GetCaptenPluginsResponse.status:type_name -> captenpluginspb.StatusCode
+	37, // 26: captenpluginspb.GetCaptenPluginsResponse.plugins:type_name -> captenpluginspb.CaptenPlugin
+	38, // 27: captenpluginspb.capten_plugins.GetCaptenPlugins:input_type -> captenpluginspb.GetCaptenPluginsRequest
+	1,  // 28: captenpluginspb.capten_plugins.AddGitProject:input_type -> captenpluginspb.AddGitProjectRequest
+	3,  // 29: captenpluginspb.capten_plugins.UpdateGitProject:input_type -> captenpluginspb.UpdateGitProjectRequest
+	5,  // 30: captenpluginspb.capten_plugins.DeleteGitProject:input_type -> captenpluginspb.DeleteGitProjectRequest
+	7,  // 31: captenpluginspb.capten_plugins.GetGitProjects:input_type -> captenpluginspb.GetGitProjectsRequest
+	10, // 32: captenpluginspb.capten_plugins.GetGitProjectsForLabels:input_type -> captenpluginspb.GetGitProjectsForLabelsRequest
+	12, // 33: captenpluginspb.capten_plugins.AddCloudProvider:input_type -> captenpluginspb.AddCloudProviderRequest
+	14, // 34: captenpluginspb.capten_plugins.UpdateCloudProvider:input_type -> captenpluginspb.UpdateCloudProviderRequest
+	16, // 35: captenpluginspb.capten_plugins.DeleteCloudProvider:input_type -> captenpluginspb.DeleteCloudProviderRequest
+	18, // 36: captenpluginspb.capten_plugins.GetCloudProviders:input_type -> captenpluginspb.GetCloudProvidersRequest
+	21, // 37: captenpluginspb.capten_plugins.GetCloudProvidersForLabel:input_type -> captenpluginspb.GetCloudProvidersForLabelsRequest
+	23, // 38: captenpluginspb.capten_plugins.RegisterArgoCDProject:input_type -> captenpluginspb.RegisterArgoCDProjectRequest
+	25, // 39: captenpluginspb.capten_plugins.GetArgoCDProjects:input_type -> captenpluginspb.GetArgoCDProjectsRequest
+	27, // 40: captenpluginspb.capten_plugins.UnRegisterArgoCDProject:input_type -> captenpluginspb.UnRegisterArgoCDProjectRequest
+	30, // 41: captenpluginspb.capten_plugins.RegisterTektonProject:input_type -> captenpluginspb.RegisterTektonProjectRequest
+	35, // 42: captenpluginspb.capten_plugins.GetTektonProjects:input_type -> captenpluginspb.GetTektonProjectsRequest
+	32, // 43: captenpluginspb.capten_plugins.UnRegisterTektonProject:input_type -> captenpluginspb.UnRegisterTektonProjectRequest
+	39, // 44: captenpluginspb.capten_plugins.GetCaptenPlugins:output_type -> captenpluginspb.GetCaptenPluginsResponse
+	2,  // 45: captenpluginspb.capten_plugins.AddGitProject:output_type -> captenpluginspb.AddGitProjectResponse
+	4,  // 46: captenpluginspb.capten_plugins.UpdateGitProject:output_type -> captenpluginspb.UpdateGitProjectResponse
+	6,  // 47: captenpluginspb.capten_plugins.DeleteGitProject:output_type -> captenpluginspb.DeleteGitProjectResponse
+	9,  // 48: captenpluginspb.capten_plugins.GetGitProjects:output_type -> captenpluginspb.GetGitProjectsResponse
+	11, // 49: captenpluginspb.capten_plugins.GetGitProjectsForLabels:output_type -> captenpluginspb.GetGitProjectsForLabelsResponse
+	13, // 50: captenpluginspb.capten_plugins.AddCloudProvider:output_type -> captenpluginspb.AddCloudProviderResponse
+	15, // 51: captenpluginspb.capten_plugins.UpdateCloudProvider:output_type -> captenpluginspb.UpdateCloudProviderResponse
+	17, // 52: captenpluginspb.capten_plugins.DeleteCloudProvider:output_type -> captenpluginspb.DeleteCloudProviderResponse
+	20, // 53: captenpluginspb.capten_plugins.GetCloudProviders:output_type -> captenpluginspb.GetCloudProvidersResponse
+	22, // 54: captenpluginspb.capten_plugins.GetCloudProvidersForLabel:output_type -> captenpluginspb.GetCloudProvidersForLabelsResponse
+	24, // 55: captenpluginspb.capten_plugins.RegisterArgoCDProject:output_type -> captenpluginspb.RegisterArgoCDProjectResponse
+	26, // 56: captenpluginspb.capten_plugins.GetArgoCDProjects:output_type -> captenpluginspb.GetArgoCDProjectsResponse
+	28, // 57: captenpluginspb.capten_plugins.UnRegisterArgoCDProject:output_type -> captenpluginspb.UnRegisterArgoCDProjectResponse
+	31, // 58: captenpluginspb.capten_plugins.RegisterTektonProject:output_type -> captenpluginspb.RegisterTektonProjectResponse
+	36, // 59: captenpluginspb.capten_plugins.GetTektonProjects:output_type -> captenpluginspb.GetTektonProjectsResponse
+	33, // 60: captenpluginspb.capten_plugins.UnRegisterTektonProject:output_type -> captenpluginspb.UnRegisterTektonProjectResponse
+	44, // [44:61] is the sub-list for method output_type
+	27, // [27:44] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_capten_plugins_proto_init() }
@@ -3076,6 +3305,42 @@ func file_capten_plugins_proto_init() {
 				return nil
 			}
 		}
+		file_capten_plugins_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CaptenPlugin); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_capten_plugins_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetCaptenPluginsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_capten_plugins_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetCaptenPluginsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -3083,7 +3348,7 @@ func file_capten_plugins_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_capten_plugins_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   39,
+			NumMessages:   42,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

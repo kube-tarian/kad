@@ -9,6 +9,8 @@ ReleaseName: "argo-cd"
 Icon: "argo-cd.svg"
 Version: "1.0.0"
 CreateNamespace: true
+PluginName: ArgoCD
+PluginDescription: "Configure ArgoCD projects and resources"
 LaunchURL: https://argo.{{.DomainName}}
 LaunchUIDescription: "Intelops ArgoCD"
 LaunchUIIcon: "argo-cd.svg"
