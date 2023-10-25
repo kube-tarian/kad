@@ -1,0 +1,42 @@
+package agent
+
+import (
+	"context"
+
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
+)
+
+func (a *Agent) GetCaptenPlugins(ctx context.Context, request *captenpluginspb.GetCaptenPluginsRequest) (
+	*captenpluginspb.GetCaptenPluginsResponse, error) {
+	a.log.Infof("Get Capten Plugins request recieved")
+
+	res, err := a.as.GetAllApps()
+	if err != nil {
+		return &captenpluginspb.GetCaptenPluginsResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to fetch pluginss",
+		}, nil
+	}
+
+	plugins := make([]*captenpluginspb.CaptenPlugin, 0)
+	for _, r := range res {
+		appConfig := r.GetConfig()
+		if len(appConfig.PluginName) == 0 {
+			continue
+		}
+
+		plugins = append(plugins, &captenpluginspb.CaptenPlugin{
+			PluginName:        r.GetConfig().GetPluginName(),
+			PluginDescription: r.GetConfig().GetPluginDescription(),
+			LaunchIcon:        r.GetConfig().GetIcon(),
+			LaunchURL:         r.GetConfig().GetLaunchURL(),
+			InstallStatus:     r.GetConfig().GetInstallStatus(),
+			RuntimeStatus:     r.GetConfig().GetRuntimeStatus(),
+		})
+	}
+
+	a.log.Infof("Fetched %d capten plugins", len(plugins))
+	return &captenpluginspb.GetCaptenPluginsResponse{Status: captenpluginspb.StatusCode_OK,
+		StatusMessage: "successfully fetched plugin",
+		Plugins:       plugins}, nil
+}

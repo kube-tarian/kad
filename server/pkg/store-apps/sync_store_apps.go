@@ -45,10 +45,11 @@ type AppConfig struct {
 	PrivilegedNamespace bool                   `yaml:"PrivilegedNamespace"`
 	TemplateValues      map[string]interface{} `yaml:"TemplateValues"`
 	Icon                string                 `yaml:"Icon"`
+	PluginName          string                 `yaml:"PluginName"`
+	PluginDescription   string                 `yaml:"PluginDescription"`
 }
 
 func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
-
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return err
@@ -98,6 +99,8 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			PrivilegedNamespace: appConfig.PrivilegedNamespace,
 			LaunchURL:           appConfig.LaunchURL,
 			LaunchUIDescription: appConfig.LaunchUIDescription,
+			PluginName:          appConfig.PluginName,
+			PluginDescription:   appConfig.PluginDescription,
 		}
 
 		if len(appConfig.LaunchUIIcon) != 0 {
