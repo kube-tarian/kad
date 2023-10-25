@@ -23,7 +23,7 @@ func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenplugin
 
 	argoCDProject, err := a.as.GetArgoCDProjectForID(request.Id)
 	if err != nil {
-		a.log.Infof("faile to get argocd project %s, %v", request.Id, err)
+		a.log.Infof("failed to get argocd project %s, %v", request.Id, err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",

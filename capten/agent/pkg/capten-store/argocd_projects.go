@@ -57,6 +57,7 @@ func (a *Store) DeleteArgoCDProjectsData(id string) error {
 }
 
 func (a *Store) executeArgoCDProjectsSelectQuery(query string) ([]*model.ArgoCDProject, error) {
+	fmt.Println("query => ", query)
 	selectAllQuery := a.client.Session().Query(query)
 	iter := selectAllQuery.Iter()
 	project := model.ArgoCDProject{}
