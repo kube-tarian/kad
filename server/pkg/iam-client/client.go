@@ -172,7 +172,6 @@ func (c *Client) Interceptor() (*cm.ClientsAndConfigs, error) {
 		return nil, err
 	}
 	cerbosPassword := serviceCredential.Password
-	log.Println("CerbosPassword", cerbosPassword)
 	iamConn := cm.NewIamConn(
 		cm.WithGrpcDialOption(grpcOpts...),
 		cm.WithIamAddress(c.cfg.IAMURL),

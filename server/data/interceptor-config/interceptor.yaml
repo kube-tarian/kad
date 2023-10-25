@@ -36,8 +36,8 @@ authenticate:
  - /captenpluginspb.capten_plugins/UnRegisterArgoCDProject
  - /captenpluginspb.capten_plugins/RegisterTektonProject
  - /captenpluginspb.capten_plugins/UnRegisterTektonProject
- - /serverpb.Server/GetClusters 
 authenticate-authorize:
+ - /serverpb.Server/GetClusters 
  - /captenpluginspb.capten_plugins/GetGitProjects
  - /serverpb.Server/GetStoreApp
  - /captenpluginspb.capten_plugins/GetTektonProjects
