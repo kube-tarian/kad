@@ -243,6 +243,16 @@ entries:
     version: 0.1.0
   server:
   - apiVersion: v2
+    appVersion: 1.24.0
+    created: "2023-10-25T17:52:20.897860533Z"
+    description: A Helm chart for Kubernetes
+    digest: dda984a1cb244646367c99c4946088abd628c8e105983acbc2e78faaeb4de75d
+    name: server
+    type: application
+    urls:
+    - https://github.com/kube-tarian/kad/releases/download/server-0.1.24/server-0.1.24.tgz
+    version: 0.1.24
+  - apiVersion: v2
     appVersion: 1.23.0
     created: "2023-10-18T17:56:15.62075567Z"
     description: A Helm chart for Kubernetes
@@ -463,4 +473,4 @@ entries:
     urls:
     - https://github.com/kube-tarian/kad/releases/download/vaultservice-0.1.0/vaultservice-0.1.0.tgz
     version: 0.1.0
-generated: "2023-10-18T17:56:15.621325476Z"
+generated: "2023-10-25T17:52:20.898039433Z"
