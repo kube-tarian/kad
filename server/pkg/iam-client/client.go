@@ -2,6 +2,7 @@ package iamclient
 
 import (
 	"context"
+	"log"
 
 	cm "github.com/intelops/go-common/iam"
 	"github.com/intelops/go-common/logging"
@@ -49,6 +50,7 @@ func GetCerbosEnv() (*CerbosEnv, error) {
 }
 
 func (c *Client) RegisterService() error {
+	log.Println("Registering Service")
 	conn, err := grpc.Dial(c.cfg.IAMURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
@@ -71,6 +73,7 @@ func (c *Client) RegisterService() error {
 }
 
 func (c *Client) RegisterRolesActions() error {
+	log.Println("Registering Roles Actiosn")
 
 	grpcOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -97,6 +100,8 @@ func (c *Client) RegisterRolesActions() error {
 	err = iamConn.UpdateActionRoles(newCtx)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to update action roles")
+	} else {
+		log.Println("Updated Roles")
 	}
 	return nil
 }
@@ -153,6 +158,7 @@ func (c *Client) RegisterCerbosPolicy() error {
 }
 
 func (c *Client) Interceptor() (*cm.ClientsAndConfigs, error) {
+	log.Println("Interceptor Started")
 	cfg, err := GetCerbosEnv()
 	if err != nil {
 		return nil, err
@@ -166,7 +172,7 @@ func (c *Client) Interceptor() (*cm.ClientsAndConfigs, error) {
 		return nil, err
 	}
 	cerbosPassword := serviceCredential.Password
-
+	log.Println("CerbosPassword", cerbosPassword)
 	iamConn := cm.NewIamConn(
 		cm.WithGrpcDialOption(grpcOpts...),
 		cm.WithIamAddress(c.cfg.IAMURL),
@@ -178,6 +184,8 @@ func (c *Client) Interceptor() (*cm.ClientsAndConfigs, error) {
 	)
 	if err := iamConn.InitializeOrySdk(); err != nil {
 		return nil, err
+	} else {
+		log.Println("Initiaized Ory Sdk")
 	}
 
 	if err := iamConn.IntializeCerbosSdk(); err != nil {
