@@ -8,5 +8,7 @@ Namespace: "crossplane-system"
 ReleaseName: "crossplane"
 Version: "1.0.0"
 CreateNamespace: true
+PluginName: "Crossplane"
+PluginDescription: "Configure Infra with Crossplane"
 OverrideValues:
   DomainName: "{{.DomainName}}"

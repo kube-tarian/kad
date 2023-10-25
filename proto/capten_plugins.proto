@@ -228,7 +228,9 @@ message CaptenPlugin {
     string pluginName = 1;
     string pluginDescription = 2;
     string launchURL = 3;
-    string launchIcon = 4;    
+    bytes launchIcon = 4;
+    string installStatus = 5;
+    string runtimeStatus = 6;
 }
 
 message GetCaptenPluginsRequest {

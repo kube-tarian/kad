@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
+	CaptenPlugins_GetCaptenPlugins_FullMethodName          = "/captenpluginspb.capten_plugins/GetCaptenPlugins"
 	CaptenPlugins_AddGitProject_FullMethodName             = "/captenpluginspb.capten_plugins/AddGitProject"
 	CaptenPlugins_UpdateGitProject_FullMethodName          = "/captenpluginspb.capten_plugins/UpdateGitProject"
 	CaptenPlugins_DeleteGitProject_FullMethodName          = "/captenpluginspb.capten_plugins/DeleteGitProject"
@@ -41,6 +42,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CaptenPluginsClient interface {
+	GetCaptenPlugins(ctx context.Context, in *GetCaptenPluginsRequest, opts ...grpc.CallOption) (*GetCaptenPluginsResponse, error)
 	AddGitProject(ctx context.Context, in *AddGitProjectRequest, opts ...grpc.CallOption) (*AddGitProjectResponse, error)
 	UpdateGitProject(ctx context.Context, in *UpdateGitProjectRequest, opts ...grpc.CallOption) (*UpdateGitProjectResponse, error)
 	DeleteGitProject(ctx context.Context, in *DeleteGitProjectRequest, opts ...grpc.CallOption) (*DeleteGitProjectResponse, error)
@@ -65,6 +67,15 @@ type captenPluginsClient struct {
 
 func NewCaptenPluginsClient(cc grpc.ClientConnInterface) CaptenPluginsClient {
 	return &captenPluginsClient{cc}
+}
+
+func (c *captenPluginsClient) GetCaptenPlugins(ctx context.Context, in *GetCaptenPluginsRequest, opts ...grpc.CallOption) (*GetCaptenPluginsResponse, error) {
+	out := new(GetCaptenPluginsResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_GetCaptenPlugins_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *captenPluginsClient) AddGitProject(ctx context.Context, in *AddGitProjectRequest, opts ...grpc.CallOption) (*AddGitProjectResponse, error) {
@@ -215,6 +226,7 @@ func (c *captenPluginsClient) UnRegisterTektonProject(ctx context.Context, in *U
 // All implementations must embed UnimplementedCaptenPluginsServer
 // for forward compatibility
 type CaptenPluginsServer interface {
+	GetCaptenPlugins(context.Context, *GetCaptenPluginsRequest) (*GetCaptenPluginsResponse, error)
 	AddGitProject(context.Context, *AddGitProjectRequest) (*AddGitProjectResponse, error)
 	UpdateGitProject(context.Context, *UpdateGitProjectRequest) (*UpdateGitProjectResponse, error)
 	DeleteGitProject(context.Context, *DeleteGitProjectRequest) (*DeleteGitProjectResponse, error)
@@ -238,6 +250,9 @@ type CaptenPluginsServer interface {
 type UnimplementedCaptenPluginsServer struct {
 }
 
+func (UnimplementedCaptenPluginsServer) GetCaptenPlugins(context.Context, *GetCaptenPluginsRequest) (*GetCaptenPluginsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCaptenPlugins not implemented")
+}
 func (UnimplementedCaptenPluginsServer) AddGitProject(context.Context, *AddGitProjectRequest) (*AddGitProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddGitProject not implemented")
 }
@@ -297,6 +312,24 @@ type UnsafeCaptenPluginsServer interface {
 
 func RegisterCaptenPluginsServer(s grpc.ServiceRegistrar, srv CaptenPluginsServer) {
 	s.RegisterService(&CaptenPlugins_ServiceDesc, srv)
+}
+
+func _CaptenPlugins_GetCaptenPlugins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCaptenPluginsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CaptenPluginsServer).GetCaptenPlugins(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CaptenPlugins_GetCaptenPlugins_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CaptenPluginsServer).GetCaptenPlugins(ctx, req.(*GetCaptenPluginsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _CaptenPlugins_AddGitProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -594,6 +627,10 @@ var CaptenPlugins_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "captenpluginspb.capten_plugins",
 	HandlerType: (*CaptenPluginsServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetCaptenPlugins",
+			Handler:    _CaptenPlugins_GetCaptenPlugins_Handler,
+		},
 		{
 			MethodName: "AddGitProject",
 			Handler:    _CaptenPlugins_AddGitProject_Handler,

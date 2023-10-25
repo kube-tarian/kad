@@ -203,6 +203,8 @@ message AppConfig {
   string runtimeStatus = 16;
   bool defualtApp = 17;
   string lastUpdateTime = 18;
+  string pluginName = 19;
+  string pluginDescription = 20;
 }
 
 message AppValues {
