@@ -1,7 +1,6 @@
 exclude:
  - /serverpb.Server/StoreCredential
  - /captenpluginspb.capten_plugins/GetGitProjectsForLabels
- 
 authenticate:
  - /serverpb.Server/NewClusterRegistration
  - /serverpb.Server/UpdateClusterRegistration
@@ -37,8 +36,8 @@ authenticate:
  - /captenpluginspb.capten_plugins/UnRegisterArgoCDProject
  - /captenpluginspb.capten_plugins/RegisterTektonProject
  - /captenpluginspb.capten_plugins/UnRegisterTektonProject
-authenticate-authorize:
  - /serverpb.Server/GetClusters 
+authenticate-authorize:
  - /captenpluginspb.capten_plugins/GetGitProjects
  - /serverpb.Server/GetStoreApp
  - /captenpluginspb.capten_plugins/GetTektonProjects
