@@ -1,6 +1,0 @@
-package: api
-generate:
-  chi-server: true
-  models: true
-  embedded-spec: true
-output: config-worker/api/config_worker.gen.go

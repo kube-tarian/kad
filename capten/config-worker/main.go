@@ -1,24 +1,29 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-	"syscall"
-
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/config-worker/pkg/application"
+	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
+	"github.com/kube-tarian/kad/capten/config-worker/pkg/activities"
+	"github.com/kube-tarian/kad/capten/config-worker/pkg/workflows"
+)
+
+const (
+	WorkflowTaskQueueName = "Configure"
 )
 
 func main() {
 	logger := logging.NewLogger()
-	logger.Infof("Started config worker\n")
-	app := application.New(logger)
-	go app.Start()
+	logger.Infof("Starting config worker..\n")
 
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-	<-signals
+	worker, err := workerframework.NewWorker(WorkflowTaskQueueName, workflows.Workflow, &activities.Activities{}, logger)
+	if err != nil {
+		logger.Fatalf("Worker initialization failed, Reason: %v\n", err)
+	}
 
-	app.Close()
+	logger.Infof("Running config worker..\n")
+	if err := worker.Run(); err != nil {
+		logger.Fatalf("failed to start the config-worker, err: %v", err)
+	}
+
 	logger.Infof("Exiting config worker\n")
 }
