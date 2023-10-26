@@ -31,6 +31,7 @@ func (a *AstraServerStore) initClient() error {
 func (a *AstraServerStore) InitializeDb() error {
 	initDbQueries := []string{
 		fmt.Sprintf(createClusterEndpointTableQuery, a.keyspace),
+		fmt.Sprintf("DROP TABLE %s.store_app_config;", a.keyspace),
 		fmt.Sprintf(createAppConfigTableQuery, a.keyspace),
 		fmt.Sprintf(createCacheAgentAppLaunchesTableQuery, a.keyspace),
 	}
