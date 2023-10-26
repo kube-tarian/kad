@@ -22,9 +22,10 @@ func getNewAPIClient(cfg *Configuration) (apiclient.Client, error) {
 	fmt.Println("getNewAPIClient start")
 	fmt.Println("cfg.ServiceURL => " + cfg.ServiceURL)
 	fmt.Println("!cfg.IsSSLEnabled => " + fmt.Sprintf("%v", !cfg.IsSSLEnabled))
+
 	client, err := apiclient.NewClient(&apiclient.ClientOptions{
 		// ServerAddr: cfg.ServiceURL,
-		ServerAddr: "http://10.100.8.208:80",
+		ServerAddr: "http://argo-cd-argocd-server.argo-cd.svc.cluster.local",
 		Insecure:   !cfg.IsSSLEnabled,
 	})
 	if err != nil {
@@ -46,7 +47,7 @@ func getNewAPIClient(cfg *Configuration) (apiclient.Client, error) {
 	sessionRequest := sessionpkg.SessionCreateRequest{
 		Username: "admin",
 		// Password: cfg.Password,
-		Password: "Jgb4pU7gbY57PAnc",
+		Password: "k36HHZR0pkm6OmZn",
 	}
 	createdSession, err := sessionClient.Create(context.Background(), &sessionRequest)
 	if err != nil {
