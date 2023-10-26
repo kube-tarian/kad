@@ -10,7 +10,7 @@ import (
 )
 
 func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppRequest) (*agentpb.InstallAppResponse, error) {
-	a.log.Infof("Recieved App Install request %+v", request)
+	a.log.Infof("Recieved App Install request for appName %s, version %+v", request.AppConfig.AppName, request.AppConfig.Version)
 	templateValues, err := deriveTemplateValues(request.AppValues.OverrideValues, request.AppValues.TemplateValues)
 	if err != nil {
 		a.log.Errorf("failed to derive template values for app %s, %v", request.AppConfig.ReleaseName, err)

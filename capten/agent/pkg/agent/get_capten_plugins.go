@@ -12,9 +12,10 @@ func (a *Agent) GetCaptenPlugins(ctx context.Context, request *captenpluginspb.G
 
 	res, err := a.as.GetAllApps()
 	if err != nil {
+		a.log.Errorf("failed to fetch plugins, %v", err)
 		return &captenpluginspb.GetCaptenPluginsResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to fetch pluginss",
+			StatusMessage: "failed to fetch plugins",
 		}, nil
 	}
 
