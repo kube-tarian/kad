@@ -46,16 +46,21 @@ message DeleteCrossplanProviderResponse {
     string statusMessage = 2;
 }
 
-
 message GetCrossplanProvidersRequest {
-    string cloudType = 1;
 }
 
 message GetCrossplanProvidersResponse {
+    repeated CrossplaneProvider providers = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message CrossplaneProvider {
     string id = 1;
     string cloudType = 2;
     string providerName = 3;
     string cloudProviderId = 4;
+    string status = 5;
 }
 
 message AddCrossplanProviderRequest {
