@@ -24,6 +24,10 @@ service capten_plugins {
     rpc RegisterTektonProject(RegisterTektonProjectRequest) returns (RegisterTektonProjectResponse) {}
     rpc GetTektonProjects(GetTektonProjectsRequest) returns (GetTektonProjectsResponse) {}
     rpc UnRegisterTektonProject(UnRegisterTektonProjectRequest) returns (UnRegisterTektonProjectResponse) {}
+
+    rpc AddCrossplanProvider(AddCrossplanProviderRequest) returns(AddCrossplanProviderResponse){}
+    rpc DeleteCrossplanProvider(DeleteCrossplanProviderRequest) returns(DeleteCrossplanProviderResponse) {}
+    rpc GetCrossplanProviders(GetCrossplanProvidersRequest) returns(GetCrossplanProvidersResponse) {}
 }
 
 enum StatusCode {
@@ -31,6 +35,39 @@ enum StatusCode {
     INTERNAL_ERROR = 1;
     INVALID_ARGUMENT = 2;
     NOT_FOUND = 3;
+}
+
+message DeleteCrossplanProviderRequest {
+    string id = 1;
+}
+
+message DeleteCrossplanProviderResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+
+message GetCrossplanProvidersRequest {
+    string cloudType = 1;
+}
+
+message GetCrossplanProvidersResponse {
+    string id = 1;
+    string cloudType = 2;
+    string providerName = 3;
+    string cloudProviderId = 4;
+}
+
+message AddCrossplanProviderRequest {
+    string cloudType = 1;
+    string providerName = 2;
+    string cloudProviderId = 3;
+}
+
+message AddCrossplanProviderResponse {
+    string id = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
 }
 
 message AddGitProjectRequest {
