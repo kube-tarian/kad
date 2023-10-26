@@ -38,6 +38,8 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 			LaunchUIDescription: request.AppConfig.LaunchUIDescription,
 			InstallStatus:       string(appIntallingStatus),
 			DefualtApp:          request.AppConfig.DefualtApp,
+			PluginName:          request.AppConfig.PluginName,
+			PluginDescription:   request.AppConfig.PluginDescription,
 		},
 		Values: &agentpb.AppValues{
 			OverrideValues: request.AppValues.OverrideValues,
@@ -210,6 +212,8 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 			LaunchUIDescription: req.AppConfig.LaunchUIDescription,
 			InstallStatus:       string(appIntallingStatus),
 			DefualtApp:          req.AppConfig.DefualtApp,
+			PluginName:          req.AppConfig.PluginName,
+			PluginDescription:   req.AppConfig.PluginDescription,
 		},
 		Values: &agentpb.AppValues{
 			OverrideValues: req.AppValues.OverrideValues,

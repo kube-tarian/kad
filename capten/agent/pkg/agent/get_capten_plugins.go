@@ -8,7 +8,7 @@ import (
 
 func (a *Agent) GetCaptenPlugins(ctx context.Context, request *captenpluginspb.GetCaptenPluginsRequest) (
 	*captenpluginspb.GetCaptenPluginsResponse, error) {
-	a.log.Infof("Get Capten Plugins %s request recieved")
+	a.log.Infof("Get Capten Plugins request recieved")
 
 	res, err := a.as.GetAllApps()
 	if err != nil {
