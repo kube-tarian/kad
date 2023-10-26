@@ -42,8 +42,8 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		}, err
 	}
 
-	// start the config-worker routine
-	go a.configureTektonGitRepo(tektonProject)
+	// start the config-worker
+	a.configureTektonGitRepo(tektonProject)
 
 	a.log.Infof("Tekton Git project %s registration triggerred", request.Id)
 	return &captenpluginspb.RegisterTektonProjectResponse{
@@ -123,7 +123,35 @@ func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
 	ci := captenmodel.UseCase{Type: tektonConfigUseCase, RepoURL: req.GitProjectUrl, VaultCredIdentifier: req.Id}
 	wd := workers.NewConfig(a.tc, a.log)
 
-	run, err := wd.SendEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: tektonConfigUseCase}, ci)
+	wkfId, err := wd.SendAsyncEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: tektonConfigUseCase}, ci)
+	if err != nil {
+		req.Status = string(model.TektonProjectConfigurationFailed)
+		req.WorkflowId = "NA"
+		if err := a.as.UpsertTektonProject(req); err != nil {
+			a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
+			return
+		}
+		a.log.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectUrl, err)
+		return
+	}
+
+	a.log.Infof("Tekton Git project %s config workflow event %s created", wkfId)
+
+	req.Status = string(model.TektonProjectConfigured)
+	req.WorkflowId = wkfId
+	if err := a.as.UpsertTektonProject(req); err != nil {
+		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
+		return
+	}
+
+	go a.monitorWorkflow(req, wkfId)
+	a.log.Infof("Tekton Git project %s registration completed", req.Id)
+}
+
+func (a *Agent) monitorWorkflow(req *model.TektonProject, wkfId string) {
+	// during system reboot start monitoring, add it in map or somewhere.
+	wd := workers.NewConfig(a.tc, a.log)
+	err := wd.GetWorkflowInformation(context.TODO(), wkfId)
 	if err != nil {
 		req.Status = string(model.TektonProjectConfigurationFailed)
 		if err := a.as.UpsertTektonProject(req); err != nil {
@@ -133,12 +161,14 @@ func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
 		a.log.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectUrl, err)
 		return
 	}
-	a.log.Infof("Tekton Git project %s config workflow event %s created", run.GetID())
+
+	a.log.Infof("Monitoring Tekton Git project %s config workflow event %s created", wkfId)
 
 	req.Status = string(model.TektonProjectConfigured)
 	if err := a.as.UpsertTektonProject(req); err != nil {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		return
 	}
-	a.log.Infof("Tekton Git project %s registration completed", req.Id)
+
+	a.log.Infof("Tekton Git project %s monitoring completed", req.Id)
 }

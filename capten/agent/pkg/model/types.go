@@ -81,6 +81,7 @@ type TektonProject struct {
 	GitProjectUrl  string `json:"git_project_url,omitempty"`
 	Status         string `json:"status,omitempty"`
 	LastUpdateTime string `json:"last_update_time,omitempty"`
+	WorkflowId     string `json:"workflow_id,omitempty"`
 }
 
 type ArgoCDProject struct {
@@ -89,4 +90,5 @@ type ArgoCDProject struct {
 	GitProjectUrl  string `json:"git_project_url,omitempty"`
 	Status         string `json:"status,omitempty"`
 	LastUpdateTime string `json:"last_update_time,omitempty"`
+	WorkflowId     string `json:"workflow_id,omitempty"`
 }

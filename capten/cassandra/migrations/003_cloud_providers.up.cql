@@ -4,6 +4,7 @@ CREATE TABLE CloudProviders (
     cloud_type TEXT,
     labels set<TEXT>,
     last_update_time TEXT,
+    workflow_id TEXT,
     PRIMARY KEY (id)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}

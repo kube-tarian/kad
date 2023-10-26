@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	getTektonProjectsQuery      = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects;"
-	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects WHERE id=%s;"
-	insertTektonProjectQuery    = "INSERT INTO %s.TektonProjects(id, git_project_id, status, last_update_time) VALUES (?,?,?,?);"
-	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s' WHERE id=%s;"
+	getTektonProjectsQuery      = "SELECT id, git_project_id, status, last_update_time, workflow_id FROM %s.TektonProjects;"
+	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time, workflow_id FROM %s.TektonProjects WHERE id=%s;"
+	insertTektonProjectQuery    = "INSERT INTO %s.TektonProjects(id, git_project_id, status, last_update_time, workflow_id) VALUES (?,?,?,?,?);"
+	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s', workflow_id='%s' WHERE id=%s;"
 	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id=%s;"
 )
 
@@ -23,7 +23,7 @@ func (a *Store) UpsertTektonProject(project *model.TektonProject) error {
 	batch.Query(fmt.Sprintf(insertTektonProjectQuery, a.keyspace), project.Id, project.GitProjectId, project.Status, project.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		batch.Query(fmt.Sprintf(updateTektonProjectQuery, a.keyspace, project.Status, project.LastUpdateTime, project.Id))
+		batch.Query(fmt.Sprintf(updateTektonProjectQuery, a.keyspace, project.Status, project.LastUpdateTime, project.Id, project.WorkflowId))
 		err = a.client.Session().ExecuteBatch(batch)
 	}
 	return err
@@ -78,6 +78,7 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 			GitProjectUrl: allTekProject.ProjectUrl}
 		if _, ok := regTektonProjectId[allTekProject.Id]; !ok {
 			project.Status = "available"
+			project.WorkflowId = "NA"
 			if err := a.UpsertTektonProject(project); err != nil {
 				return nil, err
 			}
