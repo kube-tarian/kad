@@ -17,9 +17,10 @@ var _ agentpb.AgentServer = &Agent{}
 type Agent struct {
 	agentpb.UnimplementedAgentServer
 	captenpluginspb.UnimplementedCaptenPluginsServer
-	tc  *temporalclient.Client
-	as  *captenstore.Store
-	log logging.Logger
+	tc       *temporalclient.Client
+	as       *captenstore.Store
+	log      logging.Logger
+	createPr bool
 }
 
 func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
@@ -39,9 +40,10 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
 	}
 
 	agent := &Agent{
-		tc:  tc,
-		as:  as,
-		log: log,
+		tc:       tc,
+		as:       as,
+		log:      log,
+		createPr: cfg.CreatePR,
 	}
 	return agent, nil
 }

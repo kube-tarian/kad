@@ -13,6 +13,15 @@ const (
 	ArgoCDProjectConfigurationFailed ArgoCDProjectStatus = "configuration-failed"
 )
 
+type ConfigProjectStatus string
+
+const (
+	ConfigProjectAvailable            ConfigProjectStatus = "available"
+	ConfigProjectConfigured           ConfigProjectStatus = "configured"
+	ConfigProjectConfigurationOngoing ConfigProjectStatus = "configuration-ongoing"
+	ConfigProjectConfigurationFailed  ConfigProjectStatus = "configuration-failed"
+)
+
 type TektonProjectStatus string
 
 const (
@@ -76,6 +85,15 @@ type ClusterGitoptsConfig struct {
 }
 
 type TektonProject struct {
+	Id             string `json:"id,omitempty"`
+	GitProjectId   string `json:"git_project_id,omitempty"`
+	GitProjectUrl  string `json:"git_project_url,omitempty"`
+	Status         string `json:"status,omitempty"`
+	LastUpdateTime string `json:"last_update_time,omitempty"`
+	WorkflowId     string `json:"workflow_id,omitempty"`
+}
+
+type ConfigureProject struct {
 	Id             string `json:"id,omitempty"`
 	GitProjectId   string `json:"git_project_id,omitempty"`
 	GitProjectUrl  string `json:"git_project_url,omitempty"`

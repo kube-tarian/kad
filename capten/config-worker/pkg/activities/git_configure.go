@@ -98,14 +98,20 @@ func configureCICD(ctx context.Context, params *model.UseCase, token string) err
 		return err
 	}
 
-	if err := configPlugin.Push(branchName+"-"+params.Type, token); err != nil {
-		return err
-	}
-
+	localBranchName := branchName + "-" + params.Type
 	defaultBranch, err := configPlugin.GetDefaultBranchName()
 	if err != nil {
 		return err
 	}
+
+	if params.PushToDefaultBranch {
+		localBranchName = defaultBranch
+	}
+
+	if err := configPlugin.Push(localBranchName, token); err != nil || params.PushToDefaultBranch {
+		return err
+	}
+
 	_, err = createPR(ctx, params.RepoURL, branchName+"-"+params.Type, defaultBranch, token)
 	if err != nil {
 		return err
