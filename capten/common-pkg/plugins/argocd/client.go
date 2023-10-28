@@ -57,6 +57,9 @@ func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
 		logger.Errorf("SSL not yet supported, continuing with insecure verify true")
 	}
 
+	v, _ := json.Marshal(cfg)
+	fmt.Printf("Config -> %s", string(v))
+
 	client, err := getNewAPIClient(cfg)
 	if err != nil {
 		return nil, err
