@@ -45,7 +45,7 @@ func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Printf("secret res => %+v \n", *res)
 	password := res.Data["password"]
 	if len(password) == 0 {
 		return nil, fmt.Errorf("credentials not found in the secret")
