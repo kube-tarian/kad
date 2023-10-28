@@ -17,7 +17,7 @@ service capten_plugins {
     rpc UpdateCloudProvider(UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
     rpc DeleteCloudProvider(DeleteCloudProviderRequest) returns (DeleteCloudProviderResponse) {}
     rpc GetCloudProviders(GetCloudProvidersRequest) returns (GetCloudProvidersResponse) {}
-    rpc GetCloudProvidersForLabel(GetCloudProvidersForLabelsRequest) returns (GetCloudProvidersForLabelsResponse) {}
+    rpc GetCloudProvidersWithFilter(GetCloudProvidersWithFilterRequest) returns (GetCloudProvidersWithFilterResponse) {}
 
     rpc RegisterArgoCDProject(RegisterArgoCDProjectRequest) returns (RegisterArgoCDProjectResponse) {}
     rpc GetArgoCDProjects(GetArgoCDProjectsRequest) returns (GetArgoCDProjectsResponse) {}
@@ -191,11 +191,12 @@ message GetCloudProvidersResponse {
     string statusMessage = 3;
 }
 
-message GetCloudProvidersForLabelsRequest {
+message GetCloudProvidersWithFilterRequest {
     repeated string labels = 1;
+    string cloudType = 2;
 }
 
-message GetCloudProvidersForLabelsResponse {
+message GetCloudProvidersWithFilterResponse {
     repeated CloudProvider cloudProviders = 1;
     StatusCode status = 2;
     string statusMessage = 3;

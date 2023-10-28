@@ -4,45 +4,235 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
+	"github.com/intelops/go-common/credentials"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 )
 
+const cloudProviderEntityName = "CloudProvider"
+
 func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.AddCloudProviderRequest) (
 	*captenpluginspb.AddCloudProviderResponse, error) {
+	if err := validateArgs(request.GetCloudType(), request.GetCloudAttributes()); err != nil {
+		a.log.Infof("request validation failed", err)
+		return &captenpluginspb.AddCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+
+	a.log.Infof("Add Cloud Provider %s request received", request.CloudType)
+
+	id := uuid.New()
+	if err := a.storeCloudProviderCredential(ctx, id.String(), request.GetCloudAttributes()); err != nil {
+		return &captenpluginspb.AddCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add cloud provider credential in vault",
+		}, nil
+	}
+
+	CloudProvider := captenpluginspb.CloudProvider{
+		Id:        id.String(),
+		CloudType: request.CloudType,
+		Labels:    request.Labels,
+	}
+	if err := a.as.UpsertCloudProvider(&CloudProvider); err != nil {
+		a.log.Errorf("failed to store cloud provider to DB, %v", err)
+		return &captenpluginspb.AddCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add CloudProvider in db",
+		}, nil
+	}
+
+	a.log.Infof("Cloud Provider %s added with id %s", request.GetCloudType(), id.String())
 	return &captenpluginspb.AddCloudProviderResponse{
-		Status:        captenpluginspb.StatusCode_NOT_FOUND,
-		StatusMessage: "not implemented",
-	}, fmt.Errorf("not implemented")
+		Id:            id.String(),
+		Status:        captenpluginspb.StatusCode_OK,
+		StatusMessage: "ok",
+	}, nil
 }
 
 func (a *Agent) UpdateCloudProviders(ctx context.Context, request *captenpluginspb.UpdateCloudProviderRequest) (
 	*captenpluginspb.UpdateCloudProviderResponse, error) {
+	if err := validateArgs(request.GetCloudType(), request.GetId(), request.GetCloudAttributes()); err != nil {
+		a.log.Infof("request validation failed", err)
+		return &captenpluginspb.UpdateCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+	a.log.Infof("Update Cloud Provider %s, %s request received", request.CloudType, request.Id)
+
+	id, err := uuid.Parse(request.Id)
+	if err != nil {
+		a.log.Infof("request validation failed", err)
+		return &captenpluginspb.UpdateCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: fmt.Sprintf("invalid uuid: %s", request.Id),
+		}, nil
+	}
+
+	if err := a.storeCloudProviderCredential(ctx, request.Id, request.GetCloudAttributes()); err != nil {
+		return &captenpluginspb.UpdateCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add CloudProvider credential in vault",
+		}, nil
+	}
+
+	CloudProvider := captenpluginspb.CloudProvider{
+		Id:        id.String(),
+		CloudType: request.CloudType,
+		Labels:    request.Labels,
+	}
+	if err := a.as.UpsertCloudProvider(&CloudProvider); err != nil {
+		a.log.Errorf("failed to update CloudProvider in db, %v", err)
+		return &captenpluginspb.UpdateCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to update CloudProvider in db",
+		}, nil
+	}
+
+	a.log.Infof("Cloud Provider %s, %s updated", request.CloudType, request.Id)
 	return &captenpluginspb.UpdateCloudProviderResponse{
-		Status:        captenpluginspb.StatusCode_NOT_FOUND,
-		StatusMessage: "not implemented",
-	}, fmt.Errorf("not implemented")
+		Status:        captenpluginspb.StatusCode_OK,
+		StatusMessage: "ok",
+	}, nil
 }
 
 func (a *Agent) DeleteCloudProvider(ctx context.Context, request *captenpluginspb.DeleteCloudProviderRequest) (
 	*captenpluginspb.DeleteCloudProviderResponse, error) {
+	if err := validateArgs(request.GetId()); err != nil {
+		a.log.Infof("request validation failed", err)
+		return &captenpluginspb.DeleteCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+	a.log.Infof("Delete Cloud Provider %s request recieved", request.Id)
+
+	if err := a.as.DeleteCloudProviderById(request.Id); err != nil {
+		a.log.Errorf("failed to delete CloudProvider from db, %v", err)
+		return &captenpluginspb.DeleteCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete CloudProvider from db",
+		}, nil
+	}
+
+	a.log.Infof("Cloud Provider %s deleted", request.Id)
 	return &captenpluginspb.DeleteCloudProviderResponse{
-		Status:        captenpluginspb.StatusCode_NOT_FOUND,
-		StatusMessage: "not implemented",
-	}, fmt.Errorf("not implemented")
+		Status:        captenpluginspb.StatusCode_OK,
+		StatusMessage: "ok",
+	}, nil
 }
 
 func (a *Agent) GetCloudProviders(ctx context.Context, request *captenpluginspb.GetCloudProvidersRequest) (
 	*captenpluginspb.GetCloudProvidersResponse, error) {
+	a.log.Infof("Get Cloud Provider request recieved")
+	res, err := a.as.GetCloudProviders()
+	if err != nil {
+		a.log.Errorf("failed to get CloudProviders from db, %v", err)
+		return &captenpluginspb.GetCloudProvidersResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to fetch cloud providers",
+		}, nil
+	}
+
+	for _, r := range res {
+		cloudAttributes, err := a.getCloudProviderCredential(ctx, r.Id)
+		if err != nil {
+			a.log.Errorf("failed to get credential, %v", err)
+			return &captenpluginspb.GetCloudProvidersResponse{
+				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch cloud providers",
+			}, nil
+		}
+		r.CloudAttributes = cloudAttributes
+	}
+
+	a.log.Infof("Found %d cloud providers", len(res))
 	return &captenpluginspb.GetCloudProvidersResponse{
-		Status:        captenpluginspb.StatusCode_NOT_FOUND,
-		StatusMessage: "not implemented",
-	}, fmt.Errorf("not implemented")
+		Status:         captenpluginspb.StatusCode_OK,
+		StatusMessage:  "successful",
+		CloudProviders: res,
+	}, nil
+
 }
 
-func (a *Agent) GetCloudProvidersForLabels(ctx context.Context, request *captenpluginspb.GetCloudProvidersForLabelsRequest) (
-	*captenpluginspb.GetCloudProvidersForLabelsResponse, error) {
-	return &captenpluginspb.GetCloudProvidersForLabelsResponse{
-		Status:        captenpluginspb.StatusCode_NOT_FOUND,
-		StatusMessage: "not implemented",
-	}, fmt.Errorf("not implemented")
+func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *captenpluginspb.GetCloudProvidersWithFilterRequest) (
+	*captenpluginspb.GetCloudProvidersWithFilterResponse, error) {
+	if len(request.GetLabels()) == 0 {
+		a.log.Infof("request validation failed")
+		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+	a.log.Infof("Get Cloud providers with labels %v request recieved", request.Labels)
+
+	res, err := a.as.GetCloudProvidersByLabelsAndCloudType(request.Labels, request.CloudType)
+	if err != nil {
+		a.log.Errorf("failed to get CloudProviders for labels from db, %v", err)
+		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to fetch cloud providers",
+		}, nil
+	}
+
+	for _, r := range res {
+		cloudAttributes, err := a.getCloudProviderCredential(ctx, r.Id)
+		if err != nil {
+			a.log.Errorf("failed to get credential, %v", err)
+			return &captenpluginspb.GetCloudProvidersWithFilterResponse{
+				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch cloud providers",
+			}, nil
+		}
+		r.CloudAttributes = cloudAttributes
+	}
+
+	a.log.Infof("Found %d cloud providers for lables %v and cloud type %v", len(res), request.Labels, request.CloudType)
+	return &captenpluginspb.GetCloudProvidersWithFilterResponse{
+		Status:         captenpluginspb.StatusCode_OK,
+		StatusMessage:  "successful",
+		CloudProviders: res,
+	}, nil
+}
+
+func (a *Agent) getCloudProviderCredential(ctx context.Context, id string) (map[string]string, error) {
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, cloudProviderEntityName, id)
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
+		a.log.Errorf("failed to get crendential for %s, %v", credPath, err)
+		return nil, err
+	}
+
+	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, cloudProviderEntityName, id)
+	if err != nil {
+		a.log.Errorf("failed to get credential for %s, %v", credPath, err)
+		return nil, err
+	}
+	return cred, nil
+}
+
+func (a *Agent) storeCloudProviderCredential(ctx context.Context, id string, credentialMap map[string]string) error {
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, cloudProviderEntityName, id)
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
+		a.log.Errorf("failed to store credential for %s, %v", credPath, err)
+		return err
+	}
+
+	err = credAdmin.PutCredential(ctx, credentials.GenericCredentialType, cloudProviderEntityName,
+		id, credentialMap)
+
+	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system", "failed to store crendential for %s", credPath)
+		a.log.Errorf("failed to store credential for %s, %v", credPath, err)
+		return err
+	}
+	a.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
+	a.log.Infof("stored credential for entity %s", credPath)
+	return nil
 }

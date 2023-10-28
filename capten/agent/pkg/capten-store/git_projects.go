@@ -22,13 +22,15 @@ const (
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
-	kvPairs, isEmptyUpdate := formUpdateKvPairsForGitProject(config)
+	kvPairs := formUpdateKvPairsForGitProject(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertGitProjectId, a.keyspace), config.Id)
-	if !isEmptyUpdate {
+	batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime)
+	err := a.client.Session().ExecuteBatch(batch)
+	if err != nil {
 		batch.Query(fmt.Sprintf(updateGitProjectById, a.keyspace, kvPairs), config.Id)
+		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return a.client.Session().ExecuteBatch(batch)
+	return err
 }
 
 func (a *Store) DeleteGitProjectById(id string) error {
@@ -104,7 +106,7 @@ func (a *Store) executeGitProjectsSelectQuery(query string) ([]*captenpluginspb.
 	return ret, nil
 }
 
-func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (kvPairs string, emptyUpdate bool) {
+func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (kvPairs string) {
 	params := []string{}
 
 	if config.ProjectUrl != "" {
@@ -130,7 +132,7 @@ func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (kvPairs
 
 	if len(params) == 0 {
 		// query is empty there is nothing to update
-		return "", true
+		return ""
 	}
-	return strings.Join(params, ", "), false
+	return strings.Join(params, ", ")
 }
