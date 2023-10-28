@@ -2,7 +2,6 @@ package argocd
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient"
 	sessionpkg "github.com/argoproj/argo-cd/v2/pkg/apiclient/session"
@@ -16,12 +15,6 @@ type TokenResponse struct {
 }
 
 func getNewAPIClient(cfg *Configuration) (apiclient.Client, error) {
-
-	fmt.Println("cfg.ServiceURL => " + cfg.ServiceURL)
-	fmt.Println("cfg.Username => " + cfg.Username)
-	fmt.Println("cfg.Password => " + cfg.Password)
-	fmt.Println(cfg.IsSSLEnabled)
-
 	client, err := apiclient.NewClient(&apiclient.ClientOptions{
 		ServerAddr: cfg.ServiceURL,
 		Insecure:   !cfg.IsSSLEnabled,
