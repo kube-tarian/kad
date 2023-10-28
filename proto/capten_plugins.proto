@@ -30,6 +30,7 @@ service capten_plugins {
     rpc AddCrossplanProvider(AddCrossplanProviderRequest) returns(AddCrossplanProviderResponse){}
     rpc DeleteCrossplanProvider(DeleteCrossplanProviderRequest) returns(DeleteCrossplanProviderResponse) {}
     rpc GetCrossplanProviders(GetCrossplanProvidersRequest) returns(GetCrossplanProvidersResponse) {}
+    rpc UpdateCrossplanProvider(UpdateCrossplanProviderRequest) returns(UpdateCrossplanProviderResponse) {}
 
     rpc RegisterCrossplaneProject(RegisterCrossplaneProjectRequest) returns (RegisterCrossplaneProjectResponse) {}
     rpc GetCrossplaneProject(GetCrossplaneProjectsRequest) returns (GetCrossplaneProjectsResponse) {}
@@ -41,6 +42,18 @@ enum StatusCode {
     INTERNAL_ERROR = 1;
     INVALID_ARGUMENT = 2;
     NOT_FOUND = 3;
+}
+
+message UpdateCrossplanProviderRequest{
+    string id = 1;
+    string cloudType = 2;
+    string providerName = 3;
+    string cloudProviderId = 4;
+}
+
+message UpdateCrossplanProviderResponse{
+    StatusCode status = 1;
+    string statusMessage = 2;
 }
 
 message DeleteCrossplanProviderRequest {
