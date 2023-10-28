@@ -33,12 +33,12 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	if tektonProject.Status != string(model.TektonProjectConfigurationFailed) &&
-		tektonProject.Status != string(model.TektonProjectAvailable) {
-		a.log.Infof("currently the tekton project configuration on-going %s, %v", request.Id, tektonProject.Status)
+	if tektonProject.Status == string(model.TektonProjectConfigurationOngoing) ||
+		tektonProject.Status == string(model.TektonProjectConfigured) {
+		a.log.Infof("currently the tekton project configuration on-going/configured %s, %v", request.Id, tektonProject.Status)
 		return &captenpluginspb.RegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_OK,
-			StatusMessage: "tekton configuration on-going",
+			StatusMessage: "tekton configuration on-going/configured",
 		}, nil
 	}
 
@@ -52,7 +52,7 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 	}
 
 	// start the config-worker routine
-	go a.configureTektonGitRepo(tektonProject)
+	a.configureTektonGitRepo(tektonProject)
 
 	a.log.Infof("Tekton Git project %s registration triggerred", request.Id)
 	return &captenpluginspb.RegisterTektonProjectResponse{
