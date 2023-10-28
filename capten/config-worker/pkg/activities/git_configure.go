@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/intelops/go-common/credentials"
+	agentmodel "github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/github"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
@@ -19,7 +20,7 @@ import (
 
 func handleGit(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
 	var err error
-	respPayload := model.ResponsePayload{Status: "Failed", Message: json.RawMessage("{\"error\": \"requested payload is wrong\"}")}
+	respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"requested payload is wrong\"}")}
 	req := &model.UseCase{}
 	err = json.Unmarshal(payload, req)
 	if err != nil {
@@ -31,7 +32,7 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
 		err = errors.WithMessage(err, "error in initializing credential reader")
-		return model.ResponsePayload{Status: "Failed",
+		return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed),
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
 	}
 
@@ -40,24 +41,19 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	if err != nil {
 		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
 			config.VaultEntityName, req.VaultCredIdentifier)
-		return model.ResponsePayload{Status: "Failed",
+		return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed),
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
 	}
 
-	switch req.Type {
-	case "tekton":
-		err = configureCICD(ctx, req, cred["accessToken"])
-		// Once we finalize what needs to be replaced then we can come and work here.
-	default:
-		err = fmt.Errorf("unknown use case type %s for resouce", req.Type)
-	}
+	err = configureCICD(ctx, req, cred["accessToken"])
+	// Once we finalize what needs to be replaced then we can come and work here.
 
 	if err != nil {
 		fmt.Println("ERROR: ", err)
-		return model.ResponsePayload{Status: "Failed"}, err
+		return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed)}, err
 	}
 
-	return model.ResponsePayload{Status: "Success"}, nil
+	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 }
 
 func configureCICD(ctx context.Context, params *model.UseCase, token string) error {
