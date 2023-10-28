@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	getTektonProjectsQuery      = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects;"
-	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects WHERE id=%s;"
+	getTektonProjectsQuery      = "SELECT id, git_project_id, status, last_update_time, workflow_id, workflow_status FROM %s.TektonProjects;"
+	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time, workflow_id, workflow_status FROM %s.TektonProjects WHERE id=%s;"
 	insertTektonProjectQuery    = "INSERT INTO %s.TektonProjects(id, git_project_id, status, last_update_time, workflow_id, workflow_status) VALUES (?,?,?,?,?,?);"
 	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s', workflow_id='%s', workflow_status='%s' WHERE id=%s;"
 	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id=%s;"
@@ -20,7 +20,7 @@ const (
 func (a *Store) UpsertTektonProject(project *model.TektonProject) error {
 	project.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertTektonProjectQuery, a.keyspace), project.Id, project.GitProjectId, project.Status, project.LastUpdateTime)
+	batch.Query(fmt.Sprintf(insertTektonProjectQuery, a.keyspace), project.Id, project.GitProjectId, project.Status, project.LastUpdateTime, project.WorkflowId, project.WorkflowStatus)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
 		batch.Query(fmt.Sprintf(updateTektonProjectQuery, a.keyspace, project.Status, project.LastUpdateTime, project.WorkflowId, project.WorkflowStatus, project.Id))
@@ -64,6 +64,7 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 	query := fmt.Sprintf(getTektonProjectsQuery, a.keyspace)
 	regTektonProjects, err := a.executeTektonProjectsSelectQuery(query)
 	if err != nil {
+		a.log.Errorf("failed to execute select tekton projects, :%v", err)
 		return nil, err
 	}
 
@@ -81,6 +82,7 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 			project.WorkflowId = "NA"
 			project.Status = "NA"
 			if err := a.UpsertTektonProject(project); err != nil {
+				a.log.Errorf("failed to update default tekton projects, :%v", err)
 				return nil, err
 			}
 		} else {
@@ -99,7 +101,7 @@ func (a *Store) executeTektonProjectsSelectQuery(query string) ([]*model.TektonP
 
 	ret := make([]*model.TektonProject, 0)
 	for iter.Scan(
-		&project.Id, &project.GitProjectId, &project.Status, &project.LastUpdateTime) {
+		&project.Id, &project.GitProjectId, &project.Status, &project.LastUpdateTime, &project.WorkflowId, &project.WorkflowStatus) {
 		gitProject, err := a.GetGitProjectForID(project.Id)
 		if err != nil {
 			a.log.Errorf("tekton project %s not exist in git projects", project.Id)
@@ -112,6 +114,8 @@ func (a *Store) executeTektonProjectsSelectQuery(query string) ([]*model.TektonP
 			GitProjectUrl:  gitProject.ProjectUrl,
 			Status:         project.Status,
 			LastUpdateTime: project.LastUpdateTime,
+			WorkflowId:     project.WorkflowId,
+			WorkflowStatus: project.WorkflowStatus,
 		}
 		ret = append(ret, a)
 	}

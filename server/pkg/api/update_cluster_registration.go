@@ -64,6 +64,16 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
+	if s.cfg.RegisterLaunchAppsConifg {
+		if err := s.configureSSOForClusterApps(ctx, orgId, request.ClusterID); err != nil {
+			s.log.Errorf("%v", err)
+			return &serverpb.UpdateClusterRegistrationResponse{
+				Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+				StatusMessage: "failed to configure SSO for cluster apps",
+			}, nil
+		}
+	}
+
 	s.log.Infof("Update cluster registration request for cluster %s successful, [org: %s]", request.ClusterName, orgId)
 	return &serverpb.UpdateClusterRegistrationResponse{
 		Status:        serverpb.StatusCode_OK,

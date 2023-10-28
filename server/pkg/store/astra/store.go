@@ -28,13 +28,24 @@ func (a *AstraServerStore) initClient() error {
 	return err
 }
 
-func (a *AstraServerStore) InitializeDb() error {
+func (a *AstraServerStore) InitializeDatabase() error {
 	initDbQueries := []string{
-		fmt.Sprintf(createClusterEndpointTableQuery, a.keyspace),
+		fmt.Sprintf(createCaptenClusterTableQuery, a.keyspace),
 		fmt.Sprintf(createAppConfigTableQuery, a.keyspace),
 	}
+	return a.executeDBQueries(initDbQueries)
+}
 
-	for _, query := range initDbQueries {
+func (a *AstraServerStore) CleanupDatabase() error {
+	initDbQueries := []string{
+		fmt.Sprintf(dropCaptenClusterTableQuery, a.keyspace),
+		fmt.Sprintf(dropAppConfigTableQuery, a.keyspace),
+	}
+	return a.executeDBQueries(initDbQueries)
+}
+
+func (a *AstraServerStore) executeDBQueries(queries []string) error {
+	for _, query := range queries {
 		createQuery := &pb.Query{
 			Cql: query,
 		}

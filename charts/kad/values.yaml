@@ -41,6 +41,7 @@ env:
 service:
   type: ClusterIP
   port: 8080
+  createPr: "true"
 
 vault:
   address: http://vault:8200
