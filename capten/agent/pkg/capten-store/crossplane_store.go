@@ -20,7 +20,7 @@ func (a *Store) InsertCrossplaneProvider(provider *model.CrossplaneProvider) err
 	batch.Query(fmt.Sprintf(insertCrossplaneProviderQuery, a.keyspace), provider.Id, provider.CloudType, provider.ProviderName, provider.CloudProviderId, provider.Status)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		return errors.Wrap(err, "failed to delete Crossplane provider")
+		return errors.Wrap(err, "failed to insert Crossplane provider")
 	}
 	return err
 }

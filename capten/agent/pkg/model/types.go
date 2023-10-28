@@ -90,3 +90,11 @@ type ArgoCDProject struct {
 	Status         string `json:"status,omitempty"`
 	LastUpdateTime string `json:"last_update_time,omitempty"`
 }
+
+type CrossplaneProvider struct {
+	Id              string `json:"id,omitempty"`
+	CloudType       string `json:"cloud_type,omitempty"`
+	ProviderName    string `json:"provider_name,omitempty"`
+	CloudProviderId string `json:"cloud_provider_id,omitempty"`
+	Status          string `json:"status,omitempty"`
+}
