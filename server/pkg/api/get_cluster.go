@@ -10,7 +10,7 @@ import (
 
 func (s *Server) GetClusterDetails(ctx context.Context, request *serverpb.GetClusterDetailsRequest) (
 	*serverpb.GetClusterDetailsResponse, error) {
-	orgId, err := validateOrgWithArgs(ctx, request.ClusterID)
+	orgId, err := validateOrgWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.GetClusterDetailsResponse{
@@ -19,35 +19,31 @@ func (s *Server) GetClusterDetails(ctx context.Context, request *serverpb.GetClu
 		}, nil
 	}
 
-	s.log.Infof("GetClusterDetails request recieved for cluster %s, [org: %s]", request.ClusterID, orgId)
-	clusterDetails, err := s.serverStore.GetClusterDetails(orgId, request.ClusterID)
+	s.log.Infof("GetClusterDetails request recieved, [org: %s]", orgId)
+	cluster, err := s.serverStore.GetClusterForOrg(orgId)
 	if err != nil {
-		s.log.Errorf("failed to get cluster %s, %v", request.ClusterID, err)
+		s.log.Errorf("failed to get clusterID for org %s, %v", orgId, err)
 		return &serverpb.GetClusterDetailsResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed get cluster details",
 		}, err
 	}
 
-	launchConfigList, err := s.getClusterAppLaunchesAgent(ctx, orgId, request.ClusterID)
+	launchConfigList, err := s.getClusterAppLaunchesAgent(ctx, orgId, cluster.ClusterID)
 	if err != nil {
 		s.log.Error("failed to get cluster application launches from cache/agent: %v", err)
-		return &serverpb.GetClusterDetailsResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed get cluster app launches",
-		}, err
 	}
 
 	attributes := []*serverpb.ClusterAttribute{}
 	data := &serverpb.ClusterInfo{
-		ClusterID:        request.ClusterID,
-		ClusterName:      clusterDetails.ClusterName,
-		AgentEndpoint:    clusterDetails.Endpoint,
+		ClusterID:        cluster.ClusterID,
+		ClusterName:      cluster.ClusterName,
+		AgentEndpoint:    cluster.Endpoint,
 		Attributes:       attributes,
 		AppLaunchConfigs: mapAgentAppLaunchConfigsToServer(launchConfigList),
 	}
 
-	s.log.Infof("GetClusterDetails request processed for cluster %s, [org: %s]", request.ClusterID, orgId)
+	s.log.Infof("GetClusterDetails request processed for cluster %s, [org: %s]", cluster.ClusterID, orgId)
 	return &serverpb.GetClusterDetailsResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "get cluster details success",
