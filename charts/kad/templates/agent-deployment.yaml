@@ -77,6 +77,8 @@ spec:
               value: {{ .Values.cassandra.keyspace }}
             - name: CASSANDRA_SECRET_NAME
               value: {{ .Values.cassandra.secretName }}
+            - name: CREATE_PR
+              value: {{ .Values.service.createPr }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
