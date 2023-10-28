@@ -5,7 +5,7 @@ import "time"
 type Configuration struct {
 	ServiceURL   string `envconfig:"ARGOCD_SERVICE_URL" default:"argo-cd-argocd-server.argo-cd.svc.cluster.local"`
 	IsSSLEnabled bool   `envconfig:"IS_SSL_ENABLED" default:"false"`
-	Username     string `envconfig:"USERNAME" default:"amdin"`
+	Username     string `envconfig:"USERNAME" default:"admin"`
 	Password     string `envconfig:"ARGOCD_PASSWORD" required:"true"`
 }
 
