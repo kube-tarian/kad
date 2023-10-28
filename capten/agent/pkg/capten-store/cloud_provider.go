@@ -27,10 +27,8 @@ func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error
 	batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		fmt.Println("Err While inserting Cloud provider", err)
 		batch.Query(fmt.Sprintf(updateCloudProviderById, a.keyspace, kvPairs), config.Id)
 		err = a.client.Session().ExecuteBatch(batch)
-		fmt.Println("Err While updating cloud provider", err)
 	}
 	return err
 }
@@ -83,7 +81,6 @@ func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, clo
 	}
 
 	query := fmt.Sprintf(selectAllCloudProvidersByLabels, a.keyspace, whereLabelsClause)
-	fmt.Println("QUERY for GetCloudProvidersByLabelsAndCloudType", query)
 	return a.executeCloudProvidersSelectQuery(query)
 
 }
