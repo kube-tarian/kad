@@ -45,13 +45,8 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
 	}
 
-	switch req.Type {
-	case "tekton":
-		err = configureCICD(ctx, req, cred["accessToken"])
-		// Once we finalize what needs to be replaced then we can come and work here.
-	default:
-		err = fmt.Errorf("unknown use case type %s for resouce", req.Type)
-	}
+	err = configureCICD(ctx, req, cred["accessToken"])
+	// Once we finalize what needs to be replaced then we can come and work here.
 
 	if err != nil {
 		fmt.Println("ERROR: ", err)

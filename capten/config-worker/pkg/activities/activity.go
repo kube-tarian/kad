@@ -25,7 +25,7 @@ func (a *Activities) ConfigurationActivity(ctx context.Context, params model.Con
 		return handleRepository(ctx, params, payload)
 	case "project":
 		return handleProject(ctx, params, payload)
-	case "tekton":
+	case "tekton", "infra/crossplane":
 		return handleGit(ctx, params, payload)
 	default:
 		logger.Errorf("unknown resource type: %s in configuration", params.Resource)
