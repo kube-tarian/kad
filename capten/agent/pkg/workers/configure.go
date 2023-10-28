@@ -92,7 +92,7 @@ func (d *Config) getWorkflowStatusByLatestWorkflow(ctx context.Context, run clie
 	for {
 		select {
 		case <-ticker.C:
-			err := d.GetWorkflowInformation(ctx, run.GetID())
+			_, err := d.GetWorkflowInformation(ctx, run.GetID())
 			if err != nil {
 				d.log.Errorf("get state of workflow failed: %v, retrying .....", err)
 				continue
@@ -105,7 +105,7 @@ func (d *Config) getWorkflowStatusByLatestWorkflow(ctx context.Context, run clie
 	}
 }
 
-func (d *Config) GetWorkflowInformation(ctx context.Context, workFlowId string) error {
+func (d *Config) GetWorkflowInformation(ctx context.Context, workFlowId string) (model.ResponsePayload, error) {
 	d.log.Debugf("Fetching workflow Id: %s, status...", workFlowId)
 
 	latestRun := d.client.TemporalClient.GetWorkflow(ctx, workFlowId, "")
@@ -113,10 +113,10 @@ func (d *Config) GetWorkflowInformation(ctx context.Context, workFlowId string) 
 	var result model.ResponsePayload
 	if err := latestRun.Get(ctx, &result); err != nil {
 		d.log.Errorf("failed to get the workflow Id: %s, status: ", workFlowId, err)
-		return err
+		return result, err
 	}
 
 	d.log.Debugf("Result workflow Id: %s, status: %v", workFlowId, result)
 
-	return nil
+	return result, nil
 }

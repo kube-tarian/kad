@@ -5,6 +5,15 @@ import (
 	"fmt"
 )
 
+type WorkFlowStatus string
+
+const (
+	WorkFlowStatusStarted    WorkFlowStatus = "started"
+	WorkFlowStatusCompleted  WorkFlowStatus = "completed"
+	WorkFlowStatusInProgress WorkFlowStatus = "in-progress"
+	WorkFlowStatusFailed     WorkFlowStatus = "failed"
+)
+
 type ArgoCDProjectStatus string
 
 const (
@@ -20,15 +29,6 @@ const (
 	TektonProjectConfigured           TektonProjectStatus = "configured"
 	TektonProjectConfigurationOngoing TektonProjectStatus = "configuration-ongoing"
 	TektonProjectConfigurationFailed  TektonProjectStatus = "configuration-failed"
-)
-
-type ConfigProjectStatus string
-
-const (
-	ConfigProjectAvailable            ConfigProjectStatus = "available"
-	ConfigProjectConfigured           ConfigProjectStatus = "configured"
-	ConfigProjectConfigurationOngoing ConfigProjectStatus = "configuration-ongoing"
-	ConfigProjectConfigurationFailed  ConfigProjectStatus = "configuration-failed"
 )
 
 type AppConfig struct {
@@ -84,21 +84,14 @@ type ClusterGitoptsConfig struct {
 	Status     string `json:"status,omitempty"`
 }
 
-type ConfigureProject struct {
-	Id             string `json:"id,omitempty"`
-	GitProjectId   string `json:"git_project_id,omitempty"`
-	GitProjectUrl  string `json:"git_project_url,omitempty"`
-	Status         string `json:"status,omitempty"`
-	LastUpdateTime string `json:"last_update_time,omitempty"`
-	WorkflowId     string `json:"workflow_id,omitempty"`
-}
-
 type TektonProject struct {
 	Id             string `json:"id,omitempty"`
 	GitProjectId   string `json:"git_project_id,omitempty"`
 	GitProjectUrl  string `json:"git_project_url,omitempty"`
 	Status         string `json:"status,omitempty"`
 	LastUpdateTime string `json:"last_update_time,omitempty"`
+	WorkflowId     string `json:"workflow_id,omitempty"`
+	WorkflowStatus string `json:"workflow_status,omitempty"`
 }
 
 type ArgoCDProject struct {
