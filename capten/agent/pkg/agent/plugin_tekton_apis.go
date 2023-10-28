@@ -130,7 +130,7 @@ func (a *Agent) GetTektonProjects(ctx context.Context, request *captenpluginspb.
 
 func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
 	ci := captenmodel.UseCase{Type: tektonConfigUseCase, RepoURL: req.GitProjectUrl,
-		VaultCredIdentifier: req.Id, PushToDefaultBranch: a.createPr}
+		VaultCredIdentifier: req.Id, PushToDefaultBranch: !a.createPr}
 	wd := workers.NewConfig(a.tc, a.log)
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: tektonConfigUseCase}, ci)
