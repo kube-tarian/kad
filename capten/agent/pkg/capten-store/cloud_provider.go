@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	insertCloudProvider             = "INSERT INTO %s.CloudProviders(id, cloud_type, labels, last_update_time) VALUES (?)"
+	insertCloudProvider             = "INSERT INTO %s.CloudProviders(id, cloud_type, labels, last_update_time) VALUES (?,?,?,?)"
 	insertCloudProviderId           = "INSERT INTO %s.CloudProviders(id) VALUES (?)"
 	updateCloudProviderById         = "UPDATE %s.CloudProviders SET %s WHERE id = ?"
 	deleteCloudProviderById         = "DELETE FROM %s.CloudProviders WHERE id= ?"
