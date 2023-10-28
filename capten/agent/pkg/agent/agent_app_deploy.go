@@ -10,7 +10,7 @@ import (
 )
 
 func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppRequest) (*agentpb.InstallAppResponse, error) {
-	a.log.Infof("Recieved App Install request %+v", request)
+	a.log.Infof("Recieved App Install request for appName %s, version %+v", request.AppConfig.AppName, request.AppConfig.Version)
 	templateValues, err := deriveTemplateValues(request.AppValues.OverrideValues, request.AppValues.TemplateValues)
 	if err != nil {
 		a.log.Errorf("failed to derive template values for app %s, %v", request.AppConfig.ReleaseName, err)
@@ -38,6 +38,8 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 			LaunchUIDescription: request.AppConfig.LaunchUIDescription,
 			InstallStatus:       string(appIntallingStatus),
 			DefualtApp:          request.AppConfig.DefualtApp,
+			PluginName:          request.AppConfig.PluginName,
+			PluginDescription:   request.AppConfig.PluginDescription,
 		},
 		Values: &agentpb.AppValues{
 			OverrideValues: request.AppValues.OverrideValues,
@@ -210,6 +212,8 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 			LaunchUIDescription: req.AppConfig.LaunchUIDescription,
 			InstallStatus:       string(appIntallingStatus),
 			DefualtApp:          req.AppConfig.DefualtApp,
+			PluginName:          req.AppConfig.PluginName,
+			PluginDescription:   req.AppConfig.PluginDescription,
 		},
 		Values: &agentpb.AppValues{
 			OverrideValues: req.AppValues.OverrideValues,

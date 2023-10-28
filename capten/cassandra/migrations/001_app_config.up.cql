@@ -1,13 +1,13 @@
 CREATE TABLE ClusterAppConfig(
-    app_name text, description text, category text,
-    chart_name text, repo_name text, repo_url text,
-    namespace text, release_name text, version text,
-    launch_url text, launch_redirect_url text,
-    create_namespace boolean, privileged_namespace boolean,
-    override_values text, launch_ui_values text,
-    template_values text, default_app boolean,
-    icon blob, install_status text,
-    update_time text,
+    app_name TEXT, description TEXT, category TEXT,
+    chart_name TEXT, repo_name TEXT, repo_url TEXT,
+    namespace TEXT, release_name TEXT, version TEXT,
+    launch_url TEXT, launch_redirect_url TEXT,
+    create_namespace BOOLEAN, privileged_namespace BOOLEAN,
+    override_values TEXT, launch_ui_values TEXT,
+    template_values TEXT, default_app BOOLEAN,
+    icon BLOB, install_status TEXT,
+    update_time TEXT, plugin_name TEXT, plugin_description TEXT,
     PRIMARY KEY (release_name)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}

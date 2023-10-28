@@ -45,10 +45,11 @@ type AppConfig struct {
 	PrivilegedNamespace bool                   `yaml:"PrivilegedNamespace"`
 	TemplateValues      map[string]interface{} `yaml:"TemplateValues"`
 	Icon                string                 `yaml:"Icon"`
+	PluginName          string                 `yaml:"PluginName"`
+	PluginDescription   string                 `yaml:"PluginDescription"`
 }
 
 func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
-
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return err
@@ -96,12 +97,13 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			Namespace:           appConfig.Namespace,
 			CreateNamespace:     appConfig.CreateNamespace,
 			PrivilegedNamespace: appConfig.PrivilegedNamespace,
-			Icon:                appConfig.Icon,
 			LaunchURL:           appConfig.LaunchURL,
 			LaunchUIDescription: appConfig.LaunchUIDescription,
+			PluginName:          appConfig.PluginName,
+			PluginDescription:   appConfig.PluginDescription,
 		}
 
-		if len(appConfig.Icon) != 0 {
+		if len(appConfig.LaunchUIIcon) != 0 {
 			iconBytes, err := os.ReadFile(cfg.AppStoreAppIconsPath + "/" + appConfig.Icon)
 			if err != nil {
 				return fmt.Errorf("failed loading icon for app '%s', %v", appConfig.ReleaseName, err)
