@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	getTektonProjectsQuery      = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects;"
-	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.TektonProjects WHERE id=%s;"
+	getTektonProjectsQuery      = "SELECT id, git_project_id, status, last_update_time, workflow_id, workflow_status FROM %s.TektonProjects;"
+	getTektonProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time, workflow_id, workflow_status FROM %s.TektonProjects WHERE id=%s;"
 	insertTektonProjectQuery    = "INSERT INTO %s.TektonProjects(id, git_project_id, status, last_update_time, workflow_id, workflow_status) VALUES (?,?,?,?,?,?);"
 	updateTektonProjectQuery    = "UPDATE %s.TektonProjects SET status='%s', last_update_time='%s', workflow_id='%s', workflow_status='%s' WHERE id=%s;"
 	deleteTektonProjectQuery    = "DELETE FROM %s.TektonProjects WHERE id=%s;"
@@ -112,6 +112,8 @@ func (a *Store) executeTektonProjectsSelectQuery(query string) ([]*model.TektonP
 			GitProjectUrl:  gitProject.ProjectUrl,
 			Status:         project.Status,
 			LastUpdateTime: project.LastUpdateTime,
+			WorkflowId:     project.WorkflowId,
+			WorkflowStatus: project.WorkflowStatus,
 		}
 		ret = append(ret, a)
 	}
