@@ -22,6 +22,15 @@ const (
 	TektonProjectConfigurationFailed  TektonProjectStatus = "configuration-failed"
 )
 
+type ConfigProjectStatus string
+
+const (
+	ConfigProjectAvailable            ConfigProjectStatus = "available"
+	ConfigProjectConfigured           ConfigProjectStatus = "configured"
+	ConfigProjectConfigurationOngoing ConfigProjectStatus = "configuration-ongoing"
+	ConfigProjectConfigurationFailed  ConfigProjectStatus = "configuration-failed"
+)
+
 type AppConfig struct {
 	AppName             string `json:"AppName,omitempty"`
 	Version             string `json:"Version,omitempty"`
@@ -73,6 +82,15 @@ type ClusterGitoptsConfig struct {
 	Usecase    string `json:"usecase,omitempty"`
 	ProjectUrl string `json:"project_url,omitempty"`
 	Status     string `json:"status,omitempty"`
+}
+
+type ConfigureProject struct {
+	Id             string `json:"id,omitempty"`
+	GitProjectId   string `json:"git_project_id,omitempty"`
+	GitProjectUrl  string `json:"git_project_url,omitempty"`
+	Status         string `json:"status,omitempty"`
+	LastUpdateTime string `json:"last_update_time,omitempty"`
+	WorkflowId     string `json:"workflow_id,omitempty"`
 }
 
 type TektonProject struct {

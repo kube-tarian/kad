@@ -54,9 +54,6 @@ func (d *Config) SendEvent(ctx context.Context, confParams *model.ConfigureParam
 
 	d.log.Infof("Started workflow, ID: %v, WorkflowName: %v RunID: %v", run.GetID(), ConfigWorkerWorkflowName, run.GetRunID())
 
-	// Wait for 5mins till workflow finishes
-	// Timeout with 5mins
-	// return run, d.getWorkflowStatusByLatestWorkflow(run)
 	var result model.ResponsePayload
 	err = run.Get(ctx, &result)
 	if err != nil {
@@ -68,12 +65,34 @@ func (d *Config) SendEvent(ctx context.Context, confParams *model.ConfigureParam
 	return run, nil
 }
 
-func (d *Config) getWorkflowStatusByLatestWorkflow(run client.WorkflowRun) error {
+func (d *Config) SendAsyncEvent(ctx context.Context, confParams *model.ConfigureParameters, deployPayload interface{}) (string, error) {
+	options := client.StartWorkflowOptions{
+		ID:        uuid.NewString(),
+		TaskQueue: ConfigWorkerTaskQueue,
+	}
+
+	deployPayloadJson, err := json.Marshal(deployPayload)
+	if err != nil {
+		return "", err
+	}
+
+	log.Printf("Event sent to temporal: %+v", deployPayload)
+	run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, ConfigWorkerWorkflowName, confParams, json.RawMessage(deployPayloadJson))
+	if err != nil {
+		return "", err
+	}
+
+	d.log.Infof("Started Async workflow, ID: %v, WorkflowName: %v RunID: %v", run.GetID(), ConfigWorkerWorkflowName, run.GetRunID())
+
+	return run.GetID(), nil
+}
+
+func (d *Config) getWorkflowStatusByLatestWorkflow(ctx context.Context, run client.WorkflowRun) error {
 	ticker := time.NewTicker(500 * time.Millisecond)
 	for {
 		select {
 		case <-ticker.C:
-			err := d.getWorkflowInformation(run)
+			err := d.GetWorkflowInformation(ctx, run.GetID())
 			if err != nil {
 				d.log.Errorf("get state of workflow failed: %v, retrying .....", err)
 				continue
@@ -86,14 +105,18 @@ func (d *Config) getWorkflowStatusByLatestWorkflow(run client.WorkflowRun) error
 	}
 }
 
-func (d *Config) getWorkflowInformation(run client.WorkflowRun) error {
-	latestRun := d.client.TemporalClient.GetWorkflow(context.Background(), run.GetID(), "")
+func (d *Config) GetWorkflowInformation(ctx context.Context, workFlowId string) error {
+	d.log.Debugf("Fetching workflow Id: %s, status...", workFlowId)
+
+	latestRun := d.client.TemporalClient.GetWorkflow(ctx, workFlowId, "")
 
 	var result model.ResponsePayload
-	if err := latestRun.Get(context.Background(), &result); err != nil {
-		d.log.Errorf("Unable to decode query result", err)
+	if err := latestRun.Get(ctx, &result); err != nil {
+		d.log.Errorf("failed to get the workflow Id: %s, status: ", workFlowId, err)
 		return err
 	}
-	d.log.Debugf("Result info: %+v", result)
+
+	d.log.Debugf("Result workflow Id: %s, status: %v", workFlowId, result)
+
 	return nil
 }

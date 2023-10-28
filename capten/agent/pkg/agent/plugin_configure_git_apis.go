@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 
+	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/workers"
@@ -24,7 +25,7 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 	}
 	a.log.Infof("Register Tekton Git project %s request recieved", request.Id)
 
-	tektonProject, err := a.as.GetTektonProjectForID(request.Id)
+	tektonProject, err := a.as.GetConfigProjectForID(request.Id, captenstore.TektonTableName)
 	if err != nil {
 		a.log.Infof("faile to get git project %s, %v", request.Id, err)
 		return &captenpluginspb.RegisterTektonProjectResponse{
@@ -33,8 +34,8 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	tektonProject.Status = string(model.TektonProjectConfigurationOngoing)
-	if err := a.as.UpsertTektonProject(tektonProject); err != nil {
+	tektonProject.Status = string(model.ConfigProjectConfigurationOngoing)
+	if err := a.as.UpsertConfigProject(tektonProject, captenstore.TektonTableName); err != nil {
 		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
 		return &captenpluginspb.RegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -42,8 +43,15 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		}, err
 	}
 
-	// start the config-worker routine
-	go a.configureTektonGitRepo(tektonProject)
+	// start the config-worker
+	a.configureGitRepo(&model.ConfigureProject{
+		Id:             tektonProject.Id,
+		GitProjectId:   tektonProject.GitProjectId,
+		GitProjectUrl:  tektonProject.GitProjectUrl,
+		Status:         tektonProject.Status,
+		LastUpdateTime: tektonProject.LastUpdateTime,
+		WorkflowId:     tektonProject.WorkflowId,
+	})
 
 	a.log.Infof("Tekton Git project %s registration triggerred", request.Id)
 	return &captenpluginspb.RegisterTektonProjectResponse{
@@ -63,7 +71,7 @@ func (a *Agent) UnRegisterTektonProject(ctx context.Context, request *captenplug
 	}
 	a.log.Infof("UnRegister Tekton Git project %s request recieved", request.Id)
 
-	tektonProject, err := a.as.GetTektonProjectForID(request.Id)
+	tektonProject, err := a.as.GetConfigProjectForID(request.Id, captenstore.TektonTableName)
 	if err != nil {
 		a.log.Infof("faile to get git project %s, %v", request.Id, err)
 		return &captenpluginspb.UnRegisterTektonProjectResponse{
@@ -73,7 +81,7 @@ func (a *Agent) UnRegisterTektonProject(ctx context.Context, request *captenplug
 	}
 
 	tektonProject.Status = string(model.TektonProjectAvailable)
-	if err := a.as.UpsertTektonProject(tektonProject); err != nil {
+	if err := a.as.UpsertConfigProject(tektonProject, captenstore.TektonTableName); err != nil {
 		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
 		return &captenpluginspb.UnRegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -92,7 +100,7 @@ func (a *Agent) GetTektonProjects(ctx context.Context, request *captenpluginspb.
 	*captenpluginspb.GetTektonProjectsResponse, error) {
 	a.log.Infof("Get Tekton Git projects request recieved")
 
-	projects, err := a.as.GetTektonProjects()
+	projects, err := a.as.GetConfigProjects(captenstore.TektonTableName)
 	if err != nil {
 		a.log.Errorf("failed to get tekton Project, %v", err)
 		return &captenpluginspb.GetTektonProjectsResponse{
@@ -119,26 +127,57 @@ func (a *Agent) GetTektonProjects(ctx context.Context, request *captenpluginspb.
 	}, nil
 }
 
-func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
-	ci := captenmodel.UseCase{Type: tektonConfigUseCase, RepoURL: req.GitProjectUrl, VaultCredIdentifier: req.Id}
+func (a *Agent) configureGitRepo(req *model.ConfigureProject) {
+	ci := captenmodel.UseCase{Type: tektonConfigUseCase, RepoURL: req.GitProjectUrl,
+		VaultCredIdentifier: req.Id, PushToDefaultBranch: a.createPr}
 	wd := workers.NewConfig(a.tc, a.log)
 
-	run, err := wd.SendEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: tektonConfigUseCase}, ci)
+	wkfId, err := wd.SendAsyncEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: tektonConfigUseCase}, ci)
 	if err != nil {
 		req.Status = string(model.TektonProjectConfigurationFailed)
-		if err := a.as.UpsertTektonProject(req); err != nil {
+		req.WorkflowId = "NA"
+		if err := a.as.UpsertConfigProject(req, captenstore.TektonTableName); err != nil {
 			a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 			return
 		}
 		a.log.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectUrl, err)
 		return
 	}
-	a.log.Infof("Tekton Git project %s config workflow event %s created", run.GetID())
+
+	a.log.Infof("Tekton Git project %s config workflow event %s created", wkfId)
 
 	req.Status = string(model.TektonProjectConfigured)
-	if err := a.as.UpsertTektonProject(req); err != nil {
+	req.WorkflowId = wkfId
+	if err := a.as.UpsertConfigProject(req, captenstore.TektonTableName); err != nil {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		return
 	}
+
+	go a.monitorWorkflow(req, wkfId)
 	a.log.Infof("Tekton Git project %s registration completed", req.Id)
+}
+
+func (a *Agent) monitorWorkflow(req *model.ConfigureProject, wkfId string) {
+	// during system reboot start monitoring, add it in map or somewhere.
+	wd := workers.NewConfig(a.tc, a.log)
+	err := wd.GetWorkflowInformation(context.TODO(), wkfId)
+	if err != nil {
+		req.Status = string(model.TektonProjectConfigurationFailed)
+		if err := a.as.UpsertConfigProject(req, captenstore.TektonTableName); err != nil {
+			a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
+			return
+		}
+		a.log.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectUrl, err)
+		return
+	}
+
+	a.log.Infof("Monitoring Tekton Git project %s config workflow event %s created", wkfId)
+
+	req.Status = string(model.TektonProjectConfigured)
+	if err := a.as.UpsertConfigProject(req, captenstore.TektonTableName); err != nil {
+		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
+		return
+	}
+
+	a.log.Infof("Tekton Git project %s monitoring completed", req.Id)
 }
