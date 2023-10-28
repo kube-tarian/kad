@@ -169,7 +169,7 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 	}
 	a.log.Infof("Get Cloud providers with labels %v request recieved", request.Labels)
 
-	res, err := a.as.GetCloudProvidersByLabels(request.Labels)
+	res, err := a.as.GetCloudProvidersByLabelsAndCloudType(request.Labels, request.CloudType)
 	if err != nil {
 		a.log.Errorf("failed to get CloudProviders for labels from db, %v", err)
 		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
@@ -178,16 +178,7 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 		}, nil
 	}
 
-	filteredRes := make([]*captenpluginspb.CloudProvider, 0)
 	for _, r := range res {
-		if request.CloudType == "" {
-			filteredRes = append(filteredRes, r)
-		} else if request.CloudType != "" && r.CloudType == request.CloudType {
-			filteredRes = append(filteredRes, r)
-		}
-	}
-
-	for _, r := range filteredRes {
 		cloudAttributes, err := a.getCloudProviderCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
@@ -199,11 +190,11 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 		r.CloudAttributes = cloudAttributes
 	}
 
-	a.log.Infof("Found %d cloud providers for lables %v and cloud type %v", len(filteredRes), request.Labels, request.CloudType)
+	a.log.Infof("Found %d cloud providers for lables %v and cloud type %v", len(res), request.Labels, request.CloudType)
 	return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 		Status:         captenpluginspb.StatusCode_OK,
 		StatusMessage:  "successful",
-		CloudProviders: filteredRes,
+		CloudProviders: res,
 	}, nil
 }
 

@@ -22,7 +22,7 @@ const (
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
-	kvPairs, _ := formUpdateKvPairsForCloudProvider(config)
+	kvPairs := formUpdateKvPairsForCloudProvider(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
@@ -61,19 +61,28 @@ func (a *Store) GetCloudProviders() ([]*captenpluginspb.CloudProvider, error) {
 	return a.executeCloudProvidersSelectQuery(query)
 }
 
-func (a *Store) GetCloudProvidersByLabels(searchLabels []string) ([]*captenpluginspb.CloudProvider, error) {
-	if len(searchLabels) == 0 {
-		return nil, fmt.Errorf("searchLabels empty")
+func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, cloudType string) ([]*captenpluginspb.CloudProvider, error) {
+
+	whereLabelsClause := ""
+	if cloudType != "" {
+		whereLabelsClause += fmt.Sprintf("cloud_type = '%s'", cloudType)
 	}
 
-	labelContains := []string{}
-	for _, label := range searchLabels {
-		labelContains = append(labelContains, fmt.Sprintf("labels CONTAINS '%s'", label))
+	if len(searchLabels) != 0 {
+		if whereLabelsClause != "" {
+			whereLabelsClause += " AND "
+		}
+		labelContains := []string{}
+		for _, label := range searchLabels {
+			labelContains = append(labelContains, fmt.Sprintf("labels CONTAINS '%s'", label))
+		}
+		whereLabelsClause += "(" + strings.Join(labelContains, " OR ") + ")"
+		whereLabelsClause += " ALLOW FILTERING"
 	}
-	whereLabelsClause := strings.Join(labelContains, " OR ")
-	whereLabelsClause += " ALLOW FILTERING"
+
 	query := fmt.Sprintf(selectAllCloudProvidersByLabels, a.keyspace, whereLabelsClause)
 	return a.executeCloudProvidersSelectQuery(query)
+
 }
 
 func (a *Store) executeCloudProvidersSelectQuery(query string) ([]*captenpluginspb.CloudProvider, error) {
@@ -106,7 +115,7 @@ func (a *Store) executeCloudProvidersSelectQuery(query string) ([]*captenplugins
 	return ret, nil
 }
 
-func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (kvPairs string, emptyUpdate bool) {
+func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (kvPairs string) {
 	params := []string{}
 
 	if config.CloudType != "" {
@@ -132,7 +141,7 @@ func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (k
 
 	if len(params) == 0 {
 		// query is empty there is nothing to update
-		return "", true
+		return ""
 	}
-	return strings.Join(params, ", "), false
+	return strings.Join(params, ", ")
 }
