@@ -5,6 +5,15 @@ import (
 	"fmt"
 )
 
+type WorkFlowStatus string
+
+const (
+	WorkFlowStatusStarted    WorkFlowStatus = "started"
+	WorkFlowStatusCompleted  WorkFlowStatus = "completed"
+	WorkFlowStatusInProgress WorkFlowStatus = "in-progress"
+	WorkFlowStatusFailed     WorkFlowStatus = "failed"
+)
+
 type ArgoCDProjectStatus string
 
 const (
@@ -81,6 +90,8 @@ type TektonProject struct {
 	GitProjectUrl  string `json:"git_project_url,omitempty"`
 	Status         string `json:"status,omitempty"`
 	LastUpdateTime string `json:"last_update_time,omitempty"`
+	WorkflowId     string `json:"workflow_id,omitempty"`
+	WorkflowStatus string `json:"workflow_status,omitempty"`
 }
 
 type ArgoCDProject struct {

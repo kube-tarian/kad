@@ -17,9 +17,10 @@ var _ agentpb.AgentServer = &Agent{}
 type Agent struct {
 	agentpb.UnimplementedAgentServer
 	captenpluginspb.UnimplementedCaptenPluginsServer
-	tc  *temporalclient.Client
-	as  *captenstore.Store
-	log logging.Logger
+	tc       *temporalclient.Client
+	as       *captenstore.Store
+	log      logging.Logger
+	createPr bool
 }
 
 func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
@@ -39,9 +40,10 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
 	}
 
 	agent := &Agent{
-		tc:  tc,
-		as:  as,
-		log: log,
+		tc:       tc,
+		as:       as,
+		log:      log,
+		createPr: cfg.CreatePR,
 	}
 	return agent, nil
 }
@@ -51,11 +53,23 @@ func (a *Agent) Ping(ctx context.Context, request *agentpb.PingRequest) (*agentp
 	return &agentpb.PingResponse{Status: agentpb.StatusCode_OK}, nil
 }
 
-func validateArgs(args ...string) error {
+func validateArgs(args ...any) error {
 	for _, arg := range args {
-		if len(arg) == 0 {
-			return fmt.Errorf("mandatory argument is empty")
+		switch item := arg.(type) {
+		case string:
+			if len(item) == 0 {
+				return fmt.Errorf("empty string not allowed")
+			}
+		case map[string]string:
+			for k, v := range item {
+				if len(v) == 0 {
+					return fmt.Errorf("map value empty for key: %v", k)
+				}
+			}
+		default:
+			return fmt.Errorf("validation not implemented for this type")
 		}
+
 	}
 	return nil
 }

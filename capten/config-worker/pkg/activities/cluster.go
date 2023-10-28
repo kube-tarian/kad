@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/intelops/go-common/logging"
+	agentmodel "github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
 	"github.com/kube-tarian/kad/capten/model"
@@ -28,7 +29,7 @@ func handleCluster(ctx context.Context, params model.ConfigureParameters, payloa
 		err = fmt.Errorf("unknown action %s for resouce %s", params.Action, params.Resource)
 	}
 	return model.ResponsePayload{
-		Status:  "Failed",
+		Status:  string(agentmodel.WorkFlowStatusFailed),
 		Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err.Error())),
 	}, err
 }
@@ -51,7 +52,7 @@ func addCluster(req model.ClusterRequest) (model.ResponsePayload, error) {
 	configPlugin, err := getConfigPlugin(req.PluginName, logger)
 	if err != nil {
 		return model.ResponsePayload{
-			Status:  "Failed",
+			Status:  string(agentmodel.WorkFlowStatusFailed),
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
 		}, err
 	}
@@ -59,13 +60,13 @@ func addCluster(req model.ClusterRequest) (model.ResponsePayload, error) {
 	msg, err := configPlugin.ClusterAdd(req)
 	if err != nil {
 		return model.ResponsePayload{
-			Status:  "Failed",
+			Status:  string(agentmodel.WorkFlowStatusFailed),
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
 		}, err
 	}
 
 	return model.ResponsePayload{
-		Status:  "Success",
+		Status:  string(agentmodel.WorkFlowStatusFailed),
 		Message: msg,
 	}, nil
 }
@@ -74,7 +75,7 @@ func deleteCluster(req model.ClusterRequest) (model.ResponsePayload, error) {
 	configPlugin, err := getConfigPlugin(req.PluginName, logger)
 	if err != nil {
 		return model.ResponsePayload{
-			Status:  "Failed",
+			Status:  string(agentmodel.WorkFlowStatusFailed),
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
 		}, err
 	}
@@ -82,13 +83,13 @@ func deleteCluster(req model.ClusterRequest) (model.ResponsePayload, error) {
 	msg, err := configPlugin.ClusterDelete(req)
 	if err != nil {
 		return model.ResponsePayload{
-			Status:  "Failed",
+			Status:  string(agentmodel.WorkFlowStatusFailed),
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err)),
 		}, err
 	}
 
 	return model.ResponsePayload{
-		Status:  "Success",
+		Status:  string(agentmodel.WorkFlowStatusCompleted),
 		Message: msg,
 	}, nil
 }

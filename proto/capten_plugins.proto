@@ -17,7 +17,7 @@ service capten_plugins {
     rpc UpdateCloudProvider(UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
     rpc DeleteCloudProvider(DeleteCloudProviderRequest) returns (DeleteCloudProviderResponse) {}
     rpc GetCloudProviders(GetCloudProvidersRequest) returns (GetCloudProvidersResponse) {}
-    rpc GetCloudProvidersForLabel(GetCloudProvidersForLabelsRequest) returns (GetCloudProvidersForLabelsResponse) {}
+    rpc GetCloudProvidersWithFilter(GetCloudProvidersWithFilterRequest) returns (GetCloudProvidersWithFilterResponse) {}
 
     rpc RegisterArgoCDProject(RegisterArgoCDProjectRequest) returns (RegisterArgoCDProjectResponse) {}
     rpc GetArgoCDProjects(GetArgoCDProjectsRequest) returns (GetArgoCDProjectsResponse) {}
@@ -32,6 +32,9 @@ service capten_plugins {
     rpc GetCrossplanProviders(GetCrossplanProvidersRequest) returns(GetCrossplanProvidersResponse) {}
     rpc UpdateCrossplanProvider(UpdateCrossplanProviderRequest) returns(UpdateCrossplanProviderResponse) {}
 
+    rpc RegisterCrossplaneProject(RegisterCrossplaneProjectRequest) returns (RegisterCrossplaneProjectResponse) {}
+    rpc GetCrossplaneProject(GetCrossplaneProjectsRequest) returns (GetCrossplaneProjectsResponse) {}
+    rpc UnRegisterCrossplaneProject(UnRegisterCrossplaneProjectRequest) returns (UnRegisterCrossplaneProjectResponse) {}
 }
 
 enum StatusCode {
@@ -201,11 +204,12 @@ message GetCloudProvidersResponse {
     string statusMessage = 3;
 }
 
-message GetCloudProvidersForLabelsRequest {
+message GetCloudProvidersWithFilterRequest {
     repeated string labels = 1;
+    string cloudType = 2;
 }
 
-message GetCloudProvidersForLabelsResponse {
+message GetCloudProvidersWithFilterResponse {
     repeated CloudProvider cloudProviders = 1;
     StatusCode status = 2;
     string statusMessage = 3;
@@ -295,4 +299,40 @@ message GetCaptenPluginsResponse {
     StatusCode status = 1;
     string statusMessage = 2;
     repeated CaptenPlugin plugins = 3;
+}
+
+// Crossplane projects
+
+message RegisterCrossplaneProjectRequest {
+    string id = 1;
+}
+
+message RegisterCrossplaneProjectResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message UnRegisterCrossplaneProjectRequest {
+    string id = 1;
+}
+
+message UnRegisterCrossplaneProjectResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message CrossplaneProject {
+    string id = 1;
+    string gitProjectUrl = 2;
+    string status = 3;
+    string lastUpdateTime = 4;
+}
+
+message GetCrossplaneProjectsRequest {
+}
+
+message GetCrossplaneProjectsResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+    CrossplaneProject project = 3;
 }
