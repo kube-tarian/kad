@@ -28,8 +28,7 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterI
 			return errors.WithMessagef(err, "failed to register app %s on cluster %s with IAM", app.ReleaseName, clusterID)
 		}
 
-		s.log.Infof("Configuring SSO for app %s, clusterId: %s, [org: %s]",
-			app.ReleaseName, appClientName, clusterID, orgId)
+		s.log.Infof("Configuring SSO for app %s, clusterId: %s, [org: %s]", app.ReleaseName, clusterID, orgId)
 		ssoResp, err := agentClient.GetClient().ConfigureAppSSO(ctx, &agentpb.ConfigureAppSSORequest{
 			ReleaseName:  app.ReleaseName,
 			ClientId:     clientID,
@@ -38,7 +37,7 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterI
 		})
 
 		if err != nil || ssoResp == nil || ssoResp.Status != agentpb.StatusCode_OK {
-			return fmt.Errorf("failed to configure sso for app  %s on cluster %s, err: %v", app.ReleaseName, clusterID, ssoResp)
+			return fmt.Errorf("failed to configure sso for app  %s on cluster %s, err: %v", app.ReleaseName, clusterID, ssoResp.StatusMessage)
 		}
 		s.log.Infof("Configure SSO for app %s triggerred, clusterId: %s, [org: %s]",
 			app.ReleaseName, appClientName, clusterID, orgId)
