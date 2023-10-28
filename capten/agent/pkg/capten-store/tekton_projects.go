@@ -20,7 +20,7 @@ const (
 func (a *Store) UpsertTektonProject(project *model.TektonProject) error {
 	project.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertTektonProjectQuery, a.keyspace), project.Id, project.GitProjectId, project.Status, project.LastUpdateTime)
+	batch.Query(fmt.Sprintf(insertTektonProjectQuery, a.keyspace), project.Id, project.GitProjectId, project.Status, project.LastUpdateTime, project.WorkflowId, project.WorkflowStatus)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
 		batch.Query(fmt.Sprintf(updateTektonProjectQuery, a.keyspace, project.Status, project.LastUpdateTime, project.WorkflowId, project.WorkflowStatus, project.Id))
