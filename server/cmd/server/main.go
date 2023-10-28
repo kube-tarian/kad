@@ -46,7 +46,15 @@ func main() {
 		log.Fatal("Failed to connect to %s database", cfg.Database, err)
 	}
 
-	err = serverStore.InitializeDb()
+	if cfg.CleanupDatabase {
+		log.Infof("Cleaning database")
+		err = serverStore.CleanupDatabase()
+		if err != nil {
+			log.Fatal("failed to initialize %s db, %w", cfg.Database, err)
+		}
+	}
+
+	err = serverStore.InitializeDatabase()
 	if err != nil {
 		log.Fatal("failed to initialize %s db, %w", cfg.Database, err)
 	}
