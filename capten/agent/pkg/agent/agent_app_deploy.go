@@ -275,7 +275,6 @@ func (a *Agent) unInstallAppWithWorkflow(req *model.ApplicationDeleteRequest, ap
 		return
 	}
 
-	appConfig.Config.InstallStatus = string(appUnInstalledStatus)
 	if err := a.as.DeleteAppConfigByReleaseName(req.ReleaseName); err != nil {
 		a.log.Errorf("failed to delete installed app config record %s, %v", req.ReleaseName, err)
 		return
@@ -296,7 +295,7 @@ func (a *Agent) upgradeAppWithWorkflow(req *model.ApplicationInstallRequest,
 		return
 	}
 
-	appConfig.Config.InstallStatus = string(appUpgradeAction)
+	appConfig.Config.InstallStatus = string(appUpgradedStatus)
 	if err := a.as.UpsertAppConfig(appConfig); err != nil {
 		a.log.Errorf("failed to update app config for app %s, %v", appConfig.Config.ReleaseName, err)
 		return
