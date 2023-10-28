@@ -25,7 +25,7 @@ func getNewAPIClient(cfg *Configuration) (apiclient.Client, error) {
 
 	client, err := apiclient.NewClient(&apiclient.ClientOptions{
 		// ServerAddr: cfg.ServiceURL,
-		ServerAddr: "http://argo-cd-argocd-server.argo-cd.svc.cluster.local",
+		ServerAddr: "argo-cd-argocd-server.argo-cd.svc.cluster.local",
 		Insecure:   !cfg.IsSSLEnabled,
 	})
 	if err != nil {
@@ -57,7 +57,7 @@ func getNewAPIClient(cfg *Configuration) (apiclient.Client, error) {
 
 	fmt.Println("createdSession completed")
 	return apiclient.NewClient(&apiclient.ClientOptions{
-		ServerAddr: cfg.ServiceURL,
+		ServerAddr: "argo-cd-argocd-server.argo-cd.svc.cluster.local",
 		Insecure:   !cfg.IsSSLEnabled,
 		AuthToken:  createdSession.Token,
 	})
