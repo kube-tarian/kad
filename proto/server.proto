@@ -86,7 +86,6 @@ message GetClustersResponse {
 }
 
 message GetClusterDetailsRequest {
-  string clusterID = 1;
 }
 
 message GetClusterDetailsResponse {
