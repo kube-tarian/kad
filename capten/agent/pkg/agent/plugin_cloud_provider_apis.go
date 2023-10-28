@@ -158,11 +158,11 @@ func (a *Agent) GetCloudProviders(ctx context.Context, request *captenpluginspb.
 
 }
 
-func (a *Agent) GetCloudProvidersForLabels(ctx context.Context, request *captenpluginspb.GetCloudProvidersForLabelsRequest) (
-	*captenpluginspb.GetCloudProvidersForLabelsResponse, error) {
+func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *captenpluginspb.GetCloudProvidersWithFilterRequest) (
+	*captenpluginspb.GetCloudProvidersWithFilterResponse, error) {
 	if len(request.GetLabels()) == 0 {
 		a.log.Infof("request validation failed")
-		return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
@@ -172,17 +172,26 @@ func (a *Agent) GetCloudProvidersForLabels(ctx context.Context, request *captenp
 	res, err := a.as.GetCloudProvidersByLabels(request.Labels)
 	if err != nil {
 		a.log.Errorf("failed to get CloudProviders for labels from db, %v", err)
-		return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch cloud providers",
 		}, nil
 	}
 
+	filteredRes := make([]*captenpluginspb.CloudProvider, 0)
 	for _, r := range res {
+		if request.CloudType == "" {
+			filteredRes = append(filteredRes, r)
+		} else if request.CloudType != "" && r.CloudType == request.CloudType {
+			filteredRes = append(filteredRes, r)
+		}
+	}
+
+	for _, r := range filteredRes {
 		cloudAttributes, err := a.getCloudProviderCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
-			return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+			return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 				StatusMessage: "failed to fetch cloud providers",
 			}, nil
@@ -190,11 +199,11 @@ func (a *Agent) GetCloudProvidersForLabels(ctx context.Context, request *captenp
 		r.CloudAttributes = cloudAttributes
 	}
 
-	a.log.Infof("Found %d cloud providers for lables %v", len(res), request.Labels)
-	return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+	a.log.Infof("Found %d cloud providers for lables %v and cloud type %v", len(filteredRes), request.Labels, request.CloudType)
+	return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 		Status:         captenpluginspb.StatusCode_OK,
 		StatusMessage:  "successful",
-		CloudProviders: res,
+		CloudProviders: filteredRes,
 	}, nil
 }
 

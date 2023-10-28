@@ -198,12 +198,12 @@ func (s *Server) GetCloudProviders(ctx context.Context, request *captenpluginspb
 	}, nil
 }
 
-func (s *Server) GetCloudProvidersForLabels(ctx context.Context, request *captenpluginspb.GetCloudProvidersForLabelsRequest) (
-	*captenpluginspb.GetCloudProvidersForLabelsResponse, error) {
+func (s *Server) GetCloudProvidersForLabels(ctx context.Context, request *captenpluginspb.GetCloudProvidersWithFilterRequest) (
+	*captenpluginspb.GetCloudProvidersWithFilterResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
-		return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
@@ -214,16 +214,16 @@ func (s *Server) GetCloudProvidersForLabels(ctx context.Context, request *capten
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get the Cluster CloudProvider",
 		}, nil
 	}
 
-	response, err := agent.GetCaptenPluginsClient().GetCloudProvidersForLabels(context.Background(), request)
+	response, err := agent.GetCaptenPluginsClient().GetCloudProvidersWithFilter(context.Background(), request)
 	if err != nil {
 		s.log.Errorf("failed to get the Cluster CloudProvider with lables, %v", err)
-		return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get the Cluster CloudProvider",
 		}, nil
@@ -231,7 +231,7 @@ func (s *Server) GetCloudProvidersForLabels(ctx context.Context, request *capten
 
 	if response.Status != captenpluginspb.StatusCode_OK {
 		s.log.Errorf("failed to get the ClusterProject with lables")
-		return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get the Cluster CloudProvider",
 		}, nil
@@ -239,7 +239,7 @@ func (s *Server) GetCloudProvidersForLabels(ctx context.Context, request *capten
 
 	s.log.Infof("Fetched %d Cloud Providers request with lables %v for cluster %s recieved, [org: %s]",
 		request.Labels, len(response.GetCloudProviders()), clusterId, orgId)
-	return &captenpluginspb.GetCloudProvidersForLabelsResponse{
+	return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 		CloudProviders: response.GetCloudProviders(),
 		Status:         captenpluginspb.StatusCode_OK,
 		StatusMessage:  "ok",

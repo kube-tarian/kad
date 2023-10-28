@@ -22,13 +22,15 @@ const (
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
-	kvPairs, isEmptyUpdate := formUpdateKvPairsForCloudProvider(config)
+	kvPairs, _ := formUpdateKvPairsForCloudProvider(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertCloudProviderId, a.keyspace), config.Id)
-	if !isEmptyUpdate {
+	batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime)
+	err := a.client.Session().ExecuteBatch(batch)
+	if err != nil {
 		batch.Query(fmt.Sprintf(updateCloudProviderById, a.keyspace, kvPairs), config.Id)
+		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return a.client.Session().ExecuteBatch(batch)
+	return err
 }
 
 func (a *Store) DeleteCloudProviderById(id string) error {

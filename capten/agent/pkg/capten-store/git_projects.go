@@ -24,11 +24,13 @@ func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 	kvPairs, isEmptyUpdate := formUpdateKvPairsForGitProject(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertGitProjectId, a.keyspace), config.Id)
+	batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime)
+	err := a.client.Session().ExecuteBatch(batch)
 	if !isEmptyUpdate {
 		batch.Query(fmt.Sprintf(updateGitProjectById, a.keyspace, kvPairs), config.Id)
+		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return a.client.Session().ExecuteBatch(batch)
+	return err
 }
 
 func (a *Store) DeleteGitProjectById(id string) error {
