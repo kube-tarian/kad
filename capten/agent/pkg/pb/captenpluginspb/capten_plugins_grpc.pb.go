@@ -36,6 +36,9 @@ const (
 	CaptenPlugins_RegisterTektonProject_FullMethodName     = "/captenpluginspb.capten_plugins/RegisterTektonProject"
 	CaptenPlugins_GetTektonProjects_FullMethodName         = "/captenpluginspb.capten_plugins/GetTektonProjects"
 	CaptenPlugins_UnRegisterTektonProject_FullMethodName   = "/captenpluginspb.capten_plugins/UnRegisterTektonProject"
+	CaptenPlugins_AddCrossplanProvider_FullMethodName      = "/captenpluginspb.capten_plugins/AddCrossplanProvider"
+	CaptenPlugins_DeleteCrossplanProvider_FullMethodName   = "/captenpluginspb.capten_plugins/DeleteCrossplanProvider"
+	CaptenPlugins_GetCrossplanProviders_FullMethodName     = "/captenpluginspb.capten_plugins/GetCrossplanProviders"
 )
 
 // CaptenPluginsClient is the client API for CaptenPlugins service.
@@ -59,6 +62,9 @@ type CaptenPluginsClient interface {
 	RegisterTektonProject(ctx context.Context, in *RegisterTektonProjectRequest, opts ...grpc.CallOption) (*RegisterTektonProjectResponse, error)
 	GetTektonProjects(ctx context.Context, in *GetTektonProjectsRequest, opts ...grpc.CallOption) (*GetTektonProjectsResponse, error)
 	UnRegisterTektonProject(ctx context.Context, in *UnRegisterTektonProjectRequest, opts ...grpc.CallOption) (*UnRegisterTektonProjectResponse, error)
+	AddCrossplanProvider(ctx context.Context, in *AddCrossplanProviderRequest, opts ...grpc.CallOption) (*AddCrossplanProviderResponse, error)
+	DeleteCrossplanProvider(ctx context.Context, in *DeleteCrossplanProviderRequest, opts ...grpc.CallOption) (*DeleteCrossplanProviderResponse, error)
+	GetCrossplanProviders(ctx context.Context, in *GetCrossplanProvidersRequest, opts ...grpc.CallOption) (*GetCrossplanProvidersResponse, error)
 }
 
 type captenPluginsClient struct {
@@ -222,6 +228,33 @@ func (c *captenPluginsClient) UnRegisterTektonProject(ctx context.Context, in *U
 	return out, nil
 }
 
+func (c *captenPluginsClient) AddCrossplanProvider(ctx context.Context, in *AddCrossplanProviderRequest, opts ...grpc.CallOption) (*AddCrossplanProviderResponse, error) {
+	out := new(AddCrossplanProviderResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_AddCrossplanProvider_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *captenPluginsClient) DeleteCrossplanProvider(ctx context.Context, in *DeleteCrossplanProviderRequest, opts ...grpc.CallOption) (*DeleteCrossplanProviderResponse, error) {
+	out := new(DeleteCrossplanProviderResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_DeleteCrossplanProvider_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *captenPluginsClient) GetCrossplanProviders(ctx context.Context, in *GetCrossplanProvidersRequest, opts ...grpc.CallOption) (*GetCrossplanProvidersResponse, error) {
+	out := new(GetCrossplanProvidersResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_GetCrossplanProviders_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CaptenPluginsServer is the server API for CaptenPlugins service.
 // All implementations must embed UnimplementedCaptenPluginsServer
 // for forward compatibility
@@ -243,6 +276,9 @@ type CaptenPluginsServer interface {
 	RegisterTektonProject(context.Context, *RegisterTektonProjectRequest) (*RegisterTektonProjectResponse, error)
 	GetTektonProjects(context.Context, *GetTektonProjectsRequest) (*GetTektonProjectsResponse, error)
 	UnRegisterTektonProject(context.Context, *UnRegisterTektonProjectRequest) (*UnRegisterTektonProjectResponse, error)
+	AddCrossplanProvider(context.Context, *AddCrossplanProviderRequest) (*AddCrossplanProviderResponse, error)
+	DeleteCrossplanProvider(context.Context, *DeleteCrossplanProviderRequest) (*DeleteCrossplanProviderResponse, error)
+	GetCrossplanProviders(context.Context, *GetCrossplanProvidersRequest) (*GetCrossplanProvidersResponse, error)
 	mustEmbedUnimplementedCaptenPluginsServer()
 }
 
@@ -300,6 +336,15 @@ func (UnimplementedCaptenPluginsServer) GetTektonProjects(context.Context, *GetT
 }
 func (UnimplementedCaptenPluginsServer) UnRegisterTektonProject(context.Context, *UnRegisterTektonProjectRequest) (*UnRegisterTektonProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnRegisterTektonProject not implemented")
+}
+func (UnimplementedCaptenPluginsServer) AddCrossplanProvider(context.Context, *AddCrossplanProviderRequest) (*AddCrossplanProviderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddCrossplanProvider not implemented")
+}
+func (UnimplementedCaptenPluginsServer) DeleteCrossplanProvider(context.Context, *DeleteCrossplanProviderRequest) (*DeleteCrossplanProviderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteCrossplanProvider not implemented")
+}
+func (UnimplementedCaptenPluginsServer) GetCrossplanProviders(context.Context, *GetCrossplanProvidersRequest) (*GetCrossplanProvidersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCrossplanProviders not implemented")
 }
 func (UnimplementedCaptenPluginsServer) mustEmbedUnimplementedCaptenPluginsServer() {}
 
@@ -620,6 +665,60 @@ func _CaptenPlugins_UnRegisterTektonProject_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CaptenPlugins_AddCrossplanProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddCrossplanProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CaptenPluginsServer).AddCrossplanProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CaptenPlugins_AddCrossplanProvider_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CaptenPluginsServer).AddCrossplanProvider(ctx, req.(*AddCrossplanProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CaptenPlugins_DeleteCrossplanProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteCrossplanProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CaptenPluginsServer).DeleteCrossplanProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CaptenPlugins_DeleteCrossplanProvider_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CaptenPluginsServer).DeleteCrossplanProvider(ctx, req.(*DeleteCrossplanProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CaptenPlugins_GetCrossplanProviders_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCrossplanProvidersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CaptenPluginsServer).GetCrossplanProviders(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CaptenPlugins_GetCrossplanProviders_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CaptenPluginsServer).GetCrossplanProviders(ctx, req.(*GetCrossplanProvidersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CaptenPlugins_ServiceDesc is the grpc.ServiceDesc for CaptenPlugins service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -694,6 +793,18 @@ var CaptenPlugins_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnRegisterTektonProject",
 			Handler:    _CaptenPlugins_UnRegisterTektonProject_Handler,
+		},
+		{
+			MethodName: "AddCrossplanProvider",
+			Handler:    _CaptenPlugins_AddCrossplanProvider_Handler,
+		},
+		{
+			MethodName: "DeleteCrossplanProvider",
+			Handler:    _CaptenPlugins_DeleteCrossplanProvider_Handler,
+		},
+		{
+			MethodName: "GetCrossplanProviders",
+			Handler:    _CaptenPlugins_GetCrossplanProviders_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
