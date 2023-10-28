@@ -50,6 +50,7 @@ func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
 	fmt.Printf("secret res data => %+v \n", res.Data)
 	fmt.Printf("secret res Pass=> %+v \n", res.Data["password"])
 	password := res.Data["password"]
+	fmt.Println("password => " + password)
 	if len(password) == 0 {
 		return nil, fmt.Errorf("credentials not found in the secret")
 	}
@@ -60,6 +61,7 @@ func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
 		logger.Errorf("SSL not yet supported, continuing with insecure verify true")
 	}
 
+	fmt.Println("Password cfg => " + cfg.Password)
 	v, _ := json.Marshal(cfg)
 	fmt.Printf("Config -> %s", string(v))
 
