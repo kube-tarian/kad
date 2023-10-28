@@ -17,23 +17,23 @@ func Workflow(ctx workflow.Context, params model.ConfigureParameters, payload js
 	logger := logging.NewLogger()
 
 	ao := workflow.ActivityOptions{
-		ScheduleToCloseTimeout: 60 * time.Second,
+		ScheduleToCloseTimeout: 300 * time.Second,
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, ao)
 	ctx = workflow.WithRetryPolicy(ctx, temporal.RetryPolicy{MaximumAttempts: 1})
 
 	execution := workflow.GetInfo(ctx).WorkflowExecution
-	logger.Infof("execution: %+v\n", execution)
+	logger.Infof("workflow execution information: %+v\n", execution)
 
 	var a *activities.Activities
 	err := workflow.ExecuteActivity(ctx, a.ConfigurationActivity, params, payload).Get(ctx, &result)
 	if err != nil {
-		logger.Errorf("Activity failed, Error: %v", err)
+		logger.Errorf("Activity execution failed, Error: %v", err)
 		return result, err
 	}
 
-	logger.Infof("Configuration workflow completed., result: %s", (&result).ToString())
+	logger.Infof("successfully executed workflow., result: %s", (&result).ToString())
 
 	return result, nil
 }

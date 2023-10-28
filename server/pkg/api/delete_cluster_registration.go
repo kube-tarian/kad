@@ -29,15 +29,6 @@ func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverp
 		}, nil
 	}
 
-	err = s.serverStore.DeleteFullClusterAppLaunches(orgId, request.ClusterID)
-	if err != nil {
-		s.log.Errorf("failed to delete clusterappLaunches %s from db, %v", request.ClusterID, err)
-		return &serverpb.DeleteClusterRegistrationResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed delete register cluster",
-		}, nil
-	}
-
 	err = s.serverStore.DeleteCluster(orgId, request.ClusterID)
 	if err != nil {
 		s.log.Errorf("failed to delete cluster %s from db, %v", request.ClusterID, err)
