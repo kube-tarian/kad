@@ -64,6 +64,7 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 	query := fmt.Sprintf(getTektonProjectsQuery, a.keyspace)
 	regTektonProjects, err := a.executeTektonProjectsSelectQuery(query)
 	if err != nil {
+		a.log.Errorf("failed to execute select tekton projects, :%v", err)
 		return nil, err
 	}
 
@@ -81,6 +82,7 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 			project.WorkflowId = "NA"
 			project.Status = "NA"
 			if err := a.UpsertTektonProject(project); err != nil {
+				a.log.Errorf("failed to update default tekton projects, :%v", err)
 				return nil, err
 			}
 		} else {
