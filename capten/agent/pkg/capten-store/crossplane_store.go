@@ -13,6 +13,7 @@ const (
 	getAllCrossplaneProvidersQuery    = "SELECT id, cloud_type, provider_name, cloud_provider_id, status FROM %s.CrossplaneProviders;"
 	insertCrossplaneProviderQuery     = "INSERT INTO %s.CrossplaneProviders(id, cloud_type, provider_name, cloud_provider_id, status) VALUES (?, ?, ?, ?, ?);"
 	deleteCrossplaneProviderByIDQuery = "DELETE FROM %s.CrossplaneProviders WHERE id=%s;"
+	updateCrossplaneProviderQuery     = "UPDATE %s.CrossplaneProviders SET cloud_type=%s, provider_name=%s, cloud_provider_id=%s, status=%s WHERE id=%s;"
 )
 
 func (a *Store) InsertCrossplaneProvider(provider *model.CrossplaneProvider) error {
@@ -71,4 +72,12 @@ func (a *Store) executeCrossplaneProvidersSelectQuery(query string) ([]*captenpl
 	}
 
 	return providers, nil
+}
+
+func (a *Store) UpdateCrossplaneProvider(provider *model.CrossplaneProvider) error {
+	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
+	query := fmt.Sprintf(updateCrossplaneProviderQuery, a.keyspace, provider.CloudType, provider.ProviderName, provider.CloudProviderId, provider.Status, provider.Id)
+	batch.Query(query)
+	err := a.client.Session().ExecuteBatch(batch)
+	return err
 }

@@ -42,6 +42,7 @@ type CaptenPluginsClient interface {
 	AddCrossplanProvider(ctx context.Context, in *AddCrossplanProviderRequest, opts ...grpc.CallOption) (*AddCrossplanProviderResponse, error)
 	DeleteCrossplanProvider(ctx context.Context, in *DeleteCrossplanProviderRequest, opts ...grpc.CallOption) (*DeleteCrossplanProviderResponse, error)
 	GetCrossplanProviders(ctx context.Context, in *GetCrossplanProvidersRequest, opts ...grpc.CallOption) (*GetCrossplanProvidersResponse, error)
+	UpdateCrossplanProvider(ctx context.Context, in *UpdateCrossplanProviderRequest, opts ...grpc.CallOption) (*UpdateCrossplanProviderResponse, error)
 }
 
 type captenPluginsClient struct {
@@ -232,6 +233,15 @@ func (c *captenPluginsClient) GetCrossplanProviders(ctx context.Context, in *Get
 	return out, nil
 }
 
+func (c *captenPluginsClient) UpdateCrossplanProvider(ctx context.Context, in *UpdateCrossplanProviderRequest, opts ...grpc.CallOption) (*UpdateCrossplanProviderResponse, error) {
+	out := new(UpdateCrossplanProviderResponse)
+	err := c.cc.Invoke(ctx, "/captenpluginspb.capten_plugins/UpdateCrossplanProvider", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CaptenPluginsServer is the server API for CaptenPlugins service.
 // All implementations must embed UnimplementedCaptenPluginsServer
 // for forward compatibility
@@ -256,6 +266,7 @@ type CaptenPluginsServer interface {
 	AddCrossplanProvider(context.Context, *AddCrossplanProviderRequest) (*AddCrossplanProviderResponse, error)
 	DeleteCrossplanProvider(context.Context, *DeleteCrossplanProviderRequest) (*DeleteCrossplanProviderResponse, error)
 	GetCrossplanProviders(context.Context, *GetCrossplanProvidersRequest) (*GetCrossplanProvidersResponse, error)
+	UpdateCrossplanProvider(context.Context, *UpdateCrossplanProviderRequest) (*UpdateCrossplanProviderResponse, error)
 	mustEmbedUnimplementedCaptenPluginsServer()
 }
 
@@ -322,6 +333,9 @@ func (UnimplementedCaptenPluginsServer) DeleteCrossplanProvider(context.Context,
 }
 func (UnimplementedCaptenPluginsServer) GetCrossplanProviders(context.Context, *GetCrossplanProvidersRequest) (*GetCrossplanProvidersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCrossplanProviders not implemented")
+}
+func (UnimplementedCaptenPluginsServer) UpdateCrossplanProvider(context.Context, *UpdateCrossplanProviderRequest) (*UpdateCrossplanProviderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateCrossplanProvider not implemented")
 }
 func (UnimplementedCaptenPluginsServer) mustEmbedUnimplementedCaptenPluginsServer() {}
 
@@ -696,6 +710,24 @@ func _CaptenPlugins_GetCrossplanProviders_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CaptenPlugins_UpdateCrossplanProvider_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateCrossplanProviderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CaptenPluginsServer).UpdateCrossplanProvider(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/captenpluginspb.capten_plugins/UpdateCrossplanProvider",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CaptenPluginsServer).UpdateCrossplanProvider(ctx, req.(*UpdateCrossplanProviderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CaptenPlugins_ServiceDesc is the grpc.ServiceDesc for CaptenPlugins service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -782,6 +814,10 @@ var CaptenPlugins_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCrossplanProviders",
 			Handler:    _CaptenPlugins_GetCrossplanProviders_Handler,
+		},
+		{
+			MethodName: "UpdateCrossplanProvider",
+			Handler:    _CaptenPlugins_UpdateCrossplanProvider_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
