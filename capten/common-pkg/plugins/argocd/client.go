@@ -45,12 +45,7 @@ func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
 	if err != nil {
 		return nil, err
 	}
-	// secret res => {Namespace:argo-cd Data:map[password:ftZjnSFGG3RI804A]}
-	fmt.Printf("secret res => %+v \n", *res)
-	fmt.Printf("secret res data => %+v \n", res.Data)
-	fmt.Printf("secret res Pass=> %+v \n", res.Data["password"])
 	password := res.Data["password"]
-	fmt.Println("password => " + password)
 	if len(password) == 0 {
 		return nil, fmt.Errorf("credentials not found in the secret")
 	}
@@ -60,10 +55,6 @@ func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
 		// TODO: Configure SSL certificates
 		logger.Errorf("SSL not yet supported, continuing with insecure verify true")
 	}
-
-	fmt.Println("Password cfg => " + cfg.Password)
-	v, _ := json.Marshal(cfg)
-	fmt.Printf("Config -> %s", string(v))
 
 	client, err := getNewAPIClient(cfg)
 	if err != nil {
