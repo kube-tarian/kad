@@ -31,7 +31,7 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		}, nil
 	}
 
-	marshaledOverride, err := yaml.Marshal(config.OverrideValues)
+	templateValues, err := yaml.Marshal(config.TemplateValues)
 	if err != nil {
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
@@ -39,11 +39,34 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		}, nil
 	}
 
-	marshaledLaunchUi, err := yaml.Marshal(config.LaunchUIValues)
+	launchUIValues, err := yaml.Marshal(config.LaunchUIValues)
 	if err != nil {
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to find store app values",
+		}, nil
+	}
+
+	overrideValues := request.OverrideValues
+	if len(request.OverrideValues) == 0 {
+		overrideValues = config.OverrideValues
+	}
+
+	clusterGlobalValues, err := s.getClusterGlobalValues(orgId, request.ClusterID)
+	if err != nil {
+		s.log.Errorf("failed to get cluster global values, %v", err)
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to fetch cluster global values values",
+		}, nil
+	}
+
+	dervivedOverrideValues, err := s.deriveTemplateOverrideValues(overrideValues, clusterGlobalValues)
+	if err != nil {
+		s.log.Errorf("failed to update overrided store app values, %v", err)
+		return &serverpb.DeployStoreAppResponse{
+			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to update overrided store app values",
 		}, nil
 	}
 
@@ -69,9 +92,9 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			PluginDescription:   config.PluginDescription,
 		},
 		AppValues: &agentpb.AppValues{
-			OverrideValues: request.OverrideValues,
-			LaunchUIValues: decodeBase64StringToBytes(string(marshaledLaunchUi)),
-			TemplateValues: decodeBase64StringToBytes(string(marshaledOverride)),
+			OverrideValues: dervivedOverrideValues,
+			LaunchUIValues: decodeBase64StringToBytes(string(launchUIValues)),
+			TemplateValues: decodeBase64StringToBytes(string(templateValues)),
 		},
 	}
 

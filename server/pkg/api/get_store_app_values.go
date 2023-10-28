@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
-	"gopkg.in/yaml.v2"
 )
 
 func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetStoreAppValuesRequest) (
@@ -29,15 +28,16 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 		}, nil
 	}
 
-	marshaledOverride, err := yaml.Marshal(config.OverrideValues)
+	clusterGlobalValues, err := s.getClusterGlobalValues(orgId, request.ClusterID)
 	if err != nil {
+		s.log.Errorf("failed to get cluster global values, %v", err)
 		return &serverpb.GetStoreAppValuesResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to marshal values",
+			StatusMessage: "failed to fetch cluster global values values",
 		}, nil
 	}
 
-	overrideValues, err := s.replaceGlobalValues(orgId, request.ClusterID, decodeBase64StringToBytes(string(marshaledOverride)))
+	overrideValues, err := s.deriveTemplateOverrideValues(config.OverrideValues, clusterGlobalValues)
 	if err != nil {
 		s.log.Errorf("failed to update overrided store app values, %v", err)
 		return &serverpb.GetStoreAppValuesResponse{
@@ -46,7 +46,7 @@ func (s *Server) GetStoreAppValues(ctx context.Context, request *serverpb.GetSto
 		}, nil
 	}
 
-	s.log.Infof("Get store app [%s:%s] values request for cluster %s successful, [org: %s]",
+	s.log.Infof("Fetched store app [%s:%s] values request for cluster %s successful, [org: %s]",
 		request.AppName, request.Version, request.ClusterID, orgId)
 	return &serverpb.GetStoreAppValuesResponse{
 		Status:         serverpb.StatusCode_OK,
