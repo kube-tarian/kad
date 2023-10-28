@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	insertGitProject             = "INSERT INTO %s.GitProjects(id, project_url, labels, last_update_time) VALUES (?)"
+	insertGitProject             = "INSERT INTO %s.GitProjects(id, project_url, labels, last_update_time) VALUES (?,?,?,?)"
 	insertGitProjectId           = "INSERT INTO %s.GitProjects(id) VALUES (?)"
 	updateGitProjectById         = "UPDATE %s.GitProjects SET %s WHERE id = ?"
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"
@@ -27,8 +27,10 @@ func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 	batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
+		fmt.Println("Err While inserting Git project", err)
 		batch.Query(fmt.Sprintf(updateGitProjectById, a.keyspace, kvPairs), config.Id)
 		err = a.client.Session().ExecuteBatch(batch)
+		fmt.Println("Err While updating Git project", err)
 	}
 	return err
 }
@@ -73,6 +75,7 @@ func (a *Store) GetGitProjectsByLabels(searchLabels []string) ([]*captenpluginsp
 	whereLabelsClause := strings.Join(labelContains, " OR ")
 	whereLabelsClause += " ALLOW FILTERING"
 	query := fmt.Sprintf(selectAllGitProjectsByLabels, a.keyspace, whereLabelsClause)
+	fmt.Println("QUERY for GetGitProjectsByLabels", query)
 	return a.executeGitProjectsSelectQuery(query)
 }
 
