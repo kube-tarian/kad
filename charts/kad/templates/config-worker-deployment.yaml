@@ -43,14 +43,6 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /status
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /status
-              port: http
           volumeMounts:
             - mountPath: {{ .Values.configWorkerGitCloneDir }}
               name: git-clone-dir
