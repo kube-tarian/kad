@@ -11,7 +11,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func (s *Server) replaceGlobalValues(orgId, clusterID string, overridedValues []byte) ([]byte, error) {
+func (s *Server) getClusterGlobalValues(orgId, clusterID string) (map[string]interface{}, error) {
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterID)
 	if err != nil {
 		return nil, errors.WithMessagef(err, "failed to initialize agent for cluster %s", clusterID)
@@ -29,24 +29,13 @@ func (s *Server) replaceGlobalValues(orgId, clusterID string, overridedValues []
 	if err != nil {
 		return nil, errors.WithMessagef(err, "failed to unmarshal cluster values")
 	}
-
-	var overrideValues map[string]interface{}
-	err = yaml.Unmarshal(overridedValues, &overrideValues)
-	if err != nil {
-		return nil, errors.WithMessagef(err, "failed to unmarshal override values")
-	}
-
-	return replaceOverrideGlobalValues(overrideValues, globalValues)
+	s.log.Debugf("cluster %s globalValues: %+v", clusterID, globalValues)
+	return globalValues, nil
 }
 
-func replaceOverrideGlobalValues(overrideValues map[string]interface{},
-	globlaValues map[string]interface{}) (transformedData []byte, err error) {
-	yamlData, err := yaml.Marshal(overrideValues)
-	if err != nil {
-		return
-	}
-
-	tmpl, err := template.New("templateVal").Parse(string(yamlData))
+func (s *Server) deriveTemplateOverrideValues(overridedValues []byte,
+	globlaValues map[string]interface{}) (transformedOverrideValues []byte, err error) {
+	tmpl, err := template.New("templateVal").Parse(string(overridedValues))
 	if err != nil {
 		return
 	}
@@ -57,6 +46,7 @@ func replaceOverrideGlobalValues(overrideValues map[string]interface{},
 		return
 	}
 
-	transformedData = buf.Bytes()
+	transformedOverrideValues = buf.Bytes()
+	s.log.Debugf("cluster transformedOverrideValues: %+v", string(transformedOverrideValues))
 	return
 }
