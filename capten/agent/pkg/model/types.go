@@ -31,6 +31,15 @@ const (
 	TektonProjectConfigurationFailed  TektonProjectStatus = "configuration-failed"
 )
 
+type CrossplaneProjectStatus string
+
+const (
+	CrossplaneProjectAvailable            CrossplaneProjectStatus = "available"
+	CrossplaneProjectConfigured           CrossplaneProjectStatus = "configured"
+	CrossplaneProjectConfigurationOngoing CrossplaneProjectStatus = "configuration-ongoing"
+	CrossplaneProjectConfigurationFailed  CrossplaneProjectStatus = "configuration-failed"
+)
+
 type AppConfig struct {
 	AppName             string `json:"AppName,omitempty"`
 	Version             string `json:"Version,omitempty"`
@@ -85,6 +94,16 @@ type ClusterGitoptsConfig struct {
 }
 
 type TektonProject struct {
+	Id             string `json:"id,omitempty"`
+	GitProjectId   string `json:"git_project_id,omitempty"`
+	GitProjectUrl  string `json:"git_project_url,omitempty"`
+	Status         string `json:"status,omitempty"`
+	LastUpdateTime string `json:"last_update_time,omitempty"`
+	WorkflowId     string `json:"workflow_id,omitempty"`
+	WorkflowStatus string `json:"workflow_status,omitempty"`
+}
+
+type CrossplaneProject struct {
 	Id             string `json:"id,omitempty"`
 	GitProjectId   string `json:"git_project_id,omitempty"`
 	GitProjectUrl  string `json:"git_project_url,omitempty"`
