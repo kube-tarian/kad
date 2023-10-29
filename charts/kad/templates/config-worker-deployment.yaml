@@ -33,6 +33,14 @@ spec:
       volumes:
         - name: git-clone-dir
           emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: plugin-config-map
+            items:
+              - key: TEKTON_PLUGIN_CONFIG
+                path: {{ .Values.configWorker.tektonPluginConfigFile }}
+              - key: CROSSPLANE_PLUGIN_CONFIG
+                path: {{ .Values.configWorker.crossplanePluginConfigFile }}
       containers:
         - name: {{ .Chart.Name }}-config-worker
           securityContext:
@@ -44,8 +52,10 @@ spec:
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           volumeMounts:
-            - mountPath: {{ .Values.configWorkerGitCloneDir }}
-              name: git-clone-dir
+            - name: git-clone-dir
+              mountPath: {{ .Values.configWorkerGitCloneDir }}
+            - name: config-volume
+              mountPath: {{ .Values.configWorker.pluginConfigDir }}
           env:
             - name: LOG_LEVEL
               value: {{ .Values.env.logLevel }}
@@ -57,10 +67,6 @@ spec:
               value: {{ .Values.vault.address }}
             - name: GIT_CLONE_DIR
               value: {{ .Values.configWorkerGitCloneDir }}
-            - name: CI_CD_TEMPLATE_REPO
-              value: {{ .Values.configWorker.templateRepo }}
-            - name: CI_CD_APPS_CONFIGURE
-              value: {{ .Values.configWorker.appsToConfig }}
             - name: VAULT_ROLE
               value: {{ .Values.vault.role }}
             - name: CASSANDRA_SERVICE_URL
@@ -69,6 +75,10 @@ spec:
               value: "{{ .Values.cassandra.keyspaceName }}"
             - name: CASSANDRA_TABLE_NAME
               value: "{{ .Values.cassandra.name }}"
+            - name: TEKTON_PLUGIN_CONFIG_FILE
+              value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.tektonPluginConfigFile }}"
+            - name: CROSSPLANE_PLUGIN_CONFIG_FILE
+              value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.crossplanePluginConfigFile }}"
             - name: CASSANDRA_USERNAME
               valueFrom:
                 secretKeyRef:
