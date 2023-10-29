@@ -116,9 +116,10 @@ func (a *Agent) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.
 	argocdProjects := []*captenpluginspb.ArgoCDProject{}
 	for _, project := range projects {
 		argocdProject := &captenpluginspb.ArgoCDProject{
-			Id:         project.Id,
-			ProjectUrl: project.GitProjectUrl,
-			Status:     project.Status,
+			Id:             project.Id,
+			ProjectUrl:     project.GitProjectUrl,
+			Status:         project.Status,
+			LastUpdateTime: project.LastUpdateTime,
 		}
 		argocdProjects = append(argocdProjects, argocdProject)
 	}
