@@ -89,7 +89,7 @@ func (a *Agent) GetCrossplaneProject(ctx context.Context, request *captenplugins
 	}, nil
 }
 
-func (a *Agent) UnRegisterCrossplaneProject(request *captenpluginspb.UnRegisterCrossplaneProjectRequest) (
+func (a *Agent) UnRegisterCrossplaneProject(ctx context.Context, request *captenpluginspb.UnRegisterCrossplaneProjectRequest) (
 	*captenpluginspb.UnRegisterCrossplaneProjectResponse, error) {
 
 	if err := validateArgs(request.Id); err != nil {
