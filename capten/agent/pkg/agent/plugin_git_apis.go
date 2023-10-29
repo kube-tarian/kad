@@ -11,6 +11,9 @@ import (
 
 const gitProjectEntityName = "gitproject"
 
+// add more labels here if needed
+var whitelistedLabels = []string{"crossplane"}
+
 func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddGitProjectRequest) (
 	*captenpluginspb.AddGitProjectResponse, error) {
 	if err := validateArgs(request.ProjectUrl, request.AccessToken); err != nil {
@@ -20,8 +23,15 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 			StatusMessage: "request validation failed",
 		}, nil
 	}
+	a.log.Infof("Add Git project %s request received", request.ProjectUrl)
 
-	a.log.Infof("Add Git project %s request recieved", request.ProjectUrl)
+	if err := a.validateForWhitelistedLabels(ctx, request.Labels); err != nil {
+		a.log.Infof("validateForWhitelistedLabels Git project err: %s", err.Error())
+		return &captenpluginspb.AddGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "whilelisted label validation failed, label already present",
+		}, nil
+	}
 
 	id := uuid.New()
 	if err := a.storeGitProjectCredential(ctx, id.String(), request.AccessToken); err != nil {
@@ -62,6 +72,14 @@ func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.U
 		}, nil
 	}
 	a.log.Infof("Update Git project %s, %s request recieved", request.ProjectUrl, request.Id)
+
+	if err := a.validateForWhitelistedLabels(ctx, request.Labels); err != nil {
+		a.log.Infof("validateForWhitelistedLabels Git project err: %s", err.Error())
+		return &captenpluginspb.UpdateGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "whilelisted label validation failed, label already present",
+		}, nil
+	}
 
 	id, err := uuid.Parse(request.Id)
 	if err != nil {
@@ -237,5 +255,31 @@ func (a *Agent) storeGitProjectCredential(ctx context.Context, id string, access
 	}
 	a.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
 	a.log.Infof("stored credential for entity %s", credPath)
+	return nil
+}
+
+func (a *Agent) validateForWhitelistedLabels(ctx context.Context, incomingLabels []string) error {
+	var filtered []string
+	for _, label := range incomingLabels {
+		for _, whitelisted := range whitelistedLabels {
+			if label == whitelisted {
+				filtered = append(filtered, label)
+			}
+		}
+	}
+	if len(filtered) == 0 {
+		// safe to add this project
+		return nil
+	}
+	res, err := a.as.GetGitProjectsByLabels(filtered)
+	if err != nil {
+		a.log.Errorf("failed to get gitProjects for labels from db, %v", err)
+		return err
+	}
+
+	if len(res) > 0 {
+		return fmt.Errorf("project present with whitelisted labels: %v", filtered)
+	}
+
 	return nil
 }
