@@ -5,18 +5,18 @@ type PluginConfigExtractor struct {
 	crossPlanePluginData crossplanePluginDS
 }
 
-func NewPluginExtractor(tektonFileName, crossplaneFilename string) (PluginConfigExtractor, error) {
+func NewPluginExtractor(tektonFileName, crossplaneFilename string) (*PluginConfigExtractor, error) {
 	pluginInfo, err := ReadTektonPluginConfig(tektonFileName)
 	if err != nil {
-		return PluginConfigExtractor{}, err
+		return nil, err
 	}
 
 	cpluginInfo, err := ReadCrossPlanePluginConfig(crossplaneFilename)
 	if err != nil {
-		return PluginConfigExtractor{}, err
+		return nil, err
 	}
 
-	return PluginConfigExtractor{tektonPluginData: pluginInfo, crossPlanePluginData: cpluginInfo}, nil
+	return &PluginConfigExtractor{tektonPluginData: pluginInfo, crossPlanePluginData: cpluginInfo}, nil
 }
 
 func (pc *PluginConfigExtractor) tektonGetGitRepo() string {
