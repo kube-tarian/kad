@@ -6,7 +6,6 @@ import (
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
-	"gopkg.in/yaml.v2"
 )
 
 func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeployStoreAppRequest) (
@@ -25,22 +24,6 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
 	if err != nil {
 		s.log.Errorf("failed to get store app values, %v", err)
-		return &serverpb.DeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to find store app values",
-		}, nil
-	}
-
-	templateValues, err := yaml.Marshal(config.TemplateValues)
-	if err != nil {
-		return &serverpb.DeployStoreAppResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to find store app values",
-		}, nil
-	}
-
-	launchUIValues, err := yaml.Marshal(config.LaunchUIValues)
-	if err != nil {
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to find store app values",
@@ -93,8 +76,8 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		},
 		AppValues: &agentpb.AppValues{
 			OverrideValues: dervivedOverrideValues,
-			LaunchUIValues: decodeBase64StringToBytes(string(launchUIValues)),
-			TemplateValues: decodeBase64StringToBytes(string(templateValues)),
+			LaunchUIValues: config.LaunchUIValues,
+			TemplateValues: config.TemplateValues,
 		},
 	}
 

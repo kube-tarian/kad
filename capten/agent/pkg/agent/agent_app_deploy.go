@@ -20,8 +20,6 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 		}, nil
 	}
 
-	//GetClusterGlobalValues
-
 	launchURL, err := executeStringTemplateValues(request.AppConfig.LaunchURL, request.AppValues.OverrideValues)
 	if err != nil {
 		a.log.Errorf("failed to derive template launch URL for app %s, %v", request.AppConfig.ReleaseName, err)

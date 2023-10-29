@@ -1,7 +1,6 @@
 package storeapps
 
 import (
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -116,24 +115,29 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			if err != nil {
 				return errors.WithMessage(err, "override values marshal error")
 			}
-			storeAppConfig.OverrideValues = base64.StdEncoding.EncodeToString(marshaledOverride)
+			storeAppConfig.OverrideValues = marshaledOverride
 		}
 		if len(appConfig.LaunchUIValues) > 0 {
 			marshaledOLaunchUI, err := yaml.Marshal(appConfig.LaunchUIValues)
 			if err != nil {
 				return errors.WithMessage(err, "launchui values marshal error")
 			}
-			storeAppConfig.LaunchUIValues = base64.StdEncoding.EncodeToString(marshaledOLaunchUI)
+			storeAppConfig.LaunchUIValues = marshaledOLaunchUI
 		}
 
-		templateValues, err := os.ReadFile(cfg.AppStoreAppConfigPath + "/values/" + appName + "_template.yaml")
-		if err == nil && len(templateValues) > 0 {
-			storeAppConfig.TemplateValues = base64.StdEncoding.EncodeToString(templateValues)
-		}
+		storeAppConfig.TemplateValues = getAppTemplateValues(log, cfg, appName)
 
 		if err := appStore.AddOrUpdateStoreApp(storeAppConfig); err != nil {
 			return errors.WithMessagef(err, "failed to store app config for %s", appName)
 		}
 	}
 	return nil
+}
+
+func getAppTemplateValues(log logging.Logger, cfg *Config, appName string) []byte {
+	templateValues, err := os.ReadFile(cfg.AppStoreAppConfigPath + "/values/" + appName + "_template.yaml")
+	if err != nil {
+		log.Infof("No template file for app %s", appName)
+	}
+	return templateValues
 }
