@@ -14,7 +14,7 @@ const (
 	getCrossplaneProjectsQuery      = "SELECT id, git_project_id, status, last_update_time, workflow_id, workflow_status FROM %s.CrossplaneProjects;"
 	getCrossplaneProjectsForIDQuery = "SELECT id, git_project_id, status, last_update_time, workflow_id, workflow_status FROM %s.CrossplaneProjects WHERE id=%s;"
 	insertCrossplaneProjectQuery    = "INSERT INTO %s.CrossplaneProjects(id, git_project_id, status, last_update_time) VALUES (?,?,?,?);"
-	updateCrossplaneProjectQuery    = "UPDATE %s.CrossplaneProjects SET status='%s', last_update_time='%s', workflow_id='%s', workflow_status='%s' WHERE id=%s;"
+	updateCrossplaneProjectQuery    = "UPDATE %s.CrossplaneProjects SET status=?, last_update_time=?, workflow_id=?, workflow_status=? WHERE id=?;"
 	deleteCrossplaneProjectQuery    = "DELETE FROM %s.CrossplaneProjects WHERE id=%s;"
 )
 
@@ -24,7 +24,9 @@ func (a *Store) UpsertCrossplaneProject(project *model.CrossplaneProject) error 
 	batch.Query(fmt.Sprintf(insertCrossplaneProjectQuery, a.keyspace), project.Id, project.GitProjectId, project.Status, project.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		batch.Query(fmt.Sprintf(updateCrossplaneProjectQuery, a.keyspace, project.Status, project.LastUpdateTime, project.WorkflowId, project.WorkflowStatus, project.Id))
+		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
+		query := fmt.Sprintf(updateCrossplaneProjectQuery, a.keyspace)
+		batch.Query(query, project.Status, project.LastUpdateTime, project.WorkflowId, project.WorkflowStatus, project.Id)
 		err = a.client.Session().ExecuteBatch(batch)
 	}
 	return err
