@@ -13,6 +13,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/util/io"
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/fetcher"
 	"github.com/kube-tarian/kad/capten/model"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,11 +26,26 @@ type ArgoCDCLient struct {
 }
 
 func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
-	cfg, err := fetchConfiguration(logger)
-	if err != nil {
+	cfg := &Configuration{}
+	err := envconfig.Process("", cfg)
+	if err == nil {
 		return nil, err
 	}
 
+	k8sClient, err := k8s.NewK8SClient(logger)
+	if err != nil {
+		return nil, err
+	}
+	res, err := k8sClient.FetchSecretDetails(&k8s.SecretDetailsRequest{Namespace: "argo-cd", SecretName: "argocd-initial-admin-secret"})
+	if err != nil {
+		return nil, err
+	}
+	password := res.Data["password"]
+	if len(password) == 0 {
+		return nil, fmt.Errorf("credentials not found in the secret")
+	}
+
+	cfg.Password = password
 	if cfg.IsSSLEnabled {
 		// TODO: Configure SSL certificates
 		logger.Errorf("SSL not yet supported, continuing with insecure verify true")
