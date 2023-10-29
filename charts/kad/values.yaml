@@ -113,8 +113,8 @@ affinity: {}
 
 configWorkerGitCloneDir: "/gitCloneDir"
 configWorker:
-  templateRepo: "https://github.com/intelops/capten-templates.git"
-  appsToConfig: "tekton,infra/crossplane"
+  pluginConfigDir: "/configs"
+  pluginConfigFile: "plugin_config.json"
 # TODO: attributes to be added
 temporal:
   external: true

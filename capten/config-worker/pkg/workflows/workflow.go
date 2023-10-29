@@ -26,8 +26,12 @@ func Workflow(ctx workflow.Context, params model.ConfigureParameters, payload js
 	execution := workflow.GetInfo(ctx).WorkflowExecution
 	logger.Infof("workflow execution information: %+v\n", execution)
 
-	var a *activities.Activities
-	err := workflow.ExecuteActivity(ctx, a.ConfigurationActivity, params, payload).Get(ctx, &result)
+	a, err := activities.NewActivity()
+	if err != nil {
+		return result, err
+	}
+
+	err = workflow.ExecuteActivity(ctx, a.ConfigurationActivity, params, payload).Get(ctx, &result)
 	if err != nil {
 		logger.Errorf("Activity execution failed, Error: %v", err)
 		return result, err

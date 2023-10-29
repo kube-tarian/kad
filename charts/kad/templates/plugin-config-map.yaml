@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plugin-config-map
+  labels:
+    {{- include "kad.labels" . | nindent 4 }}
+    app.kubernetes.io/component: config-worker
+data:
+  PLUGIN_CONFIG: |
+{{- $fileName := .Values.configWorker.pluginConfigFile }}
+{{ .Files.Get $fileName | indent 4 }}
+
