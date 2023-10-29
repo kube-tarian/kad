@@ -26,8 +26,11 @@ func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error
 	batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		kvPairs, values := formUpdateKvPairsForCloudProvider(config)
-		query := fmt.Sprintf(updateCloudProviderById, a.keyspace, kvPairs)
+		updatePlaceholders, values := formUpdateKvPairsForCloudProvider(config)
+		if updatePlaceholders == "" {
+			return err
+		}
+		query := fmt.Sprintf(updateCloudProviderById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
 		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
@@ -118,7 +121,7 @@ func (a *Store) executeCloudProvidersSelectQuery(query string) ([]*captenplugins
 	return ret, nil
 }
 
-func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (kvPairs string, values []interface{}) {
+func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (updatePlaceholders string, values []interface{}) {
 	params := []string{}
 	values = []interface{}{}
 	if config.CloudType != "" {
@@ -132,11 +135,14 @@ func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (k
 		values = append(values, labelsStr)
 	}
 
-	if (config.LastUpdateTime) != "" {
+	if config.LastUpdateTime != "" {
 		params = append(params, "last_update_time = ?")
 		values = append(values, config.LastUpdateTime)
 	}
 
-	kvPairs = strings.Join(params, ", ")
-	return
+	if len(params) == 0 {
+		return "", nil
+	}
+
+	return strings.Join(params, ", "), values
 }
