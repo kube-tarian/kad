@@ -22,12 +22,15 @@ const (
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
-	kvPairs := formUpdateKvPairsForCloudProvider(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		batch.Query(fmt.Sprintf(updateCloudProviderById, a.keyspace, kvPairs), config.Id)
+		kvPairs, values := formUpdateKvPairsForCloudProvider(config)
+		query := fmt.Sprintf(updateCloudProviderById, a.keyspace, kvPairs)
+		args := append(values, config.Id)
+		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
+		batch.Query(query, args...)
 		err = a.client.Session().ExecuteBatch(batch)
 	}
 	return err
@@ -115,33 +118,25 @@ func (a *Store) executeCloudProvidersSelectQuery(query string) ([]*captenplugins
 	return ret, nil
 }
 
-func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (kvPairs string) {
+func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (kvPairs string, values []interface{}) {
 	params := []string{}
-
+	values = []interface{}{}
 	if config.CloudType != "" {
-		params = append(params,
-			fmt.Sprintf("cloud_type = '%s'", config.CloudType))
+		params = append(params, "cloud_type = ?")
+		values = append(values, config.CloudType)
 	}
 
-	// comma separated labels, change this later
 	if len(config.Labels) > 0 {
-		labels := []string{}
-		for _, label := range config.Labels {
-			labels = append(labels, fmt.Sprintf("'%s'", label))
-		}
-		param := "{" + strings.Join(labels, ", ") + "}"
-		params = append(params,
-			fmt.Sprintf("labels = %v", param))
+		params = append(params, "labels = ?")
+		labelsStr := "{" + strings.Join(config.Labels, ", ") + "}"
+		values = append(values, labelsStr)
 	}
 
 	if (config.LastUpdateTime) != "" {
-		params = append(params,
-			fmt.Sprintf("last_update_time = '%v'", config.LastUpdateTime))
+		params = append(params, "last_update_time = ?")
+		values = append(values, config.LastUpdateTime)
 	}
 
-	if len(params) == 0 {
-		// query is empty there is nothing to update
-		return ""
-	}
-	return strings.Join(params, ", ")
+	kvPairs = strings.Join(params, ", ")
+	return
 }
