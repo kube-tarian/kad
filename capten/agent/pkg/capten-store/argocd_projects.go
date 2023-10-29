@@ -104,6 +104,8 @@ func (a *Store) updateArgoCDProjects() ([]*model.ArgoCDProject, error) {
 		argoCDProjects[tekPro.Id] = tekPro
 	}
 
+	fmt.Printf("regArgoCDProjects => %+v \n", regArgoCDProjects)
+	fmt.Printf("argoCDProjects => %+v \n", argoCDProjects)
 	ret := make([]*model.ArgoCDProject, 0)
 	for _, gitProject := range gitProjects {
 		project := &model.ArgoCDProject{Id: gitProject.Id, GitProjectId: gitProject.Id,
