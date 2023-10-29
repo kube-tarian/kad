@@ -77,7 +77,7 @@ spec:
               value: "{{ .Values.cassandra.name }}"
             - name: TEKTON_PLUGIN_CONFIG_FILE
               value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.tektonPluginConfigFile }}"
-            - name: CROSSPLACE_PLUGIN_CONFIG_FILE
+            - name: CROSSPLANE_PLUGIN_CONFIG_FILE
               value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.crossplanePluginConfigFile }}"
             - name: CASSANDRA_USERNAME
               valueFrom:
