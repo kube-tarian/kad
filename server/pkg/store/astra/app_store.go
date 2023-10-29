@@ -26,13 +26,26 @@ func (a *AstraServerStore) AddOrUpdateStoreApp(config *types.StoreAppConfig) err
 		return fmt.Errorf("failed to check app config existance : %w", err)
 	}
 
+	var overrideValues, launchUIValues, templateValues string
+	if len(config.OverrideValues) > 0 {
+		overrideValues = base64.StdEncoding.EncodeToString(config.OverrideValues)
+	}
+
+	if len(config.LaunchUIValues) > 0 {
+		launchUIValues = base64.StdEncoding.EncodeToString(config.LaunchUIValues)
+	}
+
+	if len(config.TemplateValues) > 0 {
+		templateValues = base64.StdEncoding.EncodeToString(config.TemplateValues)
+	}
+
 	var query *pb.Query
 	if appExists {
 		query = &pb.Query{
 			Cql: fmt.Sprintf(updateAppConfigQuery,
 				a.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace,
 				config.PrivilegedNamespace, config.LaunchURL, config.LaunchUIDescription, config.Category, config.Icon,
-				config.Description, config.LaunchUIValues, config.OverrideValues, config.TemplateValues,
+				config.Description, launchUIValues, overrideValues, templateValues,
 				time.Now().Format(time.RFC3339), config.PluginName, config.PluginDescription, config.AppName, config.Version),
 		}
 	} else {
@@ -41,7 +54,7 @@ func (a *AstraServerStore) AddOrUpdateStoreApp(config *types.StoreAppConfig) err
 				a.keyspace, config.AppName, config.ChartName, config.RepoName, config.ReleaseName, config.RepoURL,
 				config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL,
 				config.LaunchUIDescription, config.Category, config.Icon, config.Description, config.LaunchUIValues,
-				config.OverrideValues, config.TemplateValues, time.Now().Format(time.RFC3339), uuid.New().String(), config.PluginName,
+				overrideValues, templateValues, time.Now().Format(time.RFC3339), uuid.New().String(), config.PluginName,
 				config.PluginDescription),
 		}
 	}

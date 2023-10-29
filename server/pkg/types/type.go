@@ -38,9 +38,9 @@ type StoreAppConfig struct {
 	Icon                string `json:"icon,omitempty"`
 	LaunchURL           string `yaml:"LaunchURL,omitempty"`
 	LaunchUIDescription string `yaml:"LaunchUIDescription,omitempty"`
-	OverrideValues      string `json:"overrideValues,omitempty"`
-	LaunchUIValues      string `json:"launchUIValues,omitempty"`
-	TemplateValues      string `json:"templateValues,omitempty"`
+	OverrideValues      []byte `json:"overrideValues,omitempty"`
+	LaunchUIValues      []byte `json:"launchUIValues,omitempty"`
+	TemplateValues      []byte `json:"templateValues,omitempty"`
 	PluginName          string `yaml:"PluginName"`
 	PluginDescription   string `yaml:"PluginDescription"`
 }

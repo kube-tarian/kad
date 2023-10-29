@@ -272,7 +272,6 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 }
 
 func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsConfig) error {
-
 	selectQuery := a.client.Session().Query(fmt.Sprintf(getOnboardingIntegrationQuery,
 		a.keyspace, payload.Usecase))
 
