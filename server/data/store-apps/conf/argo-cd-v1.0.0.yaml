@@ -19,6 +19,6 @@ LaunchUIValues:
     name: Intelops
     issuer: "{{.OAuthBaseURL}}"
     clientID: "{{.ClientId}}"
-    clientSecret: {{.ClientSecret}}"
+    clientSecret: "{{.ClientSecret}}"
 OverrideValues:
   DomainName: "{{.DomainName}}"
