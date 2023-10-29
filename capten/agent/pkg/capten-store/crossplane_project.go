@@ -54,7 +54,6 @@ func (a *Store) GetCrossplaneProject() (*model.CrossplaneProject, error) {
 	return a.updateCrossplaneProject()
 }
 
-// CrossplaneProjects, err := a.GetGitProjectsByLabels([]string{"Crossplane"})
 func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 	allCrossplaneGitProjects, err := a.GetGitProjectsByLabels([]string{"crossplane"})
 	if err != nil {
@@ -62,45 +61,35 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 		return nil, err
 	}
 
+	if len(allCrossplaneGitProjects) == 0 {
+		return nil, fmt.Errorf("no git project found with crossplane tag")
+	}
+	crosplaneGitProject := allCrossplaneGitProjects[0]
+
 	query := fmt.Sprintf(getCrossplaneProjectsQuery, a.keyspace)
 	regCrossplaneProjects, err := a.executeCrossplaneProjectsSelectQuery(query)
 	if err != nil {
 		return nil, err
 	}
 
-	regCrossplaneProjectForGitProjectId := make(map[string]*model.CrossplaneProject)
-	for _, crossplanePro := range regCrossplaneProjects {
-		regCrossplaneProjectForGitProjectId[crossplanePro.GitProjectId] = crossplanePro
-	}
-
-	ret := make([]*model.CrossplaneProject, 0)
-
-	for _, crossplaneGitProject := range allCrossplaneGitProjects {
-
+	if len(regCrossplaneProjects) == 0 {
+		// no project was registered, register the git project
 		project := &model.CrossplaneProject{
-			GitProjectId:  crossplaneGitProject.Id,
-			GitProjectUrl: crossplaneGitProject.ProjectUrl}
-
-		if _, found := regCrossplaneProjectForGitProjectId[crossplaneGitProject.Id]; !found {
-			project.Status = "available"
-			project.WorkflowId = "NA"
-			project.WorkflowStatus = "NA"
-			project.LastUpdateTime = time.Now().Format(time.RFC3339)
-			project.Id = uuid.New().String()
-			if err := a.UpsertCrossplaneProject(project); err != nil {
-				return nil, err
-			}
-		} else {
-			crossplaneProject := regCrossplaneProjectForGitProjectId[crossplaneGitProject.Id]
-
-			project.Id = crossplaneProject.Id
-			project.WorkflowId = crossplaneProject.WorkflowId
-			project.WorkflowStatus = crossplaneProject.WorkflowStatus
-			project.Status = crossplaneProject.Status
+			Id:             uuid.New().String(),
+			GitProjectId:   crosplaneGitProject.Id,
+			Status:         "available",
+			WorkflowId:     "NA",
+			WorkflowStatus: "NA",
+			LastUpdateTime: time.Now().Format(time.RFC3339),
 		}
-		ret = append(ret, project)
+		if err := a.UpsertCrossplaneProject(project); err != nil {
+			return nil, err
+		}
+		return project, nil
 	}
-	return ret[0], nil
+
+	// project already registered, return that
+	return regCrossplaneProjects[0], nil
 }
 
 func (a *Store) executeCrossplaneProjectsSelectQuery(query string) ([]*model.CrossplaneProject, error) {
