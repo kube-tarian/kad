@@ -17,3 +17,6 @@ server:
       - secretName: argocd-cert
         hosts:
           - argo.{{.DomainName}}
+configs:
+  cm:
+    url: "https://argocd.{{.DomainName}}"

@@ -14,5 +14,11 @@ PluginDescription: "Configure ArgoCD projects and resources"
 LaunchURL: https://argo.{{.DomainName}}
 LaunchUIDescription: "Intelops ArgoCD"
 LaunchUIIcon: "argo-cd.svg"
+LaunchUIValues:
+  oidc.config: |
+    name: Intelops
+    issuer: "{{.OAuthBaseURL}}"
+    clientID: "{{.ClientId}}"
+    clientSecret: {{.ClientSecret}}"
 OverrideValues:
   DomainName: "{{.DomainName}}"
