@@ -13,7 +13,7 @@ import (
 const (
 	insertCloudProvider             = "INSERT INTO %s.CloudProviders(id, cloud_type, labels, last_update_time) VALUES (?,?,?,?)"
 	insertCloudProviderId           = "INSERT INTO %s.CloudProviders(id) VALUES (?)"
-	updateCloudProviderById         = "UPDATE %s.CloudProviders SET %s WHERE id = ?"
+	updateCloudProviderById         = "UPDATE %s.CloudProviders SET %s WHERE id=?"
 	deleteCloudProviderById         = "DELETE FROM %s.CloudProviders WHERE id= ?"
 	selectAllCloudProviders         = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders"
 	selectAllCloudProvidersByLabels = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE %s"
