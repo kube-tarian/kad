@@ -130,8 +130,12 @@ func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (u
 	}
 
 	if len(config.Labels) > 0 {
+		labels := []string{}
+		for _, label := range config.Labels {
+			labels = append(labels, fmt.Sprintf("'%s'", label))
+		}
 		params = append(params, "labels = ?")
-		labelsStr := "{" + strings.Join(config.Labels, ", ") + "}"
+		labelsStr := "{" + strings.Join(labels, ", ") + "}"
 		values = append(values, labelsStr)
 	}
 
