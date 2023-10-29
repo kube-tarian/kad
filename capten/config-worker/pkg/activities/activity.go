@@ -11,8 +11,8 @@ import (
 )
 
 type Activities struct {
-	config *Config
-	hg     *HandleGit
+	config Config
+	hg     HandleGit
 }
 
 func NewActivity() (*Activities, error) {

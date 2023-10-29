@@ -21,10 +21,10 @@ type Config struct {
 	CrossPlanePluginConfig  string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
 }
 
-func GetConfig() (*Config, error) {
+func GetConfig() (Config, error) {
 	cfg := Config{}
 	err := envconfig.Process("", &cfg)
-	return &cfg, err
+	return cfg, err
 }
 
 func ReadTektonPluginConfig(pluginFile string) (tektonPluginDS, error) {

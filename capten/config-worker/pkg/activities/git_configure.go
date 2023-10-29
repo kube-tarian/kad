@@ -19,17 +19,17 @@ import (
 )
 
 type HandleGit struct {
-	config       *Config
-	pluginConfig *PluginConfigExtractor
+	config       Config
+	pluginConfig PluginConfigExtractor
 }
 
-func NewHandleGit(config *Config) (*HandleGit, error) {
+func NewHandleGit(config Config) (HandleGit, error) {
 	pluginConfig, err := NewPluginExtractor(config.TektonPluginConfig, config.CrossPlanePluginConfig)
 	if err != nil {
-		return nil, err
+		return HandleGit{}, err
 	}
 
-	return &HandleGit{config: config, pluginConfig: pluginConfig}, nil
+	return HandleGit{config: config, pluginConfig: pluginConfig}, nil
 }
 
 func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
