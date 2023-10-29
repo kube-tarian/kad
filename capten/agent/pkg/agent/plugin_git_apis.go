@@ -28,7 +28,7 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 	if err := a.validateForWhitelistedLabels(ctx, request.Labels); err != nil {
 		a.log.Infof("validateForWhitelistedLabels Git project err: %s", err.Error())
 		return &captenpluginspb.AddGitProjectResponse{
-			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "whilelisted label validation failed",
 		}, nil
 	}
