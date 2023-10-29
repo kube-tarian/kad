@@ -10,6 +10,11 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
 )
 
+const (
+	ArgoCDRepositoryType    string = "git"
+	ArgoCDRepositoryProject string = "Default"
+)
+
 func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenpluginspb.RegisterArgoCDProjectRequest) (
 	*captenpluginspb.RegisterArgoCDProjectResponse, error) {
 	if err := validateArgs(request.Id); err != nil {
@@ -30,7 +35,16 @@ func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	if err := a.addProjectFromArgoCD(ctx, argoCDProject.GitProjectUrl); err != nil {
+	accessToken, err := a.getGitProjectCredential(ctx, request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get credential, %v", err)
+		return &captenpluginspb.RegisterArgoCDProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "Error occured while adding Repository",
+		}, nil
+	}
+
+	if err := a.addProjectFromArgoCD(ctx, argoCDProject.GitProjectUrl, accessToken); err != nil {
 		a.log.Errorf("failed to add ArgoCD Repository: %v ", err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
 			Status:        captenpluginspb.StatusCode_NOT_FOUND,
@@ -132,16 +146,16 @@ func (a *Agent) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.
 	}, nil
 }
 
-func (a *Agent) addProjectFromArgoCD(ctx context.Context, projectUrl string) error {
+func (a *Agent) addProjectFromArgoCD(ctx context.Context, projectUrl, accessToken string) error {
 	argocdClient, err := argocd.NewClient(&logging.Logging{})
 	if err != nil {
 		return err
 	}
 
 	repo := &argocd.Repository{
-		Project:       "Default",
-		SSHPrivateKey: "",
-		Type:          "git",
+		Project:       ArgoCDRepositoryProject,
+		SSHPrivateKey: accessToken,
+		Type:          ArgoCDRepositoryType,
 		Repo:          projectUrl,
 	}
 
