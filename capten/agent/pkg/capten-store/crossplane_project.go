@@ -102,7 +102,7 @@ func (a *Store) executeCrossplaneProjectsSelectQuery(query string) ([]*model.Cro
 		&project.Id, &project.GitProjectId, &project.Status,
 		&project.LastUpdateTime, &project.WorkflowId, &project.WorkflowStatus) {
 
-		gitProject, err := a.GetGitProjectForID(project.Id)
+		gitProject, err := a.GetGitProjectForID(project.GitProjectId)
 		if err != nil {
 			a.log.Errorf("Crossplane project %s not exist in git projects", project.Id)
 			continue
