@@ -114,7 +114,8 @@ affinity: {}
 configWorkerGitCloneDir: "/gitCloneDir"
 configWorker:
   pluginConfigDir: "/configs"
-  pluginConfigFile: "plugin_config.json"
+  tektonPluginConfigFile: "tekton_plugin_config.json"
+  crossplanePluginConfigFile: "crossplane_plugin_config.json"
 # TODO: attributes to be added
 temporal:
   external: true

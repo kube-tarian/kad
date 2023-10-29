@@ -24,7 +24,7 @@ type HandleGit struct {
 }
 
 func NewHandleGit(config *Config) (*HandleGit, error) {
-	pluginConfig, err := NewPluginExtractor(config.PluginConfig)
+	pluginConfig, err := NewPluginExtractor(config.TektonPluginConfig, config.CrossPlanePluginConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,14 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
 	}
 
-	err = hg.configureCICD(ctx, req, cred["accessToken"])
+	switch req.Type {
+	case Tekton:
+		err = hg.configureCICD(ctx, req, hg.pluginConfig.tektonGetGitRepo(),
+			hg.pluginConfig.tektonGetGitConfigPath(), cred["accessToken"])
+	case CrossPlane:
+		err = hg.configureCICD(ctx, req, hg.pluginConfig.crossplaneGetGitRepo(),
+			hg.pluginConfig.crossplaneGetGitConfigPath(), cred["accessToken"])
+	}
 	// Once we finalize what needs to be replaced then we can come and work here.
 
 	if err != nil {
@@ -69,7 +76,7 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 }
 
-func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, token string) error {
+func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, templateRepo, pathInRepo, token string) error {
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
 	if !ok {
@@ -83,7 +90,7 @@ func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, t
 	}
 	defer os.RemoveAll(templateDir)
 
-	if err := configPlugin.Clone(templateDir, hg.pluginConfig.getGitRepo(params.Type), token); err != nil {
+	if err := configPlugin.Clone(templateDir, templateRepo, token); err != nil {
 		return err
 	}
 
@@ -98,7 +105,7 @@ func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, t
 		return err
 	}
 
-	for _, dir := range strings.Split(hg.pluginConfig.getGitConfigPath(params.Type), ",") {
+	for _, dir := range strings.Split(pathInRepo, ",") {
 		err = cp.Copy(filepath.Join(templateDir, dir), filepath.Join(reqRepo, dir))
 		if err != nil {
 			return err

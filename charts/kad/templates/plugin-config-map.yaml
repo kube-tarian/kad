@@ -6,7 +6,10 @@ metadata:
     {{- include "kad.labels" . | nindent 4 }}
     app.kubernetes.io/component: config-worker
 data:
-  PLUGIN_CONFIG: |
-{{- $fileName := .Values.configWorker.pluginConfigFile }}
+  TEKTON_PLUGIN_CONFIG: |
+{{- $fileName := .Values.configWorker.tektonPluginConfigFile }}
+{{ .Files.Get $fileName | indent 4 }}
+CROSSPLANE_PLUGIN_CONFIG: |
+{{- $fileName := .Values.configWorker.crossplanePluginConfigFile }}
 {{ .Files.Get $fileName | indent 4 }}
 

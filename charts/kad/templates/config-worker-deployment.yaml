@@ -37,8 +37,10 @@ spec:
           configMap:
             name: plugin-config-map
             items:
-              - key: PLUGIN_CONFIG
-                path: {{ .Values.configWorker.pluginConfigFile }}
+              - key: TEKTON_PLUGIN_CONFIG
+                path: {{ .Values.configWorker.tektonPluginConfigFile }}
+              - key: CROSSPLANE_PLUGIN_CONFIG
+                path: {{ .Values.configWorker.crossplanePluginConfigFile }}
       containers:
         - name: {{ .Chart.Name }}-config-worker
           securityContext:
@@ -73,8 +75,10 @@ spec:
               value: "{{ .Values.cassandra.keyspaceName }}"
             - name: CASSANDRA_TABLE_NAME
               value: "{{ .Values.cassandra.name }}"
-            - name: PLUGIN_CONFIG_FILE
-              value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.pluginConfigFile }}"
+            - name: TEKTON_PLUGIN_CONFIG_FILE
+              value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.tektonPluginConfigFile }}"
+            - name: CROSSPLACE_PLUGIN_CONFIG_FILE
+              value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.crossplanePluginConfigFile }}"
             - name: CASSANDRA_USERNAME
               valueFrom:
                 secretKeyRef:

@@ -1,26 +1,44 @@
 package activities
 
 type PluginConfigExtractor struct {
-	pluginData pluginDS
+	tektonPluginData     tektonPluginDS
+	crossPlanePluginData crossplanePluginDS
 }
 
-func NewPluginExtractor(fileName string) (*PluginConfigExtractor, error) {
-	pluginInfo, err := ReadPluginConfig(fileName)
+func NewPluginExtractor(tektonFileName, crossplaneFilename string) (*PluginConfigExtractor, error) {
+	pluginInfo, err := ReadTektonPluginConfig(tektonFileName)
 	if err != nil {
 		return nil, err
 	}
 
-	return &PluginConfigExtractor{pluginData: pluginInfo}, nil
+	cpluginInfo, err := ReadCrossPlanePluginConfig(crossplaneFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	return &PluginConfigExtractor{tektonPluginData: pluginInfo, crossPlanePluginData: cpluginInfo}, nil
 }
 
-func (pc *PluginConfigExtractor) getGitRepo(appName string) string {
-	return pc.pluginData[appName][GitRepo]
+func (pc *PluginConfigExtractor) tektonGetGitRepo() string {
+	return pc.tektonPluginData[GitRepo]
 }
 
-func (pc *PluginConfigExtractor) getGitConfigPath(appName string) string {
-	return pc.pluginData[appName][GitConfigPath]
+func (pc *PluginConfigExtractor) tektonGetGitConfigPath() string {
+	return pc.tektonPluginData[GitConfigPath]
 }
 
-func (pc *PluginConfigExtractor) getConfigMainApp(appName string) string {
-	return pc.pluginData[appName][ConfigMainApp]
+func (pc *PluginConfigExtractor) tektonGetConfigMainApp() string {
+	return pc.tektonPluginData[ConfigMainApp]
+}
+
+func (pc *PluginConfigExtractor) crossplaneGetGitRepo() string {
+	return pc.crossPlanePluginData[GitRepo]
+}
+
+func (pc *PluginConfigExtractor) crossplaneGetGitConfigPath() string {
+	return pc.crossPlanePluginData[GitConfigPath]
+}
+
+func (pc *PluginConfigExtractor) crossplaneGetConfigMainApp() string {
+	return pc.crossPlanePluginData[ConfigMainApp]
 }
