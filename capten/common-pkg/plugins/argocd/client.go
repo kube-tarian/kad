@@ -250,6 +250,8 @@ func (a *ArgoCDCLient) CreateRepository(ctx context.Context, repo *Repository) (
 	}
 	defer io.Close(conn)
 
+	fmt.Printf("request=> %+v\n", repo)
+
 	resp, err := appClient.CreateRepository(ctx, &repository.RepoCreateRequest{
 		Repo: &v1alpha1.Repository{
 			Project:       repo.Project,

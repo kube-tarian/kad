@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
@@ -44,6 +45,7 @@ func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
+	fmt.Println("Access token => " + accessToken)
 	if err := a.addProjectToArgoCD(ctx, argoCDProject.GitProjectUrl, accessToken); err != nil {
 		a.log.Errorf("failed to add ArgoCD Repository: %v ", err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
