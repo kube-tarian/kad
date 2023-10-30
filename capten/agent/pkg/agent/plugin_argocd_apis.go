@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	ArgoCDRepositoryType    string = "git"
-	ArgoCDRepositoryProject string = "Default"
+	argoCDRepositoryType    string = "git"
+	argoCDRepositoryProject string = "Default"
 )
 
 func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenpluginspb.RegisterArgoCDProjectRequest) (
@@ -44,7 +44,7 @@ func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	if err := a.addProjectFromArgoCD(ctx, argoCDProject.GitProjectUrl, accessToken); err != nil {
+	if err := a.addProjectToArgoCD(ctx, argoCDProject.GitProjectUrl, accessToken); err != nil {
 		a.log.Errorf("failed to add ArgoCD Repository: %v ", err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
 			Status:        captenpluginspb.StatusCode_NOT_FOUND,
@@ -146,16 +146,16 @@ func (a *Agent) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.
 	}, nil
 }
 
-func (a *Agent) addProjectFromArgoCD(ctx context.Context, projectUrl, accessToken string) error {
+func (a *Agent) addProjectToArgoCD(ctx context.Context, projectUrl, accessToken string) error {
 	argocdClient, err := argocd.NewClient(&logging.Logging{})
 	if err != nil {
 		return err
 	}
 
 	repo := &argocd.Repository{
-		Project:       ArgoCDRepositoryProject,
+		Project:       argoCDRepositoryProject,
 		SSHPrivateKey: accessToken,
-		Type:          ArgoCDRepositoryType,
+		Type:          argoCDRepositoryType,
 		Repo:          projectUrl,
 	}
 
