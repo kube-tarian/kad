@@ -159,6 +159,10 @@ func (a *Agent) addProjectToArgoCD(ctx context.Context, projectUrl, accessToken 
 		SSHPrivateKey: accessToken,
 		Type:          argoCDRepositoryType,
 		Repo:          projectUrl,
+		ConnectionState: argocd.ConnectionState{
+			Status:  "Connected",
+			Message: "Repository is connected",
+		},
 	}
 
 	_, err = argocdClient.CreateRepository(ctx, repo)
