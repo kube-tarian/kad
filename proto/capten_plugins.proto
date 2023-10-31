@@ -98,6 +98,7 @@ message AddGitProjectRequest {
     string projectUrl = 1;
     repeated string labels = 2;
     string accessToken = 3;
+    string userID = 4;
 }
 
 message AddGitProjectResponse {
@@ -111,6 +112,7 @@ message UpdateGitProjectRequest {
     string projectUrl = 2;
     repeated string labels = 3;
     string accessToken = 4;
+    string userID = 5;
 }
 
 message UpdateGitProjectResponse {
@@ -136,6 +138,7 @@ message GitProject {
     repeated string labels = 3;
     string lastUpdateTime = 4;
     string accessToken = 5;
+    string userID = 6;
 }
 
 message GetGitProjectsResponse {
