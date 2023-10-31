@@ -13,7 +13,7 @@ const (
 	getArgocdProjectsQuery      = "SELECT id, git_project_id, status, last_update_time FROM %s.ArgocdProjects;"
 	getArgocdProjectsForIdQuery = "SELECT id, git_project_id, status, last_update_time FROM %s.ArgocdProjects WHERE id=%s;"
 	insertArgocdProjectQuery    = "INSERT INTO %s.ArgocdProjects(id, git_project_id, status, last_update_time) VALUES (?,?,?,?);"
-	updateArgocdProjectQuery    = "UPDATE %s.ArgocdProjects SET status='%s', last_update_time='%s' WHERE id=%s;"
+	updateArgocdProjectQuery    = "UPDATE %s.ArgocdProjects SET status=?, last_update_time=? WHERE id=?;"
 	deleteArgocdProjectQuery    = "DELETE FROM %s.ArgocdProjects WHERE id=%s;"
 )
 
@@ -23,7 +23,9 @@ func (a *Store) UpsertArgoCDProject(project *model.ArgoCDProject) error {
 	batch.Query(fmt.Sprintf(insertArgocdProjectQuery, a.keyspace), project.Id, project.GitProjectId, project.Status, project.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		batch.Query(fmt.Sprintf(updateArgocdProjectQuery, a.keyspace, project.Status, project.LastUpdateTime, project.Id))
+		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
+		query := fmt.Sprintf(updateArgocdProjectQuery, a.keyspace)
+		batch.Query(query, project.Status, project.LastUpdateTime, project.Id)
 		err = a.client.Session().ExecuteBatch(batch)
 	}
 	return err

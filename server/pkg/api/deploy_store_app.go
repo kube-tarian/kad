@@ -6,7 +6,6 @@ import (
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
-	"gopkg.in/yaml.v2"
 )
 
 func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeployStoreAppRequest) (
@@ -31,19 +30,26 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 		}, nil
 	}
 
-	marshaledOverride, err := yaml.Marshal(config.OverrideValues)
+	overrideValues := request.OverrideValues
+	if len(request.OverrideValues) == 0 {
+		overrideValues = config.OverrideValues
+	}
+
+	clusterGlobalValues, err := s.getClusterGlobalValues(orgId, request.ClusterID)
 	if err != nil {
+		s.log.Errorf("failed to get cluster global values, %v", err)
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to find store app values",
+			StatusMessage: "failed to fetch cluster global values values",
 		}, nil
 	}
 
-	marshaledLaunchUi, err := yaml.Marshal(config.LaunchUIValues)
+	dervivedOverrideValues, err := s.deriveTemplateOverrideValues(overrideValues, clusterGlobalValues)
 	if err != nil {
+		s.log.Errorf("failed to update overrided store app values, %v", err)
 		return &serverpb.DeployStoreAppResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to find store app values",
+			StatusMessage: "failed to update overrided store app values",
 		}, nil
 	}
 
@@ -69,9 +75,9 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			PluginDescription:   config.PluginDescription,
 		},
 		AppValues: &agentpb.AppValues{
-			OverrideValues: request.OverrideValues,
-			LaunchUIValues: decodeBase64StringToBytes(string(marshaledLaunchUi)),
-			TemplateValues: decodeBase64StringToBytes(string(marshaledOverride)),
+			OverrideValues: dervivedOverrideValues,
+			LaunchUIValues: config.LaunchUIValues,
+			TemplateValues: config.TemplateValues,
 		},
 	}
 

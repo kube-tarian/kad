@@ -56,7 +56,7 @@ func (s *Server) AddCloudProvider(ctx context.Context, request *captenpluginspb.
 
 }
 
-func (s *Server) UpdateCloudProviders(ctx context.Context, request *captenpluginspb.UpdateCloudProviderRequest) (
+func (s *Server) UpdateCloudProvider(ctx context.Context, request *captenpluginspb.UpdateCloudProviderRequest) (
 	*captenpluginspb.UpdateCloudProviderResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx, request.Id, request.CloudType)
 	if err != nil {

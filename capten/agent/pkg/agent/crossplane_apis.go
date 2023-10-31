@@ -8,6 +8,10 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 )
 
+const (
+	objectNotFoundErrorMessage = "object not found"
+)
+
 func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenpluginspb.AddCrossplanProviderRequest) (
 	*captenpluginspb.AddCrossplanProviderResponse, error) {
 	if err := validateArgs(request.CloudType, request.ProviderName, request.CloudProviderId); err != nil {
@@ -78,17 +82,16 @@ func (a *Agent) GetCrossplanProviders(ctx context.Context, _ *captenpluginspb.Ge
 
 	providers, err := a.as.GetCrossplaneProviders()
 	if err != nil {
+		if err.Error() == objectNotFoundErrorMessage {
+			return &captenpluginspb.GetCrossplanProvidersResponse{
+				Status:        captenpluginspb.StatusCode_NOT_FOUND,
+				StatusMessage: "No crossplane providers found",
+			}, nil
+		}
 		a.log.Errorf("failed to fetch crossplane providers from DB, %v", err)
 		return &captenpluginspb.GetCrossplanProvidersResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch crossplane providers from db",
-		}, nil
-	}
-
-	if len(providers) == 0 {
-		return &captenpluginspb.GetCrossplanProvidersResponse{
-			Status:        captenpluginspb.StatusCode_NOT_FOUND,
-			StatusMessage: "No crossplane providers found",
 		}, nil
 	}
 

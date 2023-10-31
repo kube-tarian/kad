@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plugin-config-map
+  labels:
+    {{- include "kad.labels" . | nindent 4 }}
+    app.kubernetes.io/component: config-worker
+data:
+  TEKTON_PLUGIN_CONFIG: |
+{{- $fileName := .Values.configWorker.tektonPluginConfigFile }}
+{{ .Files.Get $fileName | indent 4 }}
+CROSSPLANE_PLUGIN_CONFIG: |
+{{- $fileName := .Values.configWorker.crossplanePluginConfigFile }}
+{{ .Files.Get $fileName | indent 4 }}
+

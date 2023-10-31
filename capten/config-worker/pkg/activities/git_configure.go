@@ -18,7 +18,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-func handleGit(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
+type HandleGit struct {
+	config       *Config
+	pluginConfig *PluginConfigExtractor
+}
+
+func NewHandleGit() (*HandleGit, error) {
+	config, err := GetConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	pluginConfig, err := NewPluginExtractor(config.TektonPluginConfig, config.CrossPlanePluginConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &HandleGit{config: config, pluginConfig: pluginConfig}, nil
+}
+
+func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
 	var err error
 	respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"requested payload is wrong\"}")}
 	req := &model.UseCase{}
@@ -27,7 +46,6 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 		return respPayload, fmt.Errorf("Wrong payload: %v, recieved for configuring git", payload)
 	}
 
-	config, _ := GetConfig()
 	// read from the vault
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
@@ -37,15 +55,22 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	}
 
 	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
-		config.VaultEntityName, req.VaultCredIdentifier)
+		hg.config.VaultEntityName, req.VaultCredIdentifier)
 	if err != nil {
 		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
-			config.VaultEntityName, req.VaultCredIdentifier)
+			hg.config.VaultEntityName, req.VaultCredIdentifier)
 		return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed),
 			Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%v\"}", err))}, err
 	}
 
-	err = configureCICD(ctx, req, cred["accessToken"])
+	switch req.Type {
+	case Tekton:
+		err = hg.configureCICD(ctx, req, hg.pluginConfig.tektonGetGitRepo(),
+			hg.pluginConfig.tektonGetGitConfigPath(), cred["accessToken"])
+	case CrossPlane:
+		err = hg.configureCICD(ctx, req, hg.pluginConfig.crossplaneGetGitRepo(),
+			hg.pluginConfig.crossplaneGetGitConfigPath(), cred["accessToken"])
+	}
 	// Once we finalize what needs to be replaced then we can come and work here.
 
 	if err != nil {
@@ -56,8 +81,7 @@ func handleGit(ctx context.Context, params model.ConfigureParameters, payload js
 	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 }
 
-func configureCICD(ctx context.Context, params *model.UseCase, token string) error {
-	config, _ := GetConfig()
+func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, templateRepo, pathInRepo, token string) error {
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
 	if !ok {
@@ -65,17 +89,17 @@ func configureCICD(ctx context.Context, params *model.UseCase, token string) err
 	}
 
 	// Clone the template repo
-	templateDir, err := os.MkdirTemp(config.GitCLoneDir, "clone*")
+	templateDir, err := os.MkdirTemp(hg.config.GitCLoneDir, "clone*")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(templateDir)
 
-	if err := configPlugin.Clone(templateDir, config.CiCDTemplateRepo, token); err != nil {
+	if err := configPlugin.Clone(templateDir, templateRepo, token); err != nil {
 		return err
 	}
 
-	reqRepo, err := os.MkdirTemp(config.GitCLoneDir, "clone*")
+	reqRepo, err := os.MkdirTemp(hg.config.GitCLoneDir, "clone*")
 	if err != nil {
 		return err
 	}
@@ -86,7 +110,7 @@ func configureCICD(ctx context.Context, params *model.UseCase, token string) err
 		return err
 	}
 
-	for _, dir := range strings.Split(params.Type, ",") {
+	for _, dir := range strings.Split(pathInRepo, ",") {
 		err = cp.Copy(filepath.Join(templateDir, dir), filepath.Join(reqRepo, dir))
 		if err != nil {
 			return err
@@ -95,18 +119,24 @@ func configureCICD(ctx context.Context, params *model.UseCase, token string) err
 	}
 
 	if err := configPlugin.Commit(".", "configure CICD for the repo",
-		config.GitDefaultCommiterName, config.GitDefaultCommiterEmail); err != nil {
+		hg.config.GitDefaultCommiterName, hg.config.GitDefaultCommiterEmail); err != nil {
 		return err
 	}
 
-	if err := configPlugin.Push(branchName+"-"+params.Type, token); err != nil {
-		return err
-	}
-
+	localBranchName := branchName + "-" + params.Type
 	defaultBranch, err := configPlugin.GetDefaultBranchName()
 	if err != nil {
 		return err
 	}
+
+	if params.PushToDefaultBranch {
+		localBranchName = defaultBranch
+	}
+
+	if err := configPlugin.Push(localBranchName, token); err != nil || params.PushToDefaultBranch {
+		return err
+	}
+
 	_, err = createPR(ctx, params.RepoURL, branchName+"-"+params.Type, defaultBranch, token)
 	if err != nil {
 		return err

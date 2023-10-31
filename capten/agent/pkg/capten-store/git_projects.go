@@ -13,7 +13,7 @@ import (
 const (
 	insertGitProject             = "INSERT INTO %s.GitProjects(id, project_url, labels, last_update_time) VALUES (?,?,?,?)"
 	insertGitProjectId           = "INSERT INTO %s.GitProjects(id) VALUES (?)"
-	updateGitProjectById         = "UPDATE %s.GitProjects SET %s WHERE id = ?"
+	updateGitProjectById         = "UPDATE %s.GitProjects SET %s WHERE id=?"
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"
 	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects"
 	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE %s"
@@ -22,12 +22,18 @@ const (
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
-	kvPairs := formUpdateKvPairsForGitProject(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
-		batch.Query(fmt.Sprintf(updateGitProjectById, a.keyspace, kvPairs), config.Id)
+		updatePlaceholders, values := formUpdateKvPairsForGitProject(config)
+		if updatePlaceholders == "" {
+			return err
+		}
+		query := fmt.Sprintf(updateGitProjectById, a.keyspace, updatePlaceholders)
+		args := append(values, config.Id)
+		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
+		batch.Query(query, args...)
 		err = a.client.Session().ExecuteBatch(batch)
 	}
 	return err
@@ -106,33 +112,31 @@ func (a *Store) executeGitProjectsSelectQuery(query string) ([]*captenpluginspb.
 	return ret, nil
 }
 
-func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (kvPairs string) {
+func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (updatePlaceholders string, values []interface{}) {
 	params := []string{}
 
 	if config.ProjectUrl != "" {
-		params = append(params,
-			fmt.Sprintf("project_url = '%s'", config.ProjectUrl))
+		params = append(params, "project_url = ?")
+		values = append(values, config.ProjectUrl)
 	}
 
-	// comma separated labels, change this later
 	if len(config.Labels) > 0 {
 		labels := []string{}
 		for _, label := range config.Labels {
 			labels = append(labels, fmt.Sprintf("'%s'", label))
 		}
 		param := "{" + strings.Join(labels, ", ") + "}"
-		params = append(params,
-			fmt.Sprintf("labels = %v", param))
+		params = append(params, "labels = ?")
+		values = append(values, param)
 	}
 
-	if (config.LastUpdateTime) != "" {
-		params = append(params,
-			fmt.Sprintf("last_update_time = '%v'", config.LastUpdateTime))
+	if config.LastUpdateTime != "" {
+		params = append(params, "last_update_time = ?")
+		values = append(values, config.LastUpdateTime)
 	}
 
 	if len(params) == 0 {
-		// query is empty there is nothing to update
-		return ""
+		return "", nil
 	}
-	return strings.Join(params, ", ")
+	return strings.Join(params, ", "), values
 }

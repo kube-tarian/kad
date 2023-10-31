@@ -9,7 +9,8 @@ import (
 )
 
 type ServerStore interface {
-	InitializeDb() error
+	CleanupDatabase() error
+	InitializeDatabase() error
 	GetClusterDetails(orgID, clusterID string) (*types.ClusterDetails, error)
 	GetClusterForOrg(orgID string) (*types.ClusterDetails, error)
 	GetClusters(orgID string) ([]types.ClusterDetails, error)
