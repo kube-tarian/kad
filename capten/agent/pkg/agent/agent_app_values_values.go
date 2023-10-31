@@ -73,7 +73,7 @@ func populateTemplateValues(appConfig *agentpb.SyncAppData, newOverrideValues, l
 	return &newAppConfig, marshaledOverrideValues, nil
 }
 
-func GetSSOvalues(releaseName string) ([]byte, error) {
+func getAppLaunchSSOvalues(releaseName string) ([]byte, error) {
 	cid, csecret, err := credential.GetAppOauthCredential(context.TODO(), releaseName)
 	if err != nil && strings.Contains(err.Error(), "secret not found") {
 		// no secret was found so in that case, no sso values need to be returned
@@ -178,6 +178,10 @@ func convertKey(m map[string]any) map[any]any {
 }
 
 func executeTemplateValuesTemplate(data []byte, values map[string]any) (transformedData []byte, err error) {
+	if len(data) == 0 {
+		return
+	}
+
 	tmpl, err := template.New("templateVal").Parse(string(data))
 	if err != nil {
 		return
@@ -190,6 +194,31 @@ func executeTemplateValuesTemplate(data []byte, values map[string]any) (transfor
 	}
 
 	transformedData = buf.Bytes()
+	return
+}
+
+func executeStringTemplateValues(data string, values []byte) (transformedData string, err error) {
+	if len(data) == 0 {
+		return
+	}
+
+	tmpl, err := template.New("templateVal").Parse(data)
+	if err != nil {
+		return
+	}
+
+	mapValues := map[string]any{}
+	if err = yaml.Unmarshal(values, &mapValues); err != nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, mapValues)
+	if err != nil {
+		return
+	}
+
+	transformedData = string(buf.Bytes())
 	return
 }
 

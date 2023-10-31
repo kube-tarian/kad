@@ -1,14 +1,10 @@
-CREATE TABLE ClusterAppConfig(
-    app_name text, description text, category text,
-    chart_name text, repo_name text, repo_url text,
-    namespace text, release_name text, version text,
-    launch_url text, launch_redirect_url text,
-    create_namespace boolean, privileged_namespace boolean,
-    override_values text, launch_ui_values text,
-    template_values text, default_app boolean,
-    icon blob, install_status text,
-    update_time text,
-    PRIMARY KEY (release_name)
+
+CREATE TABLE CloudProviders (
+    id UUID,
+    cloud_type TEXT,
+    labels set<TEXT>,
+    last_update_time TEXT,
+    PRIMARY KEY (id)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''

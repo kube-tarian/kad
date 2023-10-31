@@ -9,23 +9,16 @@ ReleaseName: "argo-cd"
 Icon: "argo-cd.svg"
 Version: "1.0.0"
 CreateNamespace: true
+PluginName: ArgoCD
+PluginDescription: "Configure ArgoCD projects and resources"
+LaunchURL: https://argo.{{.DomainName}}
+LaunchUIDescription: "Intelops ArgoCD"
+LaunchUIIcon: "argo-cd.svg"
+LaunchUIValues:
+  oidc.config: |
+    name: Intelops
+    issuer: "{{.OAuthBaseURL}}"
+    clientID: "{{.ClientId}}"
+    clientSecret: "{{.ClientSecret}}"
 OverrideValues:
-  server:
-    extraArgs:
-      - --insecure
-    ingress:
-      enabled: true
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod-cluster
-        kubernetes.io/force-ssl-redirect: "true"
-        kubernetes.io/ssl-redirect: "true"
-        kubernetes.io/tls-acme: "true"
-      hosts:
-        - argo.{{.DomainName}}
-      paths:
-        - /
-      pathType: Prefix
-      tls:
-        - secretName: argocd-cert
-          hosts:
-            - argo.{{.DomainName}}
+  DomainName: "{{.DomainName}}"

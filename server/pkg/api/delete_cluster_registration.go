@@ -9,7 +9,7 @@ import (
 
 func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverpb.DeleteClusterRegistrationRequest) (
 	*serverpb.DeleteClusterRegistrationResponse, error) {
-	orgId, err := validateRequest(ctx, request.ClusterID)
+	orgId, err := validateOrgWithArgs(ctx, request.ClusterID)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.DeleteClusterRegistrationResponse{
@@ -23,15 +23,6 @@ func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverp
 	err = credential.DeleteClusterCerts(ctx, request.ClusterID)
 	if err != nil {
 		s.log.Errorf("failed to delete cert in vault for cluster %s, %v", request.ClusterID, err)
-		return &serverpb.DeleteClusterRegistrationResponse{
-			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed delete register cluster",
-		}, nil
-	}
-
-	err = s.serverStore.DeleteFullClusterAppLaunches(orgId, request.ClusterID)
-	if err != nil {
-		s.log.Errorf("failed to delete clusterappLaunches %s from db, %v", request.ClusterID, err)
 		return &serverpb.DeleteClusterRegistrationResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed delete register cluster",

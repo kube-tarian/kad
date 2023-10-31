@@ -5,6 +5,8 @@ option go_package = "/captenpluginspb";
 package captenpluginspb;
 
 service capten_plugins {
+    rpc GetCaptenPlugins(GetCaptenPluginsRequest) returns (GetCaptenPluginsResponse) {}
+
     rpc AddGitProject(AddGitProjectRequest) returns (AddGitProjectResponse) {}
     rpc UpdateGitProject(UpdateGitProjectRequest) returns (UpdateGitProjectResponse) {}
     rpc DeleteGitProject(DeleteGitProjectRequest) returns (DeleteGitProjectResponse) {}
@@ -15,7 +17,7 @@ service capten_plugins {
     rpc UpdateCloudProvider(UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
     rpc DeleteCloudProvider(DeleteCloudProviderRequest) returns (DeleteCloudProviderResponse) {}
     rpc GetCloudProviders(GetCloudProvidersRequest) returns (GetCloudProvidersResponse) {}
-    rpc GetCloudProvidersForLabel(GetCloudProvidersForLabelsRequest) returns (GetCloudProvidersForLabelsResponse) {}
+    rpc GetCloudProvidersWithFilter(GetCloudProvidersWithFilterRequest) returns (GetCloudProvidersWithFilterResponse) {}
 
     rpc RegisterArgoCDProject(RegisterArgoCDProjectRequest) returns (RegisterArgoCDProjectResponse) {}
     rpc GetArgoCDProjects(GetArgoCDProjectsRequest) returns (GetArgoCDProjectsResponse) {}
@@ -24,6 +26,15 @@ service capten_plugins {
     rpc RegisterTektonProject(RegisterTektonProjectRequest) returns (RegisterTektonProjectResponse) {}
     rpc GetTektonProjects(GetTektonProjectsRequest) returns (GetTektonProjectsResponse) {}
     rpc UnRegisterTektonProject(UnRegisterTektonProjectRequest) returns (UnRegisterTektonProjectResponse) {}
+
+    rpc AddCrossplanProvider(AddCrossplanProviderRequest) returns(AddCrossplanProviderResponse){}
+    rpc DeleteCrossplanProvider(DeleteCrossplanProviderRequest) returns(DeleteCrossplanProviderResponse) {}
+    rpc GetCrossplanProviders(GetCrossplanProvidersRequest) returns(GetCrossplanProvidersResponse) {}
+    rpc UpdateCrossplanProvider(UpdateCrossplanProviderRequest) returns(UpdateCrossplanProviderResponse) {}
+
+    rpc RegisterCrossplaneProject(RegisterCrossplaneProjectRequest) returns (RegisterCrossplaneProjectResponse) {}
+    rpc GetCrossplaneProject(GetCrossplaneProjectsRequest) returns (GetCrossplaneProjectsResponse) {}
+    rpc UnRegisterCrossplaneProject(UnRegisterCrossplaneProjectRequest) returns (UnRegisterCrossplaneProjectResponse) {}
 }
 
 enum StatusCode {
@@ -33,11 +44,60 @@ enum StatusCode {
     NOT_FOUND = 3;
 }
 
+message UpdateCrossplanProviderRequest{
+    string id = 1;
+    string cloudType = 2;
+    string providerName = 3;
+    string cloudProviderId = 4;
+}
+
+message UpdateCrossplanProviderResponse{
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message DeleteCrossplanProviderRequest {
+    string id = 1;
+}
+
+message DeleteCrossplanProviderResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message GetCrossplanProvidersRequest {
+}
+
+message GetCrossplanProvidersResponse {
+    repeated CrossplaneProvider providers = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message CrossplaneProvider {
+    string id = 1;
+    string cloudType = 2;
+    string providerName = 3;
+    string cloudProviderId = 4;
+    string status = 5;
+}
+
+message AddCrossplanProviderRequest {
+    string cloudType = 1;
+    string providerName = 2;
+    string cloudProviderId = 3;
+}
+
+message AddCrossplanProviderResponse {
+    string id = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
 message AddGitProjectRequest {
     string projectUrl = 1;
     repeated string labels = 2;
-    string lastUpdateTime = 3;
-    string accessToken = 4;
+    string accessToken = 3;
 }
 
 message AddGitProjectResponse {
@@ -50,8 +110,7 @@ message UpdateGitProjectRequest {
     string id = 1;
     string projectUrl = 2;
     repeated string labels = 3;
-    string lastUpdateTime = 4;
-    string accessToken = 5;
+    string accessToken = 4;
 }
 
 message UpdateGitProjectResponse {
@@ -80,7 +139,7 @@ message GitProject {
 }
 
 message GetGitProjectsResponse {
-    repeated GitProject gitProjects = 1;
+    repeated GitProject projects = 1;
     StatusCode status = 2;
     string statusMessage = 3;
 }
@@ -96,10 +155,9 @@ message GetGitProjectsForLabelsResponse {
 }
 
 message AddCloudProviderRequest {
-    repeated string labels = 1;
-    string lastUpdateTime = 2;
-    string accessKey = 3;
-    string secretKey = 4;
+    string cloudType = 1;
+    repeated string labels = 2;
+    map<string, string> cloudAttributes = 3;
 }
 
 message AddCloudProviderResponse {
@@ -110,10 +168,9 @@ message AddCloudProviderResponse {
 
 message UpdateCloudProviderRequest {
     string id = 1;
-    repeated string labels = 2;
-    string lastUpdateTime = 3;
-    string accessKey = 4;
-    string secretKey = 5;
+    string cloudType = 2;
+    repeated string labels = 3;
+    map<string, string> cloudAttributes = 4;
 }
 
 message UpdateCloudProviderResponse {
@@ -135,10 +192,10 @@ message GetCloudProvidersRequest {
 
 message CloudProvider {
     string id = 1;
-    repeated string labels = 2;
-    string lastUpdateTime = 3;
-    string accessKey = 4;
-    string secretKey = 5;
+    string cloudType = 2;
+    repeated string labels = 3;
+    string lastUpdateTime = 4;
+    map<string, string> cloudAttributes = 5;
 }
 
 message GetCloudProvidersResponse {
@@ -147,11 +204,12 @@ message GetCloudProvidersResponse {
     string statusMessage = 3;
 }
 
-message GetCloudProvidersForLabelsRequest {
+message GetCloudProvidersWithFilterRequest {
     repeated string labels = 1;
+    string cloudType = 2;
 }
 
-message GetCloudProvidersForLabelsResponse {
+message GetCloudProvidersWithFilterResponse {
     repeated CloudProvider cloudProviders = 1;
     StatusCode status = 2;
     string statusMessage = 3;
@@ -188,6 +246,7 @@ message ArgoCDProject {
     string id = 1;
     string projectUrl = 2;
     string status = 3;
+    string lastUpdateTime = 4;
 }
 
 message RegisterTektonProjectRequest {
@@ -212,6 +271,7 @@ message TektonProject {
     string id = 1;
     string gitProjectUrl = 2;
     string status = 3;
+    string lastUpdateTime = 4;
 }
 
 message GetTektonProjectsRequest {
@@ -221,4 +281,58 @@ message GetTektonProjectsResponse {
     StatusCode status = 1;
     string statusMessage = 2;
     repeated TektonProject projects = 3;
+}
+
+message CaptenPlugin {
+    string pluginName = 1;
+    string pluginDescription = 2;
+    string launchURL = 3;
+    bytes launchIcon = 4;
+    string installStatus = 5;
+    string runtimeStatus = 6;
+}
+
+message GetCaptenPluginsRequest {
+}
+
+message GetCaptenPluginsResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+    repeated CaptenPlugin plugins = 3;
+}
+
+// Crossplane projects
+
+message RegisterCrossplaneProjectRequest {
+    string id = 1;
+}
+
+message RegisterCrossplaneProjectResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message UnRegisterCrossplaneProjectRequest {
+    string id = 1;
+}
+
+message UnRegisterCrossplaneProjectResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message CrossplaneProject {
+    string id = 1;
+    string gitProjectUrl = 2;
+    string status = 3;
+    string lastUpdateTime = 4;
+}
+
+message GetCrossplaneProjectsRequest {
+}
+
+message GetCrossplaneProjectsResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+    CrossplaneProject project = 3;
 }

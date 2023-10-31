@@ -1,15 +1,16 @@
 exclude:
+
+authenticate:
  - /serverpb.Server/StoreCredential
  - /captenpluginspb.capten_plugins/GetGitProjectsForLabels
-authenticate:
  - /serverpb.Server/NewClusterRegistration
  - /serverpb.Server/UpdateClusterRegistration
- - /serverpb.Server/DeleteClusterRegistration 
+ - /serverpb.Server/DeleteClusterRegistration
  - /serverpb.Server/GetCluster
  - /serverpb.Server/GetClusterApps
  - /serverpb.Server/GetClusterAppLaunchConfigs
- - /serverpb.Server/GetClusterApp 
- - /serverpb.Server/AddStoreApp 
+ - /serverpb.Server/GetClusterApp
+ - /serverpb.Server/AddStoreApp
  - /serverpb.Server/UpdateStoreApp
  - /serverpb.Server/DeleteStoreApp
  - /serverpb.Server/GetStoreAppValues
@@ -36,8 +37,7 @@ authenticate:
  - /captenpluginspb.capten_plugins/UnRegisterArgoCDProject
  - /captenpluginspb.capten_plugins/RegisterTektonProject
  - /captenpluginspb.capten_plugins/UnRegisterTektonProject
-authenticate-authorize:
- - /serverpb.Server/GetClusters 
+ - /serverpb.Server/GetClusters
  - /captenpluginspb.capten_plugins/GetGitProjects
  - /serverpb.Server/GetStoreApp
  - /captenpluginspb.capten_plugins/GetTektonProjects
@@ -45,4 +45,4 @@ authenticate-authorize:
  - /serverpb.Server/GetStoreApps
  - /OauthService.OauthService/GetOauthToken
  - /OauthService.OauthService/CreateOauthClient
-
+authenticate-authorize:

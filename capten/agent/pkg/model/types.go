@@ -5,6 +5,41 @@ import (
 	"fmt"
 )
 
+type WorkFlowStatus string
+
+const (
+	WorkFlowStatusStarted    WorkFlowStatus = "started"
+	WorkFlowStatusCompleted  WorkFlowStatus = "completed"
+	WorkFlowStatusInProgress WorkFlowStatus = "in-progress"
+	WorkFlowStatusFailed     WorkFlowStatus = "failed"
+)
+
+type ArgoCDProjectStatus string
+
+const (
+	ArgoCDProjectAvailable           ArgoCDProjectStatus = "available"
+	ArgoCDProjectConfigured          ArgoCDProjectStatus = "configured"
+	ArgoCDProjectConfigurationFailed ArgoCDProjectStatus = "configuration-failed"
+)
+
+type TektonProjectStatus string
+
+const (
+	TektonProjectAvailable            TektonProjectStatus = "available"
+	TektonProjectConfigured           TektonProjectStatus = "configured"
+	TektonProjectConfigurationOngoing TektonProjectStatus = "configuration-ongoing"
+	TektonProjectConfigurationFailed  TektonProjectStatus = "configuration-failed"
+)
+
+type CrossplaneProjectStatus string
+
+const (
+	CrossplaneProjectAvailable            CrossplaneProjectStatus = "available"
+	CrossplaneProjectConfigured           CrossplaneProjectStatus = "configured"
+	CrossplaneProjectConfigurationOngoing CrossplaneProjectStatus = "configuration-ongoing"
+	CrossplaneProjectConfigurationFailed  CrossplaneProjectStatus = "configuration-failed"
+)
+
 type AppConfig struct {
 	AppName             string `json:"AppName,omitempty"`
 	Version             string `json:"Version,omitempty"`
@@ -56,4 +91,40 @@ type ClusterGitoptsConfig struct {
 	Usecase    string `json:"usecase,omitempty"`
 	ProjectUrl string `json:"project_url,omitempty"`
 	Status     string `json:"status,omitempty"`
+}
+
+type TektonProject struct {
+	Id             string `json:"id,omitempty"`
+	GitProjectId   string `json:"git_project_id,omitempty"`
+	GitProjectUrl  string `json:"git_project_url,omitempty"`
+	Status         string `json:"status,omitempty"`
+	LastUpdateTime string `json:"last_update_time,omitempty"`
+	WorkflowId     string `json:"workflow_id,omitempty"`
+	WorkflowStatus string `json:"workflow_status,omitempty"`
+}
+
+type CrossplaneProject struct {
+	Id             string `json:"id,omitempty"`
+	GitProjectId   string `json:"git_project_id,omitempty"`
+	GitProjectUrl  string `json:"git_project_url,omitempty"`
+	Status         string `json:"status,omitempty"`
+	LastUpdateTime string `json:"last_update_time,omitempty"`
+	WorkflowId     string `json:"workflow_id,omitempty"`
+	WorkflowStatus string `json:"workflow_status,omitempty"`
+}
+
+type ArgoCDProject struct {
+	Id             string `json:"id,omitempty"`
+	GitProjectId   string `json:"git_project_id,omitempty"`
+	GitProjectUrl  string `json:"git_project_url,omitempty"`
+	Status         string `json:"status,omitempty"`
+	LastUpdateTime string `json:"last_update_time,omitempty"`
+}
+
+type CrossplaneProvider struct {
+	Id              string `json:"id,omitempty"`
+	CloudType       string `json:"cloud_type,omitempty"`
+	ProviderName    string `json:"provider_name,omitempty"`
+	CloudProviderId string `json:"cloud_provider_id,omitempty"`
+	Status          string `json:"status,omitempty"`
 }

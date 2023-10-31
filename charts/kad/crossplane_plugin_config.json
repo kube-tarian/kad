@@ -1,0 +1,5 @@
+{
+    "git_repo": "https://github.com/intelops/capten-templates",
+    "git_config_path": "infra/crossplane",
+    "configure_main_app": "infra/crossplane/crossplane-main-app.yaml"
+}

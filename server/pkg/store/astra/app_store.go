@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	createAppConfigQuery         string = "INSERT INTO %s.store_app_config (name, chart_name, repo_name,release_name, repo_url, namespace, version, create_namespace, privileged_namespace, launch_ui_url, launch_ui_redirect_url, category, icon, description, launch_ui_values, override_values, template_values, created_time, id) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %t, %t, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%v', '%s' );"
-	updateAppConfigQuery         string = "UPDATE %s.store_app_config SET chart_name = '%s', repo_name = '%s', repo_url = '%s', namespace = '%s', create_namespace = %t, privileged_namespace = %t, launch_ui_url = '%s', launch_ui_redirect_url = '%s', category = '%s', icon = '%s', description = '%s', launch_ui_values = '%s', override_values = '%s', template_values = '%s', last_updated_time='%v' WHERE name = '%s' AND version = '%s';"
+	createAppConfigQuery         string = "INSERT INTO %s.store_app_config (name, chart_name, repo_name,release_name, repo_url, namespace, version, create_namespace, privileged_namespace, launch_ui_url, launch_ui_redirect_url, category, icon, description, launch_ui_values, override_values, template_values, created_time, id, plugin_name, plugin_description) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %t, %t, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%v', '%s', '%v', '%s' );"
+	updateAppConfigQuery         string = "UPDATE %s.store_app_config SET chart_name = '%s', repo_name = '%s', repo_url = '%s', namespace = '%s', create_namespace = %t, privileged_namespace = %t, launch_ui_url = '%s', launch_ui_redirect_url = '%s', category = '%s', icon = '%s', description = '%s', launch_ui_values = '%s', override_values = '%s', template_values = '%s', last_updated_time='%v', plugin_name = '%s', plugin_description = '%s' WHERE name = '%s' AND version = '%s';"
 	deleteAppConfigQuery         string = "DELETE FROM %s.store_app_config WHERE name='%s' AND version='%s';"
-	getAppConfigQuery            string = "SELECT name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, template_values, release_name FROM %s.store_app_config WHERE name='%s' AND version='%s';"
-	getAllAppConfigsQuery        string = "SELECT name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, template_values, release_name FROM %s.store_app_config;"
+	getAppConfigQuery            string = "SELECT name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, template_values, release_name, plugin_name, plugin_description FROM %s.store_app_config WHERE name='%s' AND version='%s';"
+	getAllAppConfigsQuery        string = "SELECT name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, template_values, release_name, plugin_name, plugin_description FROM %s.store_app_config;"
 	appConfigExistanceCheckQuery string = "SELECT name, version FROM %s.store_app_config WHERE name='%s' AND version ='%s';"
 )
 
@@ -26,16 +26,36 @@ func (a *AstraServerStore) AddOrUpdateStoreApp(config *types.StoreAppConfig) err
 		return fmt.Errorf("failed to check app config existance : %w", err)
 	}
 
+	var overrideValues, launchUIValues, templateValues string
+	if len(config.OverrideValues) > 0 {
+		overrideValues = base64.StdEncoding.EncodeToString(config.OverrideValues)
+	}
+
+	if len(config.LaunchUIValues) > 0 {
+		launchUIValues = base64.StdEncoding.EncodeToString(config.LaunchUIValues)
+	}
+
+	if len(config.TemplateValues) > 0 {
+		templateValues = base64.StdEncoding.EncodeToString(config.TemplateValues)
+	}
+
 	var query *pb.Query
 	if appExists {
 		query = &pb.Query{
 			Cql: fmt.Sprintf(updateAppConfigQuery,
-				a.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchUIDescription, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, config.TemplateValues, time.Now().Format(time.RFC3339), config.AppName, config.Version),
+				a.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace,
+				config.PrivilegedNamespace, config.LaunchURL, config.LaunchUIDescription, config.Category, config.Icon,
+				config.Description, launchUIValues, overrideValues, templateValues,
+				time.Now().Format(time.RFC3339), config.PluginName, config.PluginDescription, config.AppName, config.Version),
 		}
 	} else {
 		query = &pb.Query{
 			Cql: fmt.Sprintf(createAppConfigQuery,
-				a.keyspace, config.AppName, config.ChartName, config.RepoName, config.ReleaseName, config.RepoURL, config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL, config.LaunchUIDescription, config.Category, config.Icon, config.Description, config.LaunchUIValues, config.OverrideValues, config.TemplateValues, time.Now().Format(time.RFC3339), uuid.New().String()),
+				a.keyspace, config.AppName, config.ChartName, config.RepoName, config.ReleaseName, config.RepoURL,
+				config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL,
+				config.LaunchUIDescription, config.Category, config.Icon, config.Description, config.LaunchUIValues,
+				overrideValues, templateValues, time.Now().Format(time.RFC3339), uuid.New().String(), config.PluginName,
+				config.PluginDescription),
 		}
 	}
 
@@ -179,11 +199,20 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 	}
 	cqlTemplateValues, err := client.ToString(row.Values[15])
 	if err != nil {
-		return nil, fmt.Errorf("failed to get override values: %w", err)
+		return nil, fmt.Errorf("failed to get template values: %w", err)
 	}
 	cqlReleaseNameValues, err := client.ToString(row.Values[16])
 	if err != nil {
-		return nil, fmt.Errorf("failed to get override values: %w", err)
+		return nil, fmt.Errorf("failed to get release name values: %w", err)
+	}
+
+	cqlPluginName, err := client.ToString(row.Values[17])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get plugin values: %w", err)
+	}
+	cqlPluginDescription, err := client.ToString(row.Values[18])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get plugin description values: %w", err)
 	}
 
 	var cqlLaunchUiValuesByte []byte
@@ -219,6 +248,8 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 		OverrideValues:      cqlOverrideValuesByte,
 		TemplateValues:      cqlTemplateValuesByte,
 		ReleaseName:         cqlReleaseNameValues,
+		PluginName:          cqlPluginName,
+		PluginDescription:   cqlPluginDescription,
 	}
 	return config, nil
 }

@@ -61,14 +61,6 @@ spec:
               value: "{{ .Values.astra.entityName }}"
             - name: ASTRA_CRED_IDENTIFIER
               value: "{{ .Values.astra.credIdentifier }}"
-            - name: CASSANDRA_ADDRESSES
-              value: "{{ .Values.cassandra.dbAddresses }}"
-            - name: CASSANDRA_SERVICE_USERNAME
-              value: "{{ .Values.cassandra.dbUserName }}"
-            - name: CASSANDRA_ENTITY_NAME
-              value: "{{ .Values.cassandra.entityName }}"
-            - name: CASSANDRA_DB_NAME
-              value: "{{ .Values.cassandra.dbName }}"
             - name: ORY_ENTITY_NAME
               value: {{ .Values.ory.entityName }}
             - name: ORY_CRED_IDENTIFIER

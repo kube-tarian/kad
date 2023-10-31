@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/config-worker/pkg/application"
 	"github.com/kube-tarian/kad/capten/config-worker/pkg/workflows"
+	"github.com/kube-tarian/kad/capten/deployment-worker/pkg/application"
 	"github.com/kube-tarian/kad/capten/model"
 	"go.temporal.io/sdk/client"
 )
@@ -20,10 +20,22 @@ func TestMain(m *testing.M) {
 	m.Run()
 }
 
+type TestContextData struct {
+}
+
+func setupENV() {
+}
+
+func setup() *TestContextData {
+	setupENV()
+	return &TestContextData{}
+}
+
+func tearDown(t *TestContextData) {
+}
+
 func TestIntegrationArgocdConfigEvent(t *testing.T) {
 	testData := setup()
-
-	stop := startMain()
 
 	data := &model.Request{
 		RepoName:    "argocd-example",
@@ -44,13 +56,10 @@ func TestIntegrationArgocdConfigEvent(t *testing.T) {
 
 	logger.Info("Starting teardown")
 	tearDown(testData)
-	stop <- true
 }
 
 func TestIntegrationArgocdDeleteEvent(t *testing.T) {
 	testData := setup()
-
-	stop := startMain()
 
 	data := &model.Request{
 		RepoName:    "argocd-example",
@@ -71,13 +80,10 @@ func TestIntegrationArgocdDeleteEvent(t *testing.T) {
 
 	logger.Info("Starting teardown")
 	tearDown(testData)
-	stop <- true
 }
 
 func TestIntegrationHelmConfigEvent(t *testing.T) {
 	testData := setup()
-
-	stop := startMain()
 
 	data := &model.Request{
 		RepoName:    "argo",
@@ -98,13 +104,10 @@ func TestIntegrationHelmConfigEvent(t *testing.T) {
 
 	logger.Info("Starting teardown")
 	tearDown(testData)
-	stop <- true
 }
 
 func TestIntegrationHelmDeleteEvent(t *testing.T) {
 	testData := setup()
-
-	stop := startMain()
 
 	data := &model.Request{
 		RepoName:    "argo",
@@ -125,7 +128,6 @@ func TestIntegrationHelmDeleteEvent(t *testing.T) {
 
 	logger.Info("Starting teardown")
 	tearDown(testData)
-	stop <- true
 }
 
 func sendConfigEvent(t *testing.T, pluginName string, dataJSON json.RawMessage, action string) {

@@ -10,7 +10,7 @@ import (
 
 func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverpb.UpdateClusterRegistrationRequest) (
 	*serverpb.UpdateClusterRegistrationResponse, error) {
-	orgId, err := validateRequest(ctx, request.ClusterID)
+	orgId, err := validateOrgWithArgs(ctx, request.ClusterID)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.UpdateClusterRegistrationResponse{
@@ -62,6 +62,16 @@ func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverp
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed update register cluster",
 		}, nil
+	}
+
+	if s.cfg.RegisterLaunchAppsConifg {
+		if err := s.configureSSOForClusterApps(ctx, orgId, request.ClusterID); err != nil {
+			s.log.Errorf("%v", err)
+			return &serverpb.UpdateClusterRegistrationResponse{
+				Status:        serverpb.StatusCode_INTERNRAL_ERROR,
+				StatusMessage: "failed to configure SSO for cluster apps",
+			}, nil
+		}
 	}
 
 	s.log.Infof("Update cluster registration request for cluster %s successful, [org: %s]", request.ClusterName, orgId)

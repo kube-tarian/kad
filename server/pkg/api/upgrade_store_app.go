@@ -11,7 +11,7 @@ import (
 
 func (s *Server) UpgradeStoreApp(ctx context.Context, request *serverpb.UpgradeStoreAppRequest) (
 	*serverpb.UpgradeStoreAppResponse, error) {
-	orgId, err := validateRequest(ctx, request.ClusterID, request.AppName, request.Version)
+	orgId, err := validateOrgWithArgs(ctx, request.ClusterID, request.AppName, request.Version)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.UpgradeStoreAppResponse{

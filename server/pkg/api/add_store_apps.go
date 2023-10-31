@@ -10,7 +10,7 @@ import (
 
 func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppRequest) (
 	*serverpb.AddStoreAppResponse, error) {
-	_, err := validateRequest(ctx, request.AppConfig.AppName, request.AppConfig.Version)
+	err := validateArgs(request.AppConfig.AppName, request.AppConfig.Version)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.AddStoreAppResponse{
@@ -35,9 +35,9 @@ func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppR
 		Icon:                hex.EncodeToString(request.AppConfig.Icon),
 		LaunchURL:           request.AppConfig.LaunchURL,
 		LaunchUIDescription: request.AppConfig.LaunchUIDescription,
-		OverrideValues:      encodeBase64BytesToString(request.AppValues.OverrideValues),
-		LaunchUIValues:      encodeBase64BytesToString(request.AppValues.LaunchUIValues),
-		TemplateValues:      encodeBase64BytesToString(request.AppValues.TemplateValues),
+		OverrideValues:      request.AppValues.OverrideValues,
+		LaunchUIValues:      request.AppValues.LaunchUIValues,
+		TemplateValues:      request.AppValues.TemplateValues,
 	}
 
 	if err := s.serverStore.AddOrUpdateStoreApp(config); err != nil {

@@ -8,7 +8,7 @@ import (
 
 func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *serverpb.GetClusterAppLaunchConfigsRequest) (
 	*serverpb.GetClusterAppLaunchConfigsResponse, error) {
-	orgId, err := validateRequest(ctx, request.ClusterID)
+	orgId, err := validateOrgWithArgs(ctx, request.ClusterID)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.GetClusterAppLaunchConfigsResponse{

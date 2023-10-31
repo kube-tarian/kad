@@ -1,10 +1,12 @@
-
-CREATE TABLE OnboardIntegrations (
-    usecase text,
-    project_url text,
-    status text,
-    details text,
-    PRIMARY KEY (usecase)
+CREATE TABLE CrossplaneProviders (
+    id UUID,
+    cloud_type TEXT,
+    provider_name TEXT,
+    cloud_provider_id TEXT,
+    status TEXT,
+    workflow_id TEXT,
+    workflow_status TEXT,
+    PRIMARY KEY (id)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''

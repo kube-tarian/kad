@@ -15,6 +15,7 @@ service Server {
   rpc GetClusterApps (GetClusterAppsRequest) returns (GetClusterAppsResponse) {}
   rpc GetClusterAppLaunchConfigs (GetClusterAppLaunchConfigsRequest) returns (GetClusterAppLaunchConfigsResponse) {}
   rpc GetClusterApp (GetClusterAppRequest) returns (GetClusterAppResponse) {}
+  rpc GetClusterDetails (GetClusterDetailsRequest) returns (GetClusterDetailsResponse) {}  
 
   rpc AddStoreApp (AddStoreAppRequest) returns (AddStoreAppResponse) {}
   rpc UpdateStoreApp (UpdateStoreAppRequest) returns (UpdateStoreAppRsponse){}
@@ -29,10 +30,6 @@ service Server {
   rpc UpgradeStoreApp(UpgradeStoreAppRequest) returns (UpgradeStoreAppResponse) {}
 
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
-
-  rpc SetClusterGitoptsProject (SetClusterGitoptsProjectRequest) returns (SetClusterGitoptsProjectResponse) {}
-  rpc GetClusterGitoptsProject (GetClusterGitoptsProjectRequest) returns (GetClusterGitoptsProjectResponse) {}
-  rpc DeleteClusterGitoptsProject (DeleteClusterGitoptsProjectRequest) returns (DeleteClusterGitoptsProjectResponse){}
 }
 
 enum StatusCode {
@@ -88,11 +85,10 @@ message GetClustersResponse {
   repeated ClusterInfo data = 3; 
 }
 
-message GetClusterRequest {
-  string clusterID = 1;
+message GetClusterDetailsRequest {
 }
 
-message GetClusterResponse {
+message GetClusterDetailsResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   ClusterInfo data = 3; 
@@ -136,6 +132,17 @@ message ClusterInfo {
   string agentEndpoint = 3;
   repeated ClusterAttribute attributes = 4;
   repeated AppLaunchConfig appLaunchConfigs = 5;
+}
+
+message GetClusterRequest{
+}
+
+message GetClusterResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+  string clusterID = 3;
+  string clusterName = 4;
+  string agentEndpoint = 5;
 }
 
 message AppLaunchConfig {
@@ -304,46 +311,6 @@ message UnDeployStoreAppRequest {
 }
 
 message UnDeployStoreAppResponse{
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-message ClusterGitoptsConfig {
-  string usecase = 1;
-  string projectUrl = 2;
-  string status=3;
-  map<string, string> credential=4;
-}
-
-message SetClusterGitoptsProjectRequest {
-  string clusterId = 1;
-  string usecase = 2;
-  string projectUrl = 3;
-  map<string, string> credential=4;
-}
-
-message SetClusterGitoptsProjectResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message GetClusterGitoptsProjectRequest {
-  string clusterId = 1;
-  string usecase = 2;
-}
-
-message GetClusterGitoptsProjectResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-  ClusterGitoptsConfig clusterGitoptsConfig = 3;
-}
-
-message DeleteClusterGitoptsProjectRequest {
-  string clusterId = 1;
-  string usecase = 2;
-  string projectUrl = 3;
-}
-
-message DeleteClusterGitoptsProjectResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }

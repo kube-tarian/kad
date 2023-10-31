@@ -28,8 +28,9 @@ func getNewAPIClient(cfg *Configuration) (apiclient.Client, error) {
 		return nil, err
 	}
 	defer io.Close(sessConn)
+
 	sessionRequest := sessionpkg.SessionCreateRequest{
-		Username: "admin",
+		Username: cfg.Username,
 		Password: cfg.Password,
 	}
 	createdSession, err := sessionClient.Create(context.Background(), &sessionRequest)

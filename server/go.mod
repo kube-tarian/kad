@@ -1,18 +1,18 @@
 module github.com/kube-tarian/kad/server
 
-go 1.19
+go 1.21.0
 
 require (
-	github.com/gocql/gocql v1.3.1
-	github.com/google/uuid v1.3.1
+	github.com/gocql/gocql v1.6.0
+	github.com/google/uuid v1.4.0
 	github.com/intelops/go-common v1.0.21
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/kube-tarian/kad/agent v0.0.0-20221228201013-ed4f78e4b887
-	github.com/ory/client-go v1.1.49
+	github.com/kube-tarian/kad/agent v0.0.0-20230122174427-9a55458f63b2
+	github.com/ory/client-go v1.2.15
 	github.com/pkg/errors v0.9.1
 	github.com/stargate/stargate-grpc-go-client v0.0.0-20220822130422-9a1c6261d4fa
-	golang.org/x/oauth2 v0.12.0
-	google.golang.org/grpc v1.58.0
+	golang.org/x/oauth2 v0.13.0
+	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -27,7 +27,7 @@ require (
 	github.com/cerbos/cerbos v0.30.0 // indirect
 	github.com/cerbos/cloud-api v0.1.7 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/containerd/containerd v1.7.7 // indirect
+	github.com/containerd/containerd v1.7.8 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.0.2 // indirect
@@ -107,16 +107,16 @@ require (
 	go.uber.org/config v1.4.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.25.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
-	golang.org/x/net v0.15.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/time v0.1.0 // indirect
+	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230803162519-f966b187b2e5 // indirect
+	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

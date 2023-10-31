@@ -10,10 +10,19 @@ import (
 )
 
 func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppRequest) (*agentpb.InstallAppResponse, error) {
-	a.log.Infof("Recieved App Install request %+v", request)
+	a.log.Infof("Recieved App Install request for appName %s, version %+v", request.AppConfig.AppName, request.AppConfig.Version)
 	templateValues, err := deriveTemplateValues(request.AppValues.OverrideValues, request.AppValues.TemplateValues)
 	if err != nil {
 		a.log.Errorf("failed to derive template values for app %s, %v", request.AppConfig.ReleaseName, err)
+		return &agentpb.InstallAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to prepare app values",
+		}, nil
+	}
+
+	launchURL, err := executeStringTemplateValues(request.AppConfig.LaunchURL, request.AppValues.OverrideValues)
+	if err != nil {
+		a.log.Errorf("failed to derive template launch URL for app %s, %v", request.AppConfig.ReleaseName, err)
 		return &agentpb.InstallAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to prepare app values",
@@ -34,10 +43,12 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 			CreateNamespace:     request.AppConfig.CreateNamespace,
 			PrivilegedNamespace: request.AppConfig.PrivilegedNamespace,
 			Icon:                request.AppConfig.Icon,
-			LaunchURL:           request.AppConfig.LaunchURL,
+			LaunchURL:           launchURL,
 			LaunchUIDescription: request.AppConfig.LaunchUIDescription,
 			InstallStatus:       string(appIntallingStatus),
 			DefualtApp:          request.AppConfig.DefualtApp,
+			PluginName:          request.AppConfig.PluginName,
+			PluginDescription:   request.AppConfig.PluginDescription,
 		},
 		Values: &agentpb.AppValues{
 			OverrideValues: request.AppValues.OverrideValues,
@@ -123,7 +134,7 @@ func (a *Agent) UpdateAppValues(ctx context.Context, req *agentpb.UpdateAppValue
 		}, nil
 	}
 
-	launchUiValues, err := GetSSOvalues(req.ReleaseName)
+	launchUiValues, err := getAppLaunchSSOvalues(req.ReleaseName)
 	if err != nil {
 		a.log.Errorf("failed to SSO config for app %s, %v", req.ReleaseName, err)
 		return &agentpb.UpdateAppValuesResponse{
@@ -142,6 +153,16 @@ func (a *Agent) UpdateAppValues(ctx context.Context, req *agentpb.UpdateAppValue
 		}, nil
 	}
 
+	launchURL, err := executeStringTemplateValues(appConfig.Config.LaunchURL, req.OverrideValues)
+	if err != nil {
+		a.log.Errorf("failed to derive template launch URL for app %s, %v", req.ReleaseName, err)
+		return &agentpb.UpdateAppValuesResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to prepare app values",
+		}, nil
+	}
+
+	appConfig.Config.LaunchURL = launchURL
 	appConfig.Config.InstallStatus = string(appUpgradingStatus)
 	if err := a.as.UpsertAppConfig(appConfig); err != nil {
 		a.log.Errorf("failed to update app config data for app %s, %v", req.ReleaseName, err)
@@ -174,7 +195,7 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 		}, nil
 	}
 
-	launchUiValues, err := GetSSOvalues(req.AppConfig.ReleaseName)
+	launchUiValues, err := getAppLaunchSSOvalues(req.AppConfig.ReleaseName)
 	if err != nil {
 		a.log.Errorf("failed to SSO config for app %s, %v", req.AppConfig.ReleaseName, err)
 		return &agentpb.UpgradeAppResponse{
@@ -186,6 +207,15 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 	templateValues, err := deriveTemplateValues(req.AppValues.OverrideValues, req.AppValues.TemplateValues)
 	if err != nil {
 		a.log.Errorf("failed to derive template values for app %s, %v", req.AppConfig.ReleaseName, err)
+		return &agentpb.UpgradeAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to prepare app values",
+		}, nil
+	}
+
+	launchURL, err := executeStringTemplateValues(req.AppConfig.LaunchURL, req.AppValues.OverrideValues)
+	if err != nil {
+		a.log.Errorf("failed to derive template launch URL for app %s, %v", req.AppConfig.ReleaseName, err)
 		return &agentpb.UpgradeAppResponse{
 			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to prepare app values",
@@ -206,10 +236,12 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 			CreateNamespace:     req.AppConfig.CreateNamespace,
 			PrivilegedNamespace: req.AppConfig.PrivilegedNamespace,
 			Icon:                req.AppConfig.Icon,
-			LaunchURL:           req.AppConfig.LaunchURL,
+			LaunchURL:           launchURL,
 			LaunchUIDescription: req.AppConfig.LaunchUIDescription,
 			InstallStatus:       string(appIntallingStatus),
 			DefualtApp:          req.AppConfig.DefualtApp,
+			PluginName:          req.AppConfig.PluginName,
+			PluginDescription:   req.AppConfig.PluginDescription,
 		},
 		Values: &agentpb.AppValues{
 			OverrideValues: req.AppValues.OverrideValues,
@@ -271,7 +303,6 @@ func (a *Agent) unInstallAppWithWorkflow(req *model.ApplicationDeleteRequest, ap
 		return
 	}
 
-	appConfig.Config.InstallStatus = string(appUnInstalledStatus)
 	if err := a.as.DeleteAppConfigByReleaseName(req.ReleaseName); err != nil {
 		a.log.Errorf("failed to delete installed app config record %s, %v", req.ReleaseName, err)
 		return
@@ -292,7 +323,7 @@ func (a *Agent) upgradeAppWithWorkflow(req *model.ApplicationInstallRequest,
 		return
 	}
 
-	appConfig.Config.InstallStatus = string(appUpgradeAction)
+	appConfig.Config.InstallStatus = string(appUpgradedStatus)
 	if err := a.as.UpsertAppConfig(appConfig); err != nil {
 		a.log.Errorf("failed to update app config for app %s, %v", appConfig.Config.ReleaseName, err)
 		return

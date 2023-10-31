@@ -9,7 +9,7 @@ import (
 
 func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppRequest) (
 	*serverpb.GetStoreAppResponse, error) {
-	_, err := validateRequest(ctx, request.AppName, request.Version)
+	orgId, err := validateOrgWithArgs(ctx, request.AppName, request.Version)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.GetStoreAppResponse{
@@ -17,6 +17,7 @@ func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppR
 			StatusMessage: "request validation failed",
 		}, nil
 	}
+	s.log.Infof("Get store app %s:%s request recieved, [org: %s]", request.AppName, request.Version, orgId)
 
 	config, err := s.serverStore.GetAppFromStore(request.AppName, request.Version)
 	if err != nil {
@@ -45,6 +46,7 @@ func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppR
 		ReleaseName:         config.ReleaseName,
 	}
 
+	s.log.Infof("Fetched store app %s:%s, [org: %s]", request.AppName, request.Version, orgId)
 	return &serverpb.GetStoreAppResponse{
 		Status:        serverpb.StatusCode_OK,
 		StatusMessage: "app config is sucessfuly fetched from store",

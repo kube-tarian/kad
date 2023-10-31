@@ -42,6 +42,7 @@ const (
 	icon, installStatus                  = "icon", "install_status"
 	updateTime                           = "update_time"
 	usecase, projectUrl, status, details = "usecase", "project_url", "status", "details"
+	pluginName, pluginDescription        = "plugin_name", "plugin_description"
 )
 
 var (
@@ -54,7 +55,7 @@ var (
 		overrideValues, launchUiValues,
 		templateValues, defaultApp,
 		icon, installStatus,
-		updateTime,
+		updateTime, pluginName, pluginDescription,
 	}
 )
 
@@ -99,7 +100,8 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 		&overrideValues, &launchUiValues,
 		&templateValues, &config.DefualtApp,
 		&config.Icon, &config.InstallStatus,
-		&config.LastUpdateTime,
+		&config.LastUpdateTime, &config.PluginName,
+		&config.PluginDescription,
 	); err != nil {
 		return nil, err
 	}
@@ -135,7 +137,8 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&overrideValues, &launchUiValues,
 		&templateValues, &config.DefualtApp,
 		&config.Icon, &config.InstallStatus,
-		&config.LastUpdateTime,
+		&config.LastUpdateTime, &config.PluginName,
+		&config.PluginDescription,
 	) {
 		configCopy := config
 		overrideValuesCopy, _ := base64.StdEncoding.DecodeString(overrideValues)
@@ -245,6 +248,16 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 			fmt.Sprintf("%s = '%s'", installStatus, config.Config.InstallStatus))
 	}
 
+	if config.Config.PluginName != "" {
+		params = append(params,
+			fmt.Sprintf("%s = '%s'", pluginName, config.Config.PluginName))
+	}
+
+	if config.Config.PluginDescription != "" {
+		params = append(params,
+			fmt.Sprintf("%s = '%s'", pluginDescription, config.Config.PluginDescription))
+	}
+
 	params = append(params,
 		fmt.Sprintf("%s = '%s'", updateTime, time.Now().Format(time.RFC3339)))
 
@@ -259,7 +272,6 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 }
 
 func (a *Store) AddOrUpdateOnboardingIntegration(payload *model.ClusterGitoptsConfig) error {
-
 	selectQuery := a.client.Session().Query(fmt.Sprintf(getOnboardingIntegrationQuery,
 		a.keyspace, payload.Usecase))
 
