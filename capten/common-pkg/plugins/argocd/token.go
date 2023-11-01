@@ -18,6 +18,7 @@ func getNewAPIClient(cfg *Configuration) (apiclient.Client, error) {
 	client, err := apiclient.NewClient(&apiclient.ClientOptions{
 		ServerAddr: cfg.ServiceURL,
 		Insecure:   !cfg.IsSSLEnabled,
+		PlainText:  true,
 	})
 	if err != nil {
 		return nil, err
@@ -42,5 +43,6 @@ func getNewAPIClient(cfg *Configuration) (apiclient.Client, error) {
 		ServerAddr: cfg.ServiceURL,
 		Insecure:   !cfg.IsSSLEnabled,
 		AuthToken:  createdSession.Token,
+		PlainText:  true,
 	})
 }

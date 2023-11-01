@@ -35,7 +35,7 @@ func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	accessToken, err := a.getGitProjectCredential(ctx, request.Id)
+	accessToken, userID, err := a.getGitProjectCredential(ctx, request.Id)
 	if err != nil {
 		a.log.Errorf("failed to get credential, %v", err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
@@ -44,7 +44,7 @@ func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	if err := a.addProjectToArgoCD(ctx, argoCDProject.GitProjectUrl, accessToken); err != nil {
+	if err := a.addProjectToArgoCD(ctx, argoCDProject.GitProjectUrl, userID, accessToken); err != nil {
 		a.log.Errorf("failed to add ArgoCD Repository: %v ", err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{
 			Status:        captenpluginspb.StatusCode_NOT_FOUND,
@@ -146,17 +146,25 @@ func (a *Agent) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.
 	}, nil
 }
 
-func (a *Agent) addProjectToArgoCD(ctx context.Context, projectUrl, accessToken string) error {
+func (a *Agent) addProjectToArgoCD(ctx context.Context, projectUrl, userID, accessToken string) error {
 	argocdClient, err := argocd.NewClient(&logging.Logging{})
 	if err != nil {
 		return err
 	}
 
 	repo := &argocd.Repository{
-		Project:       argoCDRepositoryProject,
-		SSHPrivateKey: accessToken,
-		Type:          argoCDRepositoryType,
-		Repo:          projectUrl,
+		Project:               argoCDRepositoryProject,
+		Repo:                  projectUrl,
+		Username:              userID,
+		Password:              accessToken,
+		Type:                  argoCDRepositoryType,
+		Insecure:              false,
+		EnableLFS:             false,
+		InsecureIgnoreHostKey: false,
+		ConnectionState: argocd.ConnectionState{
+			Status:  "Connected",
+			Message: "Repository is connected",
+		},
 	}
 
 	_, err = argocdClient.CreateRepository(ctx, repo)

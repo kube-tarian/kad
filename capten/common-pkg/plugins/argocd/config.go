@@ -10,15 +10,19 @@ type Configuration struct {
 }
 
 type ConnectionState struct {
-	AttemptedAt time.Time `json:"attemptedAt"`
-	Message     string    `json:"message"`
-	Status      string    `json:"status"`
+	AttemptedAt time.Time `json:"AttemptedAt"`
+	Message     string    `json:"Message"`
+	Status      string    `json:"Status"`
 }
 
 type Repository struct {
-	Project         string          `json:"project"`
-	Repo            string          `json:"repo"`
-	SSHPrivateKey   string          `json:"sshPrivateKey"`
-	Type            string          `json:"type"`
-	ConnectionState ConnectionState `json:"connectionState"`
+	Project               string          `json:"Project"`
+	Repo                  string          `json:"Repo"`
+	Username              string          `json:"Username"`
+	Password              string          `json:"Password"`
+	Type                  string          `json:"Type"`
+	Insecure              bool            `json:"Insecure"`
+	EnableLFS             bool            `json:"EnableLFS"`
+	InsecureIgnoreHostKey bool            `json:"InsecureIgnoreHostKey"`
+	ConnectionState       ConnectionState `json:"ConnectionState"`
 }

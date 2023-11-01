@@ -252,10 +252,14 @@ func (a *ArgoCDCLient) CreateRepository(ctx context.Context, repo *Repository) (
 
 	resp, err := appClient.CreateRepository(ctx, &repository.RepoCreateRequest{
 		Repo: &v1alpha1.Repository{
-			Project:       repo.Project,
-			Repo:          repo.Repo,
-			SSHPrivateKey: repo.SSHPrivateKey,
-			Type:          repo.Type,
+			Project:               repo.Project,
+			Repo:                  repo.Repo,
+			Username:              repo.Username,
+			Password:              repo.Password,
+			Type:                  repo.Type,
+			Insecure:              repo.Insecure,
+			EnableLFS:             repo.EnableLFS,
+			InsecureIgnoreHostKey: repo.InsecureIgnoreHostKey,
 			ConnectionState: v1alpha1.ConnectionState{
 				Status:  repo.ConnectionState.Status,
 				Message: repo.ConnectionState.Message,
