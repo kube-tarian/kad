@@ -152,7 +152,7 @@ func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, t
 		return fmt.Errorf("failed to initalize k8s client: %v", err)
 	}
 
-	err = k8sclient.DynamicClient.CreateResource(ctx, mainApp)
+	err = k8sclient.DynamicClient.CreateResource(ctx, filepath.Join(reqRepo, mainApp))
 	if err != nil {
 		return fmt.Errorf("failed to create the k8s custom resource: %v", err)
 	}
