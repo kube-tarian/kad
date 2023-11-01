@@ -26,13 +26,16 @@ type HandleGit struct {
 }
 
 func NewHandleGit() (*HandleGit, error) {
+	logger.Infof("inside NewHandleGit")
 	config, err := GetConfig()
 	if err != nil {
+		logger.Infof("inside err GetConfig")
 		return nil, err
 	}
 
 	pluginConfig, err := NewPluginExtractor(config.TektonPluginConfig, config.CrossPlanePluginConfig)
 	if err != nil {
+		logger.Infof("inside err NewPluginExtractor")
 		return nil, err
 	}
 
