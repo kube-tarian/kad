@@ -9,7 +9,9 @@ import (
 	"strings"
 
 	"github.com/intelops/go-common/credentials"
+	"github.com/intelops/go-common/logging"
 	agentmodel "github.com/kube-tarian/kad/capten/agent/pkg/model"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/github"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
@@ -66,10 +68,10 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 	switch req.Type {
 	case Tekton:
 		err = hg.configureCICD(ctx, req, hg.pluginConfig.tektonGetGitRepo(),
-			hg.pluginConfig.tektonGetGitConfigPath(), cred["accessToken"])
+			hg.pluginConfig.tektonGetGitConfigPath(), hg.pluginConfig.tektonGetConfigMainApp(), cred["accessToken"])
 	case CrossPlane:
 		err = hg.configureCICD(ctx, req, hg.pluginConfig.crossplaneGetGitRepo(),
-			hg.pluginConfig.crossplaneGetGitConfigPath(), cred["accessToken"])
+			hg.pluginConfig.crossplaneGetGitConfigPath(), hg.pluginConfig.crossplaneGetConfigMainApp(), cred["accessToken"])
 	}
 	// Once we finalize what needs to be replaced then we can come and work here.
 
@@ -81,7 +83,7 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 }
 
-func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, templateRepo, pathInRepo, token string) error {
+func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, templateRepo, pathInRepo, mainApp, token string) error {
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
 	if !ok {
@@ -133,13 +135,26 @@ func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, t
 		localBranchName = defaultBranch
 	}
 
-	if err := configPlugin.Push(localBranchName, token); err != nil || params.PushToDefaultBranch {
+	if err := configPlugin.Push(localBranchName, token); err != nil {
 		return err
 	}
 
-	_, err = createPR(ctx, params.RepoURL, branchName+"-"+params.Type, defaultBranch, token)
+	if !params.PushToDefaultBranch {
+		_, err = createPR(ctx, params.RepoURL, branchName+"-"+params.Type, defaultBranch, token)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initalize k8s client: %v", err)
+	}
+
+	err = k8sclient.DynamicClient.CreateResource(ctx, mainApp)
+	if err != nil {
+		return fmt.Errorf("failed to create the k8s custom resource: %v", err)
 	}
 
 	return nil

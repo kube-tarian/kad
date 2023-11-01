@@ -103,30 +103,32 @@ func (dc *DynamicClientSet) CreateResource(ctx context.Context, filename string)
 	return nil
 }
 
-func (dc *DynamicClientSet) GetResource(ctx context.Context, filename string) error {
+func (dc *DynamicClientSet) GetResource(ctx context.Context, filename string) (*unstructured.Unstructured, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	jsonData, err := ConvertYamlToJson(data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, resourceID, err := dc.getGVK(jsonData)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	namespaceName, resourceName, err := dc.getNamespace(jsonData)
 	if err != nil {
-		return err
-	}
-	_, err = dc.client.Resource(resourceID).Namespace(namespaceName).Get(ctx, resourceName, metav1.GetOptions{})
-	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	return nil
+	obj, err := dc.client.Resource(resourceID).Namespace(namespaceName).Get(ctx, resourceName, metav1.GetOptions{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return obj, nil
 }
