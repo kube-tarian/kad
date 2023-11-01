@@ -25,7 +25,6 @@ func (a *Activities) ConfigurationActivity(ctx context.Context, params model.Con
 	case "project":
 		return handleProject(ctx, params, payload)
 	case Tekton, CrossPlane:
-		logger.Infof("inside switch case..")
 		hg, err := NewHandleGit()
 		if err != nil {
 			return model.ResponsePayload{
@@ -33,7 +32,6 @@ func (a *Activities) ConfigurationActivity(ctx context.Context, params model.Con
 				Message: json.RawMessage("{\"error\": \"failed to get Git client\"}"),
 			}, err
 		}
-		logger.Infof("inside switch case.. calling handle git")
 		return hg.handleGit(ctx, params, payload)
 	default:
 		logger.Errorf("unknown resource type: %s in configuration", params.Resource)

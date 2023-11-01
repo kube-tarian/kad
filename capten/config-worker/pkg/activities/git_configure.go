@@ -26,16 +26,13 @@ type HandleGit struct {
 }
 
 func NewHandleGit() (*HandleGit, error) {
-	logger.Infof("inside NewHandleGit")
 	config, err := GetConfig()
 	if err != nil {
-		logger.Infof("inside err GetConfig")
 		return nil, err
 	}
 
 	pluginConfig, err := NewPluginExtractor(config.TektonPluginConfig, config.CrossPlanePluginConfig)
 	if err != nil {
-		logger.Infof("inside err NewPluginExtractor")
 		return nil, err
 	}
 
@@ -79,7 +76,7 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 	// Once we finalize what needs to be replaced then we can come and work here.
 
 	if err != nil {
-		fmt.Println("ERROR: ", err)
+		logger.Error("failed to execute, err: %v", err)
 		return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed)}, err
 	}
 
@@ -87,6 +84,7 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 }
 
 func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, templateRepo, pathInRepo, mainApp, token string) error {
+	logger.Info("TOKEN: ", templateRepo, pathInRepo, mainApp, token)
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
 	if !ok {
@@ -96,58 +94,61 @@ func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, t
 	// Clone the template repo
 	templateDir, err := os.MkdirTemp(hg.config.GitCLoneDir, "clone*")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create template tmp dir, err: %v", err)
 	}
 	defer os.RemoveAll(templateDir)
 
 	if err := configPlugin.Clone(templateDir, templateRepo, token); err != nil {
-		return err
+		return fmt.Errorf("failed to Clone template repo, err: %v", err)
 	}
 
 	reqRepo, err := os.MkdirTemp(hg.config.GitCLoneDir, "clone*")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create tmp dir for user repo, err: %v", err)
 	}
 
 	defer os.RemoveAll(reqRepo) // clean up
 
 	if err := configPlugin.Clone(reqRepo, params.RepoURL, token); err != nil {
-		return err
+		return fmt.Errorf("failed to Clone user repo, err: %v", err)
 	}
 
 	for _, dir := range strings.Split(pathInRepo, ",") {
 		err = cp.Copy(filepath.Join(templateDir, dir), filepath.Join(reqRepo, dir))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to copy dir from template to user repo, err: %v", err)
 		}
 
 	}
 
 	if err := configPlugin.Commit(".", "configure CICD for the repo",
 		hg.config.GitDefaultCommiterName, hg.config.GitDefaultCommiterEmail); err != nil {
-		return err
+		return fmt.Errorf("failed to commit the changes to user repo, err: %v", err)
 	}
 
 	localBranchName := branchName + "-" + params.Type
 	defaultBranch, err := configPlugin.GetDefaultBranchName()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get default branch of user repo, err: %v", err)
 	}
 
 	if params.PushToDefaultBranch {
 		localBranchName = defaultBranch
 	}
 
-	if err := configPlugin.Push(localBranchName, token); err != nil {
-		return err
-	}
-
 	if !params.PushToDefaultBranch {
 		_, err = createPR(ctx, params.RepoURL, branchName+"-"+params.Type, defaultBranch, token)
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to create the PR on user repo, err: %v", err)
 		}
+
+		logger.Info("skiping push to default branch.")
+
 		return nil
+	}
+
+	if err := configPlugin.Push(localBranchName, token); err != nil {
+		return fmt.Errorf("failed to get push to default branch, err: %v", err)
 	}
 
 	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
