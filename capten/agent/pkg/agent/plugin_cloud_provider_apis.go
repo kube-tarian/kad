@@ -52,7 +52,7 @@ func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.A
 	}, nil
 }
 
-func (a *Agent) UpdateCloudProviders(ctx context.Context, request *captenpluginspb.UpdateCloudProviderRequest) (
+func (a *Agent) UpdateCloudProvider(ctx context.Context, request *captenpluginspb.UpdateCloudProviderRequest) (
 	*captenpluginspb.UpdateCloudProviderResponse, error) {
 	if err := validateArgs(request.GetCloudType(), request.GetId(), request.GetCloudAttributes()); err != nil {
 		a.log.Infof("request validation failed", err)
