@@ -52,8 +52,7 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 		}, err
 	}
 
-	if ok, _ := a.isProjectRegisteredWithArgoCD(ctx, CrossplaneProject.GitProjectUrl); !ok {
-
+	if ok, err := a.isProjectRegisteredWithArgoCD(ctx, CrossplaneProject.GitProjectUrl); !ok && err == nil {
 		accessToken, userID, err := a.getGitProjectCredential(ctx, request.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
@@ -70,6 +69,12 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 				StatusMessage: "Error occured while adding Crossplane Repository to ArgoCD",
 			}, err
 		}
+	} else if err != nil {
+		a.log.Errorf("failed to add Repository to ArgoCD : %v ", err)
+		return &captenpluginspb.RegisterCrossplaneProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "Failed to check weather Crossplane Repository is added to ArgoCD or not",
+		}, err
 	}
 
 	// start the config-worker routine
