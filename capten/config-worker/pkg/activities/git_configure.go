@@ -9,7 +9,9 @@ import (
 	"strings"
 
 	"github.com/intelops/go-common/credentials"
+	"github.com/intelops/go-common/logging"
 	agentmodel "github.com/kube-tarian/kad/capten/agent/pkg/model"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/github"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
@@ -66,22 +68,22 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 	switch req.Type {
 	case Tekton:
 		err = hg.configureCICD(ctx, req, hg.pluginConfig.tektonGetGitRepo(),
-			hg.pluginConfig.tektonGetGitConfigPath(), cred["accessToken"])
+			hg.pluginConfig.tektonGetGitConfigPath(), hg.pluginConfig.tektonGetConfigMainApp(), cred["accessToken"])
 	case CrossPlane:
 		err = hg.configureCICD(ctx, req, hg.pluginConfig.crossplaneGetGitRepo(),
-			hg.pluginConfig.crossplaneGetGitConfigPath(), cred["accessToken"])
+			hg.pluginConfig.crossplaneGetGitConfigPath(), hg.pluginConfig.crossplaneGetConfigMainApp(), cred["accessToken"])
 	}
 	// Once we finalize what needs to be replaced then we can come and work here.
 
 	if err != nil {
-		fmt.Println("ERROR: ", err)
+		logger.Error("failed to execute, err: %v", err)
 		return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed)}, err
 	}
 
 	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 }
 
-func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, templateRepo, pathInRepo, token string) error {
+func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, templateRepo, pathInRepo, mainApp, token string) error {
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
 	if !ok {
@@ -91,55 +93,70 @@ func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, t
 	// Clone the template repo
 	templateDir, err := os.MkdirTemp(hg.config.GitCLoneDir, "clone*")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create template tmp dir, err: %v", err)
 	}
 	defer os.RemoveAll(templateDir)
 
 	if err := configPlugin.Clone(templateDir, templateRepo, token); err != nil {
-		return err
+		return fmt.Errorf("failed to Clone template repo, err: %v", err)
 	}
 
 	reqRepo, err := os.MkdirTemp(hg.config.GitCLoneDir, "clone*")
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create tmp dir for user repo, err: %v", err)
 	}
 
 	defer os.RemoveAll(reqRepo) // clean up
 
 	if err := configPlugin.Clone(reqRepo, params.RepoURL, token); err != nil {
-		return err
+		return fmt.Errorf("failed to Clone user repo, err: %v", err)
 	}
 
 	for _, dir := range strings.Split(pathInRepo, ",") {
 		err = cp.Copy(filepath.Join(templateDir, dir), filepath.Join(reqRepo, dir))
 		if err != nil {
-			return err
+			return fmt.Errorf("failed to copy dir from template to user repo, err: %v", err)
 		}
 
 	}
 
 	if err := configPlugin.Commit(".", "configure CICD for the repo",
 		hg.config.GitDefaultCommiterName, hg.config.GitDefaultCommiterEmail); err != nil {
-		return err
+		return fmt.Errorf("failed to commit the changes to user repo, err: %v", err)
 	}
 
 	localBranchName := branchName + "-" + params.Type
 	defaultBranch, err := configPlugin.GetDefaultBranchName()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get default branch of user repo, err: %v", err)
 	}
 
-	if params.PushToDefaultBranch {
-		localBranchName = defaultBranch
+	if !params.PushToDefaultBranch {
+		_, err = createPR(ctx, params.RepoURL, branchName+"-"+params.Type, defaultBranch, token)
+		if err != nil {
+			return fmt.Errorf("failed to create the PR on user repo, err: %v", err)
+		}
+
+		logger.Info("skiping push to default branch.")
+
+		return nil
 	}
 
-	if err := configPlugin.Push(localBranchName, token); err != nil || params.PushToDefaultBranch {
-		return err
+	localBranchName = defaultBranch
+
+	if err := configPlugin.Push(localBranchName, token); err != nil {
+		return fmt.Errorf("failed to get push to default branch, err: %v", err)
 	}
 
-	_, err = createPR(ctx, params.RepoURL, branchName+"-"+params.Type, defaultBranch, token)
+	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initalize k8s client: %v", err)
+	}
+
+	// For the testing change the reqrepo to template one
+	err = k8sclient.DynamicClient.CreateResource(ctx, filepath.Join(templateDir, mainApp))
+	if err != nil {
+		return fmt.Errorf("failed to create the k8s custom resource: %v", err)
 	}
 
 	return nil

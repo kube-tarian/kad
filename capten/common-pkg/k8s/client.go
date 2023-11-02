@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kelseyhightower/envconfig"
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -18,8 +19,9 @@ type Configuration struct {
 }
 
 type K8SClient struct {
-	log       logging.Logger
-	Clientset kubernetes.Interface
+	log           logging.Logger
+	Clientset     kubernetes.Interface
+	DynamicClient *DynamicClientSet
 }
 
 func NewK8SClient(log logging.Logger) (*K8SClient, error) {
@@ -35,9 +37,16 @@ func NewK8SClient(log logging.Logger) (*K8SClient, error) {
 		return nil, err
 	}
 
+	dcClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		log.Errorf("failed to initialize dynamic client failed: %v", err)
+		return nil, err
+	}
+
 	return &K8SClient{
-		log:       log,
-		Clientset: clientset,
+		log:           log,
+		Clientset:     clientset,
+		DynamicClient: NewDynamicClientSet(dcClient),
 	}, nil
 }
 
