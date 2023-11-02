@@ -41,6 +41,8 @@ spec:
                 path: {{ .Values.configWorker.tektonPluginConfigFile }}
               - key: CROSSPLANE_PLUGIN_CONFIG
                 path: {{ .Values.configWorker.crossplanePluginConfigFile }}
+              - key: CROSSPLANE_PROVIDER_CONFIG
+                path: {{ .Values.configworker.crossplaneProviderPluginConfigFile }}
       containers:
         - name: {{ .Chart.Name }}-config-worker
           securityContext:
@@ -79,6 +81,8 @@ spec:
               value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.tektonPluginConfigFile }}"
             - name: CROSSPLANE_PLUGIN_CONFIG_FILE
               value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.crossplanePluginConfigFile }}"
+            - name: CROSSPLANE_PROVIDER_PLUGIN_CONFIG_FILE
+              value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.crossplaneProviderPluginConfigFile }}"
             - name: CASSANDRA_USERNAME
               valueFrom:
                 secretKeyRef:

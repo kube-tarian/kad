@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	crossplaneConfigUseCase string = "tekton"
+	crossplaneConfigUseCase string = "crossplane"
 )
 
 func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpluginspb.RegisterCrossplaneProjectRequest) (
@@ -25,7 +25,7 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 	}
 	a.log.Infof("Register Crossplane Git project %s request recieved", request.Id)
 
-	CrossplaneProject, err := a.as.GetCrossplaneProjectForID(request.Id)
+	crossplaneProject, err := a.as.GetCrossplaneProjectForID(request.Id)
 	if err != nil {
 		a.log.Infof("failed to get git project %s, %v", request.Id, err)
 		return &captenpluginspb.RegisterCrossplaneProjectResponse{
@@ -34,17 +34,17 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 		}, nil
 	}
 
-	if CrossplaneProject.Status != string(model.CrossplaneProjectConfigurationFailed) &&
-		CrossplaneProject.Status != string(model.CrossplaneProjectAvailable) {
-		a.log.Infof("currently the Crossplane project configuration on-going %s, %v", request.Id, CrossplaneProject.Status)
+	if crossplaneProject.Status != string(model.CrossplaneProjectConfigurationFailed) &&
+		crossplaneProject.Status != string(model.CrossplaneProjectAvailable) {
+		a.log.Infof("currently the Crossplane project configuration on-going %s, %v", request.Id, crossplaneProject.Status)
 		return &captenpluginspb.RegisterCrossplaneProjectResponse{
 			Status:        captenpluginspb.StatusCode_OK,
 			StatusMessage: "Crossplane configuration on-going",
 		}, nil
 	}
 
-	CrossplaneProject.Status = string(model.CrossplaneProjectConfigurationOngoing)
-	if err := a.as.UpsertCrossplaneProject(CrossplaneProject); err != nil {
+	crossplaneProject.Status = string(model.CrossplaneProjectConfigurationOngoing)
+	if err := a.as.UpsertCrossplaneProject(crossplaneProject); err != nil {
 		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
 		return &captenpluginspb.RegisterCrossplaneProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -52,8 +52,17 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 		}, err
 	}
 
+	providers, err := a.GetProviderInfo()
+	if err != nil {
+		a.log.Errorf("failed to fetch provider info, %v", err)
+		return &captenpluginspb.RegisterCrossplaneProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to fetch provider info",
+		}, err
+	}
+
 	// start the config-worker routine
-	go a.configureCrossplaneGitRepo(CrossplaneProject)
+	go a.configureCrossplaneGitRepo(crossplaneProject, providers)
 
 	a.log.Infof("Crossplane Git project %s registration triggerred", request.Id)
 	return &captenpluginspb.RegisterCrossplaneProjectResponse{
@@ -126,9 +135,9 @@ func (a *Agent) UnRegisterCrossplaneProject(ctx context.Context, request *capten
 	}, nil
 }
 
-func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject) {
+func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, providers []model.CrossplaneProvider) {
 	ci := captenmodel.UseCase{Type: crossplaneConfigUseCase, RepoURL: req.GitProjectUrl,
-		VaultCredIdentifier: req.Id, PushToDefaultBranch: !a.createPr}
+		VaultCredIdentifier: req.Id, PushToDefaultBranch: !a.createPr, ProviderInfo: providers}
 	wd := workers.NewConfig(a.tc, a.log)
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: crossplaneConfigUseCase}, ci)
@@ -182,4 +191,22 @@ func (a *Agent) monitorCrossplaneWorkflow(req *model.CrossplaneProject, wkfId st
 	}
 
 	a.log.Infof("Crossplane Git project %s monitoring completed", req.Id)
+}
+
+func (a *Agent) GetProviderInfo() (providers []model.CrossplaneProvider, err error) {
+	crossplaneProviders, err := a.as.GetCrossplaneProviders()
+	if err != nil {
+		return nil, err
+	}
+	for _, crossplaneProvider := range crossplaneProviders {
+		crossplaneProviderObj := model.CrossplaneProvider{
+			Id:              crossplaneProvider.GetId(),
+			CloudType:       crossplaneProvider.GetCloudType(),
+			ProviderName:    crossplaneProvider.GetProviderName(),
+			CloudProviderId: crossplaneProvider.GetCloudProviderId(),
+			Status:          crossplaneProvider.GetStatus(),
+		}
+		providers = append(providers, crossplaneProviderObj)
+	}
+	return
 }

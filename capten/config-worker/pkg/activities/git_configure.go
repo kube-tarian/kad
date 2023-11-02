@@ -29,7 +29,11 @@ func NewHandleGit() (*HandleGit, error) {
 		return nil, err
 	}
 
-	pluginConfig, err := NewPluginExtractor(config.TektonPluginConfig, config.CrossPlanePluginConfig)
+	pluginConfig, err := NewPluginExtractor(
+		config.TektonPluginConfig,
+		config.CrossPlanePluginConfig,
+		config.CrossPlaneProviderPluginConfig,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +72,13 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 		err = hg.configureCICD(ctx, req, hg.pluginConfig.tektonGetGitRepo(),
 			hg.pluginConfig.tektonGetGitConfigPath(), cred["accessToken"])
 	case CrossPlane:
-		err = hg.configureCICD(ctx, req, hg.pluginConfig.crossplaneGetGitRepo(),
-			hg.pluginConfig.crossplaneGetGitConfigPath(), cred["accessToken"])
+		if err = hg.configureCICD(ctx, req, hg.pluginConfig.crossplaneGetGitRepo(),
+			hg.pluginConfig.crossplaneGetGitConfigPath(), cred["accessToken"]); err != nil {
+			fmt.Println("ERROR while configureCICD: ", err)
+			return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed)}, err
+		}
+		err = hg.configureCrossplaneProvider(ctx, req,
+			hg.pluginConfig.crossplaneGetConfigMainApp(), cred["accessToken"])
 	}
 	// Once we finalize what needs to be replaced then we can come and work here.
 
