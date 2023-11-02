@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
@@ -184,4 +185,19 @@ func (a *Agent) deleteProjectFromArgoCD(ctx context.Context, projectUrl string) 
 		return err
 	}
 	return nil
+}
+
+func (a *Agent) isProjectRegisteredWithArgoCD(ctx context.Context, projectUrl string) (bool, error) {
+	argocdClient, err := argocd.NewClient(&logging.Logging{})
+	if err != nil {
+		return false, err
+	}
+	_, err = argocdClient.GetRepository(ctx, projectUrl)
+	if err != nil && fmt.Sprintf("rpc error: code = NotFound desc = repo '%s' not found", projectUrl) == err.Error() {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
