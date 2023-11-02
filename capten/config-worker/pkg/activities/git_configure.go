@@ -84,7 +84,6 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 }
 
 func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, templateRepo, pathInRepo, mainApp, token string) error {
-	logger.Info("TOKEN: ", templateRepo, pathInRepo, mainApp, token)
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
 	if !ok {
@@ -132,10 +131,6 @@ func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, t
 		return fmt.Errorf("failed to get default branch of user repo, err: %v", err)
 	}
 
-	if params.PushToDefaultBranch {
-		localBranchName = defaultBranch
-	}
-
 	if !params.PushToDefaultBranch {
 		_, err = createPR(ctx, params.RepoURL, branchName+"-"+params.Type, defaultBranch, token)
 		if err != nil {
@@ -147,6 +142,8 @@ func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, t
 		return nil
 	}
 
+	localBranchName = defaultBranch
+
 	if err := configPlugin.Push(localBranchName, token); err != nil {
 		return fmt.Errorf("failed to get push to default branch, err: %v", err)
 	}
@@ -156,7 +153,8 @@ func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, t
 		return fmt.Errorf("failed to initalize k8s client: %v", err)
 	}
 
-	err = k8sclient.DynamicClient.CreateResource(ctx, filepath.Join(reqRepo, mainApp))
+	// For the testing change the reqrepo to template one
+	err = k8sclient.DynamicClient.CreateResource(ctx, filepath.Join(templateDir, mainApp))
 	if err != nil {
 		return fmt.Errorf("failed to create the k8s custom resource: %v", err)
 	}
