@@ -185,3 +185,15 @@ func (a *Agent) deleteProjectFromArgoCD(ctx context.Context, projectUrl string) 
 	}
 	return nil
 }
+
+func (a *Agent) isProjectRegisteredWithArgoCD(ctx context.Context, projectUrl string) (bool, error) {
+	argocdClient, err := argocd.NewClient(&logging.Logging{})
+	if err != nil {
+		return false, err
+	}
+	_, err = argocdClient.GetRepository(ctx, projectUrl)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

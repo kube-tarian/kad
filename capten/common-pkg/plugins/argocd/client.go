@@ -288,3 +288,20 @@ func (a *ArgoCDCLient) DeleteRepository(ctx context.Context, repo string) (*repo
 
 	return resp, nil
 }
+
+func (a *ArgoCDCLient) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error) {
+	conn, appClient, err := a.client.NewRepoClient()
+	if err != nil {
+		return nil, err
+	}
+	defer io.Close(conn)
+
+	encodedRepo := url.QueryEscape(repo)
+
+	repository, err := appClient.Get(ctx, &repository.RepoQuery{Repo: encodedRepo})
+	if err != nil {
+		return nil, err
+	}
+
+	return repository, nil
+}
