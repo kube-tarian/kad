@@ -35,6 +35,8 @@ service capten_plugins {
     rpc RegisterCrossplaneProject(RegisterCrossplaneProjectRequest) returns (RegisterCrossplaneProjectResponse) {}
     rpc GetCrossplaneProject(GetCrossplaneProjectsRequest) returns (GetCrossplaneProjectsResponse) {}
     rpc UnRegisterCrossplaneProject(UnRegisterCrossplaneProjectRequest) returns (UnRegisterCrossplaneProjectResponse) {}
+
+    rpc GetManagedClusters(GetManagedClustersRequest) returns (GetManagedClustersResponse) {}
 }
 
 enum StatusCode {
@@ -338,4 +340,22 @@ message GetCrossplaneProjectsResponse {
     StatusCode status = 1;
     string statusMessage = 2;
     CrossplaneProject project = 3;
+}
+
+message ManagedCluster {
+    string id = 1;
+    string clusterName = 2;
+    string clusterEndpoint = 3;
+    string clusterDeployStatus = 4;
+    string appDeployStatus = 5;
+    string lastUpdateTime = 6;
+}
+
+message GetManagedClustersRequest {
+}
+
+message GetManagedClustersResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+    repeated ManagedCluster clusters = 3;
 }
