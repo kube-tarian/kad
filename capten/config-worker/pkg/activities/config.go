@@ -11,7 +11,6 @@ import (
 
 type tektonPluginDS map[string]string
 type crossplanePluginDS map[string]string
-type crossplaneProviderPluginDS map[string]string
 
 type Config struct {
 	GitDefaultCommiterName  string `envconfig:"GIT_COMMIT_NAME" default:"capten-bot"`
@@ -51,21 +50,6 @@ func ReadCrossPlanePluginConfig(pluginFile string) (crossplanePluginDS, error) {
 	}
 
 	var pluginData crossplanePluginDS
-	err = json.Unmarshal(data, &pluginData)
-	if err != nil {
-		return nil, fmt.Errorf("%w", err)
-	}
-
-	return pluginData, nil
-}
-
-func ReadCrossPlaneProviderPluginConfig(pluginFile string) (crossplaneProviderPluginDS, error) {
-	data, err := os.ReadFile(filepath.Clean(pluginFile))
-	if err != nil {
-		return nil, fmt.Errorf("failed to read pluginConfig File: %s, err: %w", pluginFile, err)
-	}
-
-	var pluginData crossplaneProviderPluginDS
 	err = json.Unmarshal(data, &pluginData)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
