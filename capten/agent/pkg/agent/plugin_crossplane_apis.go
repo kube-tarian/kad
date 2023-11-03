@@ -52,15 +52,39 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 		}, err
 	}
 
+	if ok, err := a.isProjectRegisteredWithArgoCD(ctx, crossplaneProject.GitProjectUrl); !ok && err == nil {
+		accessToken, userID, err := a.getGitProjectCredential(ctx, request.Id)
+		if err != nil {
+			a.log.Errorf("failed to get credential, %v", err)
+			return &captenpluginspb.RegisterCrossplaneProjectResponse{
+				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "Error occured while fetching Crossplane git project AccessToken and User Id",
+			}, nil
+		}
+
+		if err := a.addProjectToArgoCD(ctx, crossplaneProject.GitProjectUrl, userID, accessToken); err != nil {
+			a.log.Errorf("failed to add Repository to ArgoCD : %v ", err)
+			return &captenpluginspb.RegisterCrossplaneProjectResponse{
+				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "Error occured while adding Crossplane Repository to ArgoCD",
+			}, err
+		}
+	} else if err != nil {
+		a.log.Errorf("failed to add Repository to ArgoCD : %v ", err)
+		return &captenpluginspb.RegisterCrossplaneProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "Failed to check weather Crossplane Repository is added to ArgoCD or not",
+		}, err
+	}
+
 	providers, err := a.GetCrossplaneProviders()
 	if err != nil {
 		a.log.Errorf("failed to fetch provider info, %v", err)
 		return &captenpluginspb.RegisterCrossplaneProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch provider info",
-		}, err
+		}, nil
 	}
-
 	// start the config-worker routine
 	go a.configureCrossplaneGitRepo(crossplaneProject, providers)
 
