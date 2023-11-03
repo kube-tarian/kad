@@ -53,7 +53,7 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 	}
 
 	if ok, err := a.isProjectRegisteredWithArgoCD(ctx, crossplaneProject.GitProjectUrl); !ok && err == nil {
-		accessToken, userID, err := a.getGitProjectCredential(ctx, request.Id)
+		accessToken, userID, err := a.getGitProjectCredential(ctx, crossplaneProject.GitProjectId)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.RegisterCrossplaneProjectResponse{
@@ -161,7 +161,7 @@ func (a *Agent) UnRegisterCrossplaneProject(ctx context.Context, request *capten
 
 func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, providers []model.CrossplaneProvider) {
 	ci := captenmodel.CrossplaneUseCase{Type: crossplaneConfigUseCase, RepoURL: req.GitProjectUrl,
-		VaultCredIdentifier: req.Id, PushToDefaultBranch: !a.createPr, CrossplaneProviders: providers}
+		VaultCredIdentifier: req.GitProjectId, PushToDefaultBranch: !a.createPr, CrossplaneProviders: providers}
 	wd := workers.NewConfig(a.tc, a.log)
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: crossplaneConfigUseCase}, ci)
