@@ -16,14 +16,14 @@ func TestCreatefiles(t *testing.T) {
 func createDirAndFiles(t *testing.T) string {
 	dir := t.TempDir()
 	configMap := map[string]string{
-		"aws_package":   "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.44.0",
-		"azure_package": "xpkg.upbound.io/crossplane-contrib/provider-azure:v0.44.0",
+		"aws_package":   "dummy.io/crossplane-contrib/provider-aws:v1.1.1",
+		"azure_package": "dummy.io/crossplane-contrib/provider-azure:v1.1.1",
 	}
 	pathInRepo := "configs"
 	retDir := dir
 	dir = filepath.Join(dir, pathInRepo)
-	params := &model.UseCase{CrossplaneProviders: dummyProviderInfo()}
-	if err := createFiles(dir, params, configMap); err != nil {
+	params := &model.CrossplaneUseCase{CrossplaneProviders: dummyProviderInfo()}
+	if err := createProviderConfigs(dir, params, configMap); err != nil {
 		t.Fatal(err)
 	}
 	return retDir

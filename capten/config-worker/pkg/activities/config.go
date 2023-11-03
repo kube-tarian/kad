@@ -14,13 +14,13 @@ type crossplanePluginDS map[string]string
 type crossplaneProviderPluginDS map[string]string
 
 type Config struct {
-	GitDefaultCommiterName         string `envconfig:"GIT_COMMIT_NAME" default:"capten-bot"`
-	GitDefaultCommiterEmail        string `envconfig:"GIT_COMMIT_EMAIL" default:"capten-bot@intelops.dev"`
-	VaultEntityName                string `envconfig:"VAULT_ENTITY_NAME" default:"gitproject"`
-	GitCLoneDir                    string `envconfig:"GIT_CLONE_DIR" default:"/gitCloneDir"`
-	TektonPluginConfig             string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
-	CrossPlanePluginConfig         string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
-	CrossPlaneProviderPluginConfig string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_provider_plugin_config.json"`
+	GitDefaultCommiterName  string `envconfig:"GIT_COMMIT_NAME" default:"capten-bot"`
+	GitDefaultCommiterEmail string `envconfig:"GIT_COMMIT_EMAIL" default:"capten-bot@intelops.dev"`
+	VaultEntityName         string `envconfig:"VAULT_ENTITY_NAME" default:"gitproject"`
+	GitCLoneDir             string `envconfig:"GIT_CLONE_DIR" default:"/gitCloneDir"`
+	TektonPluginConfig      string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
+	CrossPlanePluginConfig  string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
+	CreatePr                bool   `envconfig:"CREATE_PR" default:"false"`
 }
 
 func GetConfig() (*Config, error) {

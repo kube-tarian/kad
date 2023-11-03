@@ -1,5 +1,8 @@
 {
     "git_repo": "https://github.com/intelops/capten-templates",
     "git_config_path": "infra/crossplane",
-    "configure_main_app": "infra/crossplane/crossplane-main-app.yaml"
+    "configure_main_app": "infra/crossplane/crossplane-main-app.yaml",
+    "aws_package": "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0",
+    "azure_package": "",
+    "gcp_package": ""
 }

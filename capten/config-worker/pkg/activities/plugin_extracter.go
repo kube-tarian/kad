@@ -6,7 +6,7 @@ type PluginConfigExtractor struct {
 	crossplaneProviderPluginData crossplaneProviderPluginDS
 }
 
-func NewPluginExtractor(tektonFileName, crossplaneFilename, crossplaneProviderFilename string) (*PluginConfigExtractor, error) {
+func NewPluginExtractor(tektonFileName, crossplaneFilename string) (*PluginConfigExtractor, error) {
 	pluginInfo, err := ReadTektonPluginConfig(tektonFileName)
 	if err != nil {
 		return nil, err
@@ -17,15 +17,9 @@ func NewPluginExtractor(tektonFileName, crossplaneFilename, crossplaneProviderFi
 		return nil, err
 	}
 
-	cproviderpluginInfo, err := ReadCrossPlaneProviderPluginConfig(crossplaneProviderFilename)
-	if err != nil {
-		return nil, err
-	}
-
 	return &PluginConfigExtractor{
-		tektonPluginData:             pluginInfo,
-		crossPlanePluginData:         cpluginInfo,
-		crossplaneProviderPluginData: cproviderpluginInfo,
+		tektonPluginData:     pluginInfo,
+		crossPlanePluginData: cpluginInfo,
 	}, nil
 }
 
@@ -59,8 +53,6 @@ func (pc *PluginConfigExtractor) GetPluginMap(plugin string) map[string]string {
 		return pc.tektonPluginData
 	case CrossPlane:
 		return pc.crossPlanePluginData
-	case CrossPlaneProvider:
-		return pc.crossplaneProviderPluginData
 	default:
 		return map[string]string{}
 	}

@@ -128,10 +128,3 @@ type CrossplaneProvider struct {
 	CloudProviderId string `json:"cloud_provider_id,omitempty"`
 	Status          string `json:"status,omitempty"`
 }
-
-type CloudProvider struct {
-	Id             string            `json:"id,omitempty"`
-	CloudType      string            `json:"cloud_type,omitempty"`
-	LastUpdateTime string            `json:"last_update_time,omitempty"`
-	CloudAtributes map[string]string `json:"cloud_attributes"`
-}

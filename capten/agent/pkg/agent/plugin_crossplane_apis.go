@@ -52,7 +52,7 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 		}, err
 	}
 
-	providers, err := a.GetProviderInfo()
+	providers, err := a.GetCrossplaneProviders()
 	if err != nil {
 		a.log.Errorf("failed to fetch provider info, %v", err)
 		return &captenpluginspb.RegisterCrossplaneProjectResponse{
@@ -136,7 +136,7 @@ func (a *Agent) UnRegisterCrossplaneProject(ctx context.Context, request *capten
 }
 
 func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, providers []model.CrossplaneProvider) {
-	ci := captenmodel.UseCase{Type: crossplaneConfigUseCase, RepoURL: req.GitProjectUrl,
+	ci := captenmodel.CrossplaneUseCase{Type: crossplaneConfigUseCase, RepoURL: req.GitProjectUrl,
 		VaultCredIdentifier: req.Id, PushToDefaultBranch: !a.createPr, CrossplaneProviders: providers}
 	wd := workers.NewConfig(a.tc, a.log)
 
@@ -193,7 +193,7 @@ func (a *Agent) monitorCrossplaneWorkflow(req *model.CrossplaneProject, wkfId st
 	a.log.Infof("Crossplane Git project %s monitoring completed", req.Id)
 }
 
-func (a *Agent) GetProviderInfo() (providers []model.CrossplaneProvider, err error) {
+func (a *Agent) GetCrossplaneProviders() (providers []model.CrossplaneProvider, err error) {
 	crossplaneProviders, err := a.as.GetCrossplaneProviders()
 	if err != nil {
 		return nil, err

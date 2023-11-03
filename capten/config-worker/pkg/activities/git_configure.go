@@ -32,7 +32,6 @@ func NewHandleGit() (*HandleGit, error) {
 	pluginConfig, err := NewPluginExtractor(
 		config.TektonPluginConfig,
 		config.CrossPlanePluginConfig,
-		config.CrossPlaneProviderPluginConfig,
 	)
 	if err != nil {
 		return nil, err
@@ -44,7 +43,7 @@ func NewHandleGit() (*HandleGit, error) {
 func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
 	var err error
 	respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"requested payload is wrong\"}")}
-	req := &model.UseCase{}
+	req := &model.CrossplaneUseCase{}
 	err = json.Unmarshal(payload, req)
 	if err != nil {
 		return respPayload, fmt.Errorf("Wrong payload: %v, recieved for configuring git", payload)
@@ -90,7 +89,7 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 }
 
-func (hg *HandleGit) configureCICD(ctx context.Context, params *model.UseCase, templateRepo, pathInRepo, token string) error {
+func (hg *HandleGit) configureCICD(ctx context.Context, params *model.CrossplaneUseCase, templateRepo, pathInRepo, token string) error {
 	gitPlugin := getCICDPlugin()
 	configPlugin, ok := gitPlugin.(workerframework.ConfigureCICD)
 	if !ok {

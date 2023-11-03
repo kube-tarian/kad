@@ -81,8 +81,6 @@ spec:
               value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.tektonPluginConfigFile }}"
             - name: CROSSPLANE_PLUGIN_CONFIG_FILE
               value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.crossplanePluginConfigFile }}"
-            - name: CROSSPLANE_PROVIDER_PLUGIN_CONFIG_FILE
-              value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.crossplaneProviderPluginConfigFile }}"
             - name: CASSANDRA_USERNAME
               valueFrom:
                 secretKeyRef:

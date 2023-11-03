@@ -116,7 +116,6 @@ configWorker:
   pluginConfigDir: "/configs"
   tektonPluginConfigFile: "tekton_plugin_config.json"
   crossplanePluginConfigFile: "crossplane_plugin_config.json"
-  crossplaneProviderPluginConfigFile: "crossplane_provider_plugin_config.json"
 # TODO: attributes to be added
 temporal:
   external: true
