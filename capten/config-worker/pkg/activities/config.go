@@ -11,6 +11,7 @@ import (
 
 type tektonPluginDS map[string]string
 type crossplanePluginDS map[string]string
+type crossplaneProviderPluginDS map[string]string
 
 type Config struct {
 	GitDefaultCommiterName  string `envconfig:"GIT_COMMIT_NAME" default:"capten-bot"`
@@ -19,6 +20,7 @@ type Config struct {
 	GitCLoneDir             string `envconfig:"GIT_CLONE_DIR" default:"/gitCloneDir"`
 	TektonPluginConfig      string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
 	CrossPlanePluginConfig  string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
+	CreatePr                bool   `envconfig:"CREATE_PR" default:"false"`
 }
 
 func GetConfig() (*Config, error) {
@@ -49,6 +51,21 @@ func ReadCrossPlanePluginConfig(pluginFile string) (crossplanePluginDS, error) {
 	}
 
 	var pluginData crossplanePluginDS
+	err = json.Unmarshal(data, &pluginData)
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+
+	return pluginData, nil
+}
+
+func ReadCrossPlaneProviderPluginConfig(pluginFile string) (crossplaneProviderPluginDS, error) {
+	data, err := os.ReadFile(filepath.Clean(pluginFile))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read pluginConfig File: %s, err: %w", pluginFile, err)
+	}
+
+	var pluginData crossplaneProviderPluginDS
 	err = json.Unmarshal(data, &pluginData)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)

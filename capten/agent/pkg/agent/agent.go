@@ -54,11 +54,11 @@ func (a *Agent) Ping(ctx context.Context, request *agentpb.PingRequest) (*agentp
 }
 
 func validateArgs(args ...any) error {
-	for _, arg := range args {
+	for index, arg := range args {
 		switch item := arg.(type) {
 		case string:
 			if len(item) == 0 {
-				return fmt.Errorf("empty string not allowed")
+				return fmt.Errorf("empty string not allowed for arg index: %v", index)
 			}
 		case map[string]string:
 			for k, v := range item {

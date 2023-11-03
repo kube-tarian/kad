@@ -1,8 +1,9 @@
 package activities
 
 type PluginConfigExtractor struct {
-	tektonPluginData     tektonPluginDS
-	crossPlanePluginData crossplanePluginDS
+	tektonPluginData             tektonPluginDS
+	crossPlanePluginData         crossplanePluginDS
+	crossplaneProviderPluginData crossplaneProviderPluginDS
 }
 
 func NewPluginExtractor(tektonFileName, crossplaneFilename string) (*PluginConfigExtractor, error) {
@@ -16,7 +17,10 @@ func NewPluginExtractor(tektonFileName, crossplaneFilename string) (*PluginConfi
 		return nil, err
 	}
 
-	return &PluginConfigExtractor{tektonPluginData: pluginInfo, crossPlanePluginData: cpluginInfo}, nil
+	return &PluginConfigExtractor{
+		tektonPluginData:     pluginInfo,
+		crossPlanePluginData: cpluginInfo,
+	}, nil
 }
 
 func (pc *PluginConfigExtractor) tektonGetGitRepo() string {
@@ -41,4 +45,15 @@ func (pc *PluginConfigExtractor) crossplaneGetGitConfigPath() string {
 
 func (pc *PluginConfigExtractor) crossplaneGetConfigMainApp() string {
 	return pc.crossPlanePluginData[ConfigMainApp]
+}
+
+func (pc *PluginConfigExtractor) GetPluginMap(plugin string) map[string]string {
+	switch plugin {
+	case Tekton:
+		return pc.tektonPluginData
+	case CrossPlane:
+		return pc.crossPlanePluginData
+	default:
+		return map[string]string{}
+	}
 }

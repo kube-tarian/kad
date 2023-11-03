@@ -1,5 +1,7 @@
 package model
 
+import "github.com/kube-tarian/kad/capten/agent/pkg/model"
+
 // AgentRequest defines model for AgentRequest.
 type AgentRequest struct {
 	CustomerId string `json:"customer_id"`
@@ -98,6 +100,16 @@ type UseCase struct {
 	Timeout             uint32            `json:"Timeout,omitempty"`
 	OverrideValues      map[string]string `json:"OverrideValues,omitempty"`
 	PushToDefaultBranch bool              `json:"PushToDefaultBranch,omitempty"`
+}
+
+type CrossplaneUseCase struct {
+	Type                string                     `json:"Type,omitempty"`
+	RepoURL             string                     `json:"RepoURL,omitempty"`
+	VaultCredIdentifier string                     `json:"VaultCredIdentifier,omitempty"`
+	Timeout             uint32                     `json:"Timeout,omitempty"`
+	OverrideValues      map[string]string          `json:"OverrideValues,omitempty"`
+	PushToDefaultBranch bool                       `json:"PushToDefaultBranch,omitempty"`
+	CrossplaneProviders []model.CrossplaneProvider `json:"ProviderInfo,omitempty"`
 }
 
 // ProjectDeleteRequest defines model for ProjectDeleteRequest.
