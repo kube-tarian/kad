@@ -50,7 +50,7 @@ func (ca *ConfigureApp) getAccessToken(ctx context.Context, credId string) (stri
 func (ca *ConfigureApp) cloneRepos(ctx context.Context, templateRepo, customerRepo, token string) (templateDir string,
 	reqRepo string, err error) {
 	// Clone the template repo
-	templateDir, err = os.MkdirTemp(ca.config.GitCLoneDir, tmpCloneStr)
+	templateDir, err = os.MkdirTemp(ca.config.GitCloneDir, tmpCloneStr)
 	if err != nil {
 		err = fmt.Errorf("failed to create template tmp dir, err: %v", err)
 		return
@@ -63,7 +63,7 @@ func (ca *ConfigureApp) cloneRepos(ctx context.Context, templateRepo, customerRe
 		return
 	}
 
-	reqRepo, err = os.MkdirTemp(ca.config.GitCLoneDir, tmpCloneStr)
+	reqRepo, err = os.MkdirTemp(ca.config.GitCloneDir, tmpCloneStr)
 	if err != nil {
 		os.RemoveAll(templateDir)
 		err = fmt.Errorf("failed to create tmp dir for user repo, err: %v", err)
@@ -114,7 +114,6 @@ func (ca *ConfigureApp) addToGit(ctx context.Context, paramType, repoUrl, token 
 		}
 
 		logger.Info("skiping push to default branch.")
-
 		return nil
 	}
 

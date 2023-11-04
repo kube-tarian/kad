@@ -24,7 +24,7 @@ func (a *Activities) ConfigurationActivity(ctx context.Context, params model.Con
 		return handleRepository(ctx, params, payload)
 	case "project":
 		return handleProject(ctx, params, payload)
-	case CrossPlane:
+	case crossPlaneUsecase:
 		config, err := NewCrossPlaneApp()
 		if err != nil {
 			return model.ResponsePayload{

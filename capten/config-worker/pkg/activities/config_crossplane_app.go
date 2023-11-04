@@ -6,15 +6,27 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	agentmodel "github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/model"
 	"github.com/otiai10/copy"
 )
 
+const (
+	tektonUsecase     = "tekton"
+	crossPlaneUsecase = "crossplane"
+
+	crossPlaneGitRepoAttribute               = "git_repo"
+	crossPlaneSyncjConfigPathAttribute       = "synch_config_path"
+	crossPlaneProviderConfigPathAttribute    = "provider_config_path"
+	crossPlaneProviderConfigMainAppAttribute = "provider_config_main_app"
+	tmpCloneStr                              = "clone*"
+)
+
 type CrossPlaneApp struct {
 	*ConfigureApp
-	data crossplanePluginDS
+	pluginConfig crossplanePluginConfig
 }
 
 func NewCrossPlaneApp() (*CrossPlaneApp, error) {
@@ -23,37 +35,22 @@ func NewCrossPlaneApp() (*CrossPlaneApp, error) {
 		return nil, err
 	}
 
-	cpluginInfo, err := ReadCrossPlanePluginConfig(baseConfigureApp.config.CrossPlanePluginConfig)
+	pluginConfig, err := readCrossPlanePluginConfig(baseConfigureApp.config.CrossPlanePluginConfig)
 	if err != nil {
 		return nil, err
 	}
-	return &CrossPlaneApp{data: cpluginInfo, ConfigureApp: baseConfigureApp}, err
-}
-
-func (pc *CrossPlaneApp) GetConfigMainApp() string {
-	return pc.data[ConfigMainApp]
-}
-
-func (pc *CrossPlaneApp) GetGitRepo() string {
-	return pc.data[GitRepo]
-}
-
-func (pc *CrossPlaneApp) GetGitConfigPath() string {
-	return pc.data[GitConfigPath]
-}
-
-func (pc *CrossPlaneApp) GetMap() map[string]string {
-	return map[string]string{}
+	return &CrossPlaneApp{pluginConfig: pluginConfig, ConfigureApp: baseConfigureApp}, err
 }
 
 func (cp *CrossPlaneApp) updateConfigs(params *model.CrossplaneUseCase, templateDir, reqRepo string) error {
-	err := createProviderConfigs(filepath.Join(templateDir, cp.GetGitConfigPath()), params,
-		cp.GetMap())
+	providerConfigPath := cp.pluginConfig[crossPlaneProviderConfigPathAttribute]
+	err := cp.createProviderConfigs(filepath.Join(templateDir, providerConfigPath), params)
 	if err != nil {
 		return fmt.Errorf("failed to create provider config, %v", err)
 	}
 
-	err = copy.Copy(filepath.Join(templateDir, cp.GetGitConfigPath()), filepath.Join(reqRepo, cp.GetGitConfigPath()),
+	synchConfigPath := cp.pluginConfig[crossPlaneSyncjConfigPathAttribute]
+	err = copy.Copy(filepath.Join(templateDir, synchConfigPath), filepath.Join(reqRepo, synchConfigPath),
 		copy.Options{
 			OnDirExists: func(src, dest string) copy.DirExistsAction {
 				return copy.Replace
@@ -78,7 +75,7 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 		return respPayload, nil
 	}
 
-	templateRepo, customerRepo, err := cp.cloneRepos(ctx, cp.GetGitRepo(), req.RepoURL, accessToken)
+	templateRepo, customerRepo, err := cp.cloneRepos(ctx, cp.pluginConfig[crossPlaneGitRepoAttribute], req.RepoURL, accessToken)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to clone repos\"}")}
 		return respPayload, err
@@ -104,7 +101,7 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 		return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 	}
 
-	err = cp.deployMainApp(ctx, filepath.Join(customerRepo, cp.GetConfigMainApp()))
+	err = cp.deployMainApp(ctx, filepath.Join(customerRepo, cp.pluginConfig[crossPlaneProviderConfigMainAppAttribute]))
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to deploy main app\"}")}
 		return respPayload, err
@@ -113,46 +110,49 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 }
 
-func createProviderConfigs(dir string, params *model.CrossplaneUseCase, pluginMap map[string]string) error {
+func (cp *CrossPlaneApp) createProviderConfigs(dir string, params *model.CrossplaneUseCase) error {
+	logger.Infof("processing %d crossplane providers to generate provider config", len(params.CrossplaneProviders))
 	for _, provider := range params.CrossplaneProviders {
-		cloudType := provider.CloudType
-		providerFile := filepath.Join(dir, fmt.Sprintf("%s-provider.yaml", cloudType))
+		providerName := strings.ToLower(provider.ProviderName)
+		providerFile := filepath.Join(dir, fmt.Sprintf("%s-provider.yaml", providerName))
 		dir := filepath.Dir(providerFile)
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			return fmt.Errorf("err while creating directories: %v", dir)
+			return fmt.Errorf("failed to create dir %s, %v", dir, err)
 		}
 
 		file, err := os.Create(providerFile)
 		if err != nil {
-			return fmt.Errorf("err while creating file for provider: %v", err)
+			return fmt.Errorf("failed to create file %s, %v", providerFile, err)
 		}
+		defer file.Close()
 
-		providerConfigString, err := createProviderCrdString(provider, params, pluginMap)
+		providerConfigString, err := cp.createProviderConfigResource(provider, params)
 		if err != nil {
-			return fmt.Errorf("createProviderConfigs: err createProviderCrdString: %v", err)
+			return fmt.Errorf("failed prepare provider %s config: %v", providerName, err)
 		}
 
 		if _, err := file.WriteString(providerConfigString); err != nil {
-			return fmt.Errorf("err while writing to controllerconfig: %v", err)
+			return fmt.Errorf("failed to write provider %s config to %s, %v", providerName, providerFile, err)
 		}
-
-		file.Close()
+		logger.Infof("crossplane provider %s config written to %s", providerName, providerFile)
 	}
 	return nil
 }
 
-func createProviderCrdString(provider agentmodel.CrossplaneProvider, params *model.CrossplaneUseCase, pluginMap map[string]string) (string, error) {
-	cloudType := provider.CloudType
-	pkg, found := pluginMap[fmt.Sprintf("%s_package", cloudType)]
+func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.CrossplaneProvider, params *model.CrossplaneUseCase) (string, error) {
+	cloudType := strings.ToLower(provider.CloudType)
+	providerName := strings.ToLower(provider.ProviderName)
+	packageAttribute := fmt.Sprintf("%s_package", cloudType)
+	pkg, found := cp.pluginConfig[packageAttribute]
 	if !found {
-		return "", fmt.Errorf("plugin package not found for cloudType: %s", cloudType)
+		return "", fmt.Errorf("plugin package attribute %s not found", packageAttribute)
 	}
 
 	secretPath := fmt.Sprintf("generic/CloudProvider/%s", provider.CloudProviderId)
 	providerConfigString := fmt.Sprintf(
 		crossplaneProviderTemplate,
-		cloudType, secretPath, secretPath,
-		cloudType, pkg, cloudType,
+		providerName, secretPath, secretPath,
+		providerName, pkg, providerName,
 	)
 	return providerConfigString, nil
 }
