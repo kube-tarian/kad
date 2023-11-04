@@ -47,7 +47,8 @@ func (ca *ConfigureApp) getAccessToken(ctx context.Context, credId string) (stri
 	return cred[accessToken], nil
 }
 
-func (ca *ConfigureApp) cloneRepos(ctx context.Context, templateRepo, customerRepo, token string) (templateDir string, reqRepo string, err error) {
+func (ca *ConfigureApp) cloneRepos(ctx context.Context, templateRepo, customerRepo, token string) (templateDir string,
+	reqRepo string, err error) {
 	// Clone the template repo
 	templateDir, err = os.MkdirTemp(ca.config.GitCLoneDir, tmpCloneStr)
 	if err != nil {
@@ -106,7 +107,7 @@ func (ca *ConfigureApp) addToGit(ctx context.Context, paramType, repoUrl, token 
 		return fmt.Errorf("failed to get default branch of user repo, err: %v", err)
 	}
 
-	if createPr {
+	if !createPr {
 		_, err = ca.createPR(ctx, repoUrl, branchName+"-"+paramType, defaultBranch, token)
 		if err != nil {
 			return fmt.Errorf("failed to create the PR on user repo, err: %v", err)

@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
@@ -35,7 +36,8 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 	}
 
 	if crossplaneProject.Status != string(model.CrossplaneProjectConfigurationFailed) &&
-		crossplaneProject.Status != string(model.CrossplaneProjectAvailable) {
+		crossplaneProject.Status != string(model.CrossplaneProjectAvailable) &&
+		crossplaneProject.Status != string(model.CrossplaneProjectConfigured) {
 		a.log.Infof("currently the Crossplane project configuration on-going %s, %v", request.Id, crossplaneProject.Status)
 		return &captenpluginspb.RegisterCrossplaneProjectResponse{
 			Status:        captenpluginspb.StatusCode_OK,
@@ -85,9 +87,8 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 			StatusMessage: "failed to fetch provider info",
 		}, nil
 	}
-	// start the config-worker routine
-	go a.configureCrossplaneGitRepo(crossplaneProject, providers)
 
+	a.configureCrossplaneGitRepo(crossplaneProject, providers)
 	a.log.Infof("Crossplane Git project %s registration triggerred", request.Id)
 	return &captenpluginspb.RegisterCrossplaneProjectResponse{
 		Status:        captenpluginspb.StatusCode_OK,
@@ -159,7 +160,7 @@ func (a *Agent) UnRegisterCrossplaneProject(ctx context.Context, request *capten
 	}, nil
 }
 
-func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, providers []model.CrossplaneProvider) {
+func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, providers []model.CrossplaneProvider) error {
 	ci := captenmodel.CrossplaneUseCase{Type: crossplaneConfigUseCase, RepoURL: req.GitProjectUrl,
 		VaultCredIdentifier: req.GitProjectId, PushToDefaultBranch: !a.createPr, CrossplaneProviders: providers}
 	wd := workers.NewConfig(a.tc, a.log)
@@ -169,25 +170,24 @@ func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, provide
 		req.Status = string(model.CrossplaneProjectConfigurationFailed)
 		req.WorkflowId = "NA"
 		if err := a.as.UpsertCrossplaneProject(req); err != nil {
-			a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
-			return
+			return fmt.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		}
-		a.log.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectUrl, err)
-		return
+		return fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectUrl, err)
 	}
 
-	a.log.Infof("Crossplane Git project %s config workflow event %s created", wkfId)
+	a.log.Infof("Crossplane Git project %s config workflow %s created", req.GitProjectUrl, wkfId)
 
 	req.Status = string(model.CrossplaneProjectConfigured)
 	req.WorkflowId = wkfId
 	req.WorkflowStatus = string(model.WorkFlowStatusStarted)
 	if err := a.as.UpsertCrossplaneProject(req); err != nil {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
-		return
+		return nil
 	}
 
 	go a.monitorCrossplaneWorkflow(req, wkfId)
-	a.log.Infof("Crossplane Git project %s registration completed", req.Id)
+	a.log.Infof("Crossplane Git project %s registration workflow monitor started", req.GitProjectUrl)
+	return nil
 }
 
 func (a *Agent) monitorCrossplaneWorkflow(req *model.CrossplaneProject, wkfId string) {
@@ -205,16 +205,13 @@ func (a *Agent) monitorCrossplaneWorkflow(req *model.CrossplaneProject, wkfId st
 		return
 	}
 
-	a.log.Infof("Monitoring Crossplane Git project %s config workflow event %s created", wkfId)
-
 	req.Status = string(model.CrossplaneProjectConfigured)
 	req.WorkflowStatus = wkfResp.Status
 	if err := a.as.UpsertCrossplaneProject(req); err != nil {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		return
 	}
-
-	a.log.Infof("Crossplane Git project %s monitoring completed", req.Id)
+	a.log.Infof("Crossplane Git project %s config workflow %s completed", req.GitProjectUrl, wkfId)
 }
 
 func (a *Agent) GetCrossplaneProviders() (providers []model.CrossplaneProvider, err error) {

@@ -15,7 +15,7 @@ type Activities struct{}
 var logger = logging.NewLogger()
 
 func (a *Activities) ConfigurationActivity(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
-	logger.Infof("Activity, name: %+v", params.Resource)
+	logger.Infof("Activity: %s, %s", params.Resource, params.Action)
 
 	switch params.Resource {
 	case "cluster":
@@ -29,7 +29,7 @@ func (a *Activities) ConfigurationActivity(ctx context.Context, params model.Con
 		if err != nil {
 			return model.ResponsePayload{
 				Status:  string(agentmodel.WorkFlowStatusFailed),
-				Message: json.RawMessage("{\"error\": \"failed to get Git client\"}"),
+				Message: json.RawMessage("{\"error\": \"failed to initialize crossplane plugin\"}"),
 			}, err
 		}
 		return config.ExecuteSteps(ctx, params, payload)

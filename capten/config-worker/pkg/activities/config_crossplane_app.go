@@ -49,15 +49,18 @@ func (pc *CrossPlaneApp) GetMap() map[string]string {
 func (cp *CrossPlaneApp) updateConfigs(params *model.CrossplaneUseCase, templateDir, reqRepo string) error {
 	err := createProviderConfigs(filepath.Join(templateDir, cp.GetGitConfigPath()), params,
 		cp.GetMap())
+	if err != nil {
+		return fmt.Errorf("failed to create provider config, %v", err)
+	}
+
 	err = copy.Copy(filepath.Join(templateDir, cp.GetGitConfigPath()), filepath.Join(reqRepo, cp.GetGitConfigPath()),
 		copy.Options{
 			OnDirExists: func(src, dest string) copy.DirExistsAction {
 				return copy.Replace
 			}})
 	if err != nil {
-		return fmt.Errorf("failed to copy dir from template to user repo, err: %v", err)
+		return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
 	}
-
 	return nil
 }
 
@@ -66,10 +69,9 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 	err := json.Unmarshal(payload, req)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"requested payload is wrong\"}")}
-		return respPayload, nil
+		return respPayload, err
 	}
 
-	//getAccessToken
 	accessToken, err := cp.getAccessToken(ctx, req.VaultCredIdentifier)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to get token from vault\"}")}
@@ -79,7 +81,7 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 	templateRepo, customerRepo, err := cp.cloneRepos(ctx, cp.GetGitRepo(), req.RepoURL, accessToken)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to clone repos\"}")}
-		return respPayload, nil
+		return respPayload, err
 	}
 
 	defer os.RemoveAll(templateRepo)
@@ -88,13 +90,13 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 	err = cp.updateConfigs(req, templateRepo, customerRepo)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to update configs to repo\"}")}
-		return respPayload, nil
+		return respPayload, err
 	}
 
 	err = cp.addToGit(ctx, req.Type, req.RepoURL, accessToken, req.PushToDefaultBranch)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to add git repo\"}")}
-		return respPayload, nil
+		return respPayload, err
 	}
 
 	if !req.PushToDefaultBranch {
@@ -105,7 +107,7 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 	err = cp.deployMainApp(ctx, filepath.Join(customerRepo, cp.GetConfigMainApp()))
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to deploy main app\"}")}
-		return respPayload, nil
+		return respPayload, err
 	}
 
 	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil

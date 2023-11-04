@@ -34,6 +34,5 @@ func Workflow(ctx workflow.Context, params model.ConfigureParameters, payload js
 	}
 
 	logger.Infof("successfully executed workflow., result: %s", (&result).ToString())
-
 	return result, nil
 }

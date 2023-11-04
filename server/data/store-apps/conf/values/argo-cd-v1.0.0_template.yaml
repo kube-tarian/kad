@@ -17,6 +17,8 @@ server:
       - secretName: argocd-cert
         hosts:
           - argo.{{.DomainName}}
+webhooks:
+  enabled: true
 configs:
   cm:
     url: "https://argocd.{{.DomainName}}"
