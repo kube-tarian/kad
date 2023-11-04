@@ -78,7 +78,7 @@ func (hg *HandleGit) handleGit(ctx context.Context, params model.ConfigureParame
 			return respPayload, fmt.Errorf("err while configureCICD: %v", err)
 		}
 		err = hg.configureCrossplaneProvider(ctx, req,
-			hg.pluginConfig.crossplaneGetConfigMainApp(), cred["accessToken"])
+			hg.pluginConfig.crossplaneGetGitConfigPath(), cred["accessToken"])
 	}
 	// Once we finalize what needs to be replaced then we can come and work here.
 

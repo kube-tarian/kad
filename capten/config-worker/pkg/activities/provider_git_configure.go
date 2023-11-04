@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	model2 "github.com/kube-tarian/kad/capten/agent/pkg/model"
 	"github.com/kube-tarian/kad/capten/model"
 	cp "github.com/otiai10/copy"
 )
 
-func (hg *HandleGit) configureCrossplaneProvider(ctx context.Context, params *model.CrossplaneUseCase, pathInRepo, token string) error {
+func (hg *HandleGit) configureCrossplaneProvider(ctx context.Context, params *model.CrossplaneUseCase, dirPathInRepo, token string) error {
 	gitConfigPlugin := getCICDPlugin()
 
 	// create a dummy directory for creating all the files
@@ -31,23 +32,17 @@ func (hg *HandleGit) configureCrossplaneProvider(ctx context.Context, params *mo
 		return err
 	}
 
-	mapping := hg.pluginConfig.GetPluginMap(CrossPlane)
-	fmt.Printf("MAPPING: %+v\n", mapping)
-
 	if err := createProviderConfigs(
-		filepath.Join(tempDir, pathInRepo),
+		filepath.Join(tempDir, dirPathInRepo),
 		params,
 		hg.pluginConfig.GetPluginMap(CrossPlane)); err != nil {
 		return err
 	}
 
-	fmt.Printf("SRC: %s DEST: %s\n", filepath.Join(tempDir, pathInRepo),
-		filepath.Join(reqRepo, pathInRepo))
-
 	// copy the contents to the cloned repo and if dir exists, then replace it
 	err = cp.Copy(
-		filepath.Join(tempDir, pathInRepo),
-		filepath.Join(reqRepo, pathInRepo),
+		filepath.Join(tempDir, dirPathInRepo),
+		filepath.Join(reqRepo, dirPathInRepo),
 		cp.Options{
 			OnDirExists: func(src, dest string) cp.DirExistsAction {
 				return cp.Replace
@@ -95,7 +90,6 @@ func createProviderConfigs(dir string, params *model.CrossplaneUseCase, pluginMa
 
 		// create and write to files
 		providerFile := filepath.Join(dir, fmt.Sprintf("%s-provider.yaml", cloudType))
-		fmt.Printf("PROVIDER FILE: %v\n", providerFile)
 
 		dir := filepath.Dir(providerFile)
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
@@ -117,7 +111,7 @@ func createProviderConfigs(dir string, params *model.CrossplaneUseCase, pluginMa
 }
 
 func createProviderCrdString(provider model2.CrossplaneProvider, params *model.CrossplaneUseCase, pluginMap map[string]string) (string, error) {
-	cloudType := provider.CloudType
+	cloudType := strings.ToLower(provider.CloudType)
 	pkg, found := pluginMap[fmt.Sprintf("%s_package", cloudType)]
 	if !found {
 		return "", fmt.Errorf("plugin package not found for cloudType: %s", cloudType)
