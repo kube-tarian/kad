@@ -1,9 +1,8 @@
 package activities
 
 type PluginConfigExtractor struct {
-	tektonPluginData             tektonPluginDS
-	crossPlanePluginData         crossplanePluginDS
-	crossplaneProviderPluginData crossplaneProviderPluginDS
+	tektonPluginData     tektonPluginDS
+	crossPlanePluginData crossplanePluginDS
 }
 
 func NewPluginExtractor(tektonFileName, crossplaneFilename string) (*PluginConfigExtractor, error) {

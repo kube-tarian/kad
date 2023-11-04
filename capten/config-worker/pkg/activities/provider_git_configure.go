@@ -31,12 +31,18 @@ func (hg *HandleGit) configureCrossplaneProvider(ctx context.Context, params *mo
 		return err
 	}
 
+	mapping := hg.pluginConfig.GetPluginMap(CrossPlane)
+	fmt.Printf("MAPPING: %+v\n", mapping)
+
 	if err := createProviderConfigs(
 		filepath.Join(tempDir, pathInRepo),
 		params,
 		hg.pluginConfig.GetPluginMap(CrossPlane)); err != nil {
 		return err
 	}
+
+	fmt.Printf("SRC: %s DEST: %s\n", filepath.Join(tempDir, pathInRepo),
+		filepath.Join(reqRepo, pathInRepo))
 
 	// copy the contents to the cloned repo and if dir exists, then replace it
 	err = cp.Copy(
@@ -82,7 +88,15 @@ func (hg *HandleGit) configureCrossplaneProvider(ctx context.Context, params *mo
 func createProviderConfigs(dir string, params *model.CrossplaneUseCase, pluginMap map[string]string) error {
 	for _, provider := range params.CrossplaneProviders {
 		cloudType := provider.CloudType
+		providerConfigString, err := createProviderCrdString(provider, params, pluginMap)
+		if err != nil {
+			return fmt.Errorf("createProviderConfigs: err createProviderCrdString: %v", err)
+		}
+
+		// create and write to files
 		providerFile := filepath.Join(dir, fmt.Sprintf("%s-provider.yaml", cloudType))
+		fmt.Printf("PROVIDER FILE: %v\n", providerFile)
+
 		dir := filepath.Dir(providerFile)
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
 			return fmt.Errorf("err while creating directories: %v", dir)
@@ -91,11 +105,6 @@ func createProviderConfigs(dir string, params *model.CrossplaneUseCase, pluginMa
 		file, err := os.Create(providerFile)
 		if err != nil {
 			return fmt.Errorf("err while creating file for provider: %v", err)
-		}
-
-		providerConfigString, err := createProviderCrdString(provider, params, pluginMap)
-		if err != nil {
-			return fmt.Errorf("createProviderConfigs: err createProviderCrdString: %v", err)
 		}
 
 		if _, err := file.WriteString(providerConfigString); err != nil {
