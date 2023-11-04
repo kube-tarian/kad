@@ -24,15 +24,15 @@ func (a *Activities) ConfigurationActivity(ctx context.Context, params model.Con
 		return handleRepository(ctx, params, payload)
 	case "project":
 		return handleProject(ctx, params, payload)
-	case Tekton, CrossPlane:
-		hg, err := NewHandleGit()
+	case CrossPlane:
+		config, err := NewCrossPlaneApp()
 		if err != nil {
 			return model.ResponsePayload{
 				Status:  string(agentmodel.WorkFlowStatusFailed),
 				Message: json.RawMessage("{\"error\": \"failed to get Git client\"}"),
 			}, err
 		}
-		return hg.handleGit(ctx, params, payload)
+		return config.ExecuteSteps(ctx, params, payload)
 	default:
 		logger.Errorf("unknown resource type: %s in configuration", params.Resource)
 		return model.ResponsePayload{
