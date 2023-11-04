@@ -52,7 +52,7 @@ func getConfigClient(restConfig *rest.Config) (client.Client, error) {
 	return clientObj, nil
 }
 
-func New(logger logging.Logger, namespace string) (ArgoCDController, error) {
+func NewArgoCDClient(logger logging.Logger, namespace string) (ArgoCDController, error) {
 	restConfig, err := GetK8SConfig(logger)
 	if err != nil {
 		return nil, err
