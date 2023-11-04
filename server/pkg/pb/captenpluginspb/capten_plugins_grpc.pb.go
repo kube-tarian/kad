@@ -44,6 +44,7 @@ const (
 	CaptenPlugins_GetCrossplaneProject_FullMethodName        = "/captenpluginspb.capten_plugins/GetCrossplaneProject"
 	CaptenPlugins_UnRegisterCrossplaneProject_FullMethodName = "/captenpluginspb.capten_plugins/UnRegisterCrossplaneProject"
 	CaptenPlugins_GetManagedClusters_FullMethodName          = "/captenpluginspb.capten_plugins/GetManagedClusters"
+	CaptenPlugins_GetManagedClusterKubeconfig_FullMethodName = "/captenpluginspb.capten_plugins/GetManagedClusterKubeconfig"
 )
 
 // CaptenPluginsClient is the client API for CaptenPlugins service.
@@ -75,6 +76,7 @@ type CaptenPluginsClient interface {
 	GetCrossplaneProject(ctx context.Context, in *GetCrossplaneProjectsRequest, opts ...grpc.CallOption) (*GetCrossplaneProjectsResponse, error)
 	UnRegisterCrossplaneProject(ctx context.Context, in *UnRegisterCrossplaneProjectRequest, opts ...grpc.CallOption) (*UnRegisterCrossplaneProjectResponse, error)
 	GetManagedClusters(ctx context.Context, in *GetManagedClustersRequest, opts ...grpc.CallOption) (*GetManagedClustersResponse, error)
+	GetManagedClusterKubeconfig(ctx context.Context, in *GetManagedClusterKubeconfigRequest, opts ...grpc.CallOption) (*GetManagedClusterKubeconfigResponse, error)
 }
 
 type captenPluginsClient struct {
@@ -310,6 +312,15 @@ func (c *captenPluginsClient) GetManagedClusters(ctx context.Context, in *GetMan
 	return out, nil
 }
 
+func (c *captenPluginsClient) GetManagedClusterKubeconfig(ctx context.Context, in *GetManagedClusterKubeconfigRequest, opts ...grpc.CallOption) (*GetManagedClusterKubeconfigResponse, error) {
+	out := new(GetManagedClusterKubeconfigResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_GetManagedClusterKubeconfig_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CaptenPluginsServer is the server API for CaptenPlugins service.
 // All implementations must embed UnimplementedCaptenPluginsServer
 // for forward compatibility
@@ -339,6 +350,7 @@ type CaptenPluginsServer interface {
 	GetCrossplaneProject(context.Context, *GetCrossplaneProjectsRequest) (*GetCrossplaneProjectsResponse, error)
 	UnRegisterCrossplaneProject(context.Context, *UnRegisterCrossplaneProjectRequest) (*UnRegisterCrossplaneProjectResponse, error)
 	GetManagedClusters(context.Context, *GetManagedClustersRequest) (*GetManagedClustersResponse, error)
+	GetManagedClusterKubeconfig(context.Context, *GetManagedClusterKubeconfigRequest) (*GetManagedClusterKubeconfigResponse, error)
 	mustEmbedUnimplementedCaptenPluginsServer()
 }
 
@@ -420,6 +432,9 @@ func (UnimplementedCaptenPluginsServer) UnRegisterCrossplaneProject(context.Cont
 }
 func (UnimplementedCaptenPluginsServer) GetManagedClusters(context.Context, *GetManagedClustersRequest) (*GetManagedClustersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetManagedClusters not implemented")
+}
+func (UnimplementedCaptenPluginsServer) GetManagedClusterKubeconfig(context.Context, *GetManagedClusterKubeconfigRequest) (*GetManagedClusterKubeconfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetManagedClusterKubeconfig not implemented")
 }
 func (UnimplementedCaptenPluginsServer) mustEmbedUnimplementedCaptenPluginsServer() {}
 
@@ -884,6 +899,24 @@ func _CaptenPlugins_GetManagedClusters_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CaptenPlugins_GetManagedClusterKubeconfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetManagedClusterKubeconfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CaptenPluginsServer).GetManagedClusterKubeconfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CaptenPlugins_GetManagedClusterKubeconfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CaptenPluginsServer).GetManagedClusterKubeconfig(ctx, req.(*GetManagedClusterKubeconfigRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CaptenPlugins_ServiceDesc is the grpc.ServiceDesc for CaptenPlugins service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -990,6 +1023,10 @@ var CaptenPlugins_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetManagedClusters",
 			Handler:    _CaptenPlugins_GetManagedClusters_Handler,
+		},
+		{
+			MethodName: "GetManagedClusterKubeconfig",
+			Handler:    _CaptenPlugins_GetManagedClusterKubeconfig_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

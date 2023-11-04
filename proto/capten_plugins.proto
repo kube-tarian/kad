@@ -37,6 +37,7 @@ service capten_plugins {
     rpc UnRegisterCrossplaneProject(UnRegisterCrossplaneProjectRequest) returns (UnRegisterCrossplaneProjectResponse) {}
 
     rpc GetManagedClusters(GetManagedClustersRequest) returns (GetManagedClustersResponse) {}
+    rpc GetManagedClusterKubeconfig(GetManagedClusterKubeconfigRequest) returns (GetManagedClusterKubeconfigResponse) {}
 }
 
 enum StatusCode {
@@ -358,4 +359,14 @@ message GetManagedClustersResponse {
     StatusCode status = 1;
     string statusMessage = 2;
     repeated ManagedCluster clusters = 3;
+}
+
+message GetManagedClusterKubeconfigRequest {
+    string id = 1;
+}
+
+message GetManagedClusterKubeconfigResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+    string kubeconfig = 3;
 }

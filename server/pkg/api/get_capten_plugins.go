@@ -16,8 +16,7 @@ func (s *Server) GetCaptenPlugins(ctx context.Context, request *captenpluginspb.
 			StatusMessage: "request validation failed",
 		}, nil
 	}
-	s.log.Infof("Get Capten Plugins %s request for cluster %s recieved, [org: %s]",
-		clusterId, orgId)
+	s.log.Infof("Get Capten Plugins request for cluster %s recieved, [org: %s]", clusterId, orgId)
 
 	a, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {

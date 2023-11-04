@@ -21,7 +21,7 @@ func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenplugins
 			StatusMessage: "request validation failed",
 		}, nil
 	}
-	a.log.Infof("Add Crossplane Provider %s request recieved", request.CloudProviderId)
+	a.log.Infof("Add Crossplane Provider %s with cloud provider %s request recieved", request.ProviderName, request.CloudProviderId)
 	id := uuid.New()
 	provider := model.CrossplaneProvider{
 		Id:              id.String(),
@@ -114,7 +114,7 @@ func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenplug
 		}, nil
 	}
 
-	a.log.Infof("Update Crossplane Provider %s request recieved", request.Id)
+	a.log.Infof("Update Crossplane Provider %s, %s request recieved", request.Id, request.ProviderName)
 
 	provider := model.CrossplaneProvider{
 		Id:              request.Id,
@@ -132,7 +132,7 @@ func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenplug
 		}, nil
 	}
 
-	a.log.Infof("Crossplane Provider with id %s updated", request.Id)
+	a.log.Infof("Crossplane Provider with id %s, %s updated", request.Id, request.ProviderName)
 	return &captenpluginspb.UpdateCrossplanProviderResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "ok",
