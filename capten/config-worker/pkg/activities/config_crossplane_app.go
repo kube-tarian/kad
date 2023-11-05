@@ -107,9 +107,24 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 		return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 	}
 
-	err = cp.deployMainApp(ctx, filepath.Join(customerRepo, cp.pluginConfig[crossPlaneProviderConfigMainAppAttribute]))
+	ns, resName, err := cp.deployMainApp(ctx, filepath.Join(customerRepo, cp.pluginConfig[crossPlaneProviderConfigMainAppAttribute]))
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to deploy main app\"}")}
+		return respPayload, err
+	}
+
+	// force Sync the app and monitor the status of the app.
+	// then wait for cluster-claims.
+
+	err = cp.syncArgoCDApp(ctx, ns, resName)
+	if err != nil {
+		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to sync argocd app\"}")}
+		return respPayload, err
+	}
+
+	err = cp.waitForArgoCDToSync(ctx, ns, resName)
+	if err != nil {
+		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to fetch argocd app\"}")}
 		return respPayload, err
 	}
 

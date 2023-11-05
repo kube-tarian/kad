@@ -305,3 +305,35 @@ func (a *ArgoCDCLient) GetRepository(ctx context.Context, repo string) (*v1alpha
 
 	return repository, nil
 }
+
+func (a *ArgoCDCLient) TriggerAppSync(ctx context.Context, namespace, name string) (*v1alpha1.Application, error) {
+	conn, app, err := a.client.NewApplicationClient()
+	if err != nil {
+		return nil, err
+	}
+
+	defer conn.Close()
+
+	resp, err := app.Sync(ctx, &application.ApplicationSyncRequest{Name: &name, AppNamespace: &namespace})
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, err
+}
+
+func (a *ArgoCDCLient) GetAppSyncStatus(ctx context.Context, namespace, name string) (*v1alpha1.Application, error) {
+	conn, app, err := a.client.NewApplicationClient()
+	if err != nil {
+		return nil, err
+	}
+
+	defer conn.Close()
+
+	resp, err := app.Get(ctx, &application.ApplicationQuery{Name: &name, AppNamespace: &namespace})
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, err
+}
