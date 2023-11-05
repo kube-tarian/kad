@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
@@ -13,6 +15,8 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/github"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
 	"github.com/pkg/errors"
+
+	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
 )
 
 type ConfigureApp struct {
@@ -80,20 +84,57 @@ func (ca *ConfigureApp) cloneRepos(ctx context.Context, templateRepo, customerRe
 	return
 }
 
-func (ca *ConfigureApp) deployMainApp(ctx context.Context, fileName string) error {
+func (ca *ConfigureApp) deployMainApp(ctx context.Context, fileName string) (string, string, error) {
 	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
 	if err != nil {
-		return fmt.Errorf("failed to initalize k8s client: %v", err)
+		return "", "", fmt.Errorf("failed to initalize k8s client: %v", err)
 	}
 
 	// For the testing change the reqrepo to template one
-	err = k8sclient.DynamicClient.CreateResource(ctx, fileName)
+	ns, resName, err := k8sclient.DynamicClient.CreateResource(ctx, fileName)
 	if err != nil {
-		return fmt.Errorf("failed to create the k8s custom resource: %v", err)
+		return "", "", fmt.Errorf("failed to create the k8s custom resource: %v", err)
+	}
+
+	return ns, resName, nil
+
+}
+
+func (ca *ConfigureApp) syncArgoCDApp(ctx context.Context, ns, resName string) error {
+	client, err := argocd.NewClient(logger)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.TriggerAppSync(ctx, ns, resName)
+	if err != nil {
+		return err
 	}
 
 	return nil
+}
 
+func (ca *ConfigureApp) waitForArgoCDToSync(ctx context.Context, ns, resName string) error {
+	client, err := argocd.NewClient(logger)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < 3; i++ {
+		app, err := client.GetAppSyncStatus(ctx, ns, resName)
+		if err != nil {
+			return err
+		}
+
+		if app.Status.Sync.Status == v1alpha1.SyncStatusCodeSynced {
+			break
+		}
+
+		time.Sleep(30 * time.Second)
+
+	}
+
+	return nil
 }
 
 func (ca *ConfigureApp) addToGit(ctx context.Context, paramType, repoUrl, token string, createPr bool) error {
