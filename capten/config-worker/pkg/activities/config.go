@@ -19,7 +19,6 @@ type Config struct {
 	GitCloneDir             string `envconfig:"GIT_CLONE_DIR" default:"/gitCloneDir"`
 	TektonPluginConfig      string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
 	CrossPlanePluginConfig  string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
-	CreatePr                bool   `envconfig:"CREATE_PR" default:"false"`
 }
 
 func GetConfig() (*Config, error) {

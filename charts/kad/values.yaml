@@ -41,7 +41,6 @@ env:
 service:
   type: ClusterIP
   port: 8080
-  createPr: "true"
 
 vault:
   address: http://vault:8200
@@ -67,6 +66,11 @@ cert:
 extraEnv:
   - name: AUTH_ENABLED
     value: false
+
+crossplane:
+  vaultRole: "vault-role-crossplane"
+  vaultPolicyNames: "vault-policy-generic-cred-admin"
+  namespace: "crossplane-system"
 
 ingress:
   enabled: false
@@ -111,12 +115,12 @@ tolerations: []
 
 affinity: {}
 
-configWorkerGitCloneDir: "/gitCloneDir"
 configWorker:
+  configWorkerGitCloneDir: "/gitCloneDir"
   pluginConfigDir: "/configs"
   tektonPluginConfigFile: "tekton_plugin_config.json"
   crossplanePluginConfigFile: "crossplane_plugin_config.json"
-# TODO: attributes to be added
+
 temporal:
   external: true
   temporalServiceURL: temporal-frontend

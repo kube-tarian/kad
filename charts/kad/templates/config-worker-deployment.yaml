@@ -35,14 +35,12 @@ spec:
           emptyDir: {}
         - name: config-volume
           configMap:
-            name: plugin-config-map
+            name: capten-plugins-config
             items:
               - key: TEKTON_PLUGIN_CONFIG
                 path: {{ .Values.configWorker.tektonPluginConfigFile }}
               - key: CROSSPLANE_PLUGIN_CONFIG
                 path: {{ .Values.configWorker.crossplanePluginConfigFile }}
-              - key: CROSSPLANE_PROVIDER_CONFIG
-                path: {{ .Values.configworker.crossplaneProviderPluginConfigFile }}
       containers:
         - name: {{ .Chart.Name }}-config-worker
           securityContext:
@@ -55,7 +53,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: git-clone-dir
-              mountPath: {{ .Values.configWorkerGitCloneDir }}
+              mountPath: {{ .Values.configWorker.configWorkerGitCloneDir }}
             - name: config-volume
               mountPath: {{ .Values.configWorker.pluginConfigDir }}
           env:
@@ -68,7 +66,7 @@ spec:
             - name: VAULT_ADDR
               value: {{ .Values.vault.address }}
             - name: GIT_CLONE_DIR
-              value: {{ .Values.configWorkerGitCloneDir }}
+              value: {{ .Values.configWorker.configWorkerGitCloneDir }}
             - name: VAULT_ROLE
               value: {{ .Values.vault.role }}
             - name: CASSANDRA_SERVICE_URL
