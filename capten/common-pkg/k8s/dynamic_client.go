@@ -96,10 +96,9 @@ func (dc *DynamicClientSet) CreateResource(ctx context.Context, filename string)
 		return "", "", err
 	}
 	_, err = dc.client.Resource(resourceID).Namespace(namespaceName).Create(ctx, obj, metav1.CreateOptions{})
-	fmt.Println("ERROR:", err)
-	// if err != nil {
-	// 	return "", "", err
-	// }
+	if err != nil {
+		return "", "", err
+	}
 
 	return namespaceName, resourceName, nil
 }
