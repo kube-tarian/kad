@@ -90,6 +90,12 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 		return respPayload, err
 	}
 
+	// update git project url
+	if err := replaceCaptenUrls(customerRepo, req.RepoURL); err != nil {
+		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to replace template url\"}")}
+		return respPayload, err
+	}
+
 	err = cp.addToGit(ctx, req.Type, req.RepoURL, accessToken, req.PushToDefaultBranch)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to add git repo\"}")}
@@ -155,4 +161,53 @@ func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.Crossp
 		providerName, pkg, providerName,
 	)
 	return providerConfigString, nil
+}
+
+func replaceCaptenUrls(dir string, replacement string) error {
+
+	target := "https://github.com/intelops/capten-templates.git"
+	if strings.HasSuffix(replacement, ".git") {
+		replacement += ".git"
+	}
+
+	// List all files in the directory
+	fileList := []string{}
+
+	if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() {
+			fileList = append(fileList, path)
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	// Replace the string in each file
+	for _, filePath := range fileList {
+		err := replaceInFile(filePath, target, replacement)
+		if err != nil {
+			fmt.Printf("Error replacing in %s: %v\n", filePath, err)
+		}
+	}
+
+	return nil
+}
+
+func replaceInFile(filePath, target, replacement string) error {
+	// Read the file content
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	// Perform the string replacement
+	newData := strings.Replace(string(data), target, replacement, -1)
+
+	// Write the modified content back to the file
+	err = os.WriteFile(filePath, []byte(newData), 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
