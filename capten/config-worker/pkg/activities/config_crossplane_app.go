@@ -189,7 +189,7 @@ func replaceCaptenUrls(dir string, replacement string) error {
 	fileList := []string{}
 
 	if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
+		if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
 			fileList = append(fileList, path)
 		}
 		return nil
