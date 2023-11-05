@@ -17,7 +17,7 @@ func Workflow(ctx workflow.Context, params model.ConfigureParameters, payload js
 	logger := logging.NewLogger()
 
 	ao := workflow.ActivityOptions{
-		ScheduleToCloseTimeout: 300 * time.Second,
+		ScheduleToCloseTimeout: 600 * time.Second,
 	}
 
 	ctx = workflow.WithActivityOptions(ctx, ao)

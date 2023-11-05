@@ -32,7 +32,7 @@ func ConvertYamlToJson(data []byte) ([]byte, error) {
 	return jsonData, nil
 }
 
-func (dc *DynamicClientSet) getNamespace(jsonByte []byte) (string, string, error) {
+func (dc *DynamicClientSet) GetNameNamespace(jsonByte []byte) (string, string, error) {
 	var keyValue map[string]interface{}
 	if err := json.Unmarshal(jsonByte, &keyValue); err != nil {
 		return "", "", nil
@@ -75,32 +75,32 @@ func (dc *DynamicClientSet) getGVK(data []byte) (obj *unstructured.Unstructured,
 	return
 }
 
-func (dc *DynamicClientSet) CreateResource(ctx context.Context, filename string) error {
+func (dc *DynamicClientSet) CreateResource(ctx context.Context, filename string) (string, string, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	jsonData, err := ConvertYamlToJson(data)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	obj, resourceID, err := dc.getGVK(jsonData)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
-	namespaceName, _, err := dc.getNamespace(jsonData)
+	namespaceName, resourceName, err := dc.GetNameNamespace(jsonData)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 	_, err = dc.client.Resource(resourceID).Namespace(namespaceName).Create(ctx, obj, metav1.CreateOptions{})
 	if err != nil {
-		return nil
+		return "", "", err
 	}
 
-	return nil
+	return namespaceName, resourceName, nil
 }
 
 func (dc *DynamicClientSet) GetResource(ctx context.Context, filename string) (*unstructured.Unstructured, error) {
@@ -119,7 +119,7 @@ func (dc *DynamicClientSet) GetResource(ctx context.Context, filename string) (*
 		return nil, err
 	}
 
-	namespaceName, resourceName, err := dc.getNamespace(jsonData)
+	namespaceName, resourceName, err := dc.GetNameNamespace(jsonData)
 	if err != nil {
 		return nil, err
 	}
