@@ -101,6 +101,7 @@ func (ca *ConfigureApp) deployMainApp(ctx context.Context, fileName string) (str
 }
 
 func (ca *ConfigureApp) syncArgoCDApp(ctx context.Context, ns, resName string) error {
+	logger.Info("RESOURCE NAME AND NAMESAPCE", resName, ns)
 	client, err := argocd.NewClient(logger)
 	if err != nil {
 		return err
@@ -115,6 +116,7 @@ func (ca *ConfigureApp) syncArgoCDApp(ctx context.Context, ns, resName string) e
 }
 
 func (ca *ConfigureApp) waitForArgoCDToSync(ctx context.Context, ns, resName string) error {
+	logger.Info("RESOURCE NAME AND NAMESAPCE", resName, ns)
 	client, err := argocd.NewClient(logger)
 	if err != nil {
 		return err

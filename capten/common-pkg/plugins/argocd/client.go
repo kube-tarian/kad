@@ -307,6 +307,7 @@ func (a *ArgoCDCLient) GetRepository(ctx context.Context, repo string) (*v1alpha
 }
 
 func (a *ArgoCDCLient) TriggerAppSync(ctx context.Context, namespace, name string) (*v1alpha1.Application, error) {
+	a.logger.Info("RESOURCE NAME AND NAMESAPCE", name, namespace)
 	conn, app, err := a.client.NewApplicationClient()
 	if err != nil {
 		return nil, err
@@ -323,6 +324,7 @@ func (a *ArgoCDCLient) TriggerAppSync(ctx context.Context, namespace, name strin
 }
 
 func (a *ArgoCDCLient) GetAppSyncStatus(ctx context.Context, namespace, name string) (*v1alpha1.Application, error) {
+	a.logger.Info("RESOURCE NAME AND NAMESAPCE", name, namespace)
 	conn, app, err := a.client.NewApplicationClient()
 	if err != nil {
 		return nil, err
