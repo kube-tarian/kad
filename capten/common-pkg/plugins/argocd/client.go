@@ -143,7 +143,6 @@ func (a *ArgoCDCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, 
 		return nil, err
 	}
 	defer io.Close(conn)
-
 	resp, err := appClient.Create(
 		context.Background(),
 		&application.ApplicationCreateRequest{
