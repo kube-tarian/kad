@@ -40,10 +40,9 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
 	}
 
 	agent := &Agent{
-		tc:       tc,
-		as:       as,
-		log:      log,
-		createPr: cfg.CreatePR,
+		tc:  tc,
+		as:  as,
+		log: log,
 	}
 	return agent, nil
 }
