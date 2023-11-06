@@ -71,7 +71,15 @@ func main() {
 		}
 	}()
 
-	go startClaimSync(cfg.CronInterval)
+	cronjob, err := startClaimSync(cfg.CronInterval)
+	if err != nil {
+		log.Fatalf("Failed to create cron job: %v", err)
+	}
+
+	cronjob.Start()
+	defer cronjob.Stop()
+
+	log.Info("syncing clusterClaim started successfully...")
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
@@ -96,21 +104,20 @@ func configureDB() error {
 	return nil
 }
 
-func startClaimSync(crontInterval string) {
+func startClaimSync(crontInterval string) (*cron.Cron, error) {
 	cronJob := cron.New()
 
 	fetch, err := captenagentsync.NewFetch()
 	if err != nil {
 		log.Errorf("Failed to initialize the sync: %v", err)
+		return nil, err
 	}
 
 	_, jobErr := cronJob.AddJob(fmt.Sprintf(StrInterval, crontInterval), cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).Then(fetch))
 	if jobErr != nil {
 		log.Errorf("Failed to add cronJob for sync clusterClaim: %v", jobErr)
+		return nil, jobErr
 	}
 
-	cronJob.Start()
-	defer cronJob.Stop()
-
-	log.Info("syncing clusterClaim started successfully...")
+	return cronJob, nil
 }
