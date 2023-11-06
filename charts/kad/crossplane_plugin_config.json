@@ -3,6 +3,7 @@
     "synch_config_path": "infra",
     "provider_config_path": "infra/crossplane/crossplane-config",
     "provider_config_main_app": "infra/crossplane/crossplane-main-app.yaml",
+    "provider_config_child_apps": "crossplane-aws-dev-cluster",
     "aws_package": "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0",
     "azure_package": "",
     "gcp_package": ""

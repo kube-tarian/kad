@@ -16,13 +16,17 @@ var whitelistedLabels = []string{"crossplane"}
 
 func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddGitProjectRequest) (
 	*captenpluginspb.AddGitProjectResponse, error) {
-	if err := validateArgs(request.ProjectUrl, request.UserID, request.AccessToken); err != nil {
+	if err := validateArgs(request.ProjectUrl, request.AccessToken); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.AddGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
 	}
+	if len(request.UserID) == 0 {
+		request.UserID = "default"
+	}
+
 	a.log.Infof("Add Git project %s request received", request.ProjectUrl)
 
 	if err := a.validateForWhitelistedLabels(ctx, request.Labels); err != nil {
