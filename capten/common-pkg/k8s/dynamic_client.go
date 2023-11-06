@@ -7,6 +7,7 @@ import (
 	"os"
 	"strings"
 
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -95,11 +96,18 @@ func (dc *DynamicClientSet) CreateResource(ctx context.Context, filename string)
 	if err != nil {
 		return "", "", err
 	}
-	_, err = dc.client.Resource(resourceID).Namespace(namespaceName).Create(ctx, obj, metav1.CreateOptions{})
+
+	_, err = dc.client.Resource(resourceID).Namespace(namespaceName).Get(ctx, resourceName, metav1.GetOptions{})
 	if err != nil {
+		if k8serrors.IsNotFound(err) {
+			_, err := dc.client.Resource(resourceID).Namespace(namespaceName).Create(ctx, obj, metav1.CreateOptions{})
+			if err != nil {
+				return "", "", fmt.Errorf("error in creating resource %s/%s, %v", namespaceName, resourceName, err)
+			}
+			return namespaceName, resourceName, nil
+		}
 		return "", "", err
 	}
-
 	return namespaceName, resourceName, nil
 }
 

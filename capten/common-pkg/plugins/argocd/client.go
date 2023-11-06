@@ -19,13 +19,13 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type ArgoCDCLient struct {
+type ArgoCDClient struct {
 	conf   *Configuration
 	logger logging.Logger
 	client apiclient.Client
 }
 
-func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
+func NewClient(logger logging.Logger) (*ArgoCDClient, error) {
 	cfg := &Configuration{}
 	err := envconfig.Process("", cfg)
 	if err == nil {
@@ -56,14 +56,14 @@ func NewClient(logger logging.Logger) (*ArgoCDCLient, error) {
 		return nil, err
 	}
 
-	return &ArgoCDCLient{
+	return &ArgoCDClient{
 		conf:   cfg,
 		logger: logger,
 		client: client,
 	}, nil
 }
 
-func (a *ArgoCDCLient) ConfigurationActivities(req interface{}) (json.RawMessage, error) {
+func (a *ArgoCDClient) ConfigurationActivities(req interface{}) (json.RawMessage, error) {
 	payload, _ := req.(model.ConfigPayload)
 	switch payload.Resource {
 	case "cluster":
@@ -75,7 +75,7 @@ func (a *ArgoCDCLient) ConfigurationActivities(req interface{}) (json.RawMessage
 	}
 }
 
-func (a *ArgoCDCLient) HandleCluster(req interface{}) (json.RawMessage, error) {
+func (a *ArgoCDClient) HandleCluster(req interface{}) (json.RawMessage, error) {
 	payload, _ := req.(model.ConfigPayload)
 	switch payload.Action {
 	case "add":
@@ -90,7 +90,7 @@ func (a *ArgoCDCLient) HandleCluster(req interface{}) (json.RawMessage, error) {
 	return nil, nil
 }
 
-func (a *ArgoCDCLient) HandleRepo(req interface{}) (json.RawMessage, error) {
+func (a *ArgoCDClient) HandleRepo(req interface{}) (json.RawMessage, error) {
 	payload, _ := req.(model.ConfigPayload)
 	switch payload.Action {
 	case "add":
@@ -136,7 +136,7 @@ func fetchConfiguration(log logging.Logger) (*Configuration, error) {
 	return cfg, err
 }
 
-func (a *ArgoCDCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, error) {
+func (a *ArgoCDClient) Create(req *model.CreteRequestPayload) (json.RawMessage, error) {
 	conn, appClient, err := a.client.NewApplicationClient()
 	if err != nil {
 		a.logger.Errorf("Application client intilialization failed: %v", err)
@@ -183,7 +183,7 @@ func (a *ArgoCDCLient) Create(req *model.CreteRequestPayload) (json.RawMessage, 
 	return respMsg, nil
 }
 
-func (a *ArgoCDCLient) Delete(req *model.DeleteRequestPayload) (json.RawMessage, error) {
+func (a *ArgoCDClient) Delete(req *model.DeleteRequestPayload) (json.RawMessage, error) {
 	conn, appClient, err := a.client.NewApplicationClient()
 	if err != nil {
 		return nil, err
@@ -208,7 +208,7 @@ func (a *ArgoCDCLient) Delete(req *model.DeleteRequestPayload) (json.RawMessage,
 	return respMsg, nil
 }
 
-func (a *ArgoCDCLient) List(req *model.ListRequestPayload) (json.RawMessage, error) {
+func (a *ArgoCDClient) List(req *model.ListRequestPayload) (json.RawMessage, error) {
 	conn, appClient, err := a.client.NewApplicationClient()
 	if err != nil {
 		return nil, err
@@ -227,7 +227,7 @@ func (a *ArgoCDCLient) List(req *model.ListRequestPayload) (json.RawMessage, err
 	return listMsg, nil
 }
 
-func (a *ArgoCDCLient) ListRepositories(ctx context.Context) (*v1alpha1.RepositoryList, error) {
+func (a *ArgoCDClient) ListRepositories(ctx context.Context) (*v1alpha1.RepositoryList, error) {
 	conn, appClient, err := a.client.NewRepoClient()
 	if err != nil {
 		return nil, err
@@ -242,7 +242,7 @@ func (a *ArgoCDCLient) ListRepositories(ctx context.Context) (*v1alpha1.Reposito
 	return list, nil
 }
 
-func (a *ArgoCDCLient) CreateRepository(ctx context.Context, repo *Repository) (*v1alpha1.Repository, error) {
+func (a *ArgoCDClient) CreateRepository(ctx context.Context, repo *Repository) (*v1alpha1.Repository, error) {
 	conn, appClient, err := a.client.NewRepoClient()
 	if err != nil {
 		return nil, err
@@ -271,7 +271,7 @@ func (a *ArgoCDCLient) CreateRepository(ctx context.Context, repo *Repository) (
 	return resp, nil
 }
 
-func (a *ArgoCDCLient) DeleteRepository(ctx context.Context, repo string) (*repository.RepoResponse, error) {
+func (a *ArgoCDClient) DeleteRepository(ctx context.Context, repo string) (*repository.RepoResponse, error) {
 	conn, appClient, err := a.client.NewRepoClient()
 	if err != nil {
 		return nil, err
@@ -288,7 +288,7 @@ func (a *ArgoCDCLient) DeleteRepository(ctx context.Context, repo string) (*repo
 	return resp, nil
 }
 
-func (a *ArgoCDCLient) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error) {
+func (a *ArgoCDClient) GetRepository(ctx context.Context, repo string) (*v1alpha1.Repository, error) {
 	conn, appClient, err := a.client.NewRepoClient()
 	if err != nil {
 		return nil, err
@@ -305,7 +305,7 @@ func (a *ArgoCDCLient) GetRepository(ctx context.Context, repo string) (*v1alpha
 	return repository, nil
 }
 
-func (a *ArgoCDCLient) TriggerAppSync(ctx context.Context, namespace, name string) (*v1alpha1.Application, error) {
+func (a *ArgoCDClient) TriggerAppSync(ctx context.Context, namespace, name string) (*v1alpha1.Application, error) {
 	conn, app, err := a.client.NewApplicationClient()
 	if err != nil {
 		return nil, err
@@ -313,7 +313,14 @@ func (a *ArgoCDCLient) TriggerAppSync(ctx context.Context, namespace, name strin
 
 	defer conn.Close()
 
-	resp, err := app.Sync(ctx, &application.ApplicationSyncRequest{Name: &name, AppNamespace: &namespace})
+	pruneApp := true
+	resp, err := app.Sync(ctx, &application.ApplicationSyncRequest{
+		Name:         &name,
+		AppNamespace: &namespace,
+		Prune:        &pruneApp,
+		RetryStrategy: &v1alpha1.RetryStrategy{
+			Limit: 3,
+		}})
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +328,7 @@ func (a *ArgoCDCLient) TriggerAppSync(ctx context.Context, namespace, name strin
 	return resp, err
 }
 
-func (a *ArgoCDCLient) GetAppSyncStatus(ctx context.Context, namespace, name string) (*v1alpha1.Application, error) {
+func (a *ArgoCDClient) GetAppSyncStatus(ctx context.Context, namespace, name string) (*v1alpha1.Application, error) {
 	conn, app, err := a.client.NewApplicationClient()
 	if err != nil {
 		return nil, err

@@ -17,11 +17,12 @@ const (
 	tektonUsecase     = "tekton"
 	crossPlaneUsecase = "crossplane"
 
-	crossPlaneGitRepoAttribute               = "git_repo"
-	crossPlaneSyncjConfigPathAttribute       = "synch_config_path"
-	crossPlaneProviderConfigPathAttribute    = "provider_config_path"
-	crossPlaneProviderConfigMainAppAttribute = "provider_config_main_app"
-	tmpCloneStr                              = "clone*"
+	crossPlaneGitRepoAttribute                 = "git_repo"
+	crossPlaneSyncjConfigPathAttribute         = "synch_config_path"
+	crossPlaneProviderConfigPathAttribute      = "provider_config_path"
+	crossPlaneProviderConfigMainAppAttribute   = "provider_config_main_app"
+	crossPlaneProviderConfigChildAppsAttribute = "provider_config_child_apps"
+	tmpCloneStr                                = "clone*"
 )
 
 type CrossPlaneApp struct {
@@ -80,6 +81,7 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to clone repos\"}")}
 		return respPayload, err
 	}
+	logger.Infof("cloned default templates to project %s", req.RepoURL)
 
 	defer os.RemoveAll(templateRepo)
 	defer os.RemoveAll(customerRepo)
@@ -89,38 +91,50 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to update configs to repo\"}")}
 		return respPayload, err
 	}
+	logger.Infof("added provider config resources to cloned project %s", req.RepoURL)
 
 	// update git project url
 	if err := replaceCaptenUrls(customerRepo, req.RepoURL); err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to replace template url\"}")}
 		return respPayload, err
 	}
+	logger.Infof("updated resource configurations in cloned project %s", req.RepoURL)
 
 	err = cp.addToGit(ctx, req.Type, req.RepoURL, accessToken, req.PushToDefaultBranch)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to add git repo\"}")}
 		return respPayload, err
 	}
+	logger.Infof("added cloned project %s changed to git", req.RepoURL)
 
 	if !req.PushToDefaultBranch {
 		logger.Info("requested to create PR.. skipping the further steps")
 		return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
 	}
 
-	ns, resName, err := cp.deployMainApp(ctx, filepath.Join(customerRepo, cp.pluginConfig[crossPlaneProviderConfigMainAppAttribute]))
+	appPath := filepath.Join(customerRepo, cp.pluginConfig[crossPlaneProviderConfigMainAppAttribute])
+	childApps := strings.Split(cp.pluginConfig[crossPlaneProviderConfigChildAppsAttribute], ",")
+	respPayload, err := cp.deployArgoCDAppAndSyncWithChilds(ctx, appPath, childApps)
+	if err != nil {
+		return respPayload, err
+	}
+	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
+}
+
+func (cp *CrossPlaneApp) deployArgoCDAppAndSyncWithChilds(ctx context.Context, appPath string, childApps []string) (model.ResponsePayload, error) {
+	ns, resName, err := cp.deployMainApp(ctx, appPath)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to deploy main app\"}")}
 		return respPayload, err
 	}
-
-	// force Sync the app and monitor the status of the app.
-	// then wait for cluster-claims.
+	logger.Infof("deployed provider config main-app %s", resName)
 
 	err = cp.syncArgoCDApp(ctx, ns, resName)
 	if err != nil {
 		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to sync argocd app\"}")}
 		return respPayload, err
 	}
+	logger.Infof("synched provider config main-app %s", resName)
 
 	err = cp.waitForArgoCDToSync(ctx, ns, resName)
 	if err != nil {
@@ -128,7 +142,29 @@ func (cp *CrossPlaneApp) ExecuteSteps(ctx context.Context, params model.Configur
 		return respPayload, err
 	}
 
+	err = cp.syncArgoCDChildApps(ctx, ns, childApps)
+	if err != nil {
+		respPayload := model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusFailed), Message: json.RawMessage("{\"error\": \"failed to synch argocd child app\"}")}
+		return respPayload, err
+	}
+	logger.Infof("synched provider config child apps")
 	return model.ResponsePayload{Status: string(agentmodel.WorkFlowStatusCompleted)}, nil
+}
+
+func (cp *CrossPlaneApp) syncArgoCDChildApps(ctx context.Context, namespace string, apps []string) error {
+	for _, appName := range apps {
+		err := cp.syncArgoCDApp(ctx, namespace, appName)
+		if err != nil {
+			return fmt.Errorf("failed to sync app %s, %v", appName, err)
+		}
+		logger.Infof("synched provider config child-app %s", appName)
+
+		err = cp.waitForArgoCDToSync(ctx, namespace, appName)
+		if err != nil {
+			return fmt.Errorf("failed to get sync status of app %s, %v", appName, err)
+		}
+	}
+	return nil
 }
 
 func (cp *CrossPlaneApp) createProviderConfigs(dir string, params *model.CrossplaneUseCase) error {

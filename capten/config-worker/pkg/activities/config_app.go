@@ -120,6 +120,7 @@ func (ca *ConfigureApp) waitForArgoCDToSync(ctx context.Context, ns, resName str
 		return err
 	}
 
+	synched := false
 	for i := 0; i < 3; i++ {
 		app, err := client.GetAppSyncStatus(ctx, ns, resName)
 		if err != nil {
@@ -127,13 +128,16 @@ func (ca *ConfigureApp) waitForArgoCDToSync(ctx context.Context, ns, resName str
 		}
 
 		if app.Status.Sync.Status == v1alpha1.SyncStatusCodeSynced {
+			synched = true
 			break
 		}
 
 		time.Sleep(30 * time.Second)
-
 	}
 
+	if !synched {
+		return fmt.Errorf("app %s not synched", resName)
+	}
 	return nil
 }
 
