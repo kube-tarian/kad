@@ -71,7 +71,7 @@ func main() {
 		}
 	}()
 
-	go startClaimSync(fmt.Sprintf(StrInterval, cfg.CronInterval))
+	go startClaimSync(cfg.CronInterval)
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
@@ -104,7 +104,7 @@ func startClaimSync(crontInterval string) {
 		log.Errorf("Failed to initialize the sync: %v", err)
 	}
 
-	_, jobErr := cronJob.AddJob(crontInterval, cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).Then(fetch))
+	_, jobErr := cronJob.AddJob(fmt.Sprintf(StrInterval, crontInterval), cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).Then(fetch))
 	if jobErr != nil {
 		log.Errorf("Failed to add cronJob for sync clusterClaim: %v", jobErr)
 	}
