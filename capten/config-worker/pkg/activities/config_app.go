@@ -120,7 +120,7 @@ func (ca *ConfigureApp) waitForArgoCDToSync(ctx context.Context, ns, resName str
 		return err
 	}
 
-	statusErr := errors.New("arogcd app is not ready after waiting for provided time")
+	synched := false
 	for i := 0; i < 3; i++ {
 		app, err := client.GetAppSyncStatus(ctx, ns, resName)
 		if err != nil {
@@ -128,15 +128,17 @@ func (ca *ConfigureApp) waitForArgoCDToSync(ctx context.Context, ns, resName str
 		}
 
 		if app.Status.Sync.Status == v1alpha1.SyncStatusCodeSynced {
-			statusErr = nil
+			synched = true
 			break
 		}
 
 		time.Sleep(30 * time.Second)
-
 	}
 
-	return statusErr
+	if !synched {
+		return fmt.Errorf("app %s not synched", resName)
+	}
+	return nil
 }
 
 func (ca *ConfigureApp) addToGit(ctx context.Context, paramType, repoUrl, token string, createPr bool) error {
