@@ -71,7 +71,7 @@ func main() {
 		}
 	}()
 
-	go startClaimSync(cfg.CronInterval)
+	go startClaimSync(fmt.Sprintf(StrInterval, cfg.CronInterval))
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
