@@ -9,11 +9,14 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/robfig/cron/v3"
+
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agent"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
+	captenagentsync "github.com/kube-tarian/kad/capten/agent/pkg/sync"
 	"github.com/kube-tarian/kad/capten/agent/pkg/util"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
@@ -21,7 +24,10 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-var log = logging.NewLogger()
+var (
+	log         = logging.NewLogger()
+	StrInterval = "@every %ss"
+)
 
 func main() {
 	log.Infof("Staring Agent")
@@ -65,6 +71,8 @@ func main() {
 		}
 	}()
 
+	go startClaimSync(cfg.CronInterval)
+
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	<-signals
@@ -86,4 +94,23 @@ func configureDB() error {
 		return errors.WithMessage(err, "error in migrating cassandra DB")
 	}
 	return nil
+}
+
+func startClaimSync(crontInterval string) {
+	cronJob := cron.New()
+
+	fetch, err := captenagentsync.NewFetch()
+	if err != nil {
+		log.Errorf("Failed to initialize the sync: %v", err)
+	}
+
+	_, jobErr := cronJob.AddJob(crontInterval, cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).Then(fetch))
+	if jobErr != nil {
+		log.Errorf("Failed to add cronJob for sync clusterClaim: %v", jobErr)
+	}
+
+	cronJob.Start()
+	defer cronJob.Stop()
+
+	log.Info("syncing clusterClaim started successfully...")
 }
