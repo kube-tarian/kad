@@ -2,7 +2,6 @@ package sync
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -120,11 +119,7 @@ func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) {
 				continue
 			}
 
-			clusterEndpoint, err := getBase64DecodedString(resp.Data[k8sEndpoint])
-			if err != nil {
-				fetch.log.Info("failed to decode base64 value: %v", err)
-				continue
-			}
+			clusterEndpoint := resp.Data[k8sEndpoint]
 
 			managedCluster := &pb.ManagedCluster{}
 			clusterObj, ok := fetch.avlClusters[clusterEndpoint]
@@ -176,12 +171,4 @@ func getManagedClusterEndpointMap(db *captenstore.Store) (map[string]*pb.Managed
 	}
 
 	return clusterEndpointMap, nil
-}
-
-func getBase64DecodedString(encodedString string) (string, error) {
-	decodedByte, err := base64.StdEncoding.DecodeString(encodedString)
-	if err != nil {
-		return "", err
-	}
-	return string(decodedByte), nil
 }
