@@ -104,11 +104,11 @@ func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) {
 				continue
 			}
 
-			if status.Status != statusValue {
-				fetch.log.Info("%s in namespace %s, status is %s, so skiping update to db.",
-					obj.Spec.Id, obj.Metadata.Namespace, status.Status)
-				continue
-			}
+			// if status.Status != statusValue {
+			// 	fetch.log.Info("%s in namespace %s, status is %s, so skiping update to db.",
+			// 		obj.Spec.Id, obj.Metadata.Namespace, status.Status)
+			// 	continue
+			// }
 
 			// get the cluster endpoint and kubeconfig file from the secrets
 			req := &k8s.SecretDetailsRequest{Namespace: "crossplane-system",
