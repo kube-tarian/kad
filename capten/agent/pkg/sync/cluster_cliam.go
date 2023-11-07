@@ -120,6 +120,9 @@ func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) {
 				continue
 			}
 
+			fetch.log.Info("secret Information: ", resp.Data)
+
+			fetch.log.Info("secret Information k8sEndpoint: ", resp.Data[k8sEndpoint])
 			clusterEndpoint, err := getBase64DecodedString(resp.Data[k8sEndpoint])
 			if err != nil {
 				fetch.log.Info("failed to decode base64 value: %v", err)
