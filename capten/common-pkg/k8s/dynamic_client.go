@@ -140,3 +140,21 @@ func (dc *DynamicClientSet) GetResource(ctx context.Context, filename string) (*
 
 	return obj, nil
 }
+
+func (dc *DynamicClientSet) ListNamespaceResource(ctx context.Context, gvk schema.GroupVersionResource, ns string) (*unstructured.UnstructuredList, error) {
+	objList, err := dc.client.Resource(gvk).Namespace(ns).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return objList, nil
+}
+
+func (dc *DynamicClientSet) ListAllNamespaceResource(ctx context.Context, gvk schema.GroupVersionResource) (*unstructured.UnstructuredList, error) {
+	objList, err := dc.client.Resource(gvk).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return objList, nil
+}
