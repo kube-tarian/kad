@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
@@ -19,21 +20,22 @@ import (
 )
 
 var (
-	statusType        = "Ready"
-	statusValue       = "True"
-	clusterId         = "%s-%s"
-	clusterSecretName = "%s-cluster"
-	k8sCredEntity     = "kubernetesclusters"
-	kubeConfig        = "kubeconfig"
-	k8sEndpoint       = "endpoint"
-	k8sClusterCA      = "clusterCA"
+	statusType               = "Ready"
+	statusValue              = "True"
+	clusterName              = "%s-%s"
+	clusterSecretName        = "%s-cluster"
+	kubeConfig               = "kubeconfig"
+	k8sEndpoint              = "endpoint"
+	k8sClusterCA             = "clusterCA"
+	managedClusterEntityName = "managedcluster"
 )
 
 type Fetch struct {
-	log    logging.Logger
-	client *k8s.K8SClient
-	db     *captenstore.Store
-	creds  credentials.CredentialAdmin
+	log         logging.Logger
+	client      *k8s.K8SClient
+	db          *captenstore.Store
+	creds       credentials.CredentialAdmin
+	avlClusters map[string]*pb.ManagedCluster
 }
 
 func NewFetch() (*Fetch, error) {
@@ -56,7 +58,12 @@ func NewFetch() (*Fetch, error) {
 		return nil, err
 	}
 
-	return &Fetch{log: log, client: k8sclient, db: db, creds: credAdmin}, nil
+	avlClusters, err := getManagedClusterEndpointMap(db)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute  getManagedClusterEndpointMap, err: %v", err)
+	}
+
+	return &Fetch{log: log, client: k8sclient, db: db, creds: credAdmin, avlClusters: avlClusters}, nil
 }
 
 // Run ...
@@ -85,17 +92,12 @@ func (fetch *Fetch) Run() {
 		return
 	}
 
-	err = fetch.UpdateClusterDetails(clObj.Items)
-	if err != nil {
-		fetch.log.Error("Failed to UpdateClusterDetails, err:", err)
-
-		return
-	}
+	fetch.UpdateClusterDetails(clObj.Items)
 
 	fetch.log.Info("succesfully sync-ed cluster-claims resources")
 }
 
-func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) error {
+func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) {
 	for _, obj := range clObj {
 		for _, status := range obj.Status.Conditions {
 			if status.Type != statusType {
@@ -108,11 +110,6 @@ func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) error {
 				continue
 			}
 
-			managedCluster := &pb.ManagedCluster{}
-			managedCluster.Id = fmt.Sprintf(clusterId, obj.Spec.Id, obj.Metadata.Namespace)
-			managedCluster.ClusterName = obj.Spec.Id
-			managedCluster.ClusterDeployStatus = status.Status
-
 			// get the cluster endpoint and kubeconfig file from the secrets
 			req := &k8s.SecretDetailsRequest{Namespace: obj.Metadata.Namespace,
 				SecretName: fmt.Sprintf(clusterSecretName, obj.Spec.Id)}
@@ -123,32 +120,62 @@ func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) error {
 				continue
 			}
 
+			clusterEndpoint, err := getBase64DecodedString(resp.Data[k8sEndpoint])
+			if err != nil {
+				fetch.log.Info("failed to decode base64 value: %v", err)
+				continue
+			}
+
+			managedCluster := &pb.ManagedCluster{}
+			clusterObj, ok := fetch.avlClusters[clusterEndpoint]
+			if !ok {
+				managedCluster.Id = uuid.New().String()
+			} else {
+				fetch.log.Info("found existing Id: %s, updating the latest information ", clusterObj.Id)
+				managedCluster.Id = clusterObj.Id
+			}
+
+			managedCluster.ClusterName = fmt.Sprintf(clusterName, obj.Spec.Id, obj.Metadata.Namespace)
+			managedCluster.ClusterDeployStatus = status.Status
+			managedCluster.ClusterEndpoint = clusterEndpoint
+
 			clusterDetails := map[string]string{}
 			clusterDetails[kubeConfig] = resp.Data[kubeConfig]
 			clusterDetails[k8sClusterCA] = resp.Data[k8sClusterCA]
 
-			err = fetch.creds.PutCredential(context.TODO(), credentials.GenericCredentialType, k8sCredEntity, managedCluster.Id, clusterDetails)
+			err = fetch.creds.PutCredential(context.TODO(), credentials.GenericCredentialType, managedClusterEntityName, managedCluster.Id, clusterDetails)
 
 			if err != nil {
 				fetch.log.Audit("security", "storecred", "failed", "system", "failed to store crendential for %s", managedCluster.Id)
 				fetch.log.Errorf("failed to store credential for %s, %v", managedCluster.Id, err)
-				return err
-			}
-
-			managedCluster.ClusterEndpoint, err = getBase64DecodedString(resp.Data[k8sEndpoint])
-			if err != nil {
-				return fmt.Errorf("failed to decode base64 value: %v", err)
+				continue
 			}
 
 			managedCluster.LastUpdateTime = time.Now().Format(time.RFC3339)
 			err = fetch.db.UpsertManagedCluster(managedCluster)
 			if err != nil {
-				return fmt.Errorf("failed to update information to db: %v", err)
+				fetch.log.Info("failed to update information to db: %v", err)
+				continue
 			}
+
+			fetch.avlClusters[clusterEndpoint] = managedCluster
 		}
 
 	}
-	return nil
+}
+
+func getManagedClusterEndpointMap(db *captenstore.Store) (map[string]*pb.ManagedCluster, error) {
+	clusters, err := db.GetManagedClusters()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the managed cluster information from db: %v", err)
+	}
+
+	clusterEndpointMap := map[string]*pb.ManagedCluster{}
+	for _, cluster := range clusters {
+		clusterEndpointMap[cluster.ClusterEndpoint] = cluster
+	}
+
+	return clusterEndpointMap, nil
 }
 
 func getBase64DecodedString(encodedString string) (string, error) {
