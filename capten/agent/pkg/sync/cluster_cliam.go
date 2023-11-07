@@ -2,7 +2,6 @@ package sync
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"time"
@@ -120,17 +119,8 @@ func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) {
 				continue
 			}
 
-			fetch.log.Info("secret Information: ", resp.Data)
-
-			fetch.log.Info("secret Information k8sEndpoint: ", resp.Data[k8sEndpoint])
-			clusterEndpoint, err := getBase64DecodedString(resp.Data[k8sEndpoint])
-			if err != nil {
-				fetch.log.Info("failed to decode base64 value: %v", err)
-				continue
-			}
-
 			managedCluster := &pb.ManagedCluster{}
-			clusterObj, ok := fetch.avlClusters[clusterEndpoint]
+			clusterObj, ok := fetch.avlClusters[resp.Data[k8sEndpoint]]
 			if !ok {
 				managedCluster.Id = uuid.New().String()
 			} else {
@@ -140,7 +130,7 @@ func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) {
 
 			managedCluster.ClusterName = fmt.Sprintf(clusterName, obj.Spec.Id, obj.Metadata.Namespace)
 			managedCluster.ClusterDeployStatus = status.Status
-			managedCluster.ClusterEndpoint = clusterEndpoint
+			managedCluster.ClusterEndpoint = resp.Data[k8sEndpoint]
 
 			clusterDetails := map[string]string{}
 			clusterDetails[kubeConfig] = resp.Data[kubeConfig]
@@ -161,7 +151,7 @@ func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) {
 				continue
 			}
 
-			fetch.avlClusters[clusterEndpoint] = managedCluster
+			fetch.avlClusters[resp.Data[k8sEndpoint]] = managedCluster
 		}
 
 	}
@@ -179,12 +169,4 @@ func getManagedClusterEndpointMap(db *captenstore.Store) (map[string]*pb.Managed
 	}
 
 	return clusterEndpointMap, nil
-}
-
-func getBase64DecodedString(encodedString string) (string, error) {
-	decodedByte, err := base64.StdEncoding.DecodeString(encodedString)
-	if err != nil {
-		return "", err
-	}
-	return string(decodedByte), nil
 }
