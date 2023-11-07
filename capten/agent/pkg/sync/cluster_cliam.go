@@ -111,7 +111,7 @@ func (fetch *Fetch) UpdateClusterDetails(clObj []model.ClusterClaim) {
 			}
 
 			// get the cluster endpoint and kubeconfig file from the secrets
-			req := &k8s.SecretDetailsRequest{Namespace: obj.Metadata.Namespace,
+			req := &k8s.SecretDetailsRequest{Namespace: "crossplane-system",
 				SecretName: fmt.Sprintf(clusterSecretName, obj.Spec.Id)}
 			resp, err := fetch.client.FetchSecretDetails(req)
 			if err != nil {
