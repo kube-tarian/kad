@@ -18,9 +18,9 @@ spec:
     annotations:
       vault.hashicorp.com/agent-inject: "true"
       vault.hashicorp.com/role: "vault-role-crossplane"
-      vault.hashicorp.com/agent-inject-secret-creds.txt: "%s"
+      vault.hashicorp.com/agent-inject-secret-creds.txt: "secret/%s"
       vault.hashicorp.com/agent-inject-template-creds.txt: |
-        {{- with secret "%s" -}}
+        {{- with secret "secret/%s" -}}
           [default]
           aws_access_key_id="{{ .Data.data.accessKey }}"
           aws_secret_access_key="{{ .Data.data.secretKey }}"
