@@ -205,7 +205,7 @@ func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.Crossp
 		return "", fmt.Errorf("plugin package attribute %s not found", packageAttribute)
 	}
 
-	secretPath := fmt.Sprintf("generic/CloudProvider/%s", provider.CloudProviderId)
+	secretPath := fmt.Sprintf("generic/cloud-provider/%s", provider.CloudProviderId)
 	providerConfigString := fmt.Sprintf(
 		crossplaneProviderTemplate,
 		providerName, secretPath, secretPath,

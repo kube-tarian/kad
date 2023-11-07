@@ -9,7 +9,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 )
 
-const cloudProviderEntityName = "CloudProvider"
+const cloudProviderEntityName = "cloud-provider"
 
 func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.AddCloudProviderRequest) (
 	*captenpluginspb.AddCloudProviderResponse, error) {
