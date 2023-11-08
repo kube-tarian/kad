@@ -102,8 +102,24 @@ func (a *Store) updateArgoCDProjects() ([]*model.ArgoCDProject, error) {
 	}
 
 	argoCDProjects := make(map[string]*model.ArgoCDProject)
-	for _, tekPro := range regArgoCDProjects {
-		argoCDProjects[tekPro.Id] = tekPro
+	for _, argoCDPro := range regArgoCDProjects {
+		var deleteArgoCDRecord bool
+		for _, gitProject := range gitProjects {
+			if gitProject.Id == argoCDPro.GitProjectId {
+				deleteArgoCDRecord = false
+				break
+			} else {
+				deleteArgoCDRecord = true
+			}
+		}
+
+		if deleteArgoCDRecord {
+			if err := a.DeleteArgoCDProjectsData(argoCDPro.Id); err != nil {
+				return nil, err
+			}
+		} else {
+			argoCDProjects[argoCDPro.GitProjectId] = argoCDPro
+		}
 	}
 
 	ret := make([]*model.ArgoCDProject, 0)

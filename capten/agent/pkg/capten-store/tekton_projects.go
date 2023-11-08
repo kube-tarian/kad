@@ -72,7 +72,23 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 
 	regTektonProjectId := make(map[string]*model.TektonProject)
 	for _, tekPro := range regTektonProjects {
-		regTektonProjectId[tekPro.Id] = tekPro
+		var deleteRecord bool
+		for _, gitProject := range allTektonProjects {
+			if gitProject.Id == tekPro.GitProjectId {
+				deleteRecord = false
+				break
+			} else {
+				deleteRecord = true
+			}
+		}
+
+		if deleteRecord {
+			if err := a.DeleteTektonProject(tekPro.Id); err != nil {
+				return nil, err
+			}
+		} else {
+			regTektonProjectId[tekPro.Id] = tekPro
+		}
 	}
 
 	ret := make([]*model.TektonProject, 0)

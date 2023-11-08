@@ -74,6 +74,24 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 		return nil, err
 	}
 
+	for _, crossplaneProject := range regCrossplaneProjects {
+		var deleteRecord bool
+		for _, gitProject := range allCrossplaneGitProjects {
+			if gitProject.Id == crossplaneProject.GitProjectId {
+				deleteRecord = false
+				break
+			} else {
+				deleteRecord = true
+			}
+		}
+
+		if deleteRecord {
+			if err := a.DeleteCrossplaneProject(crossplaneProject.Id); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	if len(regCrossplaneProjects) == 0 {
 		// no project was registered, register the git project
 		project := &model.CrossplaneProject{
