@@ -1,6 +1,7 @@
-package activities
+package crossplane
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -9,6 +10,34 @@ import (
 	cp "github.com/otiai10/copy"
 )
 
+func TestFileValuesReplace(t *testing.T) {
+	dir := t.TempDir()
+
+	path := filepath.Join(dir, "test.yaml")
+	file, err := os.Create(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := file.WriteString("https://github.com/intelops/capten-templates.git"); err != nil {
+		t.Fatal(err)
+	}
+	file.Close()
+
+	if err := replaceCaptenUrls(dir, "replaced"); err != nil {
+		t.Fatal(err)
+	}
+
+	readBytes, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if string(readBytes) != "replaced" {
+		t.Fail()
+	}
+}
+
 func TestCreatefiles(t *testing.T) {
 	createDirAndFiles(t)
 }
@@ -16,14 +45,14 @@ func TestCreatefiles(t *testing.T) {
 func createDirAndFiles(t *testing.T) string {
 	dir := t.TempDir()
 	configMap := map[string]string{
-		"aws_package":   "dummy.io/crossplane-contrib/provider-aws:v1.1.1",
-		"azure_package": "dummy.io/crossplane-contrib/provider-azure:v1.1.1",
+		"aws":   "dummy.io/crossplane-contrib/provider-aws:v1.1.1",
+		"azure": "dummy.io/crossplane-contrib/provider-azure:v1.1.1",
 	}
 	pathInRepo := "configs"
 	retDir := dir
 	dir = filepath.Join(dir, pathInRepo)
 	params := &model.CrossplaneUseCase{CrossplaneProviders: dummyProviderInfo()}
-	app := CrossPlaneApp{pluginConfig: configMap}
+	app := CrossPlaneApp{pluginConfig: &crossplanePluginConfig{ProviderPackages: configMap}}
 	if err := app.createProviderConfigs(dir, params); err != nil {
 		t.Fatal(err)
 	}

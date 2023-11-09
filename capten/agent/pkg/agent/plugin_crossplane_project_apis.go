@@ -162,7 +162,7 @@ func (a *Agent) UnRegisterCrossplaneProject(ctx context.Context, request *capten
 
 func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, providers []model.CrossplaneProvider) error {
 	ci := captenmodel.CrossplaneUseCase{Type: crossplaneConfigUseCase, RepoURL: req.GitProjectUrl,
-		VaultCredIdentifier: req.GitProjectId, PushToDefaultBranch: !a.createPr, CrossplaneProviders: providers}
+		VaultCredIdentifier: req.GitProjectId, CrossplaneProviders: providers}
 	wd := workers.NewConfig(a.tc, a.log)
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: crossplaneConfigUseCase}, ci)
