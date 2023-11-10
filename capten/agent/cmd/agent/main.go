@@ -119,5 +119,17 @@ func startClaimSync(crontInterval string) (*cron.Cron, error) {
 		return nil, jobErr
 	}
 
+	fetchCrossPlaneProviders, err := captenagentsync.NewFetchCrossPlaneProviders()
+	if err != nil {
+		log.Errorf("Failed to initialize the sync: %v", err)
+		return nil, err
+	}
+
+	_, crossPlaneJobErr := cronJob.AddJob(fmt.Sprintf(StrInterval, crontInterval), cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).Then(fetchCrossPlaneProviders))
+	if jobErr != nil {
+		log.Errorf("Failed to add cronJob for sync clusterClaim: %v", crossPlaneJobErr)
+		return nil, jobErr
+	}
+
 	return cronJob, nil
 }
