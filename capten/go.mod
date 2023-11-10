@@ -38,10 +38,19 @@ require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/crossplane/crossplane-runtime v1.14.0 // indirect
+	github.com/distribution/reference v0.5.0 // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
+	github.com/pjbgf/sha1cd v0.3.0 // indirect
+	github.com/skeema/knownhosts v1.2.0 // indirect
 	github.com/spf13/afero v1.10.0 // indirect
+	go.opentelemetry.io/otel/metric v1.19.0 // indirect
+	golang.org/x/mod v0.13.0 // indirect
+	golang.org/x/tools v0.14.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	sigs.k8s.io/controller-runtime v0.16.3 // indirect
 )
 
