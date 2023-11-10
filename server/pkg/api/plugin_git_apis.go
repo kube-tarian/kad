@@ -182,7 +182,7 @@ func (s *Server) GetGitProjects(ctx context.Context, request *captenpluginspb.Ge
 	}
 
 	if response.Status != captenpluginspb.StatusCode_OK {
-		s.log.Errorf("failed to get the ClusterProject")
+		s.log.Errorf("failed to get the ClusterProject, %s", response.StatusMessage)
 		return &captenpluginspb.GetGitProjectsResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get the Cluster GitProject",
@@ -230,7 +230,7 @@ func (s *Server) GetGitProjectsForLabels(ctx context.Context, request *captenplu
 	}
 
 	if response.Status != captenpluginspb.StatusCode_OK {
-		s.log.Errorf("failed to get the ClusterProject with lables")
+		s.log.Errorf("failed to get the ClusterProject with lables, %s", response.StatusMessage)
 		return &captenpluginspb.GetGitProjectsForLabelsResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get the Cluster GitProject",

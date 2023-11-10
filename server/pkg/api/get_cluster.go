@@ -3,9 +3,14 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+)
+
+const (
+	clusterNotFound = "no cluster found"
 )
 
 func (s *Server) GetClusterDetails(ctx context.Context, request *serverpb.GetClusterDetailsRequest) (
@@ -22,10 +27,17 @@ func (s *Server) GetClusterDetails(ctx context.Context, request *serverpb.GetClu
 	s.log.Infof("GetClusterDetails request recieved, [org: %s]", orgId)
 	cluster, err := s.serverStore.GetClusterForOrg(orgId)
 	if err != nil {
-		s.log.Errorf("failed to get clusterID for org %s, %v", orgId, err)
+		if strings.EqualFold(err.Error(), clusterNotFound) {
+			s.log.Infof("cluster not found for org %s", orgId)
+			return &serverpb.GetClusterDetailsResponse{
+				Status:        serverpb.StatusCode_NOT_FOUND,
+				StatusMessage: "cluster not found",
+			}, nil
+		}
+
 		return &serverpb.GetClusterDetailsResponse{
 			Status:        serverpb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed get cluster details",
+			StatusMessage: "failed to get cluster details",
 		}, err
 	}
 

@@ -9,7 +9,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 )
 
-const gitProjectEntityName = "gitproject"
+const gitProjectEntityName = "git-project"
 
 // add more labels here if needed
 var whitelistedLabels = []string{"crossplane"}

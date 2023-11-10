@@ -1,4 +1,4 @@
-package activities
+package appconfig
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/github"
@@ -19,21 +20,36 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
 )
 
-type ConfigureApp struct {
-	config    *Config
+const (
+	tmpGitProjectCloneStr          = "clone*"
+	gitProjectAccessTokenAttribute = "accessToken"
+	gitUrlSuffix                   = ".git"
+)
+
+type Config struct {
+	GitDefaultCommiterName  string `envconfig:"GIT_COMMIT_NAME" default:"capten-bot"`
+	GitDefaultCommiterEmail string `envconfig:"GIT_COMMIT_EMAIL" default:"capten-bot@intelops.dev"`
+	GitVaultEntityName      string `envconfig:"GIT_VAULT_ENTITY_NAME" default:"git-project"`
+	GitCloneDir             string `envconfig:"GIT_CLONE_DIR" default:"/gitCloneDir"`
+	GitBranchName           string `envconfig:"GIT_BRANCH_NAME" default:"capten-template-bot"`
+}
+
+var logger = logging.NewLogger()
+
+type AppGitConfigHelper struct {
+	cfg       Config
 	gitPlugin workerframework.ConfigureCICD
 }
 
-func NewConfigureApp() (*ConfigureApp, error) {
-	config, err := GetConfig()
-	if err != nil {
+func NewAppGitConfigHelper() (*AppGitConfigHelper, error) {
+	cfg := Config{}
+	if err := envconfig.Process("", &cfg); err != nil {
 		return nil, err
 	}
-
-	return &ConfigureApp{config: config, gitPlugin: git.New()}, nil
+	return &AppGitConfigHelper{cfg: cfg, gitPlugin: git.New()}, nil
 }
 
-func (ca *ConfigureApp) getAccessToken(ctx context.Context, credId string) (string, error) {
+func (ca *AppGitConfigHelper) GetAccessToken(ctx context.Context, projectId string) (string, error) {
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
 		err = errors.WithMessage(err, "error in initializing credential reader")
@@ -41,20 +57,20 @@ func (ca *ConfigureApp) getAccessToken(ctx context.Context, credId string) (stri
 	}
 
 	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
-		ca.config.VaultEntityName, credId)
+		ca.cfg.GitVaultEntityName, projectId)
 	if err != nil {
 		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
-			ca.config.VaultEntityName, credId)
+			ca.cfg.GitVaultEntityName, projectId)
 		return "", err
 	}
 
-	return cred[accessToken], nil
+	return cred[gitProjectAccessTokenAttribute], nil
 }
 
-func (ca *ConfigureApp) cloneRepos(ctx context.Context, templateRepo, customerRepo, token string) (templateDir string,
+func (ca *AppGitConfigHelper) CloneRepos(ctx context.Context, templateRepo, customerRepo, token string) (templateDir string,
 	reqRepo string, err error) {
 	// Clone the template repo
-	templateDir, err = os.MkdirTemp(ca.config.GitCloneDir, tmpCloneStr)
+	templateDir, err = os.MkdirTemp(ca.cfg.GitCloneDir, tmpGitProjectCloneStr)
 	if err != nil {
 		err = fmt.Errorf("failed to create template tmp dir, err: %v", err)
 		return
@@ -67,7 +83,7 @@ func (ca *ConfigureApp) cloneRepos(ctx context.Context, templateRepo, customerRe
 		return
 	}
 
-	reqRepo, err = os.MkdirTemp(ca.config.GitCloneDir, tmpCloneStr)
+	reqRepo, err = os.MkdirTemp(ca.cfg.GitCloneDir, tmpGitProjectCloneStr)
 	if err != nil {
 		os.RemoveAll(templateDir)
 		err = fmt.Errorf("failed to create tmp dir for user repo, err: %v", err)
@@ -84,7 +100,7 @@ func (ca *ConfigureApp) cloneRepos(ctx context.Context, templateRepo, customerRe
 	return
 }
 
-func (ca *ConfigureApp) deployMainApp(ctx context.Context, fileName string) (string, string, error) {
+func (ca *AppGitConfigHelper) DeployMainApp(ctx context.Context, fileName string) (string, string, error) {
 	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
 	if err != nil {
 		return "", "", fmt.Errorf("failed to initalize k8s client: %v", err)
@@ -100,7 +116,7 @@ func (ca *ConfigureApp) deployMainApp(ctx context.Context, fileName string) (str
 
 }
 
-func (ca *ConfigureApp) syncArgoCDApp(ctx context.Context, ns, resName string) error {
+func (ca *AppGitConfigHelper) SyncArgoCDApp(ctx context.Context, ns, resName string) error {
 	client, err := argocd.NewClient(logger)
 	if err != nil {
 		return err
@@ -114,7 +130,7 @@ func (ca *ConfigureApp) syncArgoCDApp(ctx context.Context, ns, resName string) e
 	return nil
 }
 
-func (ca *ConfigureApp) waitForArgoCDToSync(ctx context.Context, ns, resName string) error {
+func (ca *AppGitConfigHelper) WaitForArgoCDToSync(ctx context.Context, ns, resName string) error {
 	client, err := argocd.NewClient(logger)
 	if err != nil {
 		return err
@@ -141,9 +157,9 @@ func (ca *ConfigureApp) waitForArgoCDToSync(ctx context.Context, ns, resName str
 	return nil
 }
 
-func (ca *ConfigureApp) addToGit(ctx context.Context, paramType, repoUrl, token string, createPr bool) error {
+func (ca *AppGitConfigHelper) AddToGit(ctx context.Context, paramType, repoUrl, token string, createPR bool) error {
 	if err := ca.gitPlugin.Commit(".", "configure requested app",
-		ca.config.GitDefaultCommiterName, ca.config.GitDefaultCommiterEmail); err != nil {
+		ca.cfg.GitDefaultCommiterName, ca.cfg.GitDefaultCommiterEmail); err != nil {
 		return fmt.Errorf("failed to commit the changes to user repo, err: %v", err)
 	}
 
@@ -152,24 +168,22 @@ func (ca *ConfigureApp) addToGit(ctx context.Context, paramType, repoUrl, token 
 		return fmt.Errorf("failed to get default branch of user repo, err: %v", err)
 	}
 
-	if !createPr {
-		_, err = ca.createPR(ctx, repoUrl, branchName+"-"+paramType, defaultBranch, token)
+	if createPR {
+		_, err = ca.createPR(ctx, repoUrl, ca.cfg.GitBranchName+"-"+paramType, defaultBranch, token)
 		if err != nil {
 			return fmt.Errorf("failed to create the PR on user repo, err: %v", err)
 		}
-
-		logger.Info("skiping push to default branch.")
+		logger.Info("created PR, skiping push to default branch")
 		return nil
 	}
 
 	if err := ca.gitPlugin.Push(defaultBranch, token); err != nil {
 		return fmt.Errorf("failed to get push to default branch, err: %v", err)
 	}
-
 	return nil
 }
 
-func (ca *ConfigureApp) createPR(ctx context.Context, repoURL, commitBranch, baseBranch, token string) (string, error) {
+func (ca *AppGitConfigHelper) createPR(ctx context.Context, repoURL, commitBranch, baseBranch, token string) (string, error) {
 	op := github.NewOperation(token)
 	str := strings.Split(repoURL, "/")
 	return op.CreatePR(ctx, strings.TrimSuffix(str[len(str)-1], gitUrlSuffix), str[len(str)-2], "Configuring requested app", commitBranch, baseBranch, "")
