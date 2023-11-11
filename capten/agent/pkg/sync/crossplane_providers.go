@@ -11,8 +11,13 @@ import (
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 
 	"github.com/kube-tarian/kad/capten/agent/pkg/model"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+)
+
+const (
+	providerNamePrefix = "provider-"
 )
 
 type FetchCrossPlaneProviders struct {
@@ -41,11 +46,6 @@ func NewFetchCrossPlaneProviders() (*FetchCrossPlaneProviders, error) {
 		log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client")
 		return nil, err
 	}
-
-	// avlClusters, err := getManagedClusterEndpointMap(db)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("failed to execute  getManagedClusterEndpointMap, err: %v", err)
-	// }
 
 	return &FetchCrossPlaneProviders{log: log, client: k8sclient, db: db, creds: credAdmin}, nil
 }
@@ -81,16 +81,45 @@ func (fetch *FetchCrossPlaneProviders) Run() {
 }
 
 func (fetch *FetchCrossPlaneProviders) UpdateCrossplaneProvider(clObj []v1.Provider) {
+	prvList, err := fetch.db.GetCrossplaneProviders()
+	if err != nil {
+		fetch.log.Error("Failed to GetCrossplaneProviders, err:", err)
+
+		return
+	}
+
+	var prvMap map[string]*captenpluginspb.CrossplaneProvider
+	for _, prov := range prvList {
+		prvMap[providerNamePrefix+prov.ProviderName] = prov
+	}
+
 	for _, obj := range clObj {
 		for _, status := range obj.Status.Conditions {
 			if status.Type != v1.TypeHealthy {
 				continue
 			}
 
-			provider := model.CrossplaneProvider{}
-			provider.ProviderName = obj.Name
-			provider.Status = string(v1.TypeHealthy)
-			//fetch.db.UpdateCrossplaneProvider(&provider)
+			prvObj, ok := prvMap[obj.Name]
+			if !ok {
+				fetch.log.Infof("Provider name %s is not found in the db, skipping the update", obj.Name)
+				continue
+			}
+
+			provider := model.CrossplaneProvider{
+				Id:              prvObj.Id,
+				Status:          string(v1.TypeHealthy),
+				CloudType:       prvObj.CloudType,
+				CloudProviderId: prvObj.CloudProviderId,
+				ProviderName:    prvObj.ProviderName,
+			}
+
+			if err := fetch.db.UpdateCrossplaneProvider(&provider); err != nil {
+				fetch.log.Errorf("failed to update provider %s details in db, err: ", prvObj.ProviderName, err)
+				continue
+			}
+
+			fetch.log.Infof("successfully updated the details for %s", prvObj.ProviderName)
+
 		}
 	}
 }
