@@ -69,14 +69,12 @@ func (ca *AppGitConfigHelper) GetAccessToken(ctx context.Context, projectId stri
 
 func (ca *AppGitConfigHelper) CloneRepos(ctx context.Context, templateRepo, customerRepo, token string) (templateDir string,
 	reqRepo string, err error) {
-	// Clone the template repo
 	templateDir, err = os.MkdirTemp(ca.cfg.GitCloneDir, tmpGitProjectCloneStr)
 	if err != nil {
 		err = fmt.Errorf("failed to create template tmp dir, err: %v", err)
 		return
 	}
 
-	// Clone the customer repo
 	if err = ca.gitPlugin.Clone(templateDir, templateRepo, token); err != nil {
 		os.RemoveAll(templateDir)
 		err = fmt.Errorf("failed to Clone template repo, err: %v", err)
