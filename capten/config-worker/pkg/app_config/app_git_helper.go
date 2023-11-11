@@ -138,7 +138,7 @@ func (ca *AppGitConfigHelper) WaitForArgoCDToSync(ctx context.Context, ns, resNa
 	for i := 0; i < 3; i++ {
 		app, err := client.GetAppSyncStatus(ctx, ns, resName)
 		if err != nil {
-			return err
+			return fmt.Errorf("app %s synch staus fetch failed", resName)
 		}
 
 		if app.Status.Sync.Status == v1alpha1.SyncStatusCodeSynced {

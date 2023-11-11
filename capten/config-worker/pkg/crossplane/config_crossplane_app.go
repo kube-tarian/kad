@@ -61,6 +61,15 @@ func readCrossPlanePluginConfig(pluginFile string) (*crossplanePluginConfig, err
 }
 
 func (cp *CrossPlaneApp) Configure(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {
+	status, err = cp.configureProjectAndApps(ctx, req)
+	if err != nil {
+		logger.Errorf("failed to configure crossplane project, %v", err)
+		err = fmt.Errorf("failed to configure crossplane project")
+	}
+	return
+}
+
+func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {
 	accessToken, err := cp.helper.GetAccessToken(ctx, req.VaultCredIdentifier)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
