@@ -102,25 +102,39 @@ func (a *Store) updateArgoCDProjects() ([]*model.ArgoCDProject, error) {
 	}
 
 	argoCDProjects := make(map[string]*model.ArgoCDProject)
-	for _, tekPro := range regArgoCDProjects {
-		argoCDProjects[tekPro.Id] = tekPro
+	for _, argoCDPro := range regArgoCDProjects {
+		var deleteArgoCDRecord = true
+		for _, gitProject := range gitProjects {
+			if gitProject.Id == argoCDPro.GitProjectId {
+				deleteArgoCDRecord = false
+				break
+			}
+		}
+
+		if deleteArgoCDRecord {
+			if err := a.DeleteArgoCDProjectsData(argoCDPro.Id); err != nil {
+				return nil, err
+			}
+		} else {
+			argoCDProjects[argoCDPro.GitProjectId] = argoCDPro
+		}
 	}
 
 	ret := make([]*model.ArgoCDProject, 0)
 	for _, gitProject := range gitProjects {
-		project := &model.ArgoCDProject{Id: gitProject.Id, GitProjectId: gitProject.Id,
-			GitProjectUrl: gitProject.ProjectUrl}
-		if ap, ok := argoCDProjects[gitProject.Id]; !ok {
+		if ap, ok := argoCDProjects[gitProject.Id]; ok {
+			ret = append(ret, ap)
+		} else {
+			project := &model.ArgoCDProject{Id: gitProject.Id, GitProjectId: gitProject.Id,
+				GitProjectUrl: gitProject.ProjectUrl}
 			project.Status = string(model.ArgoCDProjectAvailable)
 			project.LastUpdateTime = time.Now().Format(time.RFC3339)
 			if err := a.UpsertArgoCDProject(project); err != nil {
 				return nil, err
 			}
-		} else {
-			project.Status = argoCDProjects[gitProject.Id].Status
-			project.LastUpdateTime = ap.LastUpdateTime
+			ret = append(ret, project)
 		}
-		ret = append(ret, project)
 	}
+
 	return ret, nil
 }
