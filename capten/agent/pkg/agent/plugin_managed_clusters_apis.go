@@ -27,7 +27,7 @@ func (a *Agent) GetManagedClusters(ctx context.Context, request *captenpluginspb
 	return &captenpluginspb.GetManagedClustersResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "successfully fetched the Crossplane projects",
-		Clusters:      []*captenpluginspb.ManagedCluster{},
+		Clusters:      managedClusters,
 	}, nil
 }
 
