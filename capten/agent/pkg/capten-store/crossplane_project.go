@@ -75,13 +75,11 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 	}
 
 	for _, crossplaneProject := range regCrossplaneProjects {
-		var deleteRecord bool
+		var deleteRecord = true
 		for _, gitProject := range allCrossplaneGitProjects {
 			if gitProject.Id == crossplaneProject.GitProjectId {
 				deleteRecord = false
 				break
-			} else {
-				deleteRecord = true
 			}
 		}
 

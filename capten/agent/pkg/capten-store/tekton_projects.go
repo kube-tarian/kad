@@ -72,13 +72,11 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 
 	regTektonProjectId := make(map[string]*model.TektonProject)
 	for _, tekPro := range regTektonProjects {
-		var deleteRecord bool
+		var deleteRecord = true
 		for _, gitProject := range allTektonProjects {
 			if gitProject.Id == tekPro.GitProjectId {
 				deleteRecord = false
 				break
-			} else {
-				deleteRecord = true
 			}
 		}
 

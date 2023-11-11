@@ -103,13 +103,11 @@ func (a *Store) updateArgoCDProjects() ([]*model.ArgoCDProject, error) {
 
 	argoCDProjects := make(map[string]*model.ArgoCDProject)
 	for _, argoCDPro := range regArgoCDProjects {
-		var deleteArgoCDRecord bool
+		var deleteArgoCDRecord = true
 		for _, gitProject := range gitProjects {
 			if gitProject.Id == argoCDPro.GitProjectId {
 				deleteArgoCDRecord = false
 				break
-			} else {
-				deleteArgoCDRecord = true
 			}
 		}
 
