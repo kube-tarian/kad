@@ -9,7 +9,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 )
 
-const gitProjectEntityName = "gitproject"
+const gitProjectEntityName = "git-project"
 
 // add more labels here if needed
 var whitelistedLabels = []string{"crossplane"}
@@ -131,6 +131,13 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 		}, nil
 	}
 	a.log.Infof("Delete Git project %s request recieved", request.Id)
+
+	if err := a.deleteGitProjectCredential(ctx, request.Id); err != nil {
+		return &captenpluginspb.DeleteGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete gitProject credential in vault",
+		}, nil
+	}
 
 	if err := a.as.DeleteGitProjectById(request.Id); err != nil {
 		a.log.Errorf("failed to delete gitProject from db, %v", err)
@@ -262,6 +269,26 @@ func (a *Agent) storeGitProjectCredential(ctx context.Context, id string, userID
 	}
 	a.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
 	a.log.Infof("stored credential for entity %s", credPath)
+	return nil
+}
+
+func (a *Agent) deleteGitProjectCredential(ctx context.Context, id string) error {
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProjectEntityName, id)
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
+		a.log.Errorf("failed to delete credential for %s, %v", credPath, err)
+		return err
+	}
+
+	err = credAdmin.DeleteCredential(ctx, credentials.GenericCredentialType, gitProjectEntityName, id)
+	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system", "failed to store crendential for %s", credPath)
+		a.log.Errorf("failed to delete credential for %s, %v", credPath, err)
+		return err
+	}
+	a.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
+	a.log.Infof("deleted credential for entity %s", credPath)
 	return nil
 }
 

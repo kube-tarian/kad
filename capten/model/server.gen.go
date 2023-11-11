@@ -108,7 +108,6 @@ type CrossplaneUseCase struct {
 	VaultCredIdentifier string                     `json:"VaultCredIdentifier,omitempty"`
 	Timeout             uint32                     `json:"Timeout,omitempty"`
 	OverrideValues      map[string]string          `json:"OverrideValues,omitempty"`
-	PushToDefaultBranch bool                       `json:"PushToDefaultBranch,omitempty"`
 	CrossplaneProviders []model.CrossplaneProvider `json:"ProviderInfo,omitempty"`
 }
 

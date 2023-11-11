@@ -110,6 +110,13 @@ func (a *Agent) DeleteCloudProvider(ctx context.Context, request *captenpluginsp
 	}
 	a.log.Infof("Delete Cloud Provider %s request recieved", request.Id)
 
+	if err := a.deleteCloudProviderCredential(ctx, request.Id); err != nil {
+		return &captenpluginspb.DeleteCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete cloud provider credential in vault",
+		}, nil
+	}
+
 	if err := a.as.DeleteCloudProviderById(request.Id); err != nil {
 		a.log.Errorf("failed to delete CloudProvider from db, %v", err)
 		return &captenpluginspb.DeleteCloudProviderResponse{
@@ -234,5 +241,25 @@ func (a *Agent) storeCloudProviderCredential(ctx context.Context, id string, cre
 	}
 	a.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
 	a.log.Infof("stored credential for entity %s", credPath)
+	return nil
+}
+
+func (a *Agent) deleteCloudProviderCredential(ctx context.Context, id string) error {
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, cloudProviderEntityName, id)
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
+		a.log.Errorf("failed to delete credential for %s, %v", credPath, err)
+		return err
+	}
+
+	err = credAdmin.DeleteCredential(ctx, credentials.GenericCredentialType, cloudProviderEntityName, id)
+	if err != nil {
+		a.log.Audit("security", "storecred", "failed", "system", "failed to store crendential for %s", credPath)
+		a.log.Errorf("failed to delete credential for %s, %v", credPath, err)
+		return err
+	}
+	a.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
+	a.log.Infof("deleted credential for entity %s", credPath)
 	return nil
 }

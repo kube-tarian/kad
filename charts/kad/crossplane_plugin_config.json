@@ -1,10 +1,20 @@
 {
-    "git_repo": "https://github.com/intelops/capten-templates",
-    "synch_config_path": "infra",
-    "provider_config_path": "infra/crossplane/crossplane-config",
-    "provider_config_main_app": "infra/crossplane/crossplane-main-app.yaml",
-    "provider_config_child_apps": "crossplane-aws-dev-cluster",
-    "aws_package": "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0",
-    "azure_package": "",
-    "gcp_package": ""
+    "templateGitRepo": "https://github.com/intelops/capten-templates",
+    "crossplaneConfigSyncPath": "infra",
+    "providerConfigSyncPath": "infra/crossplane/crossplane-config",
+    "providerPackages": {
+        "aws": "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0",
+        "gcp": "xpkg.upbound.io/crossplane-contrib/provider-gcp:v0.22.0"
+    },
+    "argoCDApps": [
+        {
+            "mainAppGitPath": "infra/crossplane/crossplane-main-app.yaml",
+            "childAppNames": ["crossplane-aws-dev-cluster","aws-k8s-package"],
+            "synchApp": true
+        },
+        {
+            "mainAppGitPath": "infra/clusters/clusters-main-app.yaml",
+            "synchApp": false
+        }
+    ]
 }
