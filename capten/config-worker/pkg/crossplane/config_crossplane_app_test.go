@@ -24,7 +24,7 @@ func TestFileValuesReplace(t *testing.T) {
 	}
 	file.Close()
 
-	if err := replaceCaptenUrls(dir, "replaced"); err != nil {
+	if err := replaceCaptenUrls(dir, "src", "replaced"); err != nil {
 		t.Fatal(err)
 	}
 

@@ -66,6 +66,7 @@ func (cp *CrossPlaneApp) Configure(ctx context.Context, req *model.CrossplaneUse
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
 	}
 
+	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
 	templateRepo, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
@@ -82,7 +83,7 @@ func (cp *CrossPlaneApp) Configure(ctx context.Context, req *model.CrossplaneUse
 	logger.Infof("added provider config resources to cloned project %s", req.RepoURL)
 
 	// update git project url
-	if err := replaceCaptenUrls(customerRepo, req.RepoURL); err != nil {
+	if err := replaceCaptenUrls(customerRepo, cp.pluginConfig.TemplateGitRepo, req.RepoURL); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace template url")
 	}
 	logger.Infof("updated resource configurations in cloned project %s", req.RepoURL)
@@ -221,15 +222,16 @@ func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.Crossp
 	return providerConfigString, nil
 }
 
-func replaceCaptenUrls(dir string, replacement string) error {
-	target := "https://github.com/intelops/capten-templates.git"
-	if strings.HasSuffix(replacement, ".git") {
-		replacement += ".git"
+func replaceCaptenUrls(dir string, src, target string) error {
+	if !strings.HasSuffix(src, ".git") {
+		src += ".git"
 	}
 
-	// List all files in the directory
-	fileList := []string{}
+	if !strings.HasSuffix(target, ".git") {
+		target += ".git"
+	}
 
+	fileList := []string{}
 	if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
 			fileList = append(fileList, path)
@@ -239,32 +241,25 @@ func replaceCaptenUrls(dir string, replacement string) error {
 		return err
 	}
 
-	// Replace the string in each file
 	for _, filePath := range fileList {
-		err := replaceInFile(filePath, target, replacement)
+		err := replaceInFile(filePath, src, target)
 		if err != nil {
-			fmt.Printf("Error replacing in %s: %v\n", filePath, err)
+			logger.Errorf("Error replacing in %s: %v\n", filePath, err)
 		}
 	}
-
 	return nil
 }
 
 func replaceInFile(filePath, target, replacement string) error {
-	// Read the file content
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return err
 	}
 
-	// Perform the string replacement
 	newData := strings.Replace(string(data), target, replacement, -1)
-
-	// Write the modified content back to the file
 	err = os.WriteFile(filePath, []byte(newData), 0644)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
