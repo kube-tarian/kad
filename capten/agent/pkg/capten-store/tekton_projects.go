@@ -90,21 +90,20 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 	}
 
 	ret := make([]*model.TektonProject, 0)
-	for _, allTekProject := range allTektonProjects {
-		project := &model.TektonProject{Id: allTekProject.Id, GitProjectId: allTekProject.Id,
-			GitProjectUrl: allTekProject.ProjectUrl}
-		if _, ok := regTektonProjectId[allTekProject.Id]; !ok {
+	for _, gitProject := range allTektonProjects {
+		if tp, ok := regTektonProjectId[gitProject.Id]; ok {
+			ret = append(ret, tp)
+		} else {
+			project := &model.TektonProject{Id: gitProject.Id, GitProjectId: gitProject.Id,
+				GitProjectUrl: gitProject.ProjectUrl}
 			project.Status = "available"
 			project.WorkflowId = "NA"
 			project.Status = "NA"
 			if err := a.UpsertTektonProject(project); err != nil {
-				a.log.Errorf("failed to update default tekton projects, :%v", err)
 				return nil, err
 			}
-		} else {
-			project.Status = regTektonProjectId[allTekProject.Id].Status
+			ret = append(ret, project)
 		}
-		ret = append(ret, project)
 	}
 
 	return ret, nil

@@ -122,19 +122,19 @@ func (a *Store) updateArgoCDProjects() ([]*model.ArgoCDProject, error) {
 
 	ret := make([]*model.ArgoCDProject, 0)
 	for _, gitProject := range gitProjects {
-		project := &model.ArgoCDProject{Id: gitProject.Id, GitProjectId: gitProject.Id,
-			GitProjectUrl: gitProject.ProjectUrl}
-		if ap, ok := argoCDProjects[gitProject.Id]; !ok {
+		if ap, ok := argoCDProjects[gitProject.Id]; ok {
+			ret = append(ret, ap)
+		} else {
+			project := &model.ArgoCDProject{Id: gitProject.Id, GitProjectId: gitProject.Id,
+				GitProjectUrl: gitProject.ProjectUrl}
 			project.Status = string(model.ArgoCDProjectAvailable)
 			project.LastUpdateTime = time.Now().Format(time.RFC3339)
 			if err := a.UpsertArgoCDProject(project); err != nil {
 				return nil, err
 			}
-		} else {
-			project.Status = argoCDProjects[gitProject.Id].Status
-			project.LastUpdateTime = ap.LastUpdateTime
+			ret = append(ret, project)
 		}
-		ret = append(ret, project)
 	}
+
 	return ret, nil
 }
