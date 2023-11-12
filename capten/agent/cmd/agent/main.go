@@ -71,7 +71,7 @@ func main() {
 		}
 	}()
 
-	cronjob, err := startClaimSync(cfg.CronInterval)
+	cronjob, err := initializeCronJobs(cfg.CronInterval)
 	if err != nil {
 		log.Fatalf("Failed to create cron job: %v", err)
 	}
@@ -104,8 +104,8 @@ func configureDB() error {
 	return nil
 }
 
-func startClaimSync(crontInterval string) (*cron.Cron, error) {
-	cronJob := cron.New()
+func initializeCronJobs(crontInterval string) (*cron.Cron, error) {
+	cronJob := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger), cron.Recover(cron.DefaultLogger)))
 
 	fetch, err := captenagentsync.NewFetch()
 	if err != nil {
@@ -113,7 +113,7 @@ func startClaimSync(crontInterval string) (*cron.Cron, error) {
 		return nil, err
 	}
 
-	_, jobErr := cronJob.AddJob(fmt.Sprintf(StrInterval, crontInterval), cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).Then(fetch))
+	_, jobErr := cronJob.AddJob(fmt.Sprintf(StrInterval, crontInterval), fetch)
 	if jobErr != nil {
 		log.Errorf("Failed to add cronJob for sync clusterClaim: %v", jobErr)
 		return nil, jobErr
@@ -125,11 +125,12 @@ func startClaimSync(crontInterval string) (*cron.Cron, error) {
 		return nil, err
 	}
 
-	_, crossPlaneJobErr := cronJob.AddJob(fmt.Sprintf(StrInterval, crontInterval), cron.NewChain(cron.SkipIfStillRunning(cron.DefaultLogger)).Then(fetchCrossPlaneProviders))
+	_, crossPlaneJobErr := cronJob.AddJob(fmt.Sprintf(StrInterval, crontInterval), fetchCrossPlaneProviders)
 	if jobErr != nil {
 		log.Errorf("Failed to add cronJob for sync clusterClaim: %v", crossPlaneJobErr)
 		return nil, jobErr
 	}
 
+	log.Info("successfully initialized the cron")
 	return cronJob, nil
 }
