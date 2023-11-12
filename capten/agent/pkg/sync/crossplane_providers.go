@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	v1 "github.com/crossplane/crossplane/apis/pkg/v1"
 	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
@@ -53,7 +52,7 @@ func NewFetchCrossPlaneProviders() (*FetchCrossPlaneProviders, error) {
 func (fetch *FetchCrossPlaneProviders) Run() {
 	fetch.log.Info("started to sync CrossplaneProvider resources")
 
-	objList, err := fetch.client.DynamicClient.ListAllNamespaceResource(context.TODO(), schema.GroupVersionResource{Group: v1.Group, Version: v1.Version, Resource: "providers"})
+	objList, err := fetch.client.DynamicClient.ListAllNamespaceResource(context.TODO(), schema.GroupVersionResource{Group: "pkg.crossplane.io", Version: "v1", Resource: "providers"})
 	if err != nil {
 		fetch.log.Error("Failed to fetch all the resource, err:", err)
 
@@ -67,7 +66,7 @@ func (fetch *FetchCrossPlaneProviders) Run() {
 		return
 	}
 
-	var providerObj v1.ProviderList
+	var providerObj model.ProviderList
 	err = json.Unmarshal(providers, &providerObj)
 	if err != nil {
 		fetch.log.Error("Failed to un-marshall the data, err:", err)
@@ -80,7 +79,7 @@ func (fetch *FetchCrossPlaneProviders) Run() {
 	fetch.log.Info("succesfully sync-ed CrossplaneProvider resources")
 }
 
-func (fetch *FetchCrossPlaneProviders) UpdateCrossplaneProvider(clObj []v1.Provider) {
+func (fetch *FetchCrossPlaneProviders) UpdateCrossplaneProvider(clObj []model.Provider) {
 	prvList, err := fetch.db.GetCrossplaneProviders()
 	if err != nil {
 		fetch.log.Error("Failed to GetCrossplaneProviders, err:", err)
@@ -95,7 +94,7 @@ func (fetch *FetchCrossPlaneProviders) UpdateCrossplaneProvider(clObj []v1.Provi
 
 	for _, obj := range clObj {
 		for _, status := range obj.Status.Conditions {
-			if status.Type != v1.TypeHealthy {
+			if status.Type != model.TypeHealthy {
 				continue
 			}
 
@@ -107,7 +106,7 @@ func (fetch *FetchCrossPlaneProviders) UpdateCrossplaneProvider(clObj []v1.Provi
 
 			provider := model.CrossplaneProvider{
 				Id:              prvObj.Id,
-				Status:          string(v1.TypeHealthy),
+				Status:          string(status.Type),
 				CloudType:       prvObj.CloudType,
 				CloudProviderId: prvObj.CloudProviderId,
 				ProviderName:    prvObj.ProviderName,
