@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 
@@ -21,13 +20,11 @@ const (
 
 type ProvidersSyncHandler struct {
 	log     logging.Logger
-	client  *k8s.K8SClient
 	dbStore *captenstore.Store
-	creds   credentials.CredentialAdmin
 }
 
-func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*ProvidersSyncHandler, error) {
-	return &ProvidersSyncHandler{log: log, dbStore: dbStore}, nil
+func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) *ProvidersSyncHandler {
+	return &ProvidersSyncHandler{log: log, dbStore: dbStore}
 }
 
 func (h *ProvidersSyncHandler) Sync() error {
