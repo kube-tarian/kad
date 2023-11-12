@@ -87,7 +87,7 @@ func (fetch *FetchCrossPlaneProviders) UpdateCrossplaneProvider(clObj []model.Pr
 		return
 	}
 
-	var prvMap map[string]*captenpluginspb.CrossplaneProvider
+	prvMap := make(map[string]*captenpluginspb.CrossplaneProvider)
 	for _, prov := range prvList {
 		prvMap[providerNamePrefix+prov.ProviderName] = prov
 	}
