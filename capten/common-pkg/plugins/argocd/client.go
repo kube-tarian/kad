@@ -36,10 +36,12 @@ func NewClient(logger logging.Logger) (*ArgoCDClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := k8sClient.FetchSecretDetails(&k8s.SecretDetailsRequest{Namespace: "argo-cd", SecretName: "argocd-initial-admin-secret"})
+
+	res, err := k8sClient.GetSecretData("argo-cd", "argocd-initial-admin-secret")
 	if err != nil {
 		return nil, err
 	}
+
 	password := res.Data["password"]
 	if len(password) == 0 {
 		return nil, fmt.Errorf("credentials not found in the secret")

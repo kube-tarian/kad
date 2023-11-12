@@ -7,8 +7,8 @@ package fetcher
 import (
 	"fmt"
 
-	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 )
 
 type CredentialFetcher struct {
@@ -17,14 +17,11 @@ type CredentialFetcher struct {
 }
 
 func NewCredentialFetcher(log logging.Logger) (*CredentialFetcher, error) {
-	// Initialize kubernetes client
 	k8sClient, err := k8s.NewK8SClient(log)
 	if err != nil {
 		log.Errorf("K8S client initialization failed: %v", err)
 		return nil, fmt.Errorf("k8 client initialization failed, %v", err)
 	}
-
-	// TODO: Initialze Cassandra client
 
 	return &CredentialFetcher{
 		k8sClient: k8sClient,
@@ -53,27 +50,20 @@ func (c *CredentialFetcher) FetchPluginDetails(req *PluginRequest) (*PluginRespo
 }
 
 func (c *CredentialFetcher) FetchArgoCDDetails(namespace, releaseName string) (*PluginResponse, error) {
-	service, err := c.k8sClient.FetchServiceDetails(&k8s.ServiceDetailsRequest{
-		Namespace:   namespace,
-		ServiceName: releaseName,
-	})
+	service, err := c.k8sClient.GetServiceData(namespace, releaseName)
 	if err != nil {
-		c.log.Errorf("Fetching plugin credentials failed: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("fetching plugin credentials failed: %v", err)
 	}
 	// Depending on the service port details isSSLEnabled can be prepared. For now it is set to false default scenario
 	isSSLEnabled := false
 
-	credentialDetails, err := c.k8sClient.FetchSecretDetails(&k8s.SecretDetailsRequest{
-		Namespace:  namespace,
-		SecretName: "argocd-initial-admin-secret",
-	})
+	credentialDetails, err := c.k8sClient.GetSecretData(namespace, "argocd-initial-admin-secret")
 	if err != nil {
 		c.log.Errorf("Fetching plugin credentials failed: %v", err)
 		return nil, err
 	}
 	return &PluginResponse{
-		ServiceURL:   fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, service.Namespace),
+		ServiceURL:   fmt.Sprintf("%s.%s.svc.cluster.local", service.Name, namespace),
 		IsSSLEnabled: isSSLEnabled,
 		Username:     "admin", // admin user is not available in secret
 		Password:     credentialDetails.Data["password"],

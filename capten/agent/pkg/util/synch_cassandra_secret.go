@@ -28,7 +28,7 @@ func SyncCassandraAdminSecret(log logging.Logger) error {
 		return err
 	}
 
-	res, err := k8sClient.FetchSecretDetails(&k8s.SecretDetailsRequest{Namespace: conf.Namespace, SecretName: conf.SecretName})
+	res, err := k8sClient.GetSecretData(conf.Namespace, conf.SecretName)
 	if err != nil {
 		return err
 	}

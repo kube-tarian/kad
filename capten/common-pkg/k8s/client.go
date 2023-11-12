@@ -33,14 +33,12 @@ func NewK8SClient(log logging.Logger) (*K8SClient, error) {
 	// creates the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		log.Errorf("Initialize kubernetes client failed: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("initialize kubernetes client failed: %v", err)
 	}
 
 	dcClient, err := dynamic.NewForConfig(config)
 	if err != nil {
-		log.Errorf("failed to initialize dynamic client failed: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to initialize dynamic client failed: %v", err)
 	}
 
 	return &K8SClient{
@@ -53,23 +51,22 @@ func NewK8SClient(log logging.Logger) (*K8SClient, error) {
 func GetK8SConfig(log logging.Logger) (*rest.Config, error) {
 	conf, err := FetchConfiguration()
 	if err != nil {
-		log.Errorf("Fetch configuration failed: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("fetch configuration failed: %v", err)
 	}
+
 	var k8sConfig *rest.Config
 	if conf.KubeconfigPath == "" {
 		// creates the in-cluster config
 		k8sConfig, err = rest.InClusterConfig()
 		if err != nil {
-			log.Errorf("Fetch in-cluster configuration failed: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("fetch in-cluster configuration failed: %v", err)
 		}
 	} else {
 		// use the current context in kubeconfig
 		k8sConfig, err = clientcmd.BuildConfigFromFlags("", conf.KubeconfigPath)
 		if err != nil {
-			log.Errorf("Fetch in-cluster configuration from absolute path %s failed: %v", conf.KubeconfigPath, err)
-			return nil, err
+			return nil, fmt.Errorf("in-cluster configuration from absolute path %s failed: %v", conf.KubeconfigPath, err)
+
 		}
 	}
 	return k8sConfig, nil
@@ -78,10 +75,8 @@ func GetK8SConfig(log logging.Logger) (*rest.Config, error) {
 func (k *K8SClient) ListPods(namespace string) ([]corev1.Pod, error) {
 	pods, err := k.Clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		k.log.Errorf("List pods failed, %v", err)
 		return nil, err
 	}
-	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
 	return pods.Items, nil
 }
 
@@ -91,29 +86,25 @@ func FetchConfiguration() (*Configuration, error) {
 	return cfg, err
 }
 
-func (k *K8SClient) FetchSecretDetails(req *SecretDetailsRequest) (*SecretDetailsResponse, error) {
-	secret, err := k.Clientset.CoreV1().Secrets(req.Namespace).Get(context.TODO(), req.SecretName, metav1.GetOptions{})
+func (k *K8SClient) GetSecretData(namespace, secretName string) (*SecretData, error) {
+	secret, err := k.Clientset.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
 	if err != nil {
-		k.log.Errorf("Fetching secret %s failed, %v", req.SecretName, err)
 		return nil, err
 	}
 
-	// Convert data value from []bytes to string
 	data := make(map[string]string, len(secret.Data))
 	for k, v := range secret.Data {
 		data[k] = string(v)
 	}
 
-	return &SecretDetailsResponse{
-		Namespace: req.Namespace,
-		Data:      data,
+	return &SecretData{
+		Data: data,
 	}, nil
 }
 
-func (k *K8SClient) FetchServiceDetails(req *ServiceDetailsRequest) (*ServiceDetailsResponse, error) {
-	service, err := k.Clientset.CoreV1().Services(req.Namespace).Get(context.TODO(), req.ServiceName, metav1.GetOptions{})
+func (k *K8SClient) GetServiceData(namespace, serviceName string) (*ServiceData, error) {
+	service, err := k.Clientset.CoreV1().Services(namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
 	if err != nil {
-		k.log.Errorf("Fetching service %s details failed, %v", req.ServiceName, err)
 		return nil, err
 	}
 
@@ -123,11 +114,8 @@ func (k *K8SClient) FetchServiceDetails(req *ServiceDetailsRequest) (*ServiceDet
 		ports = append(ports, v.Port)
 	}
 
-	return &ServiceDetailsResponse{
-		Namespace: req.Namespace,
-		ServiceDetails: ServiceDetails{
-			Name:  service.Name,
-			Ports: ports,
-		},
+	return &ServiceData{
+		Name:  service.Name,
+		Ports: ports,
 	}, nil
 }

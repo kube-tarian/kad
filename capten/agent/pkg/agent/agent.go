@@ -23,20 +23,13 @@ type Agent struct {
 	createPr bool
 }
 
-func NewAgent(log logging.Logger, cfg *config.SericeConfig) (*Agent, error) {
+func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store) (*Agent, error) {
 	var tc *temporalclient.Client
 	var err error
 
 	tc, err = temporalclient.NewClient(log)
 	if err != nil {
 		return nil, err
-	}
-
-	as, err := captenstore.NewStore(log)
-	if err != nil {
-		// ignoring store failure until DB user creation working
-		// return nil, err
-		log.Errorf("failed to initialize store, %v", err)
 	}
 
 	agent := &Agent{
