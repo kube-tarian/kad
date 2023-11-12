@@ -106,7 +106,7 @@ func (fetch *FetchCrossPlaneProviders) UpdateCrossplaneProvider(clObj []model.Pr
 
 			provider := model.CrossplaneProvider{
 				Id:              prvObj.Id,
-				Status:          string(status.Type),
+				Status:          string(status.Status),
 				CloudType:       prvObj.CloudType,
 				CloudProviderId: prvObj.CloudProviderId,
 				ProviderName:    prvObj.ProviderName,
