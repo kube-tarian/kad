@@ -35,8 +35,8 @@ type ClusterClaimSyncHandler struct {
 	clusters map[string]*captenpluginspb.ManagedCluster
 }
 
-func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*ClusterClaimSyncHandler, error) {
-	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore, clusters: map[string]*captenpluginspb.ManagedCluster{}}, nil
+func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) *ClusterClaimSyncHandler {
+	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore, clusters: map[string]*captenpluginspb.ManagedCluster{}}
 }
 
 func (h *ClusterClaimSyncHandler) Sync() error {
