@@ -9,14 +9,13 @@ import (
 
 	"google.golang.org/grpc"
 
-	"github.com/robfig/cron/v3"
-
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/pkg/agent"
+	captenstore "github.com/kube-tarian/kad/capten/agent/pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/pkg/config"
+	"github.com/kube-tarian/kad/capten/agent/pkg/job"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
-	captenagentsync "github.com/kube-tarian/kad/capten/agent/pkg/sync"
 	"github.com/kube-tarian/kad/capten/agent/pkg/util"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
@@ -41,7 +40,14 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 
-	s, err := agent.NewAgent(log, cfg)
+	as, err := captenstore.NewStore(log)
+	if err != nil {
+		// ignoring store failure until DB user creation working
+		// return nil, err
+		log.Errorf("failed to initialize store, %v", err)
+	}
+
+	s, err := agent.NewAgent(log, cfg, as)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 	}
@@ -71,15 +77,13 @@ func main() {
 		}
 	}()
 
-	cronjob, err := initializeCronJobs(cfg.CronInterval)
+	jobScheduler, err := initializeJobScheduler(cfg, as)
 	if err != nil {
 		log.Fatalf("Failed to create cron job: %v", err)
 	}
 
-	cronjob.Start()
-	defer cronjob.Stop()
-
-	log.Info("syncing clusterClaim started successfully...")
+	jobScheduler.Start()
+	defer jobScheduler.Stop()
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
@@ -104,33 +108,19 @@ func configureDB() error {
 	return nil
 }
 
-func initializeCronJobs(crontInterval string) (*cron.Cron, error) {
-	cronJob := cron.New(cron.WithChain(cron.SkipIfStillRunning(cron.DefaultLogger), cron.Recover(cron.DefaultLogger)))
-
-	fetch, err := captenagentsync.NewFetch()
-	if err != nil {
-		log.Errorf("Failed to initialize the sync: %v", err)
-		return nil, err
+func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*job.Scheduler, error) {
+	s := job.NewScheduler(log)
+	if cfg.CrossplaneSyncJobEnabled {
+		cs, err := job.NewCrossplaneResourcesSync(log, cfg.CrossplaneSyncJobInterval, as)
+		if err != nil {
+			log.Fatal("failed to init crossplane resources sync job", err)
+		}
+		err = s.AddJob("crossplane-resources-synch", cs)
+		if err != nil {
+			log.Fatal("failed to add crossplane resources sync job", err)
+		}
 	}
 
-	_, jobErr := cronJob.AddJob(fmt.Sprintf(StrInterval, crontInterval), fetch)
-	if jobErr != nil {
-		log.Errorf("Failed to add cronJob for sync clusterClaim: %v", jobErr)
-		return nil, jobErr
-	}
-
-	fetchCrossPlaneProviders, err := captenagentsync.NewFetchCrossPlaneProviders()
-	if err != nil {
-		log.Errorf("Failed to initialize the sync: %v", err)
-		return nil, err
-	}
-
-	_, crossPlaneJobErr := cronJob.AddJob(fmt.Sprintf(StrInterval, crontInterval), fetchCrossPlaneProviders)
-	if jobErr != nil {
-		log.Errorf("Failed to add cronJob for sync clusterClaim: %v", crossPlaneJobErr)
-		return nil, jobErr
-	}
-
-	log.Info("successfully initialized the cron")
-	return cronJob, nil
+	log.Info("successfully initialized job scheduler")
+	return s, nil
 }

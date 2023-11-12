@@ -43,23 +43,6 @@ type ConfigureCICD interface {
 	GetDefaultBranchName() (string, error)
 }
 
-type ConfigurationWorker interface {
-	// ConfigurationActivities(payload interface{}) (json.RawMessage, error)
-
-	ClusterAdd(payload interface{}) (json.RawMessage, error)
-	ClusterDelete(payload interface{}) (json.RawMessage, error)
-
-	RepositoryAdd(payload interface{}) (json.RawMessage, error)
-	RepositoryDelete(payload interface{}) (json.RawMessage, error)
-
-	ProjectAdd(payload interface{}) (json.RawMessage, error)
-	ProjectDelete(payload interface{}) (json.RawMessage, error)
-
-	// ConfgiureTarget(payload interface{}) (json.RawMessage, error)
-	// SetTarget(payload interface{}) (json.RawMessage, error)
-	// SetDefaultTarget(payload interface{}) (json.RawMessage, error)
-}
-
 type Action interface {
 	GetStatus()
 }
