@@ -3,7 +3,6 @@ package crossplane
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/intelops/go-common/logging"
 	agentmodel "github.com/kube-tarian/kad/capten/agent/pkg/model"
@@ -34,8 +33,15 @@ func (c *CrossPlaneActivities) ConfigurationActivity(ctx context.Context, params
 	}
 
 	status, err := config.Configure(ctx, req)
+	if err != nil {
+		logger.Errorf("crossplane plugin configure failed, %v", err)
+		return model.ResponsePayload{
+			Status:  status,
+			Message: json.RawMessage("{\"error\": \"failed to configure crossplane plugin\"}"),
+		}, err
+	}
+	logger.Infof("crossplane plugin configured")
 	return model.ResponsePayload{
-		Status:  status,
-		Message: json.RawMessage(fmt.Sprintf("{\"error\": \"%s\"}", err.Error())),
+		Status: status,
 	}, err
 }

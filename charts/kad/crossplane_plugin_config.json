@@ -9,7 +9,7 @@
     "argoCDApps": [
         {
             "mainAppGitPath": "infra/crossplane/crossplane-main-app.yaml",
-            "childAppNames": ["crossplane-aws-dev-cluster","aws-k8s-package"],
+            "childAppNames": ["crossplane-providers"],
             "synchApp": true
         },
         {
