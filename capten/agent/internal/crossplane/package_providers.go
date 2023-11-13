@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 
@@ -15,19 +14,13 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-const (
-	providerNamePrefix = "provider-"
-)
-
 type ProvidersSyncHandler struct {
 	log     logging.Logger
-	client  *k8s.K8SClient
 	dbStore *captenstore.Store
-	creds   credentials.CredentialAdmin
 }
 
-func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*ProvidersSyncHandler, error) {
-	return &ProvidersSyncHandler{log: log, dbStore: dbStore}, nil
+func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) *ProvidersSyncHandler {
+	return &ProvidersSyncHandler{log: log, dbStore: dbStore}
 }
 
 func (h *ProvidersSyncHandler) Sync() error {
@@ -46,13 +39,13 @@ func (h *ProvidersSyncHandler) Sync() error {
 
 	providers, err := json.Marshal(objList)
 	if err != nil {
-		return fmt.Errorf("failed to marshall the data, err:", err)
+		return fmt.Errorf("failed to marshall the data, %v", err)
 	}
 
 	var providerObj model.ProviderList
 	err = json.Unmarshal(providers, &providerObj)
 	if err != nil {
-		return fmt.Errorf("failed to un-marshall the data, err:", err)
+		return fmt.Errorf("failed to un-marshall the data, %s", err)
 	}
 
 	if err = h.updateCrossplaneProvider(providerObj.Items); err != nil {
@@ -62,42 +55,42 @@ func (h *ProvidersSyncHandler) Sync() error {
 	return nil
 }
 
-func (h *ProvidersSyncHandler) updateCrossplaneProvider(clObj []model.Provider) error {
-	prvList, err := h.dbStore.GetCrossplaneProviders()
+func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Provider) error {
+	dbProviders, err := h.dbStore.GetCrossplaneProviders()
 	if err != nil {
 		return fmt.Errorf("failed to get Crossplane Providers, %v", err)
 	}
 
-	prvMap := make(map[string]*captenpluginspb.CrossplaneProvider)
-	for _, prov := range prvList {
-		prvMap[providerNamePrefix+prov.ProviderName] = prov
+	dbProviderMap := make(map[string]*captenpluginspb.CrossplaneProvider)
+	for _, dbProvider := range dbProviders {
+		dbProviderMap[model.PrepareCrossplaneProviderName(dbProvider.CloudType)] = dbProvider
 	}
 
-	for _, obj := range clObj {
-		for _, status := range obj.Status.Conditions {
-			if status.Type != model.TypeHealthy {
+	for _, k8sProvider := range k8sProviders {
+		for _, providerStatus := range k8sProvider.Status.Conditions {
+			if providerStatus.Type != model.TypeHealthy {
 				continue
 			}
 
-			prvObj, ok := prvMap[obj.Name]
+			dbProvider, ok := dbProviderMap[k8sProvider.Name]
 			if !ok {
-				h.log.Infof("Provider name %s is not found in the db, skipping the update", obj.Name)
+				h.log.Infof("Provider name %s is not found in the db, skipping the update", k8sProvider.Name)
 				continue
 			}
 
 			provider := model.CrossplaneProvider{
-				Id:              prvObj.Id,
-				Status:          string(status.Type),
-				CloudType:       prvObj.CloudType,
-				CloudProviderId: prvObj.CloudProviderId,
-				ProviderName:    prvObj.ProviderName,
+				Id:              dbProvider.Id,
+				Status:          string(providerStatus.Type),
+				CloudType:       dbProvider.CloudType,
+				CloudProviderId: dbProvider.CloudProviderId,
+				ProviderName:    dbProvider.ProviderName,
 			}
 
 			if err := h.dbStore.UpdateCrossplaneProvider(&provider); err != nil {
-				h.log.Errorf("failed to update provider %s details in db, %v", prvObj.ProviderName, err)
+				h.log.Errorf("failed to update provider %s details in db, %v", k8sProvider.Name, err)
 				continue
 			}
-			h.log.Infof("successfully updated the details for %s", prvObj.ProviderName)
+			h.log.Infof("updated the crossplane provider %s", k8sProvider.Name)
 		}
 	}
 	return nil

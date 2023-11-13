@@ -177,6 +177,20 @@ func PutClusterCerts(ctx context.Context, orgID, clusterName, clientCAChainData,
 	return nil
 }
 
+func PutGenericCredential(ctx context.Context, svcEntity, credId string, cred map[string]string) error {
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		return errors.WithMessage(err, "error in initializing credential admin")
+	}
+
+	err = credAdmin.PutCredential(context.Background(), credentials.GenericCredentialType,
+		svcEntity, credId, cred)
+	if err != nil {
+		return errors.WithMessagef(err, "error in put generic cred for %s/%s", svcEntity, credId)
+	}
+	return nil
+}
+
 func getClusterCertIndentifier(orgID, clusterName string) string {
 	return fmt.Sprintf("%s:%s", orgID, clusterName)
 }
