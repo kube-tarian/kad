@@ -1,0 +1,48 @@
+exclude:
+
+authenticate:
+ - /serverpb.Server/StoreCredential
+ - /captenpluginspb.capten_plugins/GetGitProjectsForLabels
+ - /serverpb.Server/NewClusterRegistration
+ - /serverpb.Server/UpdateClusterRegistration
+ - /serverpb.Server/DeleteClusterRegistration
+ - /serverpb.Server/GetCluster
+ - /serverpb.Server/GetClusterApps
+ - /serverpb.Server/GetClusterAppLaunchConfigs
+ - /serverpb.Server/GetClusterApp
+ - /serverpb.Server/AddStoreApp
+ - /serverpb.Server/UpdateStoreApp
+ - /serverpb.Server/DeleteStoreApp
+ - /serverpb.Server/GetStoreAppValues
+ - /serverpb.Server/DeployStoreApp
+ - /serverpb.Server/UnDeployStoreApp
+ - /serverpb.Server/UpgradeStoreApp
+ - /serverpb.Server/SetClusterGitoptsProject
+ - /serverpb.Server/GetClusterGitoptsProject
+ - /serverpb.Server/DeleteClusterGitoptsProject
+ - /OauthService.OauthService/CreateOauthClient
+ - /OauthService.OauthService/GetOauthToken
+ - /OauthService.OauthService/ValidateOauthToken
+ - /OauthService.OauthService/CreateClientCredentialsClient
+ - /captenpluginspb.capten_plugins/AddGitProject
+ - /captenpluginspb.capten_plugins/UpdateGitProject
+ - /captenpluginspb.capten_plugins/DeleteGitProject
+ - /captenpluginspb.capten_plugins/AddCloudProvider
+ - /captenpluginspb.capten_plugins/UpdateCloudProvider
+ - /captenpluginspb.capten_plugins/DeleteCloudProvider
+ - /captenpluginspb.capten_plugins/GetCloudProviders
+ - /captenpluginspb.capten_plugins/GetCloudProvidersForLabel
+ - /captenpluginspb.capten_plugins/RegisterArgoCDProject
+ - /captenpluginspb.capten_plugins/GetArgoCDProjects
+ - /captenpluginspb.capten_plugins/UnRegisterArgoCDProject
+ - /captenpluginspb.capten_plugins/RegisterTektonProject
+ - /captenpluginspb.capten_plugins/UnRegisterTektonProject
+ - /serverpb.Server/GetClusters
+ - /captenpluginspb.capten_plugins/GetGitProjects
+ - /serverpb.Server/GetStoreApp
+ - /captenpluginspb.capten_plugins/GetTektonProjects
+ - /OauthService.OauthService/ValidateOauthToken
+ - /serverpb.Server/GetStoreApps
+ - /OauthService.OauthService/GetOauthToken
+ - /OauthService.OauthService/CreateOauthClient
+authenticate-authorize:
