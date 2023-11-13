@@ -85,8 +85,6 @@ func Start() {
 	jobScheduler.Start()
 	defer jobScheduler.Stop()
 
-	log.Info("syncing clusterClaim started successfully...")
-
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	<-signals

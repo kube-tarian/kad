@@ -1,8 +1,15 @@
 package model
 
 import (
+	"fmt"
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
+const (
+	providerNamePrefix = "provider"
 )
 
 type CrossplaneProviderStatus string
@@ -38,6 +45,10 @@ type CrossplaneProject struct {
 	LastUpdateTime string `json:"last_update_time,omitempty"`
 	WorkflowId     string `json:"workflow_id,omitempty"`
 	WorkflowStatus string `json:"workflow_status,omitempty"`
+}
+
+func PrepareCrossplaneProviderName(providerType string) string {
+	return fmt.Sprintf("%s-%s", providerNamePrefix, strings.ToLower(providerType))
 }
 
 // A ConditionType represents a condition a resource could be in.

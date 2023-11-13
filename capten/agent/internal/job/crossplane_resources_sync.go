@@ -3,28 +3,39 @@ package job
 import (
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
+	"github.com/kube-tarian/kad/capten/agent/internal/crossplane"
 )
 
 type CrossplaneResourcesSync struct {
-	dbStore   *captenstore.Store
-	log       logging.Logger
-	frequency string
+	dbStore         *captenstore.Store
+	clusterHandler  *crossplane.ClusterClaimSyncHandler
+	providerHandler *crossplane.ProvidersSyncHandler
+	log             logging.Logger
+	frequency       string
 }
 
 func NewCrossplaneResourcesSync(log logging.Logger, frequency string, dbStore *captenstore.Store) (*CrossplaneResourcesSync, error) {
 	return &CrossplaneResourcesSync{
-		log:       log,
-		frequency: frequency,
-		dbStore:   dbStore,
+		log:             log,
+		frequency:       frequency,
+		dbStore:         dbStore,
+		clusterHandler:  crossplane.NewClusterClaimSyncHandler(log, dbStore),
+		providerHandler: crossplane.NewProvidersSyncHandler(log, dbStore),
 	}, nil
 }
 
-func (v *CrossplaneResourcesSync) CronSpec() string {
-	return v.frequency
+func (s *CrossplaneResourcesSync) CronSpec() string {
+	return s.frequency
 }
 
-func (v *CrossplaneResourcesSync) Run() {
-	v.log.Debug("started crossplane resource sync job")
+func (s *CrossplaneResourcesSync) Run() {
+	s.log.Debug("started crossplane resource sync job")
+	if err := s.providerHandler.Sync(); err != nil {
+		s.log.Errorf("failed to synch providers, %v", err)
+	}
 
-	v.log.Debug("crossplane resource sync job completed")
+	if err := s.clusterHandler.Sync(); err != nil {
+		s.log.Errorf("failed to synch managed clusters, %v", err)
+	}
+	s.log.Debug("crossplane resource sync job completed")
 }

@@ -26,7 +26,7 @@ func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenplugins
 	provider := model.CrossplaneProvider{
 		Id:              id.String(),
 		CloudType:       request.CloudType,
-		ProviderName:    request.ProviderName,
+		ProviderName:    model.PrepareCrossplaneProviderName(request.CloudType),
 		CloudProviderId: request.CloudProviderId,
 		Status:          "added",
 	}
@@ -119,7 +119,7 @@ func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenplug
 	provider := model.CrossplaneProvider{
 		Id:              request.Id,
 		CloudType:       request.CloudType,
-		ProviderName:    request.ProviderName,
+		ProviderName:    model.PrepareCrossplaneProviderName(request.CloudType),
 		CloudProviderId: request.CloudProviderId,
 		Status:          "updated",
 	}
