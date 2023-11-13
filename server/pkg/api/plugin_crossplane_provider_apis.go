@@ -174,22 +174,25 @@ func (s *Server) GetCrossplanProviders(ctx context.Context, request *captenplugi
 
 	response, err := agent.GetCaptenPluginsClient().GetCrossplanProviders(context.Background(), request)
 	if err != nil {
-		s.log.Errorf("failed to get the Cluster CrossplanProvider, %v", err)
+		s.log.Errorf("failed to get the Cluster Crossplane Providers, %v", err)
 		return &captenpluginspb.GetCrossplanProvidersResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get the Cluster CrossplanProvider",
 		}, nil
 	}
 
-	if response.Status != captenpluginspb.StatusCode_OK {
-		s.log.Errorf("failed to get the ClusterProject")
+	if response.Status == captenpluginspb.StatusCode_NOT_FOUND {
+		response.Providers = []*captenpluginspb.CrossplaneProvider{}
+
+	} else if response.Status != captenpluginspb.StatusCode_OK {
+		s.log.Errorf("failed to get the Crossplane Providers")
 		return &captenpluginspb.GetCrossplanProvidersResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get the Cluster CrossplanProvider",
 		}, nil
 	}
 
-	s.log.Infof("Fetched %d Git projects request for cluster %s processed, [org: %s]",
+	s.log.Infof("Fetched %d Crossplane Providers for cluster %s processed, [org: %s]",
 		len(response.Providers), clusterId, orgId)
 	return &captenpluginspb.GetCrossplanProvidersResponse{
 		Providers:     response.Providers,

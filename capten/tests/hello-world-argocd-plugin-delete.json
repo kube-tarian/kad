@@ -1,6 +1,0 @@
-{
-  "plugin_name": "argocd",
-  "namespace": "default",
-  "release_name": "hello-world",
-  "timeout": 5
-}

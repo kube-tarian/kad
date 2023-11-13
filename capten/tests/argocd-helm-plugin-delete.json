@@ -1,7 +1,0 @@
-{
-  "plugin_name": "helm",
-  "namespace": "default",
-  "release_name": "argocd",
-  "timeout": 5,
-  "version": ""
-}
