@@ -1,6 +1,6 @@
 module github.com/kube-tarian/kad/server
 
-go 1.19
+go 1.21
 
 require (
 	github.com/gocql/gocql v1.3.1
