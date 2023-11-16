@@ -23,6 +23,20 @@ func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.A
 
 	a.log.Infof("Add Cloud Provider %s request received", request.CloudType)
 
+	project, err := a.as.GetCloudProviderByCloudType(request.CloudType)
+	if err != nil {
+		return &captenpluginspb.AddCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get cloud provider for " + request.CloudType,
+		}, nil
+	}
+	if project != nil {
+		return &captenpluginspb.AddCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "cloud provider is already available",
+		}, nil
+	}
+
 	id := uuid.New()
 	if err := a.storeCloudProviderCredential(ctx, id.String(), request.GetCloudAttributes()); err != nil {
 		return &captenpluginspb.AddCloudProviderResponse{
