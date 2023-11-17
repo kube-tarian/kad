@@ -1,7 +1,6 @@
 package captenstore
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -19,7 +18,7 @@ const (
 	selectAllCloudProviders           = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders"
 	selectAllCloudProvidersByLabels   = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE %s"
 	selectGetCloudProviderById        = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE id=%s;"
-	selectGetCloudProviderByCloudType = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE cloud_type='%s';"
+	selectGetCloudProviderByCloudType = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE cloud_type='%s' ALLOW FILTERING;"
 )
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
@@ -95,7 +94,7 @@ func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, clo
 
 func (a *Store) GetCloudProviderByCloudType(cloudType string) (*captenpluginspb.CloudProvider, error) {
 	query := fmt.Sprintf(selectGetCloudProviderByCloudType, a.keyspace, cloudType)
-	fmt.Println("Query => ", query)
+
 	selectQuery := a.client.Session().Query(query)
 	iter := selectQuery.Iter()
 
@@ -121,9 +120,6 @@ func (a *Store) GetCloudProviderByCloudType(cloudType string) (*captenpluginspb.
 	if err := iter.Close(); err != nil {
 		return nil, errors.WithMessage(err, "failed to iterate through results:")
 	}
-
-	v, _ := json.Marshal(ret)
-	fmt.Println("Cloud Provider => \n" + string(v))
 
 	if len(ret) <= 0 {
 		return nil, nil
