@@ -19,7 +19,7 @@ const (
 	selectAllCloudProviders           = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders"
 	selectAllCloudProvidersByLabels   = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE %s"
 	selectGetCloudProviderById        = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE id=%s;"
-	selectGetCloudProviderByCloudType = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE cloud_type=%s;"
+	selectGetCloudProviderByCloudType = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE cloud_type='%s';"
 )
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
