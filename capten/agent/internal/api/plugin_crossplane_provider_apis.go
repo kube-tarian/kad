@@ -132,6 +132,21 @@ func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenplug
 
 	a.log.Infof("Update Crossplane Provider %s, %s request recieved", request.Id, request.ProviderName)
 
+	project, err := a.as.GetCrossplanProviderByCloudType(request.CloudType)
+	if err != nil {
+		a.log.Infof("failed to get crossplane provider", err)
+		return &captenpluginspb.UpdateCrossplanProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get crossplane provider for " + request.CloudType,
+		}, nil
+	}
+	if project != nil {
+		return &captenpluginspb.UpdateCrossplanProviderResponse{
+			Status:        captenpluginspb.StatusCode_NOT_FOUND,
+			StatusMessage: "Crossplane provider is already available",
+		}, nil
+	}
+
 	provider := model.CrossplaneProvider{
 		Id:              request.Id,
 		CloudType:       request.CloudType,
