@@ -95,7 +95,7 @@ func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, clo
 
 func (a *Store) GetCloudProviderByCloudType(cloudType string) (*captenpluginspb.CloudProvider, error) {
 	query := fmt.Sprintf(selectGetCloudProviderByCloudType, a.keyspace, cloudType)
-	fmt.Println("Started ***")
+	fmt.Println("Query => ", query)
 	selectQuery := a.client.Session().Query(query)
 	iter := selectQuery.Iter()
 
