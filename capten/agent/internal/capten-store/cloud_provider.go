@@ -1,6 +1,7 @@
 package captenstore
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -94,7 +95,7 @@ func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, clo
 
 func (a *Store) GetCloudProviderByCloudType(cloudType string) (*captenpluginspb.CloudProvider, error) {
 	query := fmt.Sprintf(selectGetCloudProviderByCloudType, a.keyspace, cloudType)
-
+	fmt.Println("Started ***")
 	selectQuery := a.client.Session().Query(query)
 	iter := selectQuery.Iter()
 
@@ -120,6 +121,9 @@ func (a *Store) GetCloudProviderByCloudType(cloudType string) (*captenpluginspb.
 	if err := iter.Close(); err != nil {
 		return nil, errors.WithMessage(err, "failed to iterate through results:")
 	}
+
+	v, _ := json.Marshal(ret)
+	fmt.Println("Cloud Provider => \n" + string(v))
 
 	if len(ret) <= 0 {
 		return nil, nil

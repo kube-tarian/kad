@@ -25,6 +25,7 @@ func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.A
 
 	project, err := a.as.GetCloudProviderByCloudType(request.CloudType)
 	if err != nil {
+		fmt.Println("Error => " + err.Error())
 		return &captenpluginspb.AddCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get cloud provider for " + request.CloudType,
