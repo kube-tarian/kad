@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	getAllCrossplaneProvidersQuery    = "SELECT id, cloud_type, provider_name, cloud_provider_id, status FROM %s.CrossplaneProviders;"
-	insertCrossplaneProviderQuery     = "INSERT INTO %s.CrossplaneProviders(id, cloud_type, provider_name, cloud_provider_id, status) VALUES (?, ?, ?, ?, ?);"
-	deleteCrossplaneProviderByIDQuery = "DELETE FROM %s.CrossplaneProviders WHERE id=%s;"
-	updateCrossplaneProviderQuery     = "UPDATE %s.CrossplaneProviders SET cloud_type=?, provider_name=?, cloud_provider_id=?, status=? WHERE id=?;"
+	getAllCrossplaneProvidersQuery         = "SELECT id, cloud_type, provider_name, cloud_provider_id, status FROM %s.CrossplaneProviders;"
+	insertCrossplaneProviderQuery          = "INSERT INTO %s.CrossplaneProviders(id, cloud_type, provider_name, cloud_provider_id, status) VALUES (?, ?, ?, ?, ?);"
+	deleteCrossplaneProviderByIDQuery      = "DELETE FROM %s.CrossplaneProviders WHERE id=%s;"
+	updateCrossplaneProviderQuery          = "UPDATE %s.CrossplaneProviders SET cloud_type=?, provider_name=?, cloud_provider_id=?, status=? WHERE id=?;"
+	selectGetCrossplaneProviderByCloudType = "SELECT id, cloud_type, provider_name, cloud_provider_id, status FROM %s.CrossplaneProviders WHERE cloud_type='%s' ALLOW FILTERING;"
 )
 
 func (a *Store) InsertCrossplaneProvider(provider *model.CrossplaneProvider) error {
@@ -80,4 +81,34 @@ func (a *Store) UpdateCrossplaneProvider(provider *model.CrossplaneProvider) err
 	batch.Query(query, provider.CloudType, provider.ProviderName, provider.CloudProviderId, provider.Status, provider.Id)
 	err := a.client.Session().ExecuteBatch(batch)
 	return err
+}
+
+func (a *Store) GetCrossplanProviderByCloudType(cloudType string) (*captenpluginspb.CrossplaneProvider, error) {
+	query := fmt.Sprintf(selectGetCrossplaneProviderByCloudType, a.keyspace, cloudType)
+
+	selectQuery := a.client.Session().Query(query)
+	iter := selectQuery.Iter()
+
+	var provider captenpluginspb.CrossplaneProvider
+	providers := make([]*captenpluginspb.CrossplaneProvider, 0)
+
+	for iter.Scan(&provider.Id, &provider.CloudType, &provider.ProviderName, &provider.CloudProviderId, &provider.Status) {
+		tmpProvider := &captenpluginspb.CrossplaneProvider{
+			Id:              provider.Id,
+			CloudType:       provider.CloudType,
+			ProviderName:    provider.ProviderName,
+			CloudProviderId: provider.CloudProviderId,
+			Status:          provider.Status,
+		}
+		providers = append(providers, tmpProvider)
+	}
+
+	if err := iter.Close(); err != nil {
+		return nil, errors.Wrap(err, "error occured while iterating through results")
+	}
+
+	if len(providers) <= 0 {
+		return nil, nil
+	}
+	return providers[0], nil
 }

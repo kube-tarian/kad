@@ -11,14 +11,13 @@ import (
 )
 
 const (
-	insertCloudProvider               = "INSERT INTO %s.CloudProviders(id, cloud_type, labels, last_update_time) VALUES (?,?,?,?)"
-	insertCloudProviderId             = "INSERT INTO %s.CloudProviders(id) VALUES (?)"
-	updateCloudProviderById           = "UPDATE %s.CloudProviders SET %s WHERE id=?"
-	deleteCloudProviderById           = "DELETE FROM %s.CloudProviders WHERE id= ?"
-	selectAllCloudProviders           = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders"
-	selectAllCloudProvidersByLabels   = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE %s"
-	selectGetCloudProviderById        = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE id=%s;"
-	selectGetCloudProviderByCloudType = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE cloud_type='%s' ALLOW FILTERING;"
+	insertCloudProvider             = "INSERT INTO %s.CloudProviders(id, cloud_type, labels, last_update_time) VALUES (?,?,?,?)"
+	insertCloudProviderId           = "INSERT INTO %s.CloudProviders(id) VALUES (?)"
+	updateCloudProviderById         = "UPDATE %s.CloudProviders SET %s WHERE id=?"
+	deleteCloudProviderById         = "DELETE FROM %s.CloudProviders WHERE id= ?"
+	selectAllCloudProviders         = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders"
+	selectAllCloudProvidersByLabels = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE %s"
+	selectGetCloudProviderById      = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE id=%s;"
 )
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
@@ -90,41 +89,6 @@ func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, clo
 	query := fmt.Sprintf(selectAllCloudProvidersByLabels, a.keyspace, whereLabelsClause)
 	return a.executeCloudProvidersSelectQuery(query)
 
-}
-
-func (a *Store) GetCloudProviderByCloudType(cloudType string) (*captenpluginspb.CloudProvider, error) {
-	query := fmt.Sprintf(selectGetCloudProviderByCloudType, a.keyspace, cloudType)
-
-	selectQuery := a.client.Session().Query(query)
-	iter := selectQuery.Iter()
-
-	provider := captenpluginspb.CloudProvider{}
-	var labels []string
-
-	ret := make([]*captenpluginspb.CloudProvider, 0)
-	for iter.Scan(
-		&provider.Id, &provider.CloudType,
-		&labels, &provider.LastUpdateTime,
-	) {
-		labelsTmp := make([]string, len(labels))
-		copy(labelsTmp, labels)
-		CloudProvider := &captenpluginspb.CloudProvider{
-			Id:             provider.Id,
-			CloudType:      provider.CloudType,
-			Labels:         labelsTmp,
-			LastUpdateTime: provider.LastUpdateTime,
-		}
-		ret = append(ret, CloudProvider)
-	}
-
-	if err := iter.Close(); err != nil {
-		return nil, errors.WithMessage(err, "failed to iterate through results:")
-	}
-
-	if len(ret) <= 0 {
-		return nil, nil
-	}
-	return ret[0], nil
 }
 
 func (a *Store) executeCloudProvidersSelectQuery(query string) ([]*captenpluginspb.CloudProvider, error) {
