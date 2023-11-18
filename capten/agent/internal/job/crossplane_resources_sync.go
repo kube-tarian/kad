@@ -30,12 +30,12 @@ func (s *CrossplaneResourcesSync) CronSpec() string {
 
 func (s *CrossplaneResourcesSync) Run() {
 	s.log.Debug("started crossplane resource sync job")
-	if err := s.providerHandler.Sync(); err != nil {
-		s.log.Errorf("failed to synch providers, %v", err)
-	}
+	// if err := s.providerHandler.Sync(); err != nil {
+	// 	s.log.Errorf("failed to synch providers, %v", err)
+	// }
 
-	if err := s.clusterHandler.Sync(); err != nil {
-		s.log.Errorf("failed to synch managed clusters, %v", err)
-	}
+	// if err := s.clusterHandler.Sync(); err != nil {
+	// 	s.log.Errorf("failed to synch managed clusters, %v", err)
+	// }
 	s.log.Debug("crossplane resource sync job completed")
 }

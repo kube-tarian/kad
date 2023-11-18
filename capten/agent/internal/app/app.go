@@ -8,17 +8,20 @@ import (
 	"syscall"
 
 	"google.golang.org/grpc"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/intelops/go-common/logging"
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
+	"github.com/kube-tarian/kad/capten/agent/internal/crossplane"
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/util"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/reflection"
 )
@@ -77,6 +80,10 @@ func Start() {
 		}
 	}()
 
+	err = registerDynamicInformers(as)
+	if err != nil {
+		log.Fatalf("Failed to register Dynamic Informers: %v", err)
+	}
 	jobScheduler, err := initializeJobScheduler(cfg, as)
 	if err != nil {
 		log.Fatalf("Failed to create cron job: %v", err)
@@ -123,4 +130,18 @@ func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*j
 
 	log.Info("successfully initialized job scheduler")
 	return s, nil
+}
+
+func registerDynamicInformers(dbStore *captenstore.Store) error {
+	k8sclient, err := k8s.NewK8SClient(log)
+	if err != nil {
+		return fmt.Errorf("failed to initalize k8s client: %v", err)
+	}
+
+	err = k8s.RegisterDynamicInformers(crossplane.NewClusterClaimSyncHandler(log, dbStore), k8sclient.DynamicClientInterface, schema.GroupVersionResource{Group: "prodready.cluster", Version: "v1alpha1", Resource: "clusterclaims"})
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -23,6 +23,32 @@ func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) *Pr
 	return &ProvidersSyncHandler{log: log, dbStore: dbStore}
 }
 
+func (h *ProvidersSyncHandler) AddFunc(obj interface{}) {
+
+}
+
+func (h *ProvidersSyncHandler) UpdateFunc(oldObj, newObj interface{}) {
+	providers, err := json.Marshal(newObj)
+	if err != nil {
+		return
+	}
+
+	var providerObj model.ProviderList
+	err = json.Unmarshal(providers, &providerObj)
+	if err != nil {
+		return
+	}
+
+	if err = h.updateCrossplaneProvider(providerObj.Items); err != nil {
+		return
+	}
+	h.log.Debug("Crossplane Provider resources synched")
+}
+
+func (h *ProvidersSyncHandler) DeleteFunc(obj interface{}) {
+
+}
+
 func (h *ProvidersSyncHandler) Sync() error {
 	h.log.Debug("started to sync CrossplaneProvider resources")
 

@@ -19,9 +19,10 @@ type Configuration struct {
 }
 
 type K8SClient struct {
-	log           logging.Logger
-	Clientset     kubernetes.Interface
-	DynamicClient *DynamicClientSet
+	log                    logging.Logger
+	Clientset              kubernetes.Interface
+	DynamicClientInterface dynamic.Interface
+	DynamicClient          *DynamicClientSet
 }
 
 func NewK8SClient(log logging.Logger) (*K8SClient, error) {
@@ -42,9 +43,10 @@ func NewK8SClient(log logging.Logger) (*K8SClient, error) {
 	}
 
 	return &K8SClient{
-		log:           log,
-		Clientset:     clientset,
-		DynamicClient: NewDynamicClientSet(dcClient),
+		log:                    log,
+		Clientset:              clientset,
+		DynamicClientInterface: dcClient,
+		DynamicClient:          NewDynamicClientSet(dcClient),
 	}, nil
 }
 
