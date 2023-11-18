@@ -6,11 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
-	"github.com/kube-tarian/kad/capten/common-pkg/plugins/fetcher"
 	helmclient "github.com/kube-tarian/kad/capten/common-pkg/plugins/helm/go-helm-client"
 	"github.com/kube-tarian/kad/capten/model"
-	"gopkg.in/yaml.v2"
 	"helm.sh/helm/v3/pkg/repo"
 )
 
@@ -71,50 +68,7 @@ func (h *HelmCLient) getHelmClient(namespace string) (helmclient.Client, error) 
 		DebugLog:         h.logger.Debugf,
 	}
 
-	// If kubeconfig is empty (default) or inbuilt then use in-built(local) cluster
-	// if req.ClusterName == "" || req.ClusterName == "inbuilt" {
 	return helmclient.New(opt)
-	// }
-
-	// External cluster
-	// return h.getHelmClientForExternalCluster(req, opt)
-}
-
-func (h *HelmCLient) getHelmClientForExternalCluster(req *model.Request, opt *helmclient.Options) (helmclient.Client, error) {
-	// Fetch external cluster kubeconfig from cassandra
-	clusterDetails, err := fetcher.FetchClusterDetails(h.logger, req.ClusterName)
-	if err != nil {
-		h.logger.Errorf("Failed to fetch the cluster details from cluster store, %v", err)
-	}
-
-	// Unmarshall kubeconfig in yaml format if failed try with json format
-	// If not both yaml and json return error
-	var yamlKubeConfig interface{}
-	var jsonKubeConfig []byte
-
-	err = yaml.Unmarshal([]byte(clusterDetails.Kubeconfig), &yamlKubeConfig)
-	if err == nil {
-		jsonKubeConfig, err = jsoniter.Marshal(yamlKubeConfig)
-		if err != nil {
-			h.logger.Errorf("json Marhsal of kubeconfig failed, err: json Mashal: %v", err)
-			return nil, err
-		}
-	} else {
-		err1 := json.Unmarshal([]byte(clusterDetails.Kubeconfig), yamlKubeConfig)
-		if err1 != nil {
-			h.logger.Errorf("kubeconfig not understanable format not in yaml or json. unmarshal failed, error: %v", err)
-			return nil, err
-		}
-		jsonKubeConfig = []byte(clusterDetails.Kubeconfig)
-	}
-
-	return helmclient.NewClientFromKubeConf(
-		&helmclient.KubeConfClientOptions{
-			Options:     opt,
-			KubeContext: req.ClusterName,
-			KubeConfig:  jsonKubeConfig,
-		},
-	)
 }
 
 func (h *HelmCLient) addOrUpdate(client helmclient.Client, req *model.CreteRequestPayload) error {

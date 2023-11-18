@@ -1,47 +1,14 @@
 package workerframework
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/temporalclient"
-	"github.com/kube-tarian/kad/capten/model"
 
 	"go.temporal.io/sdk/worker"
 )
-
-type Plugin interface {
-	// DeployActivities(payload interface{}) (json.RawMessage, error)
-	Create(payload *model.CreteRequestPayload) (json.RawMessage, error)
-	Delete(payload *model.DeleteRequestPayload) (json.RawMessage, error)
-	List(payload *model.ListRequestPayload) (json.RawMessage, error)
-
-	// ConfigurationActivities(payload interface{}) (json.RawMessage, error)
-	// ConfgiureTarget(payload interface{}) (json.RawMessage, error)
-	// SetTarget(payload interface{}) (json.RawMessage, error)
-	// SetDefaultTarget(payload interface{}) (json.RawMessage, error)
-}
-
-type ClimonWorker interface {
-	Create(payload *model.CreteRequestPayload) (json.RawMessage, error)
-	Delete(payload *model.DeleteRequestPayload) (json.RawMessage, error)
-	List(payload *model.ListRequestPayload) (json.RawMessage, error)
-}
-
-type DeploymentWorker interface {
-	Create(payload *model.CreteRequestPayload) (json.RawMessage, error)
-	Delete(payload *model.DeleteRequestPayload) (json.RawMessage, error)
-	List(payload *model.ListRequestPayload) (json.RawMessage, error)
-}
-
-type ConfigureCICD interface {
-	Clone(directory, url, token string) error
-	Commit(path, msg, name, email string) error
-	Push(branchName, token string) error
-	GetDefaultBranchName() (string, error)
-}
 
 type Action interface {
 	GetStatus()
@@ -55,7 +22,6 @@ type Worker struct {
 	conf           *Configuration
 	temporalClient *temporalclient.Client
 	temporalWorker worker.Worker
-	plugins        map[string]Plugin
 	logger         logging.Logger
 }
 
@@ -66,9 +32,8 @@ func NewWorker(taskQueueName string, wf, activity interface{}, logger logging.Lo
 	}
 
 	worker := &Worker{
-		conf:    cfg,
-		plugins: make(map[string]Plugin),
-		logger:  logger,
+		conf:   cfg,
+		logger: logger,
 	}
 
 	err = worker.RegisterToTemporal(taskQueueName, wf, activity)
