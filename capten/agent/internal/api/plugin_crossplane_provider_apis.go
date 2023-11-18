@@ -22,6 +22,22 @@ func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenplugins
 		}, nil
 	}
 	a.log.Infof("Add Crossplane Provider %s with cloud provider %s request recieved", request.ProviderName, request.CloudProviderId)
+
+	project, err := a.as.GetCrossplanProviderByCloudType(request.CloudType)
+	if err != nil {
+		a.log.Infof("failed to get crossplane provider", err)
+		return &captenpluginspb.AddCrossplanProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get crossplane provider for " + request.CloudType,
+		}, nil
+	}
+	if project != nil {
+		return &captenpluginspb.AddCrossplanProviderResponse{
+			Status:        captenpluginspb.StatusCode_NOT_FOUND,
+			StatusMessage: "Crossplane provider is already available",
+		}, nil
+	}
+
 	id := uuid.New()
 	provider := model.CrossplaneProvider{
 		Id:              id.String(),
@@ -115,6 +131,21 @@ func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenplug
 	}
 
 	a.log.Infof("Update Crossplane Provider %s, %s request recieved", request.Id, request.ProviderName)
+
+	project, err := a.as.GetCrossplanProviderById(request.Id)
+	if err != nil {
+		a.log.Infof("failed to get crossplane provider for "+request.Id, err)
+		return &captenpluginspb.UpdateCrossplanProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get crossplane provider for " + request.Id,
+		}, nil
+	}
+	if project == nil {
+		return &captenpluginspb.UpdateCrossplanProviderResponse{
+			Status:        captenpluginspb.StatusCode_NOT_FOUND,
+			StatusMessage: "Crossplane provider is not available for" + request.Id,
+		}, nil
+	}
 
 	provider := model.CrossplaneProvider{
 		Id:              request.Id,
