@@ -12,15 +12,15 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 )
 
-type Operation struct {
+type GitClient struct {
 	repository *git.Repository
 }
 
-func New() *Operation {
-	return &Operation{}
+func NewClient() *GitClient {
+	return &GitClient{}
 }
 
-func (op *Operation) Clone(directory, url, token string) error {
+func (g *GitClient) Clone(directory, url, token string) error {
 	r, err := git.PlainClone(directory, false, &git.CloneOptions{
 		Auth: &http.BasicAuth{
 			Username: "dummy", // yes, this can be anything except an empty string
@@ -35,13 +35,12 @@ func (op *Operation) Clone(directory, url, token string) error {
 		return err
 	}
 
-	op.repository = r
-
+	g.repository = r
 	return nil
 }
 
-func (op *Operation) Commit(path, msg, name, email string) error {
-	w, err := op.repository.Worktree()
+func (g *GitClient) Commit(path, msg, name, email string) error {
+	w, err := g.repository.Worktree()
 	if err != nil {
 		return err
 	}
@@ -66,8 +65,8 @@ func (op *Operation) Commit(path, msg, name, email string) error {
 	return nil
 }
 
-func (op *Operation) GetDefaultBranchName() (string, error) {
-	defBranch, err := op.repository.Head()
+func (g *GitClient) GetDefaultBranchName() (string, error) {
+	defBranch, err := g.repository.Head()
 	if err != nil {
 		return "", fmt.Errorf("failed to get the current head: %w", err)
 	}
@@ -76,13 +75,13 @@ func (op *Operation) GetDefaultBranchName() (string, error) {
 	return defaultBranch[len(defaultBranch)-1], nil
 }
 
-func (op *Operation) Push(branchName, token string) error {
-	defBranch, err := op.GetDefaultBranchName()
+func (g *GitClient) Push(branchName, token string) error {
+	defBranch, err := g.GetDefaultBranchName()
 	if err != nil {
 		return fmt.Errorf("failed to get the current head: %w", err)
 	}
 
-	err = op.repository.Push(&git.PushOptions{RemoteName: "origin", Force: true,
+	err = g.repository.Push(&git.PushOptions{RemoteName: "origin", Force: true,
 		Auth: &http.BasicAuth{
 			Username: "dummy", // yes, this can be anything except an empty string
 			Password: token,
