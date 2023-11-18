@@ -223,12 +223,33 @@ func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.Crossp
 	}
 
 	secretPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, cp.cfg.CloudProviderEntityName, provider.CloudProviderId)
-	providerConfigString := fmt.Sprintf(
-		crossplaneProviderTemplate,
-		cloudType, secretPath, secretPath,
-		cloudType, pkg, cloudType,
-	)
-	return providerConfigString, nil
+
+	switch provider.CloudType {
+	case "AWS":
+		providerConfigString := fmt.Sprintf(
+			crossplaneAWSProviderTemplate,
+			cloudType, secretPath, secretPath,
+			cloudType, pkg, cloudType,
+		)
+		return providerConfigString, nil
+	case "GCP":
+		providerConfigString := fmt.Sprintf(
+			crossplaneGCPProviderTemplate,
+			cloudType, secretPath, secretPath,
+			cloudType, pkg, cloudType,
+		)
+		return providerConfigString, nil
+	case "AZUR":
+		providerConfigString := fmt.Sprintf(
+			crossplaneAzureProviderTemplate,
+			cloudType, secretPath, secretPath,
+			cloudType, pkg, cloudType,
+		)
+		return providerConfigString, nil
+	default:
+		return "", fmt.Errorf("cloud type %s not supported", provider.CloudType)
+	}
+
 }
 
 func replaceCaptenUrls(dir string, src, target string) error {
