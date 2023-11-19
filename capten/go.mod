@@ -10,7 +10,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/intelops/go-common v1.0.15
-	github.com/json-iterator/go v1.1.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kube-tarian/kad/integrator v0.0.0-20230520105805-73f03d9dcfcc
 	github.com/ory/client-go v1.1.44
@@ -35,6 +34,7 @@ require (
 require (
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 )
 
 require (

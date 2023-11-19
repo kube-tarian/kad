@@ -97,7 +97,7 @@ func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model
 	}
 	logger.Infof("updated resource configurations in cloned project %s", req.RepoURL)
 
-	err = cp.helper.AddToGit(ctx, req.Type, req.RepoURL, accessToken, false)
+	err = cp.helper.AddToGit(ctx, req.Type, req.RepoURL, accessToken)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
 	}
