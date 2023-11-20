@@ -79,6 +79,11 @@ func Start() {
 		}
 	}()
 
+	err = registerK8SWatcher(as)
+	if err != nil {
+		log.Fatalf("Failed to initialize k8s watchers %v", err)
+	}
+
 	jobScheduler, err := initializeJobScheduler(cfg, as)
 	if err != nil {
 		log.Fatalf("Failed to create cron job: %v", err)
