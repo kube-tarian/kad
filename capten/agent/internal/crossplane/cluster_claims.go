@@ -15,6 +15,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 )
 
 var (
@@ -30,6 +31,10 @@ var (
 	managedClusterEntityName = "managedcluster"
 )
 
+var (
+	cgvk = schema.GroupVersionResource{Group: "prodready.cluster", Version: "v1alpha1", Resource: "clusterclaims"}
+)
+
 type ClusterClaimSyncHandler struct {
 	log     logging.Logger
 	dbStore *captenstore.Store
@@ -39,6 +44,73 @@ func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) 
 	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore}
 }
 
+func RegisterK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
+	return k8s.RegisterDynamicInformers(NewClusterClaimSyncHandler(log, dbStore), dynamicClient, cgvk)
+}
+
+func getClusterClaimObj(obj any) *model.ClusterClaim {
+	clusterClaimByte, err := json.Marshal(obj)
+	if err != nil {
+		return nil
+	}
+
+	var clObj model.ClusterClaim
+	err = json.Unmarshal(clusterClaimByte, &clObj)
+	if err != nil {
+		return nil
+	}
+
+	return &clObj
+}
+
+func (h *ClusterClaimSyncHandler) OnAdd(obj interface{}) {
+	newCcObj := getClusterClaimObj(obj)
+	if newCcObj == nil {
+		return
+	}
+
+	k8sclient, err := k8s.NewK8SClient(h.log)
+	if err != nil {
+		return
+	}
+
+	if err = h.updateManagedClusters(k8sclient, []model.ClusterClaim{*newCcObj}); err != nil {
+		return
+	}
+
+	h.log.Info("cluster-claims resources synched")
+}
+
+func (h *ClusterClaimSyncHandler) OnUpdate(oldObj, newObj interface{}) {
+	prevObj := getClusterClaimObj(oldObj)
+	if prevObj == nil {
+		return
+	}
+
+	newCcObj := getClusterClaimObj(oldObj)
+	if newCcObj == nil {
+		return
+	}
+
+	// We receive the objects details on configured interval, identify actual updates made on the obj.
+	if newCcObj.Metadata.ResourceVersion == newCcObj.Metadata.ResourceVersion {
+		return
+	}
+
+	k8sclient, err := k8s.NewK8SClient(h.log)
+	if err != nil {
+		return
+	}
+
+	if err = h.updateManagedClusters(k8sclient, []model.ClusterClaim{*newCcObj}); err != nil {
+		return
+	}
+
+	h.log.Info("cluster-claims resources synched")
+}
+
+func (h *ClusterClaimSyncHandler) OnDelete(obj interface{}) {}
+
 func (h *ClusterClaimSyncHandler) Sync() error {
 	h.log.Debug("started to sync cluster-claims resources")
 
@@ -47,8 +119,7 @@ func (h *ClusterClaimSyncHandler) Sync() error {
 		return fmt.Errorf("failed to initalize k8s client: %v", err)
 	}
 
-	objList, err := k8sclient.DynamicClient.ListAllNamespaceResource(context.TODO(),
-		schema.GroupVersionResource{Group: "prodready.cluster", Version: "v1alpha1", Resource: "clusterclaims"})
+	objList, err := k8sclient.DynamicClient.ListAllNamespaceResource(context.TODO(), cgvk)
 	if err != nil {
 		return fmt.Errorf("failed to list cluster claim resources, %v", err)
 	}

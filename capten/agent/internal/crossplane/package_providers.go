@@ -12,6 +12,11 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
+)
+
+var (
+	pgvk = schema.GroupVersionResource{Group: "pkg.crossplane.io", Version: "v1", Resource: "providers"}
 )
 
 type ProvidersSyncHandler struct {
@@ -23,6 +28,62 @@ func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) *Pr
 	return &ProvidersSyncHandler{log: log, dbStore: dbStore}
 }
 
+func RegisterK8SProviderWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
+	return k8s.RegisterDynamicInformers(NewProvidersSyncHandler(log, dbStore), dynamicClient, pgvk)
+}
+
+func getProviderObj(obj any) *model.Provider {
+	clusterClaimByte, err := json.Marshal(obj)
+	if err != nil {
+		return nil
+	}
+
+	var clObj model.Provider
+	err = json.Unmarshal(clusterClaimByte, &clObj)
+	if err != nil {
+		return nil
+	}
+
+	return &clObj
+}
+
+func (h *ProvidersSyncHandler) OnAdd(obj interface{}) {
+	newCcObj := getProviderObj(obj)
+	if newCcObj == nil {
+		return
+	}
+	if err := h.updateCrossplaneProvider([]model.Provider{*newCcObj}); err != nil {
+		return
+	}
+
+	h.log.Info("Crossplane Provider resources synched")
+}
+
+func (h *ProvidersSyncHandler) OnUpdate(oldObj, newObj interface{}) {
+	prevObj := getProviderObj(oldObj)
+	if prevObj == nil {
+		return
+	}
+
+	newCcObj := getProviderObj(oldObj)
+	if newCcObj == nil {
+		return
+	}
+
+	// We receive the objects details on configured interval, identify actual updates made on the obj.
+	if newCcObj.ResourceVersion == newCcObj.ResourceVersion {
+		return
+	}
+
+	if err := h.updateCrossplaneProvider([]model.Provider{*newCcObj}); err != nil {
+		return
+	}
+
+	h.log.Info("Crossplane Provider resources synched")
+}
+
+func (h *ProvidersSyncHandler) OnDelete(obj interface{}) {}
+
 func (h *ProvidersSyncHandler) Sync() error {
 	h.log.Debug("started to sync CrossplaneProvider resources")
 
@@ -31,8 +92,7 @@ func (h *ProvidersSyncHandler) Sync() error {
 		return fmt.Errorf("failed to initalize k8s client: %v", err)
 	}
 
-	objList, err := k8sclient.DynamicClient.ListAllNamespaceResource(context.TODO(),
-		schema.GroupVersionResource{Group: "pkg.crossplane.io", Version: "v1", Resource: "providers"})
+	objList, err := k8sclient.DynamicClient.ListAllNamespaceResource(context.TODO(), pgvk)
 	if err != nil {
 		return fmt.Errorf("failed to fetch providers resources, %v", err)
 	}
