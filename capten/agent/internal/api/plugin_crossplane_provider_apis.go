@@ -139,11 +139,15 @@ func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenplug
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get crossplane provider for " + request.Id,
 		}, nil
-	}
-	if project == nil {
+	} else if project == nil {
 		return &captenpluginspb.UpdateCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_NOT_FOUND,
 			StatusMessage: "Crossplane provider is not available for" + request.Id,
+		}, nil
+	} else if project.CloudType != request.CloudType {
+		return &captenpluginspb.UpdateCrossplanProviderResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Crossplane provider cloud type change is not supported for" + request.Id,
 		}, nil
 	}
 

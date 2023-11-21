@@ -26,3 +26,38 @@ type Repository struct {
 	InsecureIgnoreHostKey bool            `json:"InsecureIgnoreHostKey"`
 	ConnectionState       ConnectionState `json:"ConnectionState"`
 }
+
+type TLSClientConfig struct {
+	// Insecure specifies that the server should be accessed without verifying the TLS certificate. For testing only.
+	Insecure bool `json:"insecure" `
+	// ServerName is passed to the server for SNI and is used in the client to check server
+	// certificates against. If ServerName is empty, the hostname used to contact the
+	// server is used.
+	ServerName string `json:"serverName,omitempty" `
+	// CertData holds PEM-encoded bytes (typically read from a client certificate file).
+	// CertData takes precedence over CertFile
+	CertData []byte `json:"certData,omitempty" `
+	// KeyData holds PEM-encoded bytes (typically read from a client certificate key file).
+	// KeyData takes precedence over KeyFile
+	KeyData []byte `json:"keyData,omitempty" `
+	// CAData holds PEM-encoded bytes (typically read from a root certificates bundle).
+	// CAData takes precedence over CAFile
+	CAData []byte `json:"caData,omitempty" `
+}
+
+type ClusterConfig struct {
+	// Server requires Basic authentication
+	Username string `json:"username,omitempty" `
+	Password string `json:"password,omitempty"`
+
+	// TLSClientConfig contains settings to enable transport layer security
+	TLSClientConfig `json:"tlsClientConfig"`
+}
+
+type Cluster struct {
+	Server          string          `json:"server"`
+	Name            string          `json:"name"`
+	Config          ClusterConfig   `json:"config"`
+	ConnectionState ConnectionState `json:"ConnectionState"`
+	Namespaces      []string        `json:"namespaces,omitempty"`
+}
