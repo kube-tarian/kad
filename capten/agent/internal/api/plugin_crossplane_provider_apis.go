@@ -14,14 +14,14 @@ const (
 
 func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenpluginspb.AddCrossplanProviderRequest) (
 	*captenpluginspb.AddCrossplanProviderResponse, error) {
-	if err := validateArgs(request.CloudType, request.ProviderName, request.CloudProviderId); err != nil {
+	if err := validateArgs(request.CloudType, request.CloudProviderId); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.AddCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
 	}
-	a.log.Infof("Add Crossplane Provider %s with cloud provider %s request recieved", request.ProviderName, request.CloudProviderId)
+	a.log.Infof("Add Crossplane Provider type %s with cloud provider %s request recieved", request.CloudType, request.CloudProviderId)
 
 	project, err := a.as.GetCrossplanProviderByCloudType(request.CloudType)
 	if err != nil {
@@ -44,7 +44,7 @@ func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenplugins
 		CloudType:       request.CloudType,
 		ProviderName:    model.PrepareCrossplaneProviderName(request.CloudType),
 		CloudProviderId: request.CloudProviderId,
-		Status:          "added",
+		Status:          string(model.CrossPlaneProviderOutofSynch),
 	}
 
 	if err := a.as.InsertCrossplaneProvider(&provider); err != nil {
@@ -55,7 +55,7 @@ func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenplugins
 		}, nil
 	}
 
-	a.log.Infof("Crossplane Provider %s added with id %s", request.ProviderName, id.String())
+	a.log.Infof("Crossplane Provider type %s added with id %s", request.CloudType, id.String())
 	return &captenpluginspb.AddCrossplanProviderResponse{
 		Id:            id.String(),
 		Status:        captenpluginspb.StatusCode_OK,
@@ -122,7 +122,7 @@ func (a *Agent) GetCrossplanProviders(ctx context.Context, _ *captenpluginspb.Ge
 func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenpluginspb.UpdateCrossplanProviderRequest) (
 	*captenpluginspb.UpdateCrossplanProviderResponse, error) {
 
-	if err := validateArgs(request.Id, request.CloudType, request.ProviderName, request.CloudProviderId); err != nil {
+	if err := validateArgs(request.Id, request.CloudType, request.CloudProviderId); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.UpdateCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
@@ -130,7 +130,7 @@ func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenplug
 		}, nil
 	}
 
-	a.log.Infof("Update Crossplane Provider %s, %s request recieved", request.Id, request.ProviderName)
+	a.log.Infof("Update Crossplane Provider %s, %s, %s request recieved", request.CloudType, request.Id, request.CloudProviderId)
 
 	project, err := a.as.GetCrossplanProviderById(request.Id)
 	if err != nil {
@@ -156,7 +156,7 @@ func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenplug
 		CloudType:       request.CloudType,
 		ProviderName:    model.PrepareCrossplaneProviderName(request.CloudType),
 		CloudProviderId: request.CloudProviderId,
-		Status:          "updated",
+		Status:          string(model.CrossPlaneProviderOutofSynch),
 	}
 
 	if err := a.as.UpdateCrossplaneProvider(&provider); err != nil {
@@ -167,7 +167,7 @@ func (a *Agent) UpdateCrossplanProvider(ctx context.Context, request *captenplug
 		}, nil
 	}
 
-	a.log.Infof("Crossplane Provider with id %s, %s updated", request.Id, request.ProviderName)
+	a.log.Infof("Crossplane Provider type %s with id %s updated", request.CloudType, request.Id)
 	return &captenpluginspb.UpdateCrossplanProviderResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "ok",

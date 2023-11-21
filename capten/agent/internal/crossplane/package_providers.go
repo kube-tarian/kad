@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
@@ -28,61 +29,63 @@ func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) *Pr
 	return &ProvidersSyncHandler{log: log, dbStore: dbStore}
 }
 
-func RegisterK8SProviderWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
+func registerK8SProviderWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
 	return k8s.RegisterDynamicInformers(NewProvidersSyncHandler(log, dbStore), dynamicClient, pgvk)
 }
 
-func getProviderObj(obj any) *model.Provider {
+func getProviderObj(obj any) (*model.Provider, error) {
 	clusterClaimByte, err := json.Marshal(obj)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	var clObj model.Provider
 	err = json.Unmarshal(clusterClaimByte, &clObj)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	return &clObj
+	return &clObj, nil
 }
 
 func (h *ProvidersSyncHandler) OnAdd(obj interface{}) {
-	newCcObj := getProviderObj(obj)
+	h.log.Info("Crossplane Provider Add Callback")
+	newCcObj, err := getProviderObj(obj)
 	if newCcObj == nil {
-		return
-	}
-	if err := h.updateCrossplaneProvider([]model.Provider{*newCcObj}); err != nil {
+		h.log.Errorf("failed to read Provider object, %v", err)
 		return
 	}
 
-	h.log.Info("Crossplane Provider resources synched")
+	if err := h.updateCrossplaneProvider([]model.Provider{*newCcObj}); err != nil {
+		h.log.Errorf("failed to update Provider object, %v", err)
+		return
+	}
+
 }
 
 func (h *ProvidersSyncHandler) OnUpdate(oldObj, newObj interface{}) {
-	prevObj := getProviderObj(oldObj)
+	h.log.Info("Crossplane Provider Update Callback")
+	prevObj, err := getProviderObj(oldObj)
 	if prevObj == nil {
+		h.log.Errorf("failed to read Provider old object %v", err)
 		return
 	}
 
-	newCcObj := getProviderObj(oldObj)
+	newCcObj, err := getProviderObj(oldObj)
 	if newCcObj == nil {
-		return
-	}
-
-	// We receive the objects details on configured interval, identify actual updates made on the obj.
-	if newCcObj.ResourceVersion == newCcObj.ResourceVersion {
+		h.log.Errorf("failed to read Provider new object %v", err)
 		return
 	}
 
 	if err := h.updateCrossplaneProvider([]model.Provider{*newCcObj}); err != nil {
+		h.log.Errorf("failed to update Provider object, %v", err)
 		return
 	}
-
-	h.log.Info("Crossplane Provider resources synched")
 }
 
-func (h *ProvidersSyncHandler) OnDelete(obj interface{}) {}
+func (h *ProvidersSyncHandler) OnDelete(obj interface{}) {
+	h.log.Info("Crossplane Provider Delete Callback")
+}
 
 func (h *ProvidersSyncHandler) Sync() error {
 	h.log.Debug("started to sync CrossplaneProvider resources")
@@ -127,6 +130,7 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 	}
 
 	for _, k8sProvider := range k8sProviders {
+		h.log.Infof("processing Crossplane Provider %s", k8sProvider.Name)
 		for _, providerStatus := range k8sProvider.Status.Conditions {
 			if providerStatus.Type != model.TypeHealthy {
 				continue
@@ -138,9 +142,13 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 				continue
 			}
 
+			status := model.CrossPlaneProviderNotReady
+			if strings.EqualFold(string(providerStatus.Status), "true") {
+				status = model.CrossPlaneProviderReady
+			}
 			provider := model.CrossplaneProvider{
 				Id:              dbProvider.Id,
-				Status:          string(providerStatus.Type),
+				Status:          string(status),
 				CloudType:       dbProvider.CloudType,
 				CloudProviderId: dbProvider.CloudProviderId,
 				ProviderName:    dbProvider.ProviderName,
