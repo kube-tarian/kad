@@ -24,7 +24,10 @@ func RegisterK8SWatcher(log logging.Logger, dbStore *captenstore.Store) error {
 		return fmt.Errorf("failed to RegisterK8SProviderWatcher: %v", err)
 	}
 
-	cc := NewClusterClaimSyncHandler(log, dbStore)
+	cc, err := NewClusterClaimSyncHandler(log, dbStore)
+	if err != nil {
+		return fmt.Errorf("failed to initialize NewClusterClaimSyncHandler: %v", err)
+	}
 	go cc.Sync()
 	ps := NewProvidersSyncHandler(log, dbStore)
 	go ps.Sync()
