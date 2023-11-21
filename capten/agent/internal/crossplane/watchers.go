@@ -14,7 +14,7 @@ func RegisterK8SWatcher(log logging.Logger, dbStore *captenstore.Store) error {
 		return fmt.Errorf("failed to initalize k8s client: %v", err)
 	}
 
-	err = registerK8SClusterClaimWatcher(log, dbStore, k8sclient.DynamicClientInterface)
+	err = RegisterK8SClusterClaimWatcher(log, dbStore, k8sclient.DynamicClientInterface)
 	if err != nil {
 		return fmt.Errorf("failed to RegisterK8SClusterClaimWatcher: %v", err)
 	}

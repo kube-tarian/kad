@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
+	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
+	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 
@@ -37,15 +39,25 @@ var (
 
 type ClusterClaimSyncHandler struct {
 	log     logging.Logger
+	tc      *temporalclient.Client
 	dbStore *captenstore.Store
 }
 
-func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) *ClusterClaimSyncHandler {
-	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore}
+func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*ClusterClaimSyncHandler, error) {
+	tc, err := temporalclient.NewClient(log)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore, tc: tc}, nil
 }
 
-func registerK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
-	return k8s.RegisterDynamicInformers(NewClusterClaimSyncHandler(log, dbStore), dynamicClient, cgvk)
+func RegisterK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
+	obj, err := NewClusterClaimSyncHandler(log, dbStore)
+	if err != nil {
+		return err
+	}
+	return k8s.RegisterDynamicInformers(obj, dynamicClient, cgvk)
 }
 
 func getClusterClaimObj(obj any) (*model.ClusterClaim, error) {
@@ -190,6 +202,12 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 				}
 
 				managedCluster.ClusterDeployStatus = clusterReadyStatus
+				// call config-worker.
+				err = h.UpdateClusterEndpoint(clusterEndpoint, managedCluster.Id)
+				if err != nil {
+					h.log.Info("failed to update cluster endpoint information %v", err)
+					continue
+				}
 			} else {
 				managedCluster.ClusterDeployStatus = clusterNotReadyStatus
 			}
@@ -216,4 +234,22 @@ func (h *ClusterClaimSyncHandler) getManagedClusters() (map[string]*captenplugin
 		clusterEndpointMap[cluster.ClusterName] = cluster
 	}
 	return clusterEndpointMap, nil
+}
+
+func (h *ClusterClaimSyncHandler) UpdateClusterEndpoint(endpoint string, id string) error {
+	proj, err := h.dbStore.GetCrossplaneProjectForID(id)
+	if err != nil {
+		return err
+	}
+	ci := model.CrossplaneUseCase{Type: "crossplane", RepoURL: proj.GitProjectUrl,
+		VaultCredIdentifier: id, OverrideValues: map[string]string{"cluster-endpoint": endpoint}}
+
+	wd := workers.NewConfig(h.tc, h.log)
+
+	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: "crossplane"}, ci)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
