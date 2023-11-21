@@ -14,19 +14,14 @@ func RegisterK8SWatcher(log logging.Logger, dbStore *captenstore.Store) error {
 		return fmt.Errorf("failed to initalize k8s client: %v", err)
 	}
 
-	err = RegisterK8SClusterClaimWatcher(log, dbStore, k8sclient.DynamicClientInterface)
+	err = registerK8SClusterClaimWatcher(log, dbStore, k8sclient.DynamicClientInterface)
 	if err != nil {
 		return fmt.Errorf("failed to RegisterK8SClusterClaimWatcher: %v", err)
 	}
 
-	err = RegisterK8SProviderWatcher(log, dbStore, k8sclient.DynamicClientInterface)
+	err = registerK8SProviderWatcher(log, dbStore, k8sclient.DynamicClientInterface)
 	if err != nil {
 		return fmt.Errorf("failed to RegisterK8SProviderWatcher: %v", err)
 	}
-
-	cc := NewClusterClaimSyncHandler(log, dbStore)
-	go cc.Sync()
-	ps := NewProvidersSyncHandler(log, dbStore)
-	go ps.Sync()
 	return nil
 }
