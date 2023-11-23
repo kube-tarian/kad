@@ -128,6 +128,15 @@ func (a *Agent) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.
 		}, err
 	}
 
+	argocdClient, err := argocd.NewClient(&logging.Logging{})
+	if err != nil {
+		fmt.Println(err)
+	}
+	err = argocdClient.GetConfig(ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	argocdProjects := []*captenpluginspb.ArgoCDProject{}
 	for _, project := range projects {
 		argocdProject := &captenpluginspb.ArgoCDProject{

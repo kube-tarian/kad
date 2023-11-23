@@ -2,10 +2,18 @@ package argocd
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/util/io"
+	"github.com/kube-tarian/kad/capten/common-pkg/credential"
+)
+
+const (
+	CredEntityName = "k8s"
+	CredIdentifier = "kubeconfig"
 )
 
 func (a *ArgoCDClient) CreateCluster(ctx context.Context, clusterReq *Cluster) (*v1alpha1.Cluster, error) {
@@ -94,4 +102,18 @@ func (a *ArgoCDClient) ListClusters(ctx context.Context) (*v1alpha1.ClusterList,
 	}
 
 	return list, nil
+}
+
+func (a *ArgoCDClient) GetConfig(ctx context.Context) error {
+
+	cred, err := credential.GetGenericCredential(ctx, CredEntityName, CredIdentifier)
+	if err != nil {
+		return err
+	}
+
+	v, _ := json.Marshal(cred)
+
+	fmt.Println("Kubeconfig =>", string(v))
+
+	return nil
 }
