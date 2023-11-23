@@ -14,15 +14,6 @@ var logger = logging.NewLogger()
 
 func (c *CrossPlaneActivities) ConfigurationActivity(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (model.ResponsePayload, error) {
 	logger.Infof("Activity: %s, %s", params.Resource, params.Action)
-
-	req := &model.CrossplaneUseCase{}
-	if err := json.Unmarshal(payload, req); err != nil {
-		return model.ResponsePayload{
-			Status:  string(model.WorkFlowStatusFailed),
-			Message: json.RawMessage("{\"error\": \"failed to read payload\"}"),
-		}, err
-	}
-
 	config, err := NewCrossPlaneApp()
 	if err != nil {
 		return model.ResponsePayload{
@@ -31,7 +22,7 @@ func (c *CrossPlaneActivities) ConfigurationActivity(ctx context.Context, params
 		}, err
 	}
 
-	status, err := config.Configure(ctx, req)
+	status, err := config.Configure(ctx, params.Action, payload)
 	if err != nil {
 		logger.Errorf("crossplane plugin configure failed, %v", err)
 		return model.ResponsePayload{
@@ -39,6 +30,7 @@ func (c *CrossPlaneActivities) ConfigurationActivity(ctx context.Context, params
 			Message: json.RawMessage("{\"error\": \"failed to configure crossplane plugin\"}"),
 		}, err
 	}
+
 	logger.Infof("crossplane plugin configured")
 	return model.ResponsePayload{
 		Status: status,

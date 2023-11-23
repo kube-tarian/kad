@@ -202,7 +202,7 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(k8sClient *k8s.K8SClient
 
 				managedCluster.ClusterDeployStatus = clusterReadyStatus
 				// call config-worker.
-				err = h.UpdateClusterEndpoint(clusterEndpoint, managedCluster.Id)
+				err = h.UpdateClusterEndpoint(managedCluster.Id, clusterCliam.Metadata.Namespace, clusterCliam.Spec.Id, clusterEndpoint, resp.Data[kubeConfig])
 				if err != nil {
 					h.log.Info("failed to update cluster endpoint information %v", err)
 					continue
@@ -235,17 +235,16 @@ func (h *ClusterClaimSyncHandler) getManagedClusters() (map[string]*captenplugin
 	return clusterEndpointMap, nil
 }
 
-func (h *ClusterClaimSyncHandler) UpdateClusterEndpoint(endpoint string, id string) error {
-	proj, err := h.dbStore.GetCrossplaneProjectForID(id)
+func (h *ClusterClaimSyncHandler) UpdateClusterEndpoint(id, ns, name, endpoint, k8sConfig string) error {
+	proj, err := h.dbStore.GetCrossplaneProject()
 	if err != nil {
 		return err
 	}
-	ci := model.CrossplaneUseCase{Type: "crossplane", RepoURL: proj.GitProjectUrl,
-		VaultCredIdentifier: id, OverrideValues: map[string]string{"cluster-endpoint": endpoint}}
+	ci := model.CrossplaneClusterEndpoint{RepoURL: proj.GitProjectUrl, Id: proj.Id, Name: name, Endpoint: endpoint, Namespace: ns, Kubeconfig: k8sConfig}
 
 	wd := workers.NewConfig(h.tc, h.log)
 
-	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: "crossplane"}, ci)
+	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: "crossplane", Action: "configClusterEndpoint"}, ci)
 	if err != nil {
 		return err
 	}

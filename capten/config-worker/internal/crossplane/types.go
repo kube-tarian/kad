@@ -7,11 +7,12 @@ type appConfig struct {
 }
 
 type crossplanePluginConfig struct {
-	TemplateGitRepo          string            `json:"templateGitRepo"`
-	CrossplaneConfigSyncPath string            `json:"crossplaneConfigSyncPath"`
-	ProviderConfigSyncPath   string            `json:"providerConfigSyncPath"`
-	ProviderPackages         map[string]string `json:"providerPackages"`
-	ArgoCDApps               []appConfig       `json:"argoCDApps"`
+	TemplateGitRepo           string            `json:"templateGitRepo"`
+	CrossplaneConfigSyncPath  string            `json:"crossplaneConfigSyncPath"`
+	ProviderConfigSyncPath    string            `json:"providerConfigSyncPath"`
+	ProviderPackages          map[string]string `json:"providerPackages"`
+	ArgoCDApps                []appConfig       `json:"argoCDApps"`
+	ClusterEndpointUpdateFile string            `json:"clusterEndpointUpdateFile"`
 }
 
 const (
