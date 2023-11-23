@@ -19,7 +19,7 @@ func RegisterK8SWatcher(log logging.Logger, dbStore *captenstore.Store) error {
 		return fmt.Errorf("failed to RegisterK8SClusterClaimWatcher: %v", err)
 	}
 
-	err = RegisterK8SProviderWatcher(log, dbStore, k8sclient.DynamicClientInterface)
+	err = registerK8SProviderWatcher(log, dbStore, k8sclient.DynamicClientInterface)
 	if err != nil {
 		return fmt.Errorf("failed to RegisterK8SProviderWatcher: %v", err)
 	}

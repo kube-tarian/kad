@@ -18,6 +18,8 @@ const (
 	CrossPlaneProviderOutofSynch    CrossplaneProviderStatus = "OutOfSynch"
 	CrossPlaneProviderInSynch       CrossplaneProviderStatus = "InSynch"
 	CrossPlaneProviderFailedToSynch CrossplaneProviderStatus = "FailedToSynch"
+	CrossPlaneProviderReady         CrossplaneProviderStatus = "Ready"
+	CrossPlaneProviderNotReady      CrossplaneProviderStatus = "NotReady"
 )
 
 type CrossplaneProvider struct {
