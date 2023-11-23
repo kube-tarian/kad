@@ -125,6 +125,20 @@ func (ca *AppGitConfigHelper) SyncArgoCDApp(ctx context.Context, ns, resName str
 	return nil
 }
 
+func (ca *AppGitConfigHelper) CreateCluster(ctx context.Context, ns, server, resName string) error {
+	client, err := argocd.NewClient(logger)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.CreateCluster(ctx, &argocd.Cluster{Server: server, Name: resName, Namespaces: []string{ns}})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (ca *AppGitConfigHelper) WaitForArgoCDToSync(ctx context.Context, ns, resName string) error {
 	client, err := argocd.NewClient(logger)
 	if err != nil {

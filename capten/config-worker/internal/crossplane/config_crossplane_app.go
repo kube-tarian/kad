@@ -92,16 +92,28 @@ func getAppNameNamespace(ctx context.Context, fileName string) (string, string, 
 
 }
 
-func (cp *CrossPlaneApp) Configure(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {
-	switch req.Type {
+func (cp *CrossPlaneApp) Configure(ctx context.Context, reqType string, req json.RawMessage) (status string, err error) {
+	switch reqType {
 	case configClusterEndpoint:
-		status, err = cp.configureClusterEndpoint(ctx, req)
+		reqLocal := &model.CrossplaneClusterEndpoint{}
+		if err = json.Unmarshal(req, reqLocal); err != nil {
+			logger.Errorf("failed to unmarshall the crossplane req, %v", err)
+			err = fmt.Errorf("failed to unmarshall the crossplane req")
+			return
+		}
+		status, err = cp.configureClusterEndpoint(ctx, reqLocal)
 		if err != nil {
 			logger.Errorf("failed to configure crossplane project, %v", err)
 			err = fmt.Errorf("failed to configure crossplane project")
 		}
 	default:
-		status, err = cp.configureProjectAndApps(ctx, req)
+		reqLocal := &model.CrossplaneUseCase{}
+		if err = json.Unmarshal(req, reqLocal); err != nil {
+			logger.Errorf("failed to unmarshall the crossplane req, %v", err)
+			err = fmt.Errorf("failed to unmarshall the crossplane req")
+			return
+		}
+		status, err = cp.configureProjectAndApps(ctx, reqLocal)
 		if err != nil {
 			logger.Errorf("failed to configure crossplane project, %v", err)
 			err = fmt.Errorf("failed to configure crossplane project")
@@ -110,9 +122,14 @@ func (cp *CrossPlaneApp) Configure(ctx context.Context, req *model.CrossplaneUse
 	return
 }
 
-func (cp *CrossPlaneApp) configureClusterEndpoint(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {
+func (cp *CrossPlaneApp) configureClusterEndpoint(ctx context.Context, req *model.CrossplaneClusterEndpoint) (status string, err error) {
 	logger.Infof("configuring the cluster endpoint for %s", req.RepoURL)
-	accessToken, err := cp.helper.GetAccessToken(ctx, req.VaultCredIdentifier)
+	err = cp.helper.CreateCluster(ctx, req.Namespace, req.Endpoint, req.Name)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to CreateCluster in argocd app")
+	}
+
+	accessToken, err := cp.helper.GetAccessToken(ctx, req.Id)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
 	}
@@ -127,14 +144,14 @@ func (cp *CrossPlaneApp) configureClusterEndpoint(ctx context.Context, req *mode
 	defer os.RemoveAll(templateRepo)
 	defer os.RemoveAll(customerRepo)
 
-	fileName := filepath.Join(customerRepo, cp.pluginConfig.ArgoCDApps[0].MainAppGitPath)
+	fileName := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdateFile)
 	// replace cluster endpoint
-	err = replaceInFile(fileName, "https://kubernetes.default.svc", req.OverrideValues["cluster-endpoint"])
+	err = updateClusterEndpointDetials(fileName, req)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace the file")
 	}
 
-	err = cp.helper.AddToGit(ctx, req.Type, req.RepoURL, accessToken)
+	err = cp.helper.AddToGit(ctx, configClusterEndpoint, req.RepoURL, accessToken)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
 	}
@@ -144,6 +161,7 @@ func (cp *CrossPlaneApp) configureClusterEndpoint(ctx context.Context, req *mode
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get name and namespace from")
 	}
+
 	err = cp.helper.SyncArgoCDApp(ctx, ns, resName)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync argocd app")
@@ -381,4 +399,45 @@ func replaceInFile(filePath, target, replacement string) error {
 		return err
 	}
 	return nil
+}
+
+func updateClusterEndpointDetials(filename string, req *model.CrossplaneClusterEndpoint) error {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := k8s.ConvertYamlToJson(data)
+	if err != nil {
+		return err
+	}
+
+	var argoCDAppValue model.ArgoCDAppValue
+
+	err = json.Unmarshal(jsonData, &argoCDAppValue)
+	if err != nil {
+		return err
+	}
+
+	for _, cluster := range argoCDAppValue.Clusters {
+		if cluster.Name == req.Name {
+			cluster.Server = req.Endpoint
+
+			break
+		}
+	}
+
+	jsonBytes, err := json.Marshal(argoCDAppValue)
+	if err != nil {
+		return err
+	}
+
+	yamlBytes, err := k8s.ConvertJsonToYaml(jsonBytes)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filename, yamlBytes, os.ModeAppend)
+
+	return err
 }
