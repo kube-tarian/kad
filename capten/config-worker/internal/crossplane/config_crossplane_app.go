@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	configClusterEndpoint = "configureClusterEndpoint"
+	configClusterEndpoint = "configClusterEndpoint"
 )
 
 type Config struct {
