@@ -34,6 +34,34 @@ var (
 )
 
 var (
+	s = `{
+		"items": [{
+		"apiVersion": "prodready.cluster/v1alpha1",
+		"kind": "ClusterClaim",
+		"metadata": {
+		  "name": "dev-eks-test-new"
+		},
+		"spec": {
+		  "compositeDeletePolicy": "Background",
+		  "compositionRef": {
+			"name": "cluster-aws"
+		  },
+		  "compositionSelector": {
+			"matchLabels": {
+			  "cluster": "eks",
+			  "provider": "aws"
+			}
+		  },
+		  "compositionUpdatePolicy": "Automatic",
+		  "id": "dev-eks",
+		  "parameters": {
+			"minNodeCount": 3,
+			"nodeSize": "small"
+		  }
+		}
+	  }]}`
+)
+var (
 	cgvk = schema.GroupVersionResource{Group: "prodready.cluster", Version: "v1alpha1", Resource: "clusterclaims"}
 )
 
@@ -122,23 +150,23 @@ func (h *ClusterClaimSyncHandler) OnDelete(obj interface{}) {
 func (h *ClusterClaimSyncHandler) Sync() error {
 	h.log.Debug("started to sync ClusterCliam resources")
 
-	k8sclient, err := k8s.NewK8SClient(h.log)
-	if err != nil {
-		return fmt.Errorf("failed to initalize k8s client: %v", err)
-	}
+	// k8sclient, err := k8s.NewK8SClient(h.log)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to initalize k8s client: %v", err)
+	// }
 
-	objList, err := k8sclient.DynamicClient.ListAllNamespaceResource(context.TODO(), cgvk)
-	if err != nil {
-		return fmt.Errorf("failed to list cluster claim resources, %v", err)
-	}
+	// objList, err := k8sclient.DynamicClient.ListAllNamespaceResource(context.TODO(), cgvk)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to list cluster claim resources, %v", err)
+	// }
 
-	clusterClaimByte, err := json.Marshal(objList)
-	if err != nil {
-		return fmt.Errorf("failed to marshal cluster claim resources, %v", err)
-	}
+	// clusterClaimByte, err := json.Marshal(objList)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to marshal cluster claim resources, %v", err)
+	// }
 
 	var clObj model.ClusterClaimList
-	err = json.Unmarshal(clusterClaimByte, &clObj)
+	err := json.Unmarshal([]byte(s), &clObj)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal cluster claim resources, %v", err)
 	}
