@@ -13,7 +13,6 @@ import (
 
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 
-	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -191,63 +190,63 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 
 	for _, clusterCliam := range clusterCliams {
 		h.log.Infof("processing cluster claim %s", clusterCliam.Metadata.Name)
-		for _, status := range clusterCliam.Status.Conditions {
-			if status.Type != readyStatusType {
-				continue
-			}
+		// for _, status := range clusterCliam.Status.Conditions {
+		// 	if status.Type != readyStatusType {
+		// 		continue
+		// 	}
 
-			managedCluster := &captenpluginspb.ManagedCluster{}
-			managedCluster.ClusterName = clusterCliam.Metadata.Name
+		managedCluster := &captenpluginspb.ManagedCluster{}
+		managedCluster.ClusterName = clusterCliam.Metadata.Name
 
-			clusterObj, ok := clusters[managedCluster.ClusterName]
-			if !ok {
-				managedCluster.Id = uuid.New().String()
-			} else {
-				h.log.Infof("found existing managed clusterId %s, updating", clusterObj.Id)
-				managedCluster.Id = clusterObj.Id
-				managedCluster.ClusterDeployStatus = clusterObj.ClusterDeployStatus
-			}
-
-			if status.Status != readyStatusValue {
-				// secretName := fmt.Sprintf(clusterSecretName, clusterCliam.Spec.Id)
-				// resp, err := k8sclient.GetSecretData(clusterCliam.Metadata.Namespace, secretName)
-				// if err != nil {
-				// 	h.log.Errorf("failed to get secret %s/%s, %v", clusterCliam.Metadata.Namespace, secretName, err)
-				// 	continue
-				// }
-
-				resp := map[string]string{}
-				clusterEndpoint := resp[k8sEndpoint]
-				managedCluster.ClusterEndpoint = clusterEndpoint
-				cred := map[string]string{}
-				cred[kubeConfig] = resp[kubeConfig]
-				cred[k8sClusterCA] = resp[k8sClusterCA]
-				cred[k8sEndpoint] = clusterEndpoint
-
-				err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, managedCluster.Id, cred)
-				if err != nil {
-					h.log.Errorf("failed to store credential for %s, %v", managedCluster.Id, err)
-					continue
-				}
-
-				managedCluster.ClusterDeployStatus = clusterReadyStatus
-				// call config-worker.
-				err = h.UpdateClusterEndpoint(managedCluster.Id, clusterCliam.Metadata.Namespace, clusterCliam.Spec.Id, clusterEndpoint, resp[kubeConfig])
-				if err != nil {
-					h.log.Info("failed to update cluster endpoint information %v", err)
-					continue
-				}
-			} else {
-				managedCluster.ClusterDeployStatus = clusterNotReadyStatus
-			}
-
-			err = h.dbStore.UpsertManagedCluster(managedCluster)
-			if err != nil {
-				h.log.Info("failed to update information to db, %v", err)
-				continue
-			}
-			h.log.Infof("updated the cluster claim %s with status %s", managedCluster.ClusterName, managedCluster.ClusterDeployStatus)
+		clusterObj, ok := clusters[managedCluster.ClusterName]
+		if !ok {
+			managedCluster.Id = uuid.New().String()
+		} else {
+			h.log.Infof("found existing managed clusterId %s, updating", clusterObj.Id)
+			managedCluster.Id = clusterObj.Id
+			managedCluster.ClusterDeployStatus = clusterObj.ClusterDeployStatus
 		}
+
+		//if status.Status != readyStatusValue {
+		// secretName := fmt.Sprintf(clusterSecretName, clusterCliam.Spec.Id)
+		// resp, err := k8sclient.GetSecretData(clusterCliam.Metadata.Namespace, secretName)
+		// if err != nil {
+		// 	h.log.Errorf("failed to get secret %s/%s, %v", clusterCliam.Metadata.Namespace, secretName, err)
+		// 	continue
+		// }
+
+		resp := map[string]string{}
+		clusterEndpoint := resp[k8sEndpoint]
+		managedCluster.ClusterEndpoint = clusterEndpoint
+		cred := map[string]string{}
+		cred[kubeConfig] = resp[kubeConfig]
+		cred[k8sClusterCA] = resp[k8sClusterCA]
+		cred[k8sEndpoint] = clusterEndpoint
+
+		// err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, managedCluster.Id, cred)
+		// if err != nil {
+		// 	h.log.Errorf("failed to store credential for %s, %v", managedCluster.Id, err)
+		// 	continue
+		// }
+
+		managedCluster.ClusterDeployStatus = clusterReadyStatus
+		// call config-worker.
+		err = h.UpdateClusterEndpoint(managedCluster.Id, clusterCliam.Metadata.Namespace, clusterCliam.Spec.Id, clusterEndpoint, resp[kubeConfig])
+		if err != nil {
+			h.log.Info("failed to update cluster endpoint information %v", err)
+			continue
+		}
+		// } else {
+		// 	managedCluster.ClusterDeployStatus = clusterNotReadyStatus
+		// }
+
+		err = h.dbStore.UpsertManagedCluster(managedCluster)
+		if err != nil {
+			h.log.Info("failed to update information to db, %v", err)
+			continue
+		}
+		h.log.Infof("updated the cluster claim %s with status %s", managedCluster.ClusterName, managedCluster.ClusterDeployStatus)
+		//}
 	}
 	return nil
 }
