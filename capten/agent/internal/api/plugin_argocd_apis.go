@@ -128,18 +128,6 @@ func (a *Agent) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.
 		}, err
 	}
 
-	argocdClient, err := argocd.NewClient(&logging.Logging{})
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println("Started fetching kubeconfig")
-	err = argocdClient.GetConfig(ctx)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("finished fetching kubeconfig")
-
 	argocdProjects := []*captenpluginspb.ArgoCDProject{}
 	for _, project := range projects {
 		argocdProject := &captenpluginspb.ArgoCDProject{
