@@ -2,18 +2,10 @@ package argocd
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/util/io"
-	"github.com/kube-tarian/kad/capten/common-pkg/credential"
-)
-
-const (
-	CredEntityName = "k8s"
-	CredIdentifier = "kubeconfig"
 )
 
 func (a *ArgoCDClient) CreateCluster(ctx context.Context, clusterReq *Cluster) (*v1alpha1.Cluster, error) {
@@ -28,21 +20,12 @@ func (a *ArgoCDClient) CreateCluster(ctx context.Context, clusterReq *Cluster) (
 			Server: clusterReq.Server,
 			Name:   clusterReq.Name,
 			Config: v1alpha1.ClusterConfig{
-				Username: clusterReq.Config.Username,
-				Password: clusterReq.Config.Password,
+				BearerToken: clusterReq.Config.BearerToken,
 				TLSClientConfig: v1alpha1.TLSClientConfig{
-					Insecure:   clusterReq.Config.Insecure,
 					ServerName: clusterReq.Config.ServerName,
-					CertData:   clusterReq.Config.CertData,
-					KeyData:    clusterReq.Config.KeyData,
 					CAData:     clusterReq.Config.CAData,
 				},
 			},
-			ConnectionState: v1alpha1.ConnectionState{
-				Status:  clusterReq.ConnectionState.Status,
-				Message: clusterReq.ConnectionState.Message,
-			},
-			Namespaces: clusterReq.Namespaces,
 		},
 	})
 	if err != nil {
@@ -77,7 +60,7 @@ func (a *ArgoCDClient) GetCluster(ctx context.Context, clusterURL string) (*v1al
 	}
 	defer io.Close(conn)
 
-	repository, err := appClient.Get(ctx, &cluster.ClusterQuery{
+	cluster, err := appClient.Get(ctx, &cluster.ClusterQuery{
 		Id: &cluster.ClusterID{
 			Value: clusterURL,
 		},
@@ -86,7 +69,7 @@ func (a *ArgoCDClient) GetCluster(ctx context.Context, clusterURL string) (*v1al
 		return nil, err
 	}
 
-	return repository, nil
+	return cluster, nil
 }
 
 func (a *ArgoCDClient) ListClusters(ctx context.Context) (*v1alpha1.ClusterList, error) {
@@ -102,18 +85,4 @@ func (a *ArgoCDClient) ListClusters(ctx context.Context) (*v1alpha1.ClusterList,
 	}
 
 	return list, nil
-}
-
-func (a *ArgoCDClient) GetConfig(ctx context.Context) error {
-
-	cred, err := credential.GetGenericCredential(ctx, CredEntityName, CredIdentifier)
-	if err != nil {
-		return err
-	}
-
-	v, _ := json.Marshal(cred)
-
-	fmt.Println("Kubeconfig =>", string(v))
-
-	return nil
 }

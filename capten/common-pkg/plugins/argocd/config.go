@@ -46,18 +46,13 @@ type TLSClientConfig struct {
 }
 
 type ClusterConfig struct {
-	// Server requires Basic authentication
-	Username string `json:"username,omitempty" `
-	Password string `json:"password,omitempty"`
-
+	BearerToken string `json:"bearerToken,omitempty"`
 	// TLSClientConfig contains settings to enable transport layer security
 	TLSClientConfig `json:"tlsClientConfig"`
 }
 
 type Cluster struct {
-	Server          string          `json:"server"`
-	Name            string          `json:"name"`
-	Config          ClusterConfig   `json:"config"`
-	ConnectionState ConnectionState `json:"ConnectionState"`
-	Namespaces      []string        `json:"namespaces,omitempty"`
+	Server string        `json:"server"`
+	Name   string        `json:"name"`
+	Config ClusterConfig `json:"config"`
 }
