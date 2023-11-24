@@ -269,10 +269,13 @@ func (h *ClusterClaimSyncHandler) UpdateClusterEndpoint(id, ns, name, endpoint, 
 	if err != nil {
 		return err
 	}
+
+	h.log.Info("PROJECT DETAILS:", proj)
 	ci := model.CrossplaneClusterEndpoint{RepoURL: proj.GitProjectUrl, Id: proj.Id, Name: name, Endpoint: endpoint, Namespace: ns, Kubeconfig: k8sConfig}
 
 	wd := workers.NewConfig(h.tc, h.log)
 
+	h.log.Info("CI DETAILS:", ci)
 	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: "crossplane", Action: "configClusterEndpoint"}, ci)
 	if err != nil {
 		return err
