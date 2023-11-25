@@ -15,6 +15,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 )
 
 var (
@@ -30,6 +31,10 @@ var (
 	managedClusterEntityName = "managedcluster"
 )
 
+var (
+	cgvk = schema.GroupVersionResource{Group: "prodready.cluster", Version: "v1alpha1", Resource: "clusterclaims"}
+)
+
 type ClusterClaimSyncHandler struct {
 	log     logging.Logger
 	dbStore *captenstore.Store
@@ -39,16 +44,78 @@ func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) 
 	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore}
 }
 
+func registerK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
+	return k8s.RegisterDynamicInformers(NewClusterClaimSyncHandler(log, dbStore), dynamicClient, cgvk)
+}
+
+func getClusterClaimObj(obj any) (*model.ClusterClaim, error) {
+	clusterClaimByte, err := json.Marshal(obj)
+	if err != nil {
+		return nil, err
+	}
+
+	var clObj model.ClusterClaim
+	err = json.Unmarshal(clusterClaimByte, &clObj)
+	if err != nil {
+		return nil, err
+	}
+
+	return &clObj, nil
+}
+
+func (h *ClusterClaimSyncHandler) OnAdd(obj interface{}) {
+	h.log.Info("Crossplane ClusterCliam Add Callback")
+
+	newCcObj, err := getClusterClaimObj(obj)
+	if newCcObj == nil {
+		h.log.Errorf("failed to read ClusterCliam object, %v", err)
+		return
+	}
+
+	if err = h.updateManagedClusters([]model.ClusterClaim{*newCcObj}); err != nil {
+		h.log.Errorf("failed to update ClusterCliam object, %v", err)
+		return
+	}
+
+	h.log.Info("cluster-claims resources synched")
+}
+
+func (h *ClusterClaimSyncHandler) OnUpdate(oldObj, newObj interface{}) {
+	h.log.Info("Crossplane ClusterCliam Update Callback")
+
+	prevObj, err := getClusterClaimObj(oldObj)
+	if prevObj == nil {
+		h.log.Errorf("failed to read ClusterCliam old object %v", err)
+		return
+	}
+
+	newCcObj, err := getClusterClaimObj(oldObj)
+	if newCcObj == nil {
+		h.log.Errorf("failed to read ClusterCliam new object %v", err)
+		return
+	}
+
+	if err = h.updateManagedClusters([]model.ClusterClaim{*newCcObj}); err != nil {
+		h.log.Errorf("failed to update ClusterCliam object, %v", err)
+		return
+	}
+
+	h.log.Info("cluster-claims resources synched")
+}
+
+func (h *ClusterClaimSyncHandler) OnDelete(obj interface{}) {
+	h.log.Info("Crossplane ClusterCliam Delete Callback")
+}
+
 func (h *ClusterClaimSyncHandler) Sync() error {
-	h.log.Debug("started to sync cluster-claims resources")
+	h.log.Debug("started to sync ClusterCliam resources")
 
 	k8sclient, err := k8s.NewK8SClient(h.log)
 	if err != nil {
 		return fmt.Errorf("failed to initalize k8s client: %v", err)
 	}
 
-	objList, err := k8sclient.DynamicClient.ListAllNamespaceResource(context.TODO(),
-		schema.GroupVersionResource{Group: "prodready.cluster", Version: "v1alpha1", Resource: "clusterclaims"})
+	objList, err := k8sclient.DynamicClient.ListAllNamespaceResource(context.TODO(), cgvk)
 	if err != nil {
 		return fmt.Errorf("failed to list cluster claim resources, %v", err)
 	}
@@ -64,14 +131,19 @@ func (h *ClusterClaimSyncHandler) Sync() error {
 		return fmt.Errorf("failed to unmarshal cluster claim resources, %v", err)
 	}
 
-	if err = h.updateManagedClusters(k8sclient, clObj.Items); err != nil {
+	if err = h.updateManagedClusters(clObj.Items); err != nil {
 		return fmt.Errorf("failed to update clusters in DB, %v", err)
 	}
 	h.log.Info("cluster-claims resources synched")
 	return nil
 }
 
-func (h *ClusterClaimSyncHandler) updateManagedClusters(k8sClient *k8s.K8SClient, clusterCliams []model.ClusterClaim) error {
+func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.ClusterClaim) error {
+	k8sclient, err := k8s.NewK8SClient(h.log)
+	if err != nil {
+		return fmt.Errorf("failed to get k8s client, %v", err)
+	}
+
 	clusters, err := h.getManagedClusters()
 	if err != nil {
 		return fmt.Errorf("failed to get managed clusters from DB, %v", err)
@@ -98,7 +170,7 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(k8sClient *k8s.K8SClient
 
 			if status.Status == readyStatusValue {
 				secretName := fmt.Sprintf(clusterSecretName, clusterCliam.Spec.Id)
-				resp, err := k8sClient.GetSecretData(clusterCliam.Metadata.Namespace, secretName)
+				resp, err := k8sclient.GetSecretData(clusterCliam.Metadata.Namespace, secretName)
 				if err != nil {
 					h.log.Errorf("failed to get secret %s/%s, %v", clusterCliam.Metadata.Namespace, secretName, err)
 					continue

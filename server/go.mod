@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/gocql/gocql v1.3.1
 	github.com/google/uuid v1.3.0
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/intelops/go-common v1.0.20
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kube-tarian/kad/agent v0.0.0-20221228201013-ed4f78e4b887

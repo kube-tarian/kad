@@ -1,0 +1,26 @@
+Name: "argo-cd"
+ChartName: "tools/argo-cd"
+Category: "CI/CD"
+Description: ""
+RepoName: "tools"
+RepoURL: "https://kube-tarian.github.io/helmrepo-supporting-tools"
+Namespace: "argo-cd"
+ReleaseName: "argo-cd"
+Icon: "argo-cd.svg"
+Version: "1.0.1"
+CreateNamespace: true
+PluginName: ArgoCD
+PluginDescription: "Configure ArgoCD projects and resources"
+LaunchURL: https://argo.{{.DomainName}}
+LaunchUIDescription: "Intelops ArgoCD"
+LaunchUIIcon: "argo-cd.svg"
+LaunchUIValues:
+  configs:
+    cm:
+      oidc.config: |
+        name: Intelops
+        issuer: "{{.OAuthBaseURL}}"
+        clientID: "{{.ClientId}}"
+        clientSecret: "{{.ClientSecret}}"
+OverrideValues:
+  DomainName: "{{.DomainName}}"

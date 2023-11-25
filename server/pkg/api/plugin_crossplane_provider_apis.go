@@ -8,7 +8,7 @@ import (
 
 func (s *Server) AddCrossplanProvider(ctx context.Context, request *captenpluginspb.AddCrossplanProviderRequest) (
 	*captenpluginspb.AddCrossplanProviderResponse, error) {
-	orgId, clusterId, err := validateOrgClusterWithArgs(ctx, request.CloudProviderId, request.CloudType, request.ProviderName)
+	orgId, clusterId, err := validateOrgClusterWithArgs(ctx, request.CloudProviderId, request.CloudType)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &captenpluginspb.AddCrossplanProviderResponse{
@@ -39,7 +39,7 @@ func (s *Server) AddCrossplanProvider(ctx context.Context, request *captenplugin
 	}
 
 	if response.Status != captenpluginspb.StatusCode_OK {
-		s.log.Errorf("failed to add the ClusterProject for cluster %s, %s, %s", response.Status, response.StatusMessage)
+		s.log.Errorf("failed to add the CrossplanProvider for cluster %s, %s, %s", response.Status, response.StatusMessage)
 		return &captenpluginspb.AddCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add the Cluster CrossplanProvider",
@@ -58,7 +58,7 @@ func (s *Server) AddCrossplanProvider(ctx context.Context, request *captenplugin
 
 func (s *Server) UpdateCrossplanProvider(ctx context.Context, request *captenpluginspb.UpdateCrossplanProviderRequest) (
 	*captenpluginspb.UpdateCrossplanProviderResponse, error) {
-	orgId, clusterId, err := validateOrgClusterWithArgs(ctx, request.Id, request.CloudType, request.CloudProviderId, request.ProviderName)
+	orgId, clusterId, err := validateOrgClusterWithArgs(ctx, request.Id, request.CloudType, request.CloudProviderId)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &captenpluginspb.UpdateCrossplanProviderResponse{
@@ -89,7 +89,7 @@ func (s *Server) UpdateCrossplanProvider(ctx context.Context, request *captenplu
 	}
 
 	if response.Status != captenpluginspb.StatusCode_OK {
-		s.log.Errorf("failed to update the ClusterProject for cluster %s, %s, %s", response.Status, response.StatusMessage)
+		s.log.Errorf("failed to update the CrossplanProvider for cluster %s, %s, %s", response.Status, response.StatusMessage)
 		return &captenpluginspb.UpdateCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to update the Cluster CrossplanProvider",
@@ -137,7 +137,7 @@ func (s *Server) DeleteCrossplanProvider(ctx context.Context, request *captenplu
 	}
 
 	if response.Status != captenpluginspb.StatusCode_OK {
-		s.log.Errorf("failed to update the ClusterProject for cluster %s, %s, %s", response.Status, response.StatusMessage)
+		s.log.Errorf("failed to update the CrossplanProvider for cluster %s, %s, %s", response.Status, response.StatusMessage)
 		return &captenpluginspb.DeleteCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to delete the Cluster CrossplanProvider",

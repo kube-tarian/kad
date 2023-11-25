@@ -13,6 +13,7 @@ import (
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
+	"github.com/kube-tarian/kad/capten/agent/internal/crossplane"
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
@@ -77,6 +78,11 @@ func Start() {
 		}
 	}()
 
+	err = registerK8SWatcher(as)
+	if err != nil {
+		log.Fatalf("Failed to initialize k8s watchers %v", err)
+	}
+
 	jobScheduler, err := initializeJobScheduler(cfg, as)
 	if err != nil {
 		log.Fatalf("Failed to create cron job: %v", err)
@@ -123,4 +129,11 @@ func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*j
 
 	log.Info("successfully initialized job scheduler")
 	return s, nil
+}
+
+func registerK8SWatcher(dbStore *captenstore.Store) error {
+	if err := crossplane.RegisterK8SWatcher(log, dbStore); err != nil {
+		return err
+	}
+	return nil
 }
