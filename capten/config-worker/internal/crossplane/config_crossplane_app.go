@@ -158,7 +158,7 @@ func (cp *CrossPlaneApp) configureClusterEndpoint(ctx context.Context, req *mode
 	}
 
 	logger.Infof("added cloned project %s changed to git", req.RepoURL)
-	ns, resName, err := getAppNameNamespace(ctx, fileName)
+	ns, resName, err := getAppNameNamespace(ctx, filepath.Join(customerRepo, "infra/clusters/clusters-main-app.yaml"))
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get name and namespace from")
 	}

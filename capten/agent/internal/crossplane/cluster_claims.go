@@ -52,7 +52,7 @@ var (
 			}
 		  },
 		  "compositionUpdatePolicy": "Automatic",
-		  "id": "dev-eks",
+		  "id": "dev-aws",
 		  "parameters": {
 			"minNodeCount": 3,
 			"nodeSize": "small"
