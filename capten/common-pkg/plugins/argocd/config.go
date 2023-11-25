@@ -51,36 +51,47 @@ type ClusterConfig struct {
 	TLSClientConfig `json:"tlsClientConfig"`
 }
 
-type Cluster struct {
-	Server string        `json:"server"`
-	Name   string        `json:"name"`
-	Config ClusterConfig `json:"config"`
+//	type Cluster struct {
+//		Server string        `json:"server"`
+//		Name   string        `json:"name"`
+//		Config ClusterConfig `json:"config"`
+//	}
+type KubeConfig struct {
+	APIVersion     string    `json:"apiVersion"`
+	Kind           string    `json:"kind"`
+	Clusters       []Cluster `json:"clusters"`
+	Users          []User    `json:"users"`
+	Contexts       []Context `json:"contexts"`
+	CurrentContext string    `json:"current-context"`
 }
 
-type KubeConfig struct {
-	APIVersion string `json:"apiVersion"`
-	Kind       string `json:"kind"`
-	Clusters   []struct {
-		Name    string `json:"name"`
-		Cluster struct {
-			Server                   string `json:"server"`
-			CertificateAuthorityData string `json:"certificate-authority-data"`
-		} `json:"cluster"`
-	} `json:"clusters"`
-	Users []struct {
-		Name string `json:"name"`
-		User struct {
-			ClientCertificateData string `json:"client-certificate-data"`
-			ClientKeyData         string `json:"client-key-data"`
-		} `json:"user"`
-	} `json:"users"`
-	Contexts []struct {
-		Context struct {
-			Cluster   string `json:"cluster"`
-			Namespace string `json:"namespace"`
-			User      string `json:"user"`
-		} `json:"context"`
-		Name string `json:"name"`
-	} `json:"contexts"`
-	CurrentContext string `json:"current-context"`
+type Cluster struct {
+	Name    string     `json:"name"`
+	Cluster ClusterObj `json:"cluster"`
+}
+
+type ClusterObj struct {
+	Server                   string `json:"server"`
+	CertificateAuthorityData string `json:"certificate-authority-data"`
+}
+
+type User struct {
+	Name string  `json:"name"`
+	User UserObj `json:"user"`
+}
+
+type UserObj struct {
+	ClientCertificateData string `json:"client-certificate-data"`
+	ClientKeyData         string `json:"client-key-data"`
+}
+
+type Context struct {
+	Context ContextObj `json:"context"`
+	Name    string     `json:"name"`
+}
+
+type ContextObj struct {
+	Cluster   string `json:"cluster"`
+	Namespace string `json:"namespace"`
+	User      string `json:"user"`
 }
