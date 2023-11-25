@@ -120,6 +120,7 @@ configWorker:
   pluginConfigDir: "/configs"
   tektonPluginConfigFile: "tekton_plugin_config.json"
   crossplanePluginConfigFile: "crossplane_plugin_config.json"
+  crossplaneClusterDefaultApps: "crossplane_cluster_default_apps.json"
 
 temporal:
   external: true

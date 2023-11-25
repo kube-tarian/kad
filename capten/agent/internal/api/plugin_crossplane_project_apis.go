@@ -165,7 +165,8 @@ func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, provide
 		VaultCredIdentifier: req.GitProjectId, CrossplaneProviders: providers}
 	wd := workers.NewConfig(a.tc, a.log)
 
-	wkfId, err := wd.SendAsyncEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: crossplaneConfigUseCase}, ci)
+	wkfId, err := wd.SendAsyncEvent(context.TODO(),
+		&captenmodel.ConfigureParameters{Resource: crossplaneConfigUseCase, Action: model.CrossPlaneProjectSync}, ci)
 	if err != nil {
 		req.Status = string(model.CrossplaneProjectConfigurationFailed)
 		req.WorkflowId = "NA"

@@ -17,8 +17,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	clusterNameSub = "{CLUSTER_NAME}"
+)
+
 type Config struct {
 	PluginConfigFile        string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
+	ClusterDefaultAppsFile  string `envconfig:"CROSSPLANE_CLUSTER_DEFAULT_APPS" default:"/crossplane_cluster_default_apps.json"`
 	CloudProviderEntityName string `envconfig:"CLOUD_PROVIDER_ENTITY_NAME" default:"cloud-provider"`
 }
 
@@ -60,13 +65,18 @@ func readCrossPlanePluginConfig(pluginFile string) (*crossplanePluginConfig, err
 	return &pluginData, nil
 }
 
-func (cp *CrossPlaneApp) Configure(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {
-	status, err = cp.configureProjectAndApps(ctx, req)
+func readClusterDefaultApps(clusterDefaultApp string) ([]DefaultApps, error) {
+	data, err := os.ReadFile(filepath.Clean(clusterDefaultApp))
 	if err != nil {
-		logger.Errorf("failed to configure crossplane project, %v", err)
-		err = fmt.Errorf("failed to configure crossplane project")
+		return nil, fmt.Errorf("failed to read clusterDefaultApp File: %s, err: %w", clusterDefaultApp, err)
 	}
-	return
+
+	var defaultApps []DefaultApps
+	err = json.Unmarshal(data, &defaultApps)
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+	return defaultApps, nil
 }
 
 func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {

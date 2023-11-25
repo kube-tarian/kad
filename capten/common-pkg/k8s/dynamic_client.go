@@ -33,6 +33,15 @@ func ConvertYamlToJson(data []byte) ([]byte, error) {
 	return jsonData, nil
 }
 
+func ConvertJsonToYaml(data []byte) ([]byte, error) {
+	yamlData, err := yaml.JSONToYAML(data)
+	if err != nil {
+		return nil, err
+	}
+
+	return yamlData, nil
+}
+
 func (dc *DynamicClientSet) GetNameNamespace(jsonByte []byte) (string, string, error) {
 	var keyValue map[string]interface{}
 	if err := json.Unmarshal(jsonByte, &keyValue); err != nil {

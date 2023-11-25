@@ -15,11 +15,15 @@ type CrossplaneResourcesSync struct {
 }
 
 func NewCrossplaneResourcesSync(log logging.Logger, frequency string, dbStore *captenstore.Store) (*CrossplaneResourcesSync, error) {
+	ccObj, err := crossplane.NewClusterClaimSyncHandler(log, dbStore)
+	if err != nil {
+		return nil, err
+	}
 	return &CrossplaneResourcesSync{
 		log:             log,
 		frequency:       frequency,
 		dbStore:         dbStore,
-		clusterHandler:  crossplane.NewClusterClaimSyncHandler(log, dbStore),
+		clusterHandler:  ccObj,
 		providerHandler: crossplane.NewProvidersSyncHandler(log, dbStore),
 	}, nil
 }

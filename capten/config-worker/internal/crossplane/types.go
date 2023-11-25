@@ -6,12 +6,18 @@ type appConfig struct {
 	SynchApp       bool     `json:"synchApp"`
 }
 
+type clusterConfig struct {
+	MainAppGitPath string `json:"mainAppGitPath"`
+	File           string `json:"file"`
+}
+
 type crossplanePluginConfig struct {
 	TemplateGitRepo          string            `json:"templateGitRepo"`
 	CrossplaneConfigSyncPath string            `json:"crossplaneConfigSyncPath"`
 	ProviderConfigSyncPath   string            `json:"providerConfigSyncPath"`
 	ProviderPackages         map[string]string `json:"providerPackages"`
 	ArgoCDApps               []appConfig       `json:"argoCDApps"`
+	ClusterEndpointUpdates   clusterConfig     `json:"clusterEndpointUpdates"`
 }
 
 const (

@@ -29,3 +29,10 @@ type CrossplaneUseCase struct {
 	OverrideValues      map[string]string    `json:"OverrideValues,omitempty"`
 	CrossplaneProviders []CrossplaneProvider `json:"ProviderInfo,omitempty"`
 }
+
+type CrossplaneClusterUpdate struct {
+	Name             string `json:"name,omitempty"`
+	GitProjectId     string `json:"gitProjectId,omitempty"`
+	ManagedClusterId string `json:"managedClusterId,omitempty"`
+	RepoURL          string `json:"repoURL,omitempty"`
+}

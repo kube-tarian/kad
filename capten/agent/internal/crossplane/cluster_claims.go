@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
+	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
+	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 
@@ -19,7 +22,10 @@ import (
 )
 
 var (
-	readyStatusType          = "Ready"
+	readyStatusType        = "ready"
+	nodePoolStatusType     = "nodepool"
+	controlPlaneStatusType = "controlplane"
+
 	clusterNotReadyStatus    = "NotReady"
 	clusterReadyStatus       = "Ready"
 	readyStatusValue         = "True"
@@ -37,15 +43,25 @@ var (
 
 type ClusterClaimSyncHandler struct {
 	log     logging.Logger
+	tc      *temporalclient.Client
 	dbStore *captenstore.Store
 }
 
-func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) *ClusterClaimSyncHandler {
-	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore}
+func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*ClusterClaimSyncHandler, error) {
+	tc, err := temporalclient.NewClient(log)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore, tc: tc}, nil
 }
 
 func registerK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
-	return k8s.RegisterDynamicInformers(NewClusterClaimSyncHandler(log, dbStore), dynamicClient, cgvk)
+	obj, err := NewClusterClaimSyncHandler(log, dbStore)
+	if err != nil {
+		return err
+	}
+	return k8s.RegisterDynamicInformers(obj, dynamicClient, cgvk)
 }
 
 func getClusterClaimObj(obj any) (*model.ClusterClaim, error) {
@@ -151,55 +167,67 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 
 	for _, clusterCliam := range clusterCliams {
 		h.log.Infof("processing cluster claim %s", clusterCliam.Metadata.Name)
-		for _, status := range clusterCliam.Status.Conditions {
-			if status.Type != readyStatusType {
-				continue
-			}
+		nodePoolStatus, controlPlaneStatus, readyStatus := getClusterClaimStatus(clusterCliam.Status.Conditions)
+		h.log.Infof("cluster claim %s status: %s-%s-%s", clusterCliam.Metadata.Name, nodePoolStatus, controlPlaneStatus, readyStatus)
 
-			managedCluster := &captenpluginspb.ManagedCluster{}
-			managedCluster.ClusterName = clusterCliam.Metadata.Name
+		if !(strings.EqualFold(nodePoolStatus, "active") && strings.EqualFold(controlPlaneStatus, "active")) {
+			h.log.Infof("cluster %s is not created", clusterCliam.Metadata.Name)
+			return nil
+		}
 
-			clusterObj, ok := clusters[managedCluster.ClusterName]
-			if !ok {
-				managedCluster.Id = uuid.New().String()
-			} else {
-				h.log.Infof("found existing managed clusterId %s, updating", clusterObj.Id)
-				managedCluster.Id = clusterObj.Id
-				managedCluster.ClusterDeployStatus = clusterObj.ClusterDeployStatus
-			}
+		managedCluster := &captenpluginspb.ManagedCluster{}
+		managedCluster.ClusterName = clusterCliam.Metadata.Name
 
-			if status.Status == readyStatusValue {
-				secretName := fmt.Sprintf(clusterSecretName, clusterCliam.Spec.Id)
-				resp, err := k8sclient.GetSecretData(clusterCliam.Metadata.Namespace, secretName)
-				if err != nil {
-					h.log.Errorf("failed to get secret %s/%s, %v", clusterCliam.Metadata.Namespace, secretName, err)
-					continue
-				}
+		clusterObj, ok := clusters[managedCluster.ClusterName]
+		if !ok {
+			managedCluster.Id = uuid.New().String()
+		} else {
+			h.log.Infof("found existing managed clusterId %s, updating", clusterObj.Id)
+			managedCluster.Id = clusterObj.Id
+			managedCluster.ClusterDeployStatus = clusterObj.ClusterDeployStatus
+		}
 
-				clusterEndpoint := resp.Data[k8sEndpoint]
-				managedCluster.ClusterEndpoint = clusterEndpoint
-				cred := map[string]string{}
-				cred[kubeConfig] = resp.Data[kubeConfig]
-				cred[k8sClusterCA] = resp.Data[k8sClusterCA]
-				cred[k8sEndpoint] = clusterEndpoint
+		if strings.EqualFold(readyStatus, readyStatusValue) {
+			managedCluster.ClusterDeployStatus = clusterReadyStatus
+		} else {
+			managedCluster.ClusterDeployStatus = clusterNotReadyStatus
+		}
 
-				err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, managedCluster.Id, cred)
-				if err != nil {
-					h.log.Errorf("failed to store credential for %s, %v", managedCluster.Id, err)
-					continue
-				}
+		secretName := fmt.Sprintf(clusterSecretName, clusterCliam.Spec.Id)
+		resp, err := k8sclient.GetSecretData(clusterCliam.Metadata.Namespace, secretName)
+		if err != nil {
+			h.log.Errorf("failed to get secret %s/%s, %v", clusterCliam.Metadata.Namespace, secretName, err)
+			continue
+		}
 
-				managedCluster.ClusterDeployStatus = clusterReadyStatus
-			} else {
-				managedCluster.ClusterDeployStatus = clusterNotReadyStatus
-			}
+		clusterEndpoint := resp.Data[k8sEndpoint]
+		managedCluster.ClusterEndpoint = clusterEndpoint
+		cred := map[string]string{}
+		cred[kubeConfig] = resp.Data[kubeConfig]
+		cred[k8sClusterCA] = resp.Data[k8sClusterCA]
+		cred[k8sEndpoint] = clusterEndpoint
 
-			err = h.dbStore.UpsertManagedCluster(managedCluster)
+		err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, managedCluster.Id, cred)
+		if err != nil {
+			h.log.Errorf("failed to store credential for %s, %v", managedCluster.Id, err)
+			continue
+		}
+
+		err = h.dbStore.UpsertManagedCluster(managedCluster)
+		if err != nil {
+			h.log.Info("failed to update information to db, %v", err)
+			continue
+		}
+		h.log.Infof("updated the cluster claim %s with status %s", managedCluster.ClusterName, managedCluster.ClusterDeployStatus)
+
+		if managedCluster.ClusterDeployStatus == clusterReadyStatus {
+			// call config-worker.
+			err = h.triggerClusterUpdates(clusterCliam.Spec.Id, managedCluster.Id)
 			if err != nil {
-				h.log.Info("failed to update information to db, %v", err)
+				h.log.Info("failed to trigger cluster update workflow, %v", err)
 				continue
 			}
-			h.log.Infof("updated the cluster claim %s with status %s", managedCluster.ClusterName, managedCluster.ClusterDeployStatus)
+			h.log.Infof("triggered cluster update workflow for cluster %s", managedCluster.ClusterName)
 		}
 	}
 	return nil
@@ -216,4 +244,30 @@ func (h *ClusterClaimSyncHandler) getManagedClusters() (map[string]*captenplugin
 		clusterEndpointMap[cluster.ClusterName] = cluster
 	}
 	return clusterEndpointMap, nil
+}
+
+func (h *ClusterClaimSyncHandler) triggerClusterUpdates(clusterName, managedClusterID string) error {
+	proj, err := h.dbStore.GetCrossplaneProject()
+	if err != nil {
+		return err
+	}
+
+	ci := model.CrossplaneClusterUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId, Name: clusterName, ManagedClusterId: managedClusterID}
+	wd := workers.NewConfig(h.tc, h.log)
+	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: model.CrossPlaneResource, Action: model.CrossPlaneClusterUpdate}, ci)
+	return err
+}
+
+func getClusterClaimStatus(conditions []model.ClusterClaimCondition) (nodePoolStatus, controlPlaneStatus, readyStatus string) {
+	for _, condition := range conditions {
+		switch strings.ToLower(condition.Type) {
+		case readyStatusType:
+			readyStatus = condition.Status
+		case nodePoolStatusType:
+			nodePoolStatus = condition.Status
+		case controlPlaneStatusType:
+			controlPlaneStatus = condition.Status
+		}
+	}
+	return
 }

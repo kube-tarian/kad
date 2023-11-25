@@ -21,14 +21,18 @@ const (
 	tmpGitProjectCloneStr          = "clone*"
 	gitProjectAccessTokenAttribute = "accessToken"
 	gitUrlSuffix                   = ".git"
+	kubeConfig                     = "kubeconfig"
+	k8sEndpoint                    = "endpoint"
+	k8sClusterCA                   = "clusterCA"
 )
 
 type Config struct {
-	GitDefaultCommiterName  string `envconfig:"GIT_COMMIT_NAME" default:"capten-bot"`
-	GitDefaultCommiterEmail string `envconfig:"GIT_COMMIT_EMAIL" default:"capten-bot@intelops.dev"`
-	GitVaultEntityName      string `envconfig:"GIT_VAULT_ENTITY_NAME" default:"git-project"`
-	GitCloneDir             string `envconfig:"GIT_CLONE_DIR" default:"/gitCloneDir"`
-	GitBranchName           string `envconfig:"GIT_BRANCH_NAME" default:"capten-template-bot"`
+	GitDefaultCommiterName   string `envconfig:"GIT_COMMIT_NAME" default:"capten-bot"`
+	GitDefaultCommiterEmail  string `envconfig:"GIT_COMMIT_EMAIL" default:"capten-bot@intelops.dev"`
+	GitVaultEntityName       string `envconfig:"GIT_VAULT_ENTITY_NAME" default:"git-project"`
+	GitCloneDir              string `envconfig:"GIT_CLONE_DIR" default:"/gitCloneDir"`
+	GitBranchName            string `envconfig:"GIT_BRANCH_NAME" default:"capten-template-bot"`
+	ManagedClusterEntityName string `envconfig:"MANAGED_CLUSER_VAULT_ENTITY_NAME" default:"managedcluster"`
 }
 
 var logger = logging.NewLogger()
@@ -123,6 +127,34 @@ func (ca *AppGitConfigHelper) SyncArgoCDApp(ctx context.Context, ns, resName str
 	}
 
 	return nil
+}
+
+func (ca *AppGitConfigHelper) CreateCluster(ctx context.Context, id, clusterName string) (string, error) {
+	credReader, err := credentials.NewCredentialReader(ctx)
+	if err != nil {
+		err = errors.WithMessage(err, "error in initializing credential reader")
+		return "", err
+	}
+
+	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
+		ca.cfg.ManagedClusterEntityName, id)
+	if err != nil {
+		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
+			ca.cfg.GitVaultEntityName, id)
+		return "", err
+	}
+
+	client, err := argocd.NewClient(logger)
+	if err != nil {
+		return "", err
+	}
+
+	err = client.CreateOrUpdateCluster(ctx, clusterName, cred[kubeConfig])
+	if err != nil {
+		return "", err
+	}
+
+	return cred[k8sEndpoint], nil
 }
 
 func (ca *AppGitConfigHelper) WaitForArgoCDToSync(ctx context.Context, ns, resName string) error {
