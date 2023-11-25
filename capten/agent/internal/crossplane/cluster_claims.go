@@ -151,7 +151,7 @@ func (h *ClusterClaimSyncHandler) Sync() error {
 }
 
 func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.ClusterClaim) error {
-	k8sclient, err := k8s.NewK8SClient(h.log)
+	_, err := k8s.NewK8SClient(h.log)
 	if err != nil {
 		return fmt.Errorf("failed to get k8s client, %v", err)
 	}
@@ -180,19 +180,19 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 				managedCluster.ClusterDeployStatus = clusterObj.ClusterDeployStatus
 			}
 
-			if status.Status == readyStatusValue {
-				secretName := fmt.Sprintf(clusterSecretName, clusterCliam.Spec.Id)
-				resp, err := k8sclient.GetSecretData(clusterCliam.Metadata.Namespace, secretName)
-				if err != nil {
-					h.log.Errorf("failed to get secret %s/%s, %v", clusterCliam.Metadata.Namespace, secretName, err)
-					continue
-				}
+			if status.Status != readyStatusValue {
+				// secretName := fmt.Sprintf(clusterSecretName, clusterCliam.Spec.Id)
+				// resp, err := k8sclient.GetSecretData(clusterCliam.Metadata.Namespace, secretName)
+				// if err != nil {
+				// 	h.log.Errorf("failed to get secret %s/%s, %v", clusterCliam.Metadata.Namespace, secretName, err)
+				// 	continue
+				// }
 
-				clusterEndpoint := resp.Data[k8sEndpoint]
+				clusterEndpoint := "test"
 				managedCluster.ClusterEndpoint = clusterEndpoint
 				cred := map[string]string{}
-				cred[kubeConfig] = resp.Data[kubeConfig]
-				cred[k8sClusterCA] = resp.Data[k8sClusterCA]
+				cred[kubeConfig] = "test"
+				cred[k8sClusterCA] = "test"
 				cred[k8sEndpoint] = clusterEndpoint
 
 				err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, managedCluster.Id, cred)
@@ -203,7 +203,7 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 
 				managedCluster.ClusterDeployStatus = clusterReadyStatus
 				// call config-worker.
-				err = h.UpdateClusterEndpoint(clusterCliam.Metadata.Namespace, clusterCliam.Spec.Id, clusterEndpoint, resp.Data[kubeConfig])
+				err = h.UpdateClusterEndpoint(clusterCliam.Metadata.Namespace, clusterCliam.Spec.Id, clusterEndpoint, "test")
 				if err != nil {
 					h.log.Info("failed to update cluster endpoint information %v", err)
 					continue
