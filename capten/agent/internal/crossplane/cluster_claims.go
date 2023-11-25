@@ -214,7 +214,7 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 
 			if managedCluster.ClusterDeployStatus == clusterReadyStatus {
 				// call config-worker.
-				err = h.triggerClusterUpdates(clusterCliam.Metadata.Namespace, clusterCliam.Spec.Id)
+				err = h.triggerClusterUpdates(clusterCliam.Spec.Id, managedCluster.Id)
 				if err != nil {
 					h.log.Info("failed to update cluster endpoint information %v", err)
 					continue
