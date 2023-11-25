@@ -2,6 +2,7 @@ package argocd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
@@ -22,7 +23,20 @@ func (a *ArgoCDClient) CreateCluster(ctx context.Context, clusterReq *Cluster) (
 		fmt.Printf(err.Error())
 	}
 
-	fmt.Println("kubeconfig =>", cred)
+	byteConfig, err := json.Marshal(cred)
+	if err != nil {
+		return nil, err
+	}
+
+	var kubeconfig KubeConfig
+	if err := json.Unmarshal(byteConfig, &kubeconfig); err != nil {
+		return nil, err
+	}
+
+	fmt.Println("byteConfig =>", string(byteConfig))
+	fmt.Println("Config =>", kubeconfig)
+
+	fmt.Println("clusterReq.Server" + kubeconfig.Clusters[0].Name)
 
 	if false {
 		conn, appClient, err := a.client.NewClusterClient()
