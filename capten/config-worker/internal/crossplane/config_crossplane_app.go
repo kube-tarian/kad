@@ -145,7 +145,7 @@ func (cp *CrossPlaneApp) configureClusterEndpoint(ctx context.Context, req *mode
 	defer os.RemoveAll(templateRepo)
 	defer os.RemoveAll(customerRepo)
 
-	fileName := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdateFile)
+	fileName := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.File)
 	// replace cluster endpoint
 	err = updateClusterEndpointDetials(fileName, req)
 	if err != nil {
@@ -158,7 +158,7 @@ func (cp *CrossPlaneApp) configureClusterEndpoint(ctx context.Context, req *mode
 	}
 
 	logger.Infof("added cloned project %s changed to git", req.RepoURL)
-	ns, resName, err := getAppNameNamespace(ctx, filepath.Join(customerRepo, "infra/clusters/clusters-main-app.yaml"))
+	ns, resName, err := getAppNameNamespace(ctx, filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.MainAppGitPath))
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get name and namespace from")
 	}
@@ -420,13 +420,18 @@ func updateClusterEndpointDetials(filename string, req *model.CrossplaneClusterE
 		return err
 	}
 
-	for _, cluster := range argoCDAppValue.Clusters {
+	clusters := *argoCDAppValue.Clusters
+	for index := range clusters {
+		cluster := &clusters[index]
 		if cluster.Name == req.Name {
+			logger.Infof("udpated the req endpoint details to %s for name %s ", req.Endpoint, req.Name)
 			cluster.Server = req.Endpoint
 
 			break
 		}
 	}
+
+	argoCDAppValue.Clusters = &clusters
 
 	jsonBytes, err := json.Marshal(argoCDAppValue)
 	if err != nil {

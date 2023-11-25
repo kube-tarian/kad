@@ -65,10 +65,10 @@ type Cluster struct {
 }
 
 type ArgoCDAppValue struct {
-	Project      string      `json:"project,omitempty"`
-	Src          Source      `json:"source,omitempty"`
-	Destination  Dest        `json:"destination,omitempty"`
+	Project      *string     `json:"project,omitempty"`
+	Src          *Source     `json:"source,omitempty"`
+	Destination  *Dest       `json:"destination,omitempty"`
 	SyncPolicy   interface{} `json:"syncPolicy,omitempty"`
 	Compositions interface{} `json:"compositions,omitempty"`
-	Clusters     []Cluster   `json:"clusters,omitempty"`
+	Clusters     *[]Cluster  `json:"clusters,omitempty"`
 }
