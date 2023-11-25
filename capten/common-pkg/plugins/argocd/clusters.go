@@ -30,7 +30,7 @@ func (a *ArgoCDClient) CreateCluster(ctx context.Context, serverName string, con
 		return nil, err
 	}
 
-	var kubeconfig KubeConfig
+	kubeconfig := KubeConfig{}
 	if err := json.Unmarshal(byteConfig, &kubeconfig); err != nil {
 		return nil, err
 	}
@@ -67,9 +67,8 @@ func (a *ArgoCDClient) CreateCluster(ctx context.Context, serverName string, con
 	if err != nil {
 		return nil, err
 	}
-	return resp, nil
 
-	return nil, nil
+	return resp, nil
 }
 
 // func parseKubeConfig(kubeconfigMap map[string]string) error {
