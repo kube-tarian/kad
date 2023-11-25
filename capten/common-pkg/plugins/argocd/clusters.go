@@ -11,6 +11,7 @@ import (
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/util/io"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -31,7 +32,7 @@ func (a *ArgoCDClient) CreateCluster(ctx context.Context, serverName string, con
 	}
 
 	kubeconfig := KubeConfig{}
-	if err := json.Unmarshal(byteConfig, &kubeconfig); err != nil {
+	if err := yaml.Unmarshal(byteConfig, &kubeconfig); err != nil {
 		return nil, err
 	}
 
