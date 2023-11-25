@@ -43,7 +43,7 @@ func getAppNameNamespace(ctx context.Context, fileName string) (string, string, 
 
 func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
 	logger.Infof("configuring the cluster endpoint for %s", req.RepoURL)
-	endpoint, err := cp.helper.CreateCluster(ctx, req.Name, req.ManagedK8SId)
+	endpoint, err := cp.helper.CreateCluster(ctx, req.ManagedK8SId, req.Name)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to CreateCluster in argocd app")
 	}
