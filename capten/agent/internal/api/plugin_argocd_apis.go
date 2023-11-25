@@ -123,7 +123,7 @@ func (a *Agent) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.
 	if err != nil {
 		fmt.Println("NewClient Error => " + err.Error())
 	}
-	_, err = argocdClient.CreateCluster(ctx, &argocd.Cluster{})
+	_, err = argocdClient.CreateCluster(ctx, "", make(map[string]string))
 	if err != nil {
 		fmt.Println("CreateCluster Error => " + err.Error())
 	}
