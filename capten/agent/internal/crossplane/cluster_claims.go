@@ -271,7 +271,7 @@ func (h *ClusterClaimSyncHandler) UpdateClusterEndpoint(id, ns, name, endpoint, 
 	}
 
 	h.log.Info("PROJECT DETAILS:", proj)
-	ci := model.CrossplaneClusterEndpoint{RepoURL: proj.GitProjectUrl, Id: proj.Id, Name: name, Endpoint: endpoint, Namespace: ns, Kubeconfig: k8sConfig}
+	ci := model.CrossplaneClusterEndpoint{RepoURL: proj.GitProjectUrl, Id: proj.GitProjectId, Name: name, Endpoint: endpoint, Namespace: ns, Kubeconfig: k8sConfig}
 
 	wd := workers.NewConfig(h.tc, h.log)
 
