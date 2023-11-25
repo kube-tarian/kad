@@ -97,7 +97,9 @@ type ClusterClaimCondition struct {
 }
 
 type ClusterClaimStatus struct {
-	Conditions []ClusterClaimCondition `json:"conditions,omitempty" protobuf:"bytes,1,opt,name=conditions"`
+	Conditions         []ClusterClaimCondition `json:"conditions,omitempty" protobuf:"bytes,1,opt,name=conditions"`
+	ControlPlaneStatus string                  `json:"controlPlaneStatus,omitempty"`
+	NodePoolStatus     string                  `json:"nodePoolStatus,omitempty"`
 }
 
 type ClusterClaim struct {

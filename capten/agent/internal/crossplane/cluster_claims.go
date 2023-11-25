@@ -22,9 +22,7 @@ import (
 )
 
 var (
-	readyStatusType        = "ready"
-	nodePoolStatusType     = "nodepool"
-	controlPlaneStatusType = "controlplane"
+	readyStatusType = "ready"
 
 	clusterNotReadyStatus    = "NotReady"
 	clusterReadyStatus       = "Ready"
@@ -167,10 +165,12 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 
 	for _, clusterCliam := range clusterCliams {
 		h.log.Infof("processing cluster claim %s", clusterCliam.Metadata.Name)
-		nodePoolStatus, controlPlaneStatus, readyStatus := getClusterClaimStatus(clusterCliam.Status.Conditions)
-		h.log.Infof("cluster claim %s status: %s-%s-%s", clusterCliam.Metadata.Name, nodePoolStatus, controlPlaneStatus, readyStatus)
+		readyStatus := h.getClusterClaimStatus(clusterCliam.Status.Conditions)
+		h.log.Infof("cluster claim %s status: %s-%s-%s", clusterCliam.Metadata.Name,
+			clusterCliam.Status.NodePoolStatus, clusterCliam.Status.ControlPlaneStatus, readyStatus)
 
-		if !(strings.EqualFold(nodePoolStatus, "active") && strings.EqualFold(controlPlaneStatus, "active")) {
+		if !(strings.EqualFold(clusterCliam.Status.NodePoolStatus, "active") &&
+			strings.EqualFold(clusterCliam.Status.ControlPlaneStatus, "active")) {
 			h.log.Infof("cluster %s is not created", clusterCliam.Metadata.Name)
 			return nil
 		}
@@ -221,7 +221,6 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 		h.log.Infof("updated the cluster claim %s with status %s", managedCluster.ClusterName, managedCluster.ClusterDeployStatus)
 
 		if managedCluster.ClusterDeployStatus == clusterReadyStatus {
-			// call config-worker.
 			err = h.triggerClusterUpdates(clusterCliam.Spec.Id, managedCluster.Id)
 			if err != nil {
 				h.log.Info("failed to trigger cluster update workflow, %v", err)
@@ -252,21 +251,18 @@ func (h *ClusterClaimSyncHandler) triggerClusterUpdates(clusterName, managedClus
 		return err
 	}
 
-	ci := model.CrossplaneClusterUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId, Name: clusterName, ManagedClusterId: managedClusterID}
+	ci := model.CrossplaneClusterUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId,
+		ManagedClusterName: clusterName, ManagedClusterId: managedClusterID}
 	wd := workers.NewConfig(h.tc, h.log)
 	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: model.CrossPlaneResource, Action: model.CrossPlaneClusterUpdate}, ci)
 	return err
 }
 
-func getClusterClaimStatus(conditions []model.ClusterClaimCondition) (nodePoolStatus, controlPlaneStatus, readyStatus string) {
+func (h *ClusterClaimSyncHandler) getClusterClaimStatus(conditions []model.ClusterClaimCondition) (readyStatus string) {
 	for _, condition := range conditions {
 		switch strings.ToLower(condition.Type) {
 		case readyStatusType:
 			readyStatus = condition.Status
-		case nodePoolStatusType:
-			nodePoolStatus = condition.Status
-		case controlPlaneStatusType:
-			controlPlaneStatus = condition.Status
 		}
 	}
 	return

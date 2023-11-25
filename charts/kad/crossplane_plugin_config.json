@@ -6,9 +6,9 @@
         "aws": "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0",
         "gcp": "xpkg.upbound.io/crossplane-contrib/provider-gcp:v0.22.0"
     },
-    "clusterEndpointUpdates":{
+    "clusterUpdateConfig":{
         "mainAppGitPath": "infra/crossplane/crossplane-main-app.yaml",
-        "file": "infra/clusters/argocd-apps/values.yaml"
+        "clusterValuesFile": "infra/clusters/argocd-apps/values.yaml"
     },
     "argoCDApps": [
         {

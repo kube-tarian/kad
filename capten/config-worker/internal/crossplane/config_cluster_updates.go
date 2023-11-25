@@ -43,7 +43,7 @@ func getAppNameNamespace(ctx context.Context, fileName string) (string, string, 
 
 func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
 	logger.Infof("configuring the cluster endpoint for %s", req.RepoURL)
-	endpoint, err := cp.helper.CreateCluster(ctx, req.ManagedClusterId, req.Name)
+	endpoint, err := cp.helper.CreateCluster(ctx, req.ManagedClusterId, req.ManagedClusterName)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to CreateCluster in argocd app")
 	}
@@ -64,9 +64,8 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	defer os.RemoveAll(templateRepo)
 	defer os.RemoveAll(customerRepo)
 
-	fileName := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.File)
-	// replace cluster endpoint
-	err = updateClusterEndpointDetials(fileName, req.Name, endpoint, cp.cfg.ClusterDefaultAppsFile)
+	clusterValuesFile := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterValuesFile)
+	err = updateClusterEndpointDetials(clusterValuesFile, req.ManagedClusterName, endpoint, cp.cfg.ClusterDefaultAppsFile)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace the file")
 	}
@@ -96,8 +95,8 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	return string(agentmodel.WorkFlowStatusCompleted), nil
 }
 
-func updateClusterEndpointDetials(filename, clusterName, clusterEndpoint, defaultAppFile string) error {
-	data, err := os.ReadFile(filename)
+func updateClusterEndpointDetials(valuesFileName, clusterName, clusterEndpoint, defaultAppFile string) error {
+	data, err := os.ReadFile(valuesFileName)
 	if err != nil {
 		return err
 	}
@@ -108,35 +107,31 @@ func updateClusterEndpointDetials(filename, clusterName, clusterEndpoint, defaul
 	}
 
 	var argoCDAppValue ArgoCDAppValue
-
 	err = json.Unmarshal(jsonData, &argoCDAppValue)
 	if err != nil {
 		return err
 	}
 
+	defaultApps, err := readClusterDefaultApps(defaultAppFile)
+	if err != nil {
+		return err
+	}
+
+	var found bool
 	clusters := *argoCDAppValue.Clusters
 	for index := range clusters {
-		cluster := &clusters[index]
-		if cluster.Name == clusterName {
-			defaultApps, err := readClusterDefaultApps(defaultAppFile)
-			if err != nil {
-				return err
-			}
-
-			for index := range defaultApps {
-				localObj := &defaultApps[index]
-				strings.ReplaceAll(localObj.ValuesPath, clusterNameSub, clusterName)
-			}
-
-			logger.Infof("udpated the req endpoint details to %s for name %s ", clusterEndpoint, clusterName)
-			cluster.Server = clusterEndpoint
-
+		if clusters[index].Name == clusterName {
+			clusters[index] = prepareClusterData(clusterName, clusterEndpoint, defaultApps)
+			found = true
 			break
 		}
 	}
 
-	argoCDAppValue.Clusters = &clusters
+	if !found {
+		clusters = append(clusters, prepareClusterData(clusterName, clusterEndpoint, defaultApps))
+	}
 
+	argoCDAppValue.Clusters = &clusters
 	jsonBytes, err := json.Marshal(argoCDAppValue)
 	if err != nil {
 		return err
@@ -147,7 +142,33 @@ func updateClusterEndpointDetials(filename, clusterName, clusterEndpoint, defaul
 		return err
 	}
 
-	err = os.WriteFile(filename, yamlBytes, os.ModeAppend)
-
+	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
 	return err
+}
+
+func prepareClusterData(clusterName, endpoint string, defaultApps []DefaultApps) Cluster {
+	for index := range defaultApps {
+		localObj := &defaultApps[index]
+		localObj.ValuesPath = strings.ReplaceAll(localObj.ValuesPath, clusterNameSub, clusterName)
+	}
+
+	return Cluster{
+		Name:    clusterName,
+		Server:  endpoint,
+		DefApps: defaultApps,
+	}
+}
+
+func readClusterDefaultApps(clusterDefaultApp string) ([]DefaultApps, error) {
+	data, err := os.ReadFile(filepath.Clean(clusterDefaultApp))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read clusterDefaultApp File: %s, err: %w", clusterDefaultApp, err)
+	}
+
+	var defaultApps []DefaultApps
+	err = json.Unmarshal(data, &defaultApps)
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+	return defaultApps, nil
 }
