@@ -52,7 +52,7 @@ func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) 
 	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore, tc: tc}, nil
 }
 
-func RegisterK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
+func registerK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
 	obj, err := NewClusterClaimSyncHandler(log, dbStore)
 	if err != nil {
 		return err
@@ -202,12 +202,6 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 				}
 
 				managedCluster.ClusterDeployStatus = clusterReadyStatus
-				// call config-worker.
-				err = h.UpdateClusterEndpoint(clusterCliam.Metadata.Namespace, clusterCliam.Spec.Id, clusterEndpoint, resp.Data[kubeConfig])
-				if err != nil {
-					h.log.Info("failed to update cluster endpoint information %v", err)
-					continue
-				}
 			} else {
 				managedCluster.ClusterDeployStatus = clusterNotReadyStatus
 			}
@@ -217,6 +211,17 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 				h.log.Info("failed to update information to db, %v", err)
 				continue
 			}
+
+			if managedCluster.ClusterDeployStatus == clusterReadyStatus {
+				// call config-worker.
+				err = h.triggerClusterUpdates(clusterCliam.Metadata.Namespace, clusterCliam.Spec.Id)
+				if err != nil {
+					h.log.Info("failed to update cluster endpoint information %v", err)
+					continue
+				}
+
+			}
+
 			h.log.Infof("updated the cluster claim %s with status %s", managedCluster.ClusterName, managedCluster.ClusterDeployStatus)
 		}
 	}
@@ -236,12 +241,12 @@ func (h *ClusterClaimSyncHandler) getManagedClusters() (map[string]*captenplugin
 	return clusterEndpointMap, nil
 }
 
-func (h *ClusterClaimSyncHandler) UpdateClusterEndpoint(ns, name, endpoint, k8sConfig string) error {
+func (h *ClusterClaimSyncHandler) triggerClusterUpdates(clusterName, managedClusterID string) error {
 	proj, err := h.dbStore.GetCrossplaneProject()
 	if err != nil {
 		return err
 	}
-	ci := model.CrossplaneClusterEndpoint{RepoURL: proj.GitProjectUrl, Id: proj.GitProjectId, Name: name, Endpoint: endpoint, Namespace: ns, Kubeconfig: k8sConfig}
+	ci := model.CrossplaneClusterUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId, Name: clusterName, ManagedK8SId: managedClusterID}
 
 	wd := workers.NewConfig(h.tc, h.log)
 

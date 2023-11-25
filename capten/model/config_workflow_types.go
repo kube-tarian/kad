@@ -30,13 +30,11 @@ type CrossplaneUseCase struct {
 	CrossplaneProviders []CrossplaneProvider `json:"ProviderInfo,omitempty"`
 }
 
-type CrossplaneClusterEndpoint struct {
-	Name       string `json:"name,omitempty"`
-	Endpoint   string `json:"endpoint,omitempty"`
-	Kubeconfig string `json:"kubeconfig,omitempty"`
-	Id         string `json:"id,omitempty"`
-	RepoURL    string `json:"repoURL,omitempty"`
-	Namespace  string `json:"namespace,omitempty"`
+type CrossplaneClusterUpdate struct {
+	Name         string `json:"name,omitempty"`
+	GitProjectId string `json:"gitProjectId,omitempty"`
+	ManagedK8SId string `json:"managedK8SId,omitempty"`
+	RepoURL      string `json:"repoURL,omitempty"`
 }
 
 type Source struct {
