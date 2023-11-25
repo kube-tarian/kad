@@ -119,6 +119,15 @@ func (a *Agent) GetArgoCDProjects(ctx context.Context, request *captenpluginspb.
 	*captenpluginspb.GetArgoCDProjectsResponse, error) {
 	a.log.Infof("Get ArgoCD Git projects request recieved")
 
+	argocdClient, err := argocd.NewClient(&logging.Logging{})
+	if err != nil {
+		fmt.Println("NewClient Error => " + err.Error())
+	}
+	_, err = argocdClient.CreateCluster(ctx, &argocd.Cluster{})
+	if err != nil {
+		fmt.Println("CreateCluster Error => " + err.Error())
+	}
+
 	projects, err := a.as.GetArgoCDProjects()
 	if err != nil {
 		a.log.Errorf("failed to get argocd Project, %v", err)
