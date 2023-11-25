@@ -250,7 +250,7 @@ func (h *ClusterClaimSyncHandler) triggerClusterUpdates(clusterName, managedClus
 
 	wd := workers.NewConfig(h.tc, h.log)
 
-	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: "crossplane", Action: "configClusterEndpoint"}, ci)
+	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: model.CrossPlaneResource, Action: model.CrossPlaneClusterUpdate}, ci)
 	if err != nil {
 		return err
 	}

@@ -35,7 +35,7 @@ func (c *CrossPlaneActivities) ConfigurationActivity(ctx context.Context, params
 		status, err = config.configureClusterUpdate(ctx, reqLocal)
 		if err != nil {
 			logger.Errorf("failed to configure crossplane project for %s, %v", model.CrossPlaneClusterUpdate, err)
-			err = fmt.Errorf("failed to configure crossplane project for", model.CrossPlaneClusterUpdate)
+			err = fmt.Errorf("failed to configure crossplane project for %s", model.CrossPlaneClusterUpdate)
 		}
 	default:
 		reqLocal := &model.CrossplaneUseCase{}
