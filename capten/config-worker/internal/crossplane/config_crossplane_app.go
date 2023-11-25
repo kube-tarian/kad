@@ -125,10 +125,11 @@ func (cp *CrossPlaneApp) Configure(ctx context.Context, reqType string, req json
 func (cp *CrossPlaneApp) configureClusterEndpoint(ctx context.Context, req *model.CrossplaneClusterEndpoint) (status string, err error) {
 	logger.Infof("configuring the cluster endpoint for %s", req.RepoURL)
 	err = cp.helper.CreateCluster(ctx, req.Namespace, req.Endpoint, req.Name)
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to CreateCluster in argocd app")
-	}
+	// if err != nil {
+	// 	return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to CreateCluster in argocd app")
+	// }
 
+	logger.Infof("CreateCluster argocd err: ", err)
 	accessToken, err := cp.helper.GetAccessToken(ctx, req.Id)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
