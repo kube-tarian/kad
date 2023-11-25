@@ -9,7 +9,9 @@ import (
 )
 
 const (
-	providerNamePrefix = "provider"
+	providerNamePrefix      = "provider"
+	CrossPlaneResource      = "crossplane"
+	CrossPlaneClusterUpdate = "crossplaneClusterUpdates"
 )
 
 type CrossplaneProviderStatus string

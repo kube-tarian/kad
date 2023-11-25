@@ -3,6 +3,7 @@ package crossplane
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/model"
@@ -22,17 +23,32 @@ func (c *CrossPlaneActivities) ConfigurationActivity(ctx context.Context, params
 		}, err
 	}
 
-	status, err := config.Configure(ctx, params.Action, payload)
-	if err != nil {
-		logger.Errorf("crossplane plugin configure failed, %v", err)
-		return model.ResponsePayload{
-			Status:  status,
-			Message: json.RawMessage("{\"error\": \"failed to configure crossplane plugin\"}"),
-		}, err
-	}
+	status := ""
 
+	switch params.Action {
+	case model.CrossPlaneClusterUpdate:
+		reqLocal := &model.CrossplaneClusterUpdate{}
+		if err = json.Unmarshal(payload, reqLocal); err != nil {
+			logger.Errorf("failed to unmarshall the crossplane req for %s, %v", model.CrossPlaneClusterUpdate, err)
+			err = fmt.Errorf("failed to unmarshall the crossplane req for %s", model.CrossPlaneClusterUpdate)
+		}
+		status, err = config.configureClusterUpdate(ctx, reqLocal)
+		if err != nil {
+			logger.Errorf("failed to configure crossplane project for %s, %v", model.CrossPlaneClusterUpdate, err)
+			err = fmt.Errorf("failed to configure crossplane project for", model.CrossPlaneClusterUpdate)
+		}
+	default:
+		reqLocal := &model.CrossplaneUseCase{}
+		if err = json.Unmarshal(payload, reqLocal); err != nil {
+			logger.Errorf("failed to unmarshall the crossplane req, %v", err)
+			err = fmt.Errorf("failed to unmarshall the crossplane req")
+		}
+		status, err = config.configureProjectAndApps(ctx, reqLocal)
+		if err != nil {
+			logger.Errorf("failed to configure crossplane project, %v", err)
+			err = fmt.Errorf("failed to configure crossplane project")
+		}
+	}
 	logger.Infof("crossplane plugin configured")
-	return model.ResponsePayload{
-		Status: status,
-	}, err
+	return model.ResponsePayload{Status: status}, err
 }
