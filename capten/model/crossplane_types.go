@@ -11,7 +11,8 @@ import (
 const (
 	providerNamePrefix      = "provider"
 	CrossPlaneResource      = "crossplane"
-	CrossPlaneClusterUpdate = "crossplaneClusterUpdates"
+	CrossPlaneClusterUpdate = "crossplane-cluster-update"
+	CrossPlaneProjectSync   = "crossplane-project-sync"
 )
 
 type CrossplaneProviderStatus string

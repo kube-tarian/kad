@@ -65,13 +65,13 @@ func readCrossPlanePluginConfig(pluginFile string) (*crossplanePluginConfig, err
 	return &pluginData, nil
 }
 
-func readClusterDefaultApps(clusterDefaultApp string) ([]model.DefaultApps, error) {
+func readClusterDefaultApps(clusterDefaultApp string) ([]DefaultApps, error) {
 	data, err := os.ReadFile(filepath.Clean(clusterDefaultApp))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read clusterDefaultApp File: %s, err: %w", clusterDefaultApp, err)
 	}
 
-	var defaultApps []model.DefaultApps
+	var defaultApps []DefaultApps
 	err = json.Unmarshal(data, &defaultApps)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)

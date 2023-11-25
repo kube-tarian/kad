@@ -43,7 +43,7 @@ func getAppNameNamespace(ctx context.Context, fileName string) (string, string, 
 
 func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
 	logger.Infof("configuring the cluster endpoint for %s", req.RepoURL)
-	endpoint, err := cp.helper.CreateCluster(ctx, req.Name, req.ManagedK8SId)
+	endpoint, err := cp.helper.CreateCluster(ctx, req.ManagedClusterId, req.Name)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to CreateCluster in argocd app")
 	}
@@ -107,7 +107,7 @@ func updateClusterEndpointDetials(filename, clusterName, clusterEndpoint, defaul
 		return err
 	}
 
-	var argoCDAppValue model.ArgoCDAppValue
+	var argoCDAppValue ArgoCDAppValue
 
 	err = json.Unmarshal(jsonData, &argoCDAppValue)
 	if err != nil {
@@ -125,7 +125,7 @@ func updateClusterEndpointDetials(filename, clusterName, clusterEndpoint, defaul
 
 			for index := range defaultApps {
 				localObj := &defaultApps[index]
-				strings.ReplaceAll(localObj.AppConfigPath, clusterNameSub, clusterName)
+				strings.ReplaceAll(localObj.ValuesPath, clusterNameSub, clusterName)
 			}
 
 			logger.Infof("udpated the req endpoint details to %s for name %s ", clusterEndpoint, clusterName)

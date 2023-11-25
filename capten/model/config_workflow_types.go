@@ -31,42 +31,8 @@ type CrossplaneUseCase struct {
 }
 
 type CrossplaneClusterUpdate struct {
-	Name         string `json:"name,omitempty"`
-	GitProjectId string `json:"gitProjectId,omitempty"`
-	ManagedK8SId string `json:"managedK8SId,omitempty"`
-	RepoURL      string `json:"repoURL,omitempty"`
-}
-
-type Source struct {
-	RepoURL        string `json:"repoURL,omitempty"`
-	TargetRevision string `json:"targetRevision,omitempty"`
-}
-
-type Dest struct {
-	Server    string `json:"server,omitempty"`
-	Namespace string `json:"namespace,omitempty"`
-}
-
-type DefaultApps struct {
-	Name           string `json:"name,omitempty"`
-	AppConfigPath  string `json:"appConfigPath,omitempty"`
-	RepoURL        string `json:"repoURL,omitempty"`
-	Namespace      string `json:"namespace,omitempty"`
-	Chart          string `json:"chart,omitempty"`
-	TargetRevision string `json:"targetRevision,omitempty"`
-}
-type Cluster struct {
-	Name       string        `json:"name,omitempty"`
-	ConfigPath string        `json:"configPath,omitempty"`
-	Server     string        `json:"server,omitempty"`
-	DefApps    []DefaultApps `json:"defaultApps,omitempty"`
-}
-
-type ArgoCDAppValue struct {
-	Project      string      `json:"project,omitempty"`
-	Src          Source      `json:"source,omitempty"`
-	Destination  Dest        `json:"destination,omitempty"`
-	SyncPolicy   interface{} `json:"syncPolicy,omitempty"`
-	Compositions interface{} `json:"compositions,omitempty"`
-	Clusters     *[]Cluster  `json:"clusters,omitempty"`
+	Name             string `json:"name,omitempty"`
+	GitProjectId     string `json:"gitProjectId,omitempty"`
+	ManagedClusterId string `json:"managedClusterId,omitempty"`
+	RepoURL          string `json:"repoURL,omitempty"`
 }
