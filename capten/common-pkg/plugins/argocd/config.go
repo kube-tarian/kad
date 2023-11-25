@@ -1,6 +1,8 @@
 package argocd
 
-import "time"
+import (
+	"time"
+)
 
 type Configuration struct {
 	ServiceURL   string `envconfig:"ARGOCD_SERVICE_URL" default:"argo-cd-argocd-server.argo-cd.svc.cluster.local"`
@@ -25,73 +27,4 @@ type Repository struct {
 	EnableLFS             bool            `json:"EnableLFS"`
 	InsecureIgnoreHostKey bool            `json:"InsecureIgnoreHostKey"`
 	ConnectionState       ConnectionState `json:"ConnectionState"`
-}
-
-type TLSClientConfig struct {
-	// Insecure specifies that the server should be accessed without verifying the TLS certificate. For testing only.
-	Insecure bool `json:"insecure" `
-	// ServerName is passed to the server for SNI and is used in the client to check server
-	// certificates against. If ServerName is empty, the hostname used to contact the
-	// server is used.
-	ServerName string `json:"serverName,omitempty" `
-	// CertData holds PEM-encoded bytes (typically read from a client certificate file).
-	// CertData takes precedence over CertFile
-	CertData []byte `json:"certData,omitempty" `
-	// KeyData holds PEM-encoded bytes (typically read from a client certificate key file).
-	// KeyData takes precedence over KeyFile
-	KeyData []byte `json:"keyData,omitempty" `
-	// CAData holds PEM-encoded bytes (typically read from a root certificates bundle).
-	// CAData takes precedence over CAFile
-	CAData []byte `json:"caData,omitempty" `
-}
-
-type ClusterConfig struct {
-	BearerToken string `json:"bearerToken,omitempty"`
-	// TLSClientConfig contains settings to enable transport layer security
-	TLSClientConfig `json:"tlsClientConfig"`
-}
-
-//	type Cluster struct {
-//		Server string        `json:"server"`
-//		Name   string        `json:"name"`
-//		Config ClusterConfig `json:"config"`
-//	}
-type KubeConfig struct {
-	APIVersion     string    `json:"apiVersion"`
-	Kind           string    `json:"kind"`
-	Clusters       []Cluster `json:"clusters"`
-	Users          []User    `json:"users"`
-	Contexts       []Context `json:"contexts"`
-	CurrentContext string    `json:"current-context"`
-}
-
-type Cluster struct {
-	Name    string     `json:"name"`
-	Cluster ClusterObj `json:"cluster"`
-}
-
-type ClusterObj struct {
-	Server                   string `json:"server"`
-	CertificateAuthorityData string `json:"certificate-authority-data"`
-}
-
-type User struct {
-	Name string  `json:"name"`
-	User UserObj `json:"user"`
-}
-
-type UserObj struct {
-	ClientCertificateData string `json:"client-certificate-data"`
-	ClientKeyData         string `json:"client-key-data"`
-}
-
-type Context struct {
-	Context ContextObj `json:"context"`
-	Name    string     `json:"name"`
-}
-
-type ContextObj struct {
-	Cluster   string `json:"cluster"`
-	Namespace string `json:"namespace"`
-	User      string `json:"user"`
 }

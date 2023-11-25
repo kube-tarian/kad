@@ -3,15 +3,14 @@ package argocd
 import (
 	"context"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/cluster"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
 	"github.com/argoproj/argo-cd/v2/util/io"
-	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"gopkg.in/yaml.v2"
+	k8sapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 const (
@@ -19,66 +18,115 @@ const (
 	CredIdentifier = "kubeconfig"
 )
 
-func (a *ArgoCDClient) CreateCluster(ctx context.Context, serverName string, config map[string]string) (*v1alpha1.Cluster, error) {
-	cred, err := credential.GetGenericCredential(ctx, CredEntityName, CredIdentifier)
-	if err != nil {
-		fmt.Println("Error occured while fetching kubeconfig")
-		fmt.Printf(err.Error())
-	}
-
-	byteConfig, err := json.Marshal(cred)
+func parseKubeconfigString(kubeconfigString string) (*k8sapi.Config, error) {
+	config := &k8sapi.Config{}
+	err := yaml.Unmarshal([]byte(kubeconfigString), config)
 	if err != nil {
 		return nil, err
 	}
+	return config, nil
+}
 
-	kubeconfig := KubeConfig{}
-	if err := yaml.Unmarshal(byteConfig, &kubeconfig); err != nil {
-		return nil, err
+func (a *ArgoCDClient) CreateOrUpdateCluster(ctx context.Context, clusterName, kubeconfigData string) error {
+	kubeConfig, err := parseKubeconfigString(kubeconfigData)
+	if err != nil {
+		return err
 	}
 
-	fmt.Println("byteConfig =>", string(byteConfig))
-	fmt.Println("Config =>", kubeconfig)
+	clusterData, ok := kubeConfig.Clusters[clusterName]
+	if !ok {
+		return fmt.Errorf("cluster %s not found in kubeconfig", clusterName)
+	}
+	caData, err := base64.StdEncoding.DecodeString(string(clusterData.CertificateAuthorityData))
+	if err != nil {
+		return err
+	}
 
-	fmt.Println("clusterReq.Server" + kubeconfig.Clusters[0].Cluster.Server)
+	var clusterCAuthInfo *k8sapi.AuthInfo
+	for _, authInfo := range kubeConfig.AuthInfos {
+		clusterCAuthInfo = authInfo
+		break
+	}
+
+	if clusterCAuthInfo == nil {
+		return fmt.Errorf("auth info not found for cluster")
+	}
+
+	var clientCertData []byte
+	if len(clusterCAuthInfo.ClientCertificateData) != 0 {
+		clientCertData, err = base64.StdEncoding.DecodeString(string(clusterCAuthInfo.ClientCertificateData))
+		if err != nil {
+			return err
+		}
+	}
+
+	a.logger.Infof("Cluster create or update request for cluster %s", clusterName)
+	var clientKeyData []byte
+	if len(clusterCAuthInfo.ClientKeyData) != 0 {
+		clientKeyData, err = base64.StdEncoding.DecodeString(string(clusterCAuthInfo.ClientKeyData))
+		if err != nil {
+			return err
+		}
+	}
 
 	conn, appClient, err := a.client.NewClusterClient()
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to create argocd cluster client, %v", err)
 	}
 	defer io.Close(conn)
 
-	caData, err := base64.StdEncoding.DecodeString(strings.TrimSpace(kubeconfig.Clusters[0].Cluster.CertificateAuthorityData))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := appClient.Create(ctx, &cluster.ClusterCreateRequest{
+	var update bool
+	_, err = appClient.Create(ctx, &cluster.ClusterCreateRequest{
 		Cluster: &v1alpha1.Cluster{
-			Server: kubeconfig.Clusters[0].Cluster.Server,
-			Name:   kubeconfig.Contexts[0].Context.Cluster,
+			Server: clusterData.Server,
+			Name:   clusterName,
 			Config: v1alpha1.ClusterConfig{
-				BearerToken: kubeconfig.Users[0].User.ClientCertificateData,
+				BearerToken: clusterCAuthInfo.Token,
+				Username:    clusterCAuthInfo.Username,
+				Password:    clusterCAuthInfo.Password,
 				TLSClientConfig: v1alpha1.TLSClientConfig{
-					ServerName: serverName,
+					ServerName: clusterData.Server,
 					CAData:     caData,
+					CertData:   clientCertData,
+					KeyData:    clientKeyData,
 				},
 			},
 		},
 	})
 	if err != nil {
-		return nil, err
+		if strings.Contains(err.Error(), "already exists") {
+			update = true
+		}
+		return fmt.Errorf("failed to create cluster %s, %v", clusterName, err)
 	}
 
-	return resp, nil
+	if update {
+		_, err := appClient.Update(ctx, &cluster.ClusterUpdateRequest{
+			Cluster: &v1alpha1.Cluster{
+				Server: clusterData.Server,
+				Name:   clusterName,
+				Config: v1alpha1.ClusterConfig{
+					BearerToken: clusterCAuthInfo.Token,
+					Username:    clusterCAuthInfo.Username,
+					Password:    clusterCAuthInfo.Password,
+					TLSClientConfig: v1alpha1.TLSClientConfig{
+						ServerName: clusterData.Server,
+						CAData:     caData,
+						CertData:   clientCertData,
+						KeyData:    clientKeyData,
+					},
+				},
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update cluster %s, %v", clusterName, err)
+		}
+		a.logger.Infof("Cluster %s created", clusterName)
+	} else {
+		a.logger.Infof("Cluster %s updated", clusterName)
+	}
+	return nil
 }
-
-// func parseKubeConfig(kubeconfigMap map[string]string) error {
-// 	clusters, ok := kubeconfigMap["clusters"].([]interface{})
-// 	if !ok {
-// 		fmt.Println("Error: clusters not found in kubeconfig")
-// 		return
-// 	}
-// }
 
 func (a *ArgoCDClient) DeleteCluster(ctx context.Context, clusterURL string) (*cluster.ClusterResponse, error) {
 	conn, appClient, err := a.client.NewClusterClient()
