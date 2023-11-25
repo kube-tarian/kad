@@ -31,8 +31,8 @@ type CrossplaneUseCase struct {
 }
 
 type CrossplaneClusterUpdate struct {
-	Name             string `json:"name,omitempty"`
-	GitProjectId     string `json:"gitProjectId,omitempty"`
-	ManagedClusterId string `json:"managedClusterId,omitempty"`
-	RepoURL          string `json:"repoURL,omitempty"`
+	ManagedClusterName string `json:"managedClusterName,omitempty"`
+	ManagedClusterId   string `json:"managedClusterId,omitempty"`
+	GitProjectId       string `json:"gitProjectId,omitempty"`
+	RepoURL            string `json:"repoURL,omitempty"`
 }

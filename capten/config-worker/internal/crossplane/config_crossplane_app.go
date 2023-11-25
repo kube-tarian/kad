@@ -65,20 +65,6 @@ func readCrossPlanePluginConfig(pluginFile string) (*crossplanePluginConfig, err
 	return &pluginData, nil
 }
 
-func readClusterDefaultApps(clusterDefaultApp string) ([]DefaultApps, error) {
-	data, err := os.ReadFile(filepath.Clean(clusterDefaultApp))
-	if err != nil {
-		return nil, fmt.Errorf("failed to read clusterDefaultApp File: %s, err: %w", clusterDefaultApp, err)
-	}
-
-	var defaultApps []DefaultApps
-	err = json.Unmarshal(data, &defaultApps)
-	if err != nil {
-		return nil, fmt.Errorf("%w", err)
-	}
-	return defaultApps, nil
-}
-
 func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {
 	accessToken, err := cp.helper.GetAccessToken(ctx, req.VaultCredIdentifier)
 	if err != nil {

@@ -1,7 +1,7 @@
  [
       {
         "name": "falco",
-        "appConfigPath": "infra/clusters/{CLUSTER_NAME}/app-configs/default-apps/falco-values.yaml",
+        "valuesPath": "infra/clusters/app-configs{CLUSTER_NAME}/default-apps/falco-values.yaml",
         "repoURL": "https://kube-tarian.github.io/helmrepo-supporting-tools",
         "namespace": "falco",
         "chart": "falco",
@@ -9,7 +9,7 @@
       },
       {
         "name": "kyverno",
-        "appConfigPath": "infra/clusters/{CLUSTER_NAME}/app-configs/default-apps/kyverno-values.yaml",
+        "valuesPath": "infra/clusters/app-configs{CLUSTER_NAME}/default-apps/kyverno-values.yaml",
         "repoURL": "https://kube-tarian.github.io/helmrepo-supporting-tools",
         "namespace": "kyverno",
         "chart": "kyverno",
@@ -17,7 +17,7 @@
       },
       {
         "name": "prometheus",
-        "appConfigPath": "infra/clusters/{CLUSTER_NAME}/app-configs/default-apps/prometheus-values.yaml",
+        "valuesPath": "infra/clusters/app-configs{CLUSTER_NAME}/default-apps/prometheus-values.yaml",
         "repoURL": "https://kube-tarian.github.io/helmrepo-supporting-tools",
         "namespace": "prometheus",
         "chart": "kube-prometheus-stack",
@@ -25,7 +25,7 @@
       },
       {
         "name": "promtail",
-        "appConfigPath": "infra/clusters/{CLUSTER_NAME}/app-configs/default-apps/promtail-values.yaml",
+        "valuesPath": "infra/clusters/app-configs{CLUSTER_NAME}/default-apps/promtail-values.yaml",
         "repoURL": "https://kube-tarian.github.io/helmrepo-supporting-tools",
         "namespace": "promtail",
         "chart": "promtail",
