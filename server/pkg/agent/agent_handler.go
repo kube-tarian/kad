@@ -55,10 +55,10 @@ func (s *AgentHandler) UpdateAgent(clusterID string, agentCfg *Config) error {
 }
 
 func (s *AgentHandler) GetAgent(orgId, clusterID string) (*Agent, error) {
-	/*agent := s.getAgent(clusterID)
+	agent := s.getAgent(clusterID)
 	if agent != nil {
 		return agent, nil
-	}*/
+	}
 
 	cfg, err := s.getAgentConfig(orgId, clusterID)
 	if err != nil {
@@ -69,7 +69,7 @@ func (s *AgentHandler) GetAgent(orgId, clusterID string) (*Agent, error) {
 		return nil, err
 	}
 
-	agent := s.getAgent(clusterID)
+	agent = s.getAgent(clusterID)
 	if agent != nil {
 		return agent, nil
 	}

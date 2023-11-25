@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
 	"github.com/pkg/errors"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -74,7 +76,9 @@ func getConnection(cfg *Config, oryClient oryclient.OryClient) (*grpc.ClientConn
 		return nil, err
 	}
 
-	dialOptions := []grpc.DialOption{}
+	dialOptions := []grpc.DialOption{
+		grpc.WithUnaryInterceptor(timeout.UnaryClientInterceptor(5 * time.Second)),
+	}
 
 	if cfg.AuthEnabled {
 		dialOptions = append(dialOptions, grpc.WithUnaryInterceptor(authInterceptor(oryClient, cfg.ServicName)))
@@ -90,7 +94,7 @@ func getConnection(cfg *Config, oryClient oryclient.OryClient) (*grpc.ClientConn
 		dialOptions = append(dialOptions, grpc.WithTransportCredentials(tlsCreds))
 	}
 
-	return grpc.Dial(fmt.Sprintf("%s:%s", address, port), dialOptions...)
+	return grpc.DialContext(context.Background(), fmt.Sprintf("%s:%s", address, port), dialOptions...)
 }
 
 func (a *Agent) GetClient() agentpb.AgentClient {
