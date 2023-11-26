@@ -42,6 +42,8 @@ service:
   type: ClusterIP
   port: 8080
 
+domainName: capten
+
 vault:
   address: http://vault:8200
   role: vault-role-capten-agent
@@ -120,7 +122,6 @@ configWorker:
   pluginConfigDir: "/configs"
   tektonPluginConfigFile: "tekton_plugin_config.json"
   crossplanePluginConfigFile: "crossplane_plugin_config.json"
-  crossplaneClusterDefaultApps: "crossplane_cluster_default_apps.json"
 
 temporal:
   external: true

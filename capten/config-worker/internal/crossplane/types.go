@@ -7,8 +7,11 @@ type appConfig struct {
 }
 
 type clusterUpdateConfig struct {
-	MainAppGitPath    string `json:"mainAppGitPath"`
-	ClusterValuesFile string `json:"clusterValuesFile"`
+	MainAppGitPath              string `json:"mainAppGitPath"`
+	ClusterValuesFile           string `json:"clusterValuesFile"`
+	DefaultAppListFile          string `json:"defaultAppListFile"`
+	DefaultAppValuesPath        string `json:"defaultAppValuesPath"`
+	ClusterDefaultAppValuesPath string `json:"clusterDefaultAppValuesPath"`
 }
 
 type crossplanePluginConfig struct {

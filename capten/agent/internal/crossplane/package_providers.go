@@ -60,7 +60,6 @@ func (h *ProvidersSyncHandler) OnAdd(obj interface{}) {
 		h.log.Errorf("failed to update Provider object, %v", err)
 		return
 	}
-
 }
 
 func (h *ProvidersSyncHandler) OnUpdate(oldObj, newObj interface{}) {
