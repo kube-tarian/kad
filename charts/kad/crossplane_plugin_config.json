@@ -8,7 +8,10 @@
     },
     "clusterUpdateConfig":{
         "mainAppGitPath": "infra/crossplane/crossplane-main-app.yaml",
-        "clusterValuesFile": "infra/clusters/argocd-apps/values.yaml"
+        "clusterValuesFile": "infra/clusters/argocd-apps/values.yaml",
+        "defaultAppListFile": "default-apps-templates/app_list.yaml",
+        "defaultAppValuesPath": "default-apps-templates/values",
+        "clusterDefaultAppValuesPath": "infra/clusters/app-configs"
     },
     "argoCDApps": [
         {

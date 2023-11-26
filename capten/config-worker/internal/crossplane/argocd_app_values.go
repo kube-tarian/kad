@@ -15,12 +15,16 @@ type GlobalValues struct {
 }
 
 type DefaultApps struct {
-	Name           string `json:"name,omitempty"`
-	ValuesPath     string `json:"valuesPath,omitempty"`
-	RepoURL        string `json:"repoURL,omitempty"`
-	Namespace      string `json:"namespace,omitempty"`
-	Chart          string `json:"chart,omitempty"`
-	TargetRevision string `json:"targetRevision,omitempty"`
+	Name           string `yaml:"name" json:"name,omitempty"`
+	ValuesPath     string `yaml:"valuesPath" json:"valuesPath,omitempty"`
+	RepoURL        string `yaml:"repoURL" json:"repoURL,omitempty"`
+	Namespace      string `yaml:"namespace" json:"namespace,omitempty"`
+	Chart          string `yaml:"chart" json:"chart,omitempty"`
+	TargetRevision string `yaml:"targetRevision" json:"targetRevision,omitempty"`
+}
+
+type DefaultAppList struct {
+	DefaultApps []DefaultApps `yaml:"defaultApps"`
 }
 
 type Cluster struct {
@@ -29,7 +33,7 @@ type Cluster struct {
 	DefApps []DefaultApps `json:"defaultApps,omitempty"`
 }
 
-type ArgoCDAppValue struct {
+type ClusterConfigValues struct {
 	Project      string       `json:"project,omitempty"`
 	Global       GlobalValues `json:"global,omitempty"`
 	Src          Source       `json:"source,omitempty"`

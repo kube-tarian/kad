@@ -17,14 +17,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-var (
-	clusterNameSub = "{CLUSTER_NAME}"
-)
-
 type Config struct {
 	PluginConfigFile        string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
-	ClusterDefaultAppsFile  string `envconfig:"CROSSPLANE_CLUSTER_DEFAULT_APPS" default:"/crossplane_cluster_default_apps.json"`
 	CloudProviderEntityName string `envconfig:"CLOUD_PROVIDER_ENTITY_NAME" default:"cloud-provider"`
+	DomainName              string `envconfig:"DOMAIN_NAME" default:"capten"`
 }
 
 type CrossPlaneApp struct {

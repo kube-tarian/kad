@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
+	fileutil "github.com/kube-tarian/kad/capten/config-worker/internal/file_util"
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 )
 
 func getAppNameNamespace(ctx context.Context, fileName string) (string, string, error) {
@@ -42,13 +43,12 @@ func getAppNameNamespace(ctx context.Context, fileName string) (string, string, 
 }
 
 func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
-	logger.Infof("configuring the cluster endpoint for %s", req.RepoURL)
+	logger.Infof("configuring crossplane project for cluster %s update", req.ManagedClusterName)
 	endpoint, err := cp.helper.CreateCluster(ctx, req.ManagedClusterId, req.ManagedClusterName)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to CreateCluster in argocd app")
 	}
 
-	logger.Infof("CreateCluster argocd err: ", err)
 	accessToken, err := cp.helper.GetAccessToken(ctx, req.GitProjectId)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
@@ -65,10 +65,20 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	defer os.RemoveAll(customerRepo)
 
 	clusterValuesFile := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterValuesFile)
-	err = updateClusterEndpointDetials(clusterValuesFile, req.ManagedClusterName, endpoint, cp.cfg.ClusterDefaultAppsFile)
+	defaultAppListFile := filepath.Join(templateRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppListFile)
+	err = updateClusterEndpointDetials(clusterValuesFile, req.ManagedClusterName, endpoint, defaultAppListFile)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace the file")
 	}
+
+	defaultAppValPath := filepath.Join(templateRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppValuesPath)
+	clusterDefaultAppValPath := filepath.Join(customerRepo,
+		cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName)
+	err = cp.syncDefaultAppVaules(req.ManagedClusterName, defaultAppValPath, clusterDefaultAppValPath)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync default app value files")
+	}
+	logger.Infof("default app vaules synched for cluster %s", req.ManagedClusterName)
 
 	err = cp.helper.AddToGit(ctx, model.CrossPlaneClusterUpdate, req.RepoURL, accessToken)
 	if err != nil {
@@ -106,8 +116,8 @@ func updateClusterEndpointDetials(valuesFileName, clusterName, clusterEndpoint, 
 		return err
 	}
 
-	var argoCDAppValue ArgoCDAppValue
-	err = json.Unmarshal(jsonData, &argoCDAppValue)
+	var clusterConfig ClusterConfigValues
+	err = json.Unmarshal(jsonData, &clusterConfig)
 	if err != nil {
 		return err
 	}
@@ -117,22 +127,26 @@ func updateClusterEndpointDetials(valuesFileName, clusterName, clusterEndpoint, 
 		return err
 	}
 
-	var found bool
-	clusters := *argoCDAppValue.Clusters
+	clusters := []Cluster{}
+	if clusterConfig.Clusters != nil {
+		clusters = *clusterConfig.Clusters
+	}
+
+	var clusterFound bool
 	for index := range clusters {
 		if clusters[index].Name == clusterName {
 			clusters[index] = prepareClusterData(clusterName, clusterEndpoint, defaultApps)
-			found = true
+			clusterFound = true
 			break
 		}
 	}
 
-	if !found {
+	if !clusterFound {
 		clusters = append(clusters, prepareClusterData(clusterName, clusterEndpoint, defaultApps))
 	}
 
-	argoCDAppValue.Clusters = &clusters
-	jsonBytes, err := json.Marshal(argoCDAppValue)
+	clusterConfig.Clusters = &clusters
+	jsonBytes, err := json.Marshal(clusterConfig)
 	if err != nil {
 		return err
 	}
@@ -146,12 +160,31 @@ func updateClusterEndpointDetials(valuesFileName, clusterName, clusterEndpoint, 
 	return err
 }
 
-func prepareClusterData(clusterName, endpoint string, defaultApps []DefaultApps) Cluster {
-	for index := range defaultApps {
-		localObj := &defaultApps[index]
-		localObj.ValuesPath = strings.ReplaceAll(localObj.ValuesPath, clusterNameSub, clusterName)
+func (cp *CrossPlaneApp) syncDefaultAppVaules(clusterName, defaultAppVaulesPath, clusterDefaultAppVaulesPath string) error {
+	if err := fileutil.CreateFolderIfNotExist(clusterDefaultAppVaulesPath); err != nil {
+		return err
 	}
 
+	if err := fileutil.SyncFiles(defaultAppVaulesPath, clusterDefaultAppVaulesPath); err != nil {
+		return err
+	}
+
+	if err := fileutil.UpdateFilesInFolderWithTempaltes(clusterDefaultAppVaulesPath, cp.prepareTemplateVaules(clusterName)); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (cp *CrossPlaneApp) prepareTemplateVaules(clusterName string) map[string]string {
+	val := map[string]string{
+		"DomainName":  cp.cfg.DomainName,
+		"ClusterName": clusterName,
+	}
+	return val
+}
+
+func prepareClusterData(clusterName, endpoint string, defaultApps []DefaultApps) Cluster {
 	return Cluster{
 		Name:    clusterName,
 		Server:  endpoint,
@@ -159,16 +192,17 @@ func prepareClusterData(clusterName, endpoint string, defaultApps []DefaultApps)
 	}
 }
 
-func readClusterDefaultApps(clusterDefaultApp string) ([]DefaultApps, error) {
-	data, err := os.ReadFile(filepath.Clean(clusterDefaultApp))
+func readClusterDefaultApps(clusterDefaultAppsFile string) ([]DefaultApps, error) {
+	data, err := os.ReadFile(filepath.Clean(clusterDefaultAppsFile))
 	if err != nil {
-		return nil, fmt.Errorf("failed to read clusterDefaultApp File: %s, err: %w", clusterDefaultApp, err)
+		return nil, fmt.Errorf("failed to read default applist File: %s, err: %w", clusterDefaultAppsFile, err)
 	}
 
-	var defaultApps []DefaultApps
-	err = json.Unmarshal(data, &defaultApps)
+	var appList DefaultAppList
+	err = yaml.Unmarshal(data, &appList)
 	if err != nil {
-		return nil, fmt.Errorf("%w", err)
+		return nil, fmt.Errorf("failed to unmarshall default apps file: %s, err: %w", clusterDefaultAppsFile, err)
 	}
-	return defaultApps, nil
+
+	return appList.DefaultApps, nil
 }

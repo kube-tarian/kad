@@ -56,7 +56,7 @@ func processConfigurationActivity(ctx context.Context, params model.ConfigurePar
 		status, err := cp.configureProjectAndApps(ctx, reqLocal)
 		if err != nil {
 			logger.Errorf("failed to configure crossplane project, %v", err)
-			err = fmt.Errorf("failed to configure crossplane project")
+			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to configure crossplane project")
 		}
 		return status, nil
 	default:

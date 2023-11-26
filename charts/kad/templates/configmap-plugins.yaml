@@ -12,4 +12,3 @@ data:
   CROSSPLANE_PLUGIN_CONFIG: |
 {{- $fileName := .Values.configWorker.crossplanePluginConfigFile }}
 {{ .Files.Get $fileName | indent 4 }}
-
