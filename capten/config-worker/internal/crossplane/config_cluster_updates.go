@@ -78,6 +78,16 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync default app value files")
 	}
+
+	templateValues := cp.prepareTemplateVaules(req.ManagedClusterName)
+	if err := fileutil.UpdateFilesInFolderWithTempaltes(clusterDefaultAppValPath, templateValues); err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update default app template values")
+	}
+
+	if err := fileutil.UpdateFileWithTempaltes(clusterValuesFile, templateValues); err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update cluster config template values")
+	}
+
 	logger.Infof("default app vaules synched for cluster %s", req.ManagedClusterName)
 
 	err = cp.helper.AddToGit(ctx, model.CrossPlaneClusterUpdate, req.RepoURL, accessToken)
@@ -166,10 +176,6 @@ func (cp *CrossPlaneApp) syncDefaultAppVaules(clusterName, defaultAppVaulesPath,
 	}
 
 	if err := fileutil.SyncFiles(defaultAppVaulesPath, clusterDefaultAppVaulesPath); err != nil {
-		return err
-	}
-
-	if err := fileutil.UpdateFilesInFolderWithTempaltes(clusterDefaultAppVaulesPath, cp.prepareTemplateVaules(clusterName)); err != nil {
 		return err
 	}
 

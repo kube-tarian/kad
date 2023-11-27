@@ -68,7 +68,7 @@ func applyTemplate(templateString string, data map[string]string) (string, error
 	return outputBuffer.String(), nil
 }
 
-func UpdateFilesInFolderWithTempaltes(folderPath string, data map[string]string) error {
+func UpdateFilesInFolderWithTempaltes(folderPath string, templateValues map[string]string) error {
 	files, err := os.ReadDir(folderPath)
 	if err != nil {
 		return err
@@ -77,19 +77,27 @@ func UpdateFilesInFolderWithTempaltes(folderPath string, data map[string]string)
 	for _, file := range files {
 		filePath := filepath.Join(folderPath, file.Name())
 
-		content, err := os.ReadFile(filePath)
+		err := UpdateFileWithTempaltes(filePath, templateValues)
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
 
-		newContent, err := applyTemplate(string(content), data)
-		if err != nil {
-			return err
-		}
+func UpdateFileWithTempaltes(filePath string, templateValues map[string]string) error {
+	content, err := os.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
 
-		if err := os.WriteFile(filePath, []byte(newContent), os.ModePerm); err != nil {
-			return err
-		}
+	newContent, err := applyTemplate(string(content), templateValues)
+	if err != nil {
+		return err
+	}
+
+	if err := os.WriteFile(filePath, []byte(newContent), os.ModePerm); err != nil {
+		return err
 	}
 	return nil
 }
