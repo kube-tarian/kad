@@ -13,6 +13,14 @@ service capten_plugins {
     rpc GetGitProjects(GetGitProjectsRequest) returns (GetGitProjectsResponse) {}
     rpc GetGitProjectsForLabels(GetGitProjectsForLabelsRequest) returns (GetGitProjectsForLabelsResponse) {}
 
+    rpc GetTektonPipelines(GetTektonPipelinesRequest) returns (GetTektonPipelinesResponse) {}
+
+    rpc AddDockerRegistry(AddDockerRegistryRequest) returns (AddDockerRegistryResponse) {}
+    rpc UpdateDockerRegistry(UpdateDockerRegistryRequest) returns (UpdateDockerRegistryResponse) {}
+    rpc DeleteDockerRegistry(DeleteDockerRegistryRequest) returns (DeleteDockerRegistryResponse) {}
+    rpc GetDockerRegistry(GetDockerRegistryRequest) returns (GetDockerRegistryResponse) {}
+    rpc GetDockerRegistryForLabels(GetDockerRegistryForLabelsRequest) returns (GetDockerRegistryForLabelsResponse) {}
+
     rpc AddCloudProvider(AddCloudProviderRequest) returns (AddCloudProviderResponse) {}
     rpc UpdateCloudProvider(UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
     rpc DeleteCloudProvider(DeleteCloudProviderRequest) returns (DeleteCloudProviderResponse) {}
@@ -369,4 +377,89 @@ message GetManagedClusterKubeconfigResponse {
     StatusCode status = 1;
     string statusMessage = 2;
     string kubeconfig = 3;
+}
+
+message AddDockerRegistryRequest {
+    string registryUrl = 1;
+    repeated string labels = 2;
+    string registryToken = 3;
+    string userID = 4;
+}
+
+message AddDockerRegistryResponse {
+    string id = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message UpdateDockerRegistryRequest {
+    string id = 1;
+    string registryUrl = 2;
+    repeated string labels = 3;
+    string registryToken = 4;
+    string userID = 5;
+}
+
+message UpdateDockerRegistryResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message DeleteDockerRegistryRequest {
+    string id = 1;
+}
+
+message DeleteDockerRegistryResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message GetDockerRegistryRequest {
+}
+
+message DockerRegistry {
+    string id = 1;
+    string registryUrl = 2;
+    repeated string labels = 3;
+    string lastUpdateTime = 4;
+    string registryToken = 5;
+    string userID = 6;
+}
+
+message GetDockerRegistryResponse {
+    repeated DockerRegistry registries = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message GetDockerRegistryForLabelsRequest {
+    repeated string labels = 1;
+}
+
+message GetDockerRegistryForLabelsResponse {
+    repeated DockerRegistry registries = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+
+message TektonPipelines {
+    string id = 1;
+    string pipelineName = 2;
+    string webhookURL = 6;
+}
+
+message GetTektonPipelinesRequest {
+}
+
+message GetTektonPipelinesResponse {
+    repeated TektonPipelines pipelines = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message GetTektonPipelinesForLabelsResponse {
+    repeated TektonPipelines pipelines = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
 }

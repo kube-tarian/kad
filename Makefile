@@ -8,6 +8,7 @@ BUILD := 0.1.1
 gen-protoc:
 	mkdir -p server/pkg/pb/serverpb
 	mkdir -p capten/agent/pkg/pb/agentpb
+	mkdir -p capten/agent/pkg/pb/captenpluginspb
 	mkdir -p server/pkg/pb/agentpb
 	mkdir -p server/pkg/pb/captenpluginspb
 
