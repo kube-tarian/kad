@@ -13,6 +13,7 @@ const (
 	CrossPlaneResource      = "crossplane"
 	CrossPlaneClusterUpdate = "crossplane-cluster-update"
 	CrossPlaneProjectSync   = "crossplane-project-sync"
+	CrossPlaneProjectDelete = "crossplane-project-delete"
 )
 
 type CrossplaneProviderStatus string

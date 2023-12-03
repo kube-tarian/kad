@@ -182,6 +182,100 @@ func (cp *CrossPlaneApp) syncDefaultAppVaules(clusterName, defaultAppVaulesPath,
 	return nil
 }
 
+func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
+	logger.Infof("configuring crossplane project for cluster %s delete", req.ManagedClusterName)
+
+	accessToken, err := cp.helper.GetAccessToken(ctx, req.GitProjectId)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
+	}
+
+	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
+	templateRepo, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
+	}
+	logger.Infof("cloned default templates to project %s", req.RepoURL)
+
+	defer os.RemoveAll(templateRepo)
+	defer os.RemoveAll(customerRepo)
+
+	clusterValuesFile := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterValuesFile)
+	defaultAppListFile := filepath.Join(templateRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppListFile)
+	err = removeClusterValues(clusterValuesFile, req.ManagedClusterName, req.ClusterEndpoint, defaultAppListFile)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace the file")
+	}
+
+	dirToDelete := filepath.Join(cp.pluginConfig.ClusterEndpointUpdates.DefaultAppValuesPath, req.ManagedClusterName)
+	if err := os.RemoveAll(dirToDelete); err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
+	}
+
+	err = cp.helper.AddToGit(ctx, model.CrossPlaneClusterUpdate, req.RepoURL, accessToken)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
+	}
+
+	logger.Infof("added cloned project %s changed to git", req.RepoURL)
+
+	return string(agentmodel.WorkFlowStatusCompleted), nil
+}
+
+func removeClusterValues(valuesFileName, clusterName, clusterEndpoint, defaultAppFile string) error {
+	data, err := os.ReadFile(valuesFileName)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := k8s.ConvertYamlToJson(data)
+	if err != nil {
+		return err
+	}
+
+	var clusterConfig ClusterConfigValues
+	err = json.Unmarshal(jsonData, &clusterConfig)
+	if err != nil {
+		return err
+	}
+
+	defaultApps, err := readClusterDefaultApps(defaultAppFile)
+	if err != nil {
+		return err
+	}
+
+	clusters := []Cluster{}
+	if clusterConfig.Clusters != nil {
+		clusters = *clusterConfig.Clusters
+	}
+
+	var clusterFound bool
+	for index := range clusters {
+		if clusters[index].Name != clusterName {
+			clusters[index] = prepareClusterData(clusterName, clusterEndpoint, defaultApps)
+			clusterFound = true
+		}
+	}
+
+	if !clusterFound {
+		clusters = append(clusters, prepareClusterData(clusterName, clusterEndpoint, defaultApps))
+	}
+
+	clusterConfig.Clusters = &clusters
+	jsonBytes, err := json.Marshal(clusterConfig)
+	if err != nil {
+		return err
+	}
+
+	yamlBytes, err := k8s.ConvertJsonToYaml(jsonBytes)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
+	return err
+}
+
 func (cp *CrossPlaneApp) prepareTemplateVaules(clusterName string) map[string]string {
 	val := map[string]string{
 		"DomainName":  cp.cfg.DomainName,

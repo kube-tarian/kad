@@ -35,4 +35,5 @@ type CrossplaneClusterUpdate struct {
 	ManagedClusterId   string `json:"managedClusterId,omitempty"`
 	GitProjectId       string `json:"gitProjectId,omitempty"`
 	RepoURL            string `json:"repoURL,omitempty"`
+	ClusterEndpoint    string `json:"clusterEndpoint,omitempty"`
 }
