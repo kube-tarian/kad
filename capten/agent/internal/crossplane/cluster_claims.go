@@ -27,6 +27,7 @@ var (
 
 	clusterNotReadyStatus    = "NotReady"
 	clusterReadyStatus       = "Ready"
+	clusterDeletingStatus    = "Deleting"
 	readyStatusValue         = "True"
 	NorReadyStatusValue      = "False"
 	clusterSecretName        = "%s-cluster"
@@ -302,22 +303,34 @@ func (h *ClusterClaimSyncHandler) deleteManagedClusters(clusterCliam model.Clust
 			break
 		}
 	}
-	if isDeleteManagedCluster {
-		if err := h.dbStore.DeleteManagedClusterById(managedCluster.Id); err != nil {
-			return fmt.Errorf("failed to delete managed clusters from DB, %v", err)
-		}
-	} else {
-		h.log.Errorf("failed to delete managed clusters from DB, %s Cluster is not stored in ManagedClusters table", managedCluster.ClusterName)
-	}
 
-	if err = h.deleteManagedClusterCredential(context.TODO(), managedCluster.Id); err != nil {
-		return fmt.Errorf("failed to delete credential for %s, %v", managedCluster.Id, err)
+	if isDeleteManagedCluster {
+		Cluster := &captenpluginspb.ManagedCluster{
+			Id:                  managedCluster.Id,
+			ClusterName:         managedCluster.ClusterName,
+			ClusterEndpoint:     managedCluster.ClusterEndpoint,
+			AppDeployStatus:     managedCluster.AppDeployStatus,
+			ClusterDeployStatus: clusterDeletingStatus,
+		}
+		if err := h.dbStore.UpsertManagedCluster(Cluster); err != nil {
+			return fmt.Errorf("failed to update managed cluster from DB, %v", err)
+		}
 	}
 
 	err = h.triggerClusterDelete(clusterCliam.Spec.Id, managedCluster.Id, managedCluster.ClusterEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to trigger cluster delete workflow, %v", err)
 	}
+
+	if isDeleteManagedCluster {
+		if err := h.dbStore.DeleteManagedClusterById(managedCluster.Id); err != nil {
+			return fmt.Errorf("failed to delete managed cluster from DB, %v", err)
+		}
+	} else {
+		h.log.Info("failed to delete managed cluster from DB, %s Cluster is not stored in ManagedClusters table", clusterCliam.Metadata.Name)
+		return nil
+	}
+
 	h.log.Infof("triggered cluster delete workflow for cluster %s", managedCluster.ClusterName)
 
 	return nil
@@ -353,7 +366,15 @@ func (h *ClusterClaimSyncHandler) triggerClusterDelete(clusterName, managedClust
 		ManagedClusterName: clusterName, ManagedClusterId: managedClusterID, ClusterEndpoint: clusterEndpoint}
 	wd := workers.NewConfig(h.tc, h.log)
 	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: model.CrossPlaneResource, Action: model.CrossPlaneProjectDelete}, ci)
-	return err
+	if err != nil {
+		return err
+	}
+
+	if err = h.deleteManagedClusterCredential(context.TODO(), managedClusterID); err != nil {
+		return fmt.Errorf("failed to delete credential for %s, %v", managedClusterID, err)
+	}
+
+	return nil
 }
 
 func (h *ClusterClaimSyncHandler) syncClusterClaimsWithDB(clusterClaims []model.ClusterClaim) error {
