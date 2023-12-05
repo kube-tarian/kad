@@ -385,11 +385,11 @@ func (h *ClusterClaimSyncHandler) syncClusterClaimsWithDB(clusterClaims []model.
 	}
 
 	for _, cm := range clusterClaims {
-		var isDeleteManagedCluster bool
+		var isDeleteManagedCluster = true
 		var clusterId string
 		for _, c := range clusters {
 			if c.ClusterName == cm.Metadata.Name {
-				isDeleteManagedCluster = true
+				isDeleteManagedCluster = false
 				clusterId = c.Id
 				break
 			}
