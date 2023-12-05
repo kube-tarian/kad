@@ -191,23 +191,21 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 	}
 
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
-	templateRepo, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
+	_, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
 	logger.Infof("cloned default templates to project %s", req.RepoURL)
 
-	defer os.RemoveAll(templateRepo)
 	defer os.RemoveAll(customerRepo)
 
 	clusterValuesFile := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterValuesFile)
-	defaultAppListFile := filepath.Join(templateRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppListFile)
-	err = removeClusterValues(clusterValuesFile, req.ManagedClusterName, req.ClusterEndpoint, defaultAppListFile)
+	err = removeClusterValues(clusterValuesFile, req.ManagedClusterName)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace the file")
 	}
 
-	dirToDelete := filepath.Join(cp.pluginConfig.ClusterEndpointUpdates.DefaultAppValuesPath, req.ManagedClusterName)
+	dirToDelete := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppValuesPath, req.ManagedClusterName)
 	if err := os.RemoveAll(dirToDelete); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
 	}
@@ -222,7 +220,7 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 	return string(agentmodel.WorkFlowStatusCompleted), nil
 }
 
-func removeClusterValues(valuesFileName, clusterName, clusterEndpoint, defaultAppFile string) error {
+func removeClusterValues(valuesFileName, clusterName string) error {
 	data, err := os.ReadFile(valuesFileName)
 	if err != nil {
 		return err
@@ -239,26 +237,15 @@ func removeClusterValues(valuesFileName, clusterName, clusterEndpoint, defaultAp
 		return err
 	}
 
-	defaultApps, err := readClusterDefaultApps(defaultAppFile)
-	if err != nil {
-		return err
-	}
-
 	clusters := []Cluster{}
 	if clusterConfig.Clusters != nil {
 		clusters = *clusterConfig.Clusters
 	}
 
-	var clusterFound bool
-	for index := range clusters {
-		if clusters[index].Name != clusterName {
-			clusters[index] = prepareClusterData(clusterName, clusterEndpoint, defaultApps)
-			clusterFound = true
+	for _, cluster := range clusters {
+		if cluster.Name != clusterName {
+			clusters = append(clusters, cluster)
 		}
-	}
-
-	if !clusterFound {
-		clusters = append(clusters, prepareClusterData(clusterName, clusterEndpoint, defaultApps))
 	}
 
 	clusterConfig.Clusters = &clusters

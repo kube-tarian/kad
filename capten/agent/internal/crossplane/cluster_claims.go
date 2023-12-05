@@ -317,7 +317,7 @@ func (h *ClusterClaimSyncHandler) deleteManagedClusters(clusterCliam model.Clust
 		}
 	}
 
-	err = h.triggerClusterDelete(clusterCliam.Spec.Id, managedCluster.Id, managedCluster.ClusterEndpoint)
+	err = h.triggerClusterDelete(clusterCliam.Spec.Id, managedCluster.Id)
 	if err != nil {
 		return fmt.Errorf("failed to trigger cluster delete workflow, %v", err)
 	}
@@ -356,14 +356,14 @@ func (h *ClusterClaimSyncHandler) deleteManagedClusterCredential(ctx context.Con
 	return nil
 }
 
-func (h *ClusterClaimSyncHandler) triggerClusterDelete(clusterName, managedClusterID, clusterEndpoint string) error {
+func (h *ClusterClaimSyncHandler) triggerClusterDelete(clusterName, managedClusterID string) error {
 	proj, err := h.dbStore.GetCrossplaneProject()
 	if err != nil {
 		return err
 	}
 
 	ci := model.CrossplaneClusterUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId,
-		ManagedClusterName: clusterName, ManagedClusterId: managedClusterID, ClusterEndpoint: clusterEndpoint}
+		ManagedClusterName: clusterName, ManagedClusterId: managedClusterID}
 	wd := workers.NewConfig(h.tc, h.log)
 	_, err = wd.SendEvent(context.TODO(), &model.ConfigureParameters{Resource: model.CrossPlaneResource, Action: model.CrossPlaneProjectDelete}, ci)
 	if err != nil {
