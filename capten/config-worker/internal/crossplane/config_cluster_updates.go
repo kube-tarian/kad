@@ -190,10 +190,6 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
 	}
 
-	v, _ := json.Marshal(cp.pluginConfig)
-	fmt.Println("Plugin config")
-	fmt.Println(string(v))
-
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
 	_, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
 	if err != nil {
@@ -210,12 +206,12 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 	}
 
 	dirToDelete := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName)
-	logger.Info("for the culster %s, removing the cluster folder from git repo through path %s", req.ManagedClusterName, dirToDelete)
+	logger.Infof("for the culster %s, removing the cluster folder from git repo through path %s", req.ManagedClusterName, dirToDelete)
 	if err := os.RemoveAll(dirToDelete); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
 	}
 
-	err = cp.helper.AddToGit(ctx, model.CrossPlaneClusterUpdate, req.RepoURL, accessToken)
+	err = cp.helper.AddToGit(ctx, model.CrossPlaneProjectDelete, req.RepoURL, accessToken)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
 	}
