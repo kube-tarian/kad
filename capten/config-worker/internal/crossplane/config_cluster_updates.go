@@ -190,6 +190,10 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
 	}
 
+	v, _ := json.Marshal(cp.pluginConfig)
+	fmt.Println("Plugin config")
+	fmt.Println(string(v))
+
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
 	_, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
 	if err != nil {
