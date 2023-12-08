@@ -84,6 +84,17 @@ func (h *ProvidersSyncHandler) OnUpdate(oldObj, newObj interface{}) {
 
 func (h *ProvidersSyncHandler) OnDelete(obj interface{}) {
 	h.log.Info("Crossplane Provider Delete Callback")
+	// need to update the state as not in sync.
+	provider, err := getProviderObj(obj)
+	if provider == nil {
+		h.log.Errorf("failed to read Provider object %v", err)
+		return
+	}
+
+	if err := h.updateCrossplaneProviderToOutOfSync(provider); err != nil {
+		h.log.Errorf("failed to update Provider object %v", err)
+		return
+	}
 }
 
 func (h *ProvidersSyncHandler) Sync() error {
@@ -160,5 +171,42 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 			h.log.Infof("updated the crossplane provider %s", k8sProvider.Name)
 		}
 	}
+	return nil
+}
+
+func (h *ProvidersSyncHandler) updateCrossplaneProviderToOutOfSync(k8sProvider *model.Provider) error {
+	dbProviders, err := h.dbStore.GetCrossplaneProviders()
+	if err != nil {
+		return fmt.Errorf("failed to get Crossplane Providers, %v", err)
+	}
+
+	dbProviderMap := make(map[string]*captenpluginspb.CrossplaneProvider)
+	for _, dbProvider := range dbProviders {
+		dbProviderMap[model.PrepareCrossplaneProviderName(dbProvider.CloudType)] = dbProvider
+	}
+
+	h.log.Infof("processing Crossplane Provider %s", k8sProvider.Name)
+
+	dbProvider, ok := dbProviderMap[k8sProvider.Name]
+	if !ok {
+		return fmt.Errorf("provider name %s is not found in the db, skipping the update", k8sProvider.Name)
+
+	}
+
+	provider := model.CrossplaneProvider{
+		Id:              dbProvider.Id,
+		Status:          string(model.CrossPlaneProviderOutofSynch),
+		CloudType:       dbProvider.CloudType,
+		CloudProviderId: dbProvider.CloudProviderId,
+		ProviderName:    dbProvider.ProviderName,
+	}
+
+	if err := h.dbStore.UpdateCrossplaneProvider(&provider); err != nil {
+		return fmt.Errorf("failed to update provider %s details in db, %v", k8sProvider.Name, err)
+
+	}
+
+	h.log.Infof("updated the crossplane provider %s", k8sProvider.Name)
+
 	return nil
 }
