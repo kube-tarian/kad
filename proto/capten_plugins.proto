@@ -13,7 +13,10 @@ service capten_plugins {
     rpc GetGitProjects(GetGitProjectsRequest) returns (GetGitProjectsResponse) {}
     rpc GetGitProjectsForLabels(GetGitProjectsForLabelsRequest) returns (GetGitProjectsForLabelsResponse) {}
 
-    rpc GetTektonPipelines(GetTektonPipelinesRequest) returns (GetTektonPipelinesResponse) {}
+    rpc GetDefaultTektonPipelines(GetDefaultTektonPipelinesRequest) returns (GetDefaultTektonPipelinesResponse) {}
+    rpc GetConfiguredTektonPipelines(GetConfiguredTektonPipelinesRequest) returns (GetConfiguredTektonPipelinesResponse) {}
+    rpc CreateTektonPipelines(CreateTektonPipelinesRequest) returns (CreateTektonPipelinesResponse) {}
+    rpc UpdateTektonPipelines(UpdateTektonPipelinesRequest) returns (UpdateTektonPipelinesResponse) {}
 
     rpc AddDockerRegistry(AddDockerRegistryRequest) returns (AddDockerRegistryResponse) {}
     rpc UpdateDockerRegistry(UpdateDockerRegistryRequest) returns (UpdateDockerRegistryResponse) {}
@@ -442,14 +445,45 @@ message GetDockerRegistryForLabelsResponse {
     string statusMessage = 3;
 }
 
-
 message TektonPipelines {
     string id = 1;
     string pipelineName = 2;
     string webhookURL = 6;
 }
 
-message GetTektonPipelinesRequest {
+message GetDefaultTektonPipelinesRequest {
+}
+
+message GetDefaultTektonPipelinesResponse {
+    repeated string pipelines = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message GetConfiguredTektonPipelinesRequest {
+}
+
+message GetConfiguredTektonPipelinesResponse {
+    repeated TektonPipelines pipelines = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message GetConfiguredTektonPipelinesForLabelsResponse {
+    repeated TektonPipelines pipelines = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message CreateTektonPipelinesRequest {
+    string id = 1;
+    string orgName = 2;
+}
+
+message CreateTektonPipelinesResponse {
+    string pipelineName = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
 }
 
 message GetTektonPipelinesResponse {
@@ -458,8 +492,12 @@ message GetTektonPipelinesResponse {
     string statusMessage = 3;
 }
 
-message GetTektonPipelinesForLabelsResponse {
-    repeated TektonPipelines pipelines = 1;
+message UpdateTektonPipelinesRequest {
+    string id = 1;
+}
+
+message UpdateTektonPipelinesResponse {
+    string id = 1;
     StatusCode status = 2;
     string statusMessage = 3;
 }
