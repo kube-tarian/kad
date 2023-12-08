@@ -206,6 +206,7 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 	}
 
 	dirToDelete := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppValuesPath, req.ManagedClusterName)
+	logger.Info("for the culster %s, removing the cluster folder from git repo through path %s", req.ManagedClusterName, dirToDelete)
 	if err := os.RemoveAll(dirToDelete); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
 	}
@@ -221,6 +222,7 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 }
 
 func removeClusterValues(valuesFileName, clusterName string) error {
+	logger.Info("for the culster %s, removing the cluster values from %s file", clusterName, valuesFileName)
 	data, err := os.ReadFile(valuesFileName)
 	if err != nil {
 		return err
