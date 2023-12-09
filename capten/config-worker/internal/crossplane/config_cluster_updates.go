@@ -222,7 +222,7 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 }
 
 func removeClusterValues(valuesFileName, clusterName string) error {
-	logger.Info("for the culster %s, removing the cluster values from %s file", clusterName, valuesFileName)
+	logger.Infof("for the culster %s, removing the cluster values from %s file", clusterName, valuesFileName)
 	data, err := os.ReadFile(valuesFileName)
 	if err != nil {
 		return err
