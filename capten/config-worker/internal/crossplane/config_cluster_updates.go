@@ -244,6 +244,10 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 		clusters = *clusterConfig.Clusters
 	}
 
+	v, _ := json.Marshal(clusters)
+	fmt.Println("Cluster details")
+	fmt.Println(string(v))
+
 	for _, cluster := range clusters {
 		if cluster.Name != clusterName {
 			clusters = append(clusters, cluster)
