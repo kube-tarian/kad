@@ -195,9 +195,6 @@ func (ca *AppGitConfigHelper) AddToGit(ctx context.Context, paramType, repoUrl, 
 		return fmt.Errorf("failed to get default branch of user repo, err: %v", err)
 	}
 
-	fmt.Println("defaultBranch =>")
-	fmt.Println(defaultBranch)
-
 	if err := ca.gitClient.Push(defaultBranch, token); err != nil {
 		return fmt.Errorf("failed to get push to default branch, err: %v", err)
 	}

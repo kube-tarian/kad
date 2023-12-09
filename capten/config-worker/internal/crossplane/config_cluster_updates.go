@@ -207,27 +207,8 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 
 	dirToDelete := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName)
 	logger.Infof("for the culster %s, removing the cluster folder from git repo through path %s", req.ManagedClusterName, dirToDelete)
-
-	fmt.Println("before")
-	data, err := os.ReadFile(filepath.Join(dirToDelete, "prometheus-values.yaml"))
-	if err != nil {
-		fmt.Println("Failed to red prometheus-values.yaml file")
-	} else {
-		fmt.Println("prometheus-values.yaml data")
-		fmt.Println(string(data))
-	}
-
 	if err := os.RemoveAll(dirToDelete); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
-	}
-
-	fmt.Println("After")
-	datax, errx := os.ReadFile(filepath.Join(dirToDelete, "prometheus-values.yaml"))
-	if errx != nil {
-		fmt.Println("Failed to red prometheus-values.yaml file")
-	} else {
-		fmt.Println("prometheus-values.yaml data")
-		fmt.Println(string(datax))
 	}
 
 	err = cp.helper.AddToGit(ctx, model.CrossPlaneProjectDelete, req.RepoURL, accessToken)
