@@ -385,8 +385,8 @@ message GetManagedClusterKubeconfigResponse {
 message AddDockerRegistryRequest {
     string registryUrl = 1;
     repeated string labels = 2;
-    string registryToken = 3;
-    string userID = 4;
+    string password = 3;
+    string userName = 4;
 }
 
 message AddDockerRegistryResponse {
@@ -399,8 +399,8 @@ message UpdateDockerRegistryRequest {
     string id = 1;
     string registryUrl = 2;
     repeated string labels = 3;
-    string registryToken = 4;
-    string userID = 5;
+    string password = 4;
+    string userName = 5;
 }
 
 message UpdateDockerRegistryResponse {
