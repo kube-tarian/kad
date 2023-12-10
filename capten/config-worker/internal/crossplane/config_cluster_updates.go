@@ -211,6 +211,13 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
 	}
 
+	fmt.Printf("accesstoken => %s \n", accessToken)
+	fmt.Printf("cp.pluginConfig.TemplateGitRepo => %s \n", cp.pluginConfig.TemplateGitRepo)
+	fmt.Printf("req.RepoURL => %s \n", req.RepoURL)
+	fmt.Printf("clusterValuesFile => %s \n", clusterValuesFile)
+	fmt.Printf("req.ManagedClusterName => %s \n", req.ManagedClusterName)
+	fmt.Printf("dirToDelete => %s \n", dirToDelete)
+
 	err = cp.helper.AddToGit(ctx, model.CrossPlaneProjectDelete, req.RepoURL, accessToken)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
