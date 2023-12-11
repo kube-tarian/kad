@@ -22,7 +22,6 @@ service capten_plugins {
     rpc UpdateDockerRegistry(UpdateDockerRegistryRequest) returns (UpdateDockerRegistryResponse) {}
     rpc DeleteDockerRegistry(DeleteDockerRegistryRequest) returns (DeleteDockerRegistryResponse) {}
     rpc GetDockerRegistry(GetDockerRegistryRequest) returns (GetDockerRegistryResponse) {}
-    rpc GetDockerRegistryForLabels(GetDockerRegistryForLabelsRequest) returns (GetDockerRegistryForLabelsResponse) {}
 
     rpc AddCloudProvider(AddCloudProviderRequest) returns (AddCloudProviderResponse) {}
     rpc UpdateCloudProvider(UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
@@ -430,16 +429,6 @@ message DockerRegistry {
 }
 
 message GetDockerRegistryResponse {
-    repeated DockerRegistry registries = 1;
-    StatusCode status = 2;
-    string statusMessage = 3;
-}
-
-message GetDockerRegistryForLabelsRequest {
-    repeated string labels = 1;
-}
-
-message GetDockerRegistryForLabelsResponse {
     repeated DockerRegistry registries = 1;
     StatusCode status = 2;
     string statusMessage = 3;

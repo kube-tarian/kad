@@ -33,7 +33,6 @@ const (
 	CaptenPlugins_UpdateDockerRegistry_FullMethodName         = "/captenpluginspb.capten_plugins/UpdateDockerRegistry"
 	CaptenPlugins_DeleteDockerRegistry_FullMethodName         = "/captenpluginspb.capten_plugins/DeleteDockerRegistry"
 	CaptenPlugins_GetDockerRegistry_FullMethodName            = "/captenpluginspb.capten_plugins/GetDockerRegistry"
-	CaptenPlugins_GetDockerRegistryForLabels_FullMethodName   = "/captenpluginspb.capten_plugins/GetDockerRegistryForLabels"
 	CaptenPlugins_AddCloudProvider_FullMethodName             = "/captenpluginspb.capten_plugins/AddCloudProvider"
 	CaptenPlugins_UpdateCloudProvider_FullMethodName          = "/captenpluginspb.capten_plugins/UpdateCloudProvider"
 	CaptenPlugins_DeleteCloudProvider_FullMethodName          = "/captenpluginspb.capten_plugins/DeleteCloudProvider"
@@ -74,7 +73,6 @@ type CaptenPluginsClient interface {
 	UpdateDockerRegistry(ctx context.Context, in *UpdateDockerRegistryRequest, opts ...grpc.CallOption) (*UpdateDockerRegistryResponse, error)
 	DeleteDockerRegistry(ctx context.Context, in *DeleteDockerRegistryRequest, opts ...grpc.CallOption) (*DeleteDockerRegistryResponse, error)
 	GetDockerRegistry(ctx context.Context, in *GetDockerRegistryRequest, opts ...grpc.CallOption) (*GetDockerRegistryResponse, error)
-	GetDockerRegistryForLabels(ctx context.Context, in *GetDockerRegistryForLabelsRequest, opts ...grpc.CallOption) (*GetDockerRegistryForLabelsResponse, error)
 	AddCloudProvider(ctx context.Context, in *AddCloudProviderRequest, opts ...grpc.CallOption) (*AddCloudProviderResponse, error)
 	UpdateCloudProvider(ctx context.Context, in *UpdateCloudProviderRequest, opts ...grpc.CallOption) (*UpdateCloudProviderResponse, error)
 	DeleteCloudProvider(ctx context.Context, in *DeleteCloudProviderRequest, opts ...grpc.CallOption) (*DeleteCloudProviderResponse, error)
@@ -225,15 +223,6 @@ func (c *captenPluginsClient) DeleteDockerRegistry(ctx context.Context, in *Dele
 func (c *captenPluginsClient) GetDockerRegistry(ctx context.Context, in *GetDockerRegistryRequest, opts ...grpc.CallOption) (*GetDockerRegistryResponse, error) {
 	out := new(GetDockerRegistryResponse)
 	err := c.cc.Invoke(ctx, CaptenPlugins_GetDockerRegistry_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *captenPluginsClient) GetDockerRegistryForLabels(ctx context.Context, in *GetDockerRegistryForLabelsRequest, opts ...grpc.CallOption) (*GetDockerRegistryForLabelsResponse, error) {
-	out := new(GetDockerRegistryForLabelsResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_GetDockerRegistryForLabels_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +427,6 @@ type CaptenPluginsServer interface {
 	UpdateDockerRegistry(context.Context, *UpdateDockerRegistryRequest) (*UpdateDockerRegistryResponse, error)
 	DeleteDockerRegistry(context.Context, *DeleteDockerRegistryRequest) (*DeleteDockerRegistryResponse, error)
 	GetDockerRegistry(context.Context, *GetDockerRegistryRequest) (*GetDockerRegistryResponse, error)
-	GetDockerRegistryForLabels(context.Context, *GetDockerRegistryForLabelsRequest) (*GetDockerRegistryForLabelsResponse, error)
 	AddCloudProvider(context.Context, *AddCloudProviderRequest) (*AddCloudProviderResponse, error)
 	UpdateCloudProvider(context.Context, *UpdateCloudProviderRequest) (*UpdateCloudProviderResponse, error)
 	DeleteCloudProvider(context.Context, *DeleteCloudProviderRequest) (*DeleteCloudProviderResponse, error)
@@ -507,9 +495,6 @@ func (UnimplementedCaptenPluginsServer) DeleteDockerRegistry(context.Context, *D
 }
 func (UnimplementedCaptenPluginsServer) GetDockerRegistry(context.Context, *GetDockerRegistryRequest) (*GetDockerRegistryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDockerRegistry not implemented")
-}
-func (UnimplementedCaptenPluginsServer) GetDockerRegistryForLabels(context.Context, *GetDockerRegistryForLabelsRequest) (*GetDockerRegistryForLabelsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetDockerRegistryForLabels not implemented")
 }
 func (UnimplementedCaptenPluginsServer) AddCloudProvider(context.Context, *AddCloudProviderRequest) (*AddCloudProviderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddCloudProvider not implemented")
@@ -832,24 +817,6 @@ func _CaptenPlugins_GetDockerRegistry_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CaptenPluginsServer).GetDockerRegistry(ctx, req.(*GetDockerRegistryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CaptenPlugins_GetDockerRegistryForLabels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDockerRegistryForLabelsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CaptenPluginsServer).GetDockerRegistryForLabels(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CaptenPlugins_GetDockerRegistryForLabels_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).GetDockerRegistryForLabels(ctx, req.(*GetDockerRegistryForLabelsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1276,10 +1243,6 @@ var CaptenPlugins_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDockerRegistry",
 			Handler:    _CaptenPlugins_GetDockerRegistry_Handler,
-		},
-		{
-			MethodName: "GetDockerRegistryForLabels",
-			Handler:    _CaptenPlugins_GetDockerRegistryForLabels_Handler,
 		},
 		{
 			MethodName: "AddCloudProvider",
