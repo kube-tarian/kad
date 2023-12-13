@@ -157,12 +157,12 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 
 			dbProvider, ok := dbProviderMap[k8sProvider.Name]
 			if !ok {
-				h.log.Infof("Provider name %s is not found in the db, uptaing its status to out of sync", k8sProvider.Name)
-				status = model.CrossPlaneProviderOutofSynch
-			} else {
-				if strings.EqualFold(string(providerStatus.Status), "true") {
-					status = model.CrossPlaneProviderReady
-				}
+				h.log.Infof("Provider name %s is not found in the db, skipped the provider update", k8sProvider.Name)
+				continue
+			}
+
+			if strings.EqualFold(string(providerStatus.Status), "true") {
+				status = model.CrossPlaneProviderReady
 			}
 
 			if action == updateCrossplaneProviderDeleteAction {
