@@ -6,159 +6,159 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
 )
 
-func (s *Server) AddDockerRegistry(ctx context.Context, request *captenpluginspb.AddDockerRegistryRequest) (
-	*captenpluginspb.AddDockerRegistryResponse, error) {
+func (s *Server) AddContainerRegistry(ctx context.Context, request *captenpluginspb.AddContainerRegistryRequest) (
+	*captenpluginspb.AddContainerRegistryResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
-		return &captenpluginspb.AddDockerRegistryResponse{
+		return &captenpluginspb.AddContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
 	}
-	s.log.Infof("add docker registry for cluster %s recieved, [org: %s]",
+	s.log.Infof("add Container registry for cluster %s recieved, [org: %s]",
 		clusterId, orgId)
 
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &captenpluginspb.AddDockerRegistryResponse{
+		return &captenpluginspb.AddContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to initialize agent",
 		}, err
 	}
 
-	resp, err := agent.GetCaptenPluginsClient().AddDockerRegistry(ctx, request)
+	resp, err := agent.GetCaptenPluginsClient().AddContainerRegistry(ctx, request)
 	if err != nil {
-		s.log.Errorf("failed to add docker registry, %v", err)
-		return &captenpluginspb.AddDockerRegistryResponse{
+		s.log.Errorf("failed to add Container registry, %v", err)
+		return &captenpluginspb.AddContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to add docker registry",
+			StatusMessage: "failed to add Container registry",
 		}, err
 	}
 
-	s.log.Infof("docker regsitry creattion for cluster %s successful, [org: %s]",
+	s.log.Infof("Container regsitry creattion for cluster %s successful, [org: %s]",
 		clusterId, orgId)
-	return &captenpluginspb.AddDockerRegistryResponse{
+	return &captenpluginspb.AddContainerRegistryResponse{
 		Status:        resp.Status,
-		StatusMessage: "add docker registry successful",
+		StatusMessage: "add Container registry successful",
 	}, nil
 }
 
-func (s *Server) UpdateDockerRegistry(ctx context.Context, request *captenpluginspb.UpdateDockerRegistryRequest) (
-	*captenpluginspb.UpdateDockerRegistryResponse, error) {
+func (s *Server) UpdateContainerRegistry(ctx context.Context, request *captenpluginspb.UpdateContainerRegistryRequest) (
+	*captenpluginspb.UpdateContainerRegistryResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
-		return &captenpluginspb.UpdateDockerRegistryResponse{
+		return &captenpluginspb.UpdateContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
 	}
-	s.log.Infof("update docker registry for cluster %s recieved, [org: %s]",
+	s.log.Infof("update Container registry for cluster %s recieved, [org: %s]",
 		clusterId, orgId)
 
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &captenpluginspb.UpdateDockerRegistryResponse{
+		return &captenpluginspb.UpdateContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to initialize agent",
 		}, err
 	}
 
-	resp, err := agent.GetCaptenPluginsClient().UpdateDockerRegistry(ctx, request)
+	resp, err := agent.GetCaptenPluginsClient().UpdateContainerRegistry(ctx, request)
 	if err != nil {
-		s.log.Errorf("failed to update docker registry, %v", err)
-		return &captenpluginspb.UpdateDockerRegistryResponse{
+		s.log.Errorf("failed to update Container registry, %v", err)
+		return &captenpluginspb.UpdateContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to update docker registry",
+			StatusMessage: "failed to update Container registry",
 		}, err
 	}
 
-	s.log.Infof("docker regsitry update for cluster %s successful, [org: %s]",
+	s.log.Infof("Container regsitry update for cluster %s successful, [org: %s]",
 		clusterId, orgId)
-	return &captenpluginspb.UpdateDockerRegistryResponse{
+	return &captenpluginspb.UpdateContainerRegistryResponse{
 		Status:        resp.Status,
-		StatusMessage: "update docker registry successful",
+		StatusMessage: "update Container registry successful",
 	}, nil
 }
-func (s *Server) DeleteDockerRegistry(ctx context.Context, request *captenpluginspb.DeleteDockerRegistryRequest) (
-	*captenpluginspb.DeleteDockerRegistryResponse, error) {
+func (s *Server) DeleteContainerRegistry(ctx context.Context, request *captenpluginspb.DeleteContainerRegistryRequest) (
+	*captenpluginspb.DeleteContainerRegistryResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
-		return &captenpluginspb.DeleteDockerRegistryResponse{
+		return &captenpluginspb.DeleteContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
 	}
-	s.log.Infof("delete docker registry for cluster %s recieved, [org: %s]",
+	s.log.Infof("delete Container registry for cluster %s recieved, [org: %s]",
 		clusterId, orgId)
 
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &captenpluginspb.DeleteDockerRegistryResponse{
+		return &captenpluginspb.DeleteContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to initialize agent",
 		}, err
 	}
 
-	resp, err := agent.GetCaptenPluginsClient().DeleteDockerRegistry(ctx, request)
+	resp, err := agent.GetCaptenPluginsClient().DeleteContainerRegistry(ctx, request)
 	if err != nil {
-		s.log.Errorf("failed to delete docker registry, %v", err)
-		return &captenpluginspb.DeleteDockerRegistryResponse{
+		s.log.Errorf("failed to delete Container registry, %v", err)
+		return &captenpluginspb.DeleteContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to delete docker registry",
+			StatusMessage: "failed to delete Container registry",
 		}, err
 	}
 
-	s.log.Infof("docker regsitry delete for cluster %s successful, [org: %s]",
+	s.log.Infof("Container regsitry delete for cluster %s successful, [org: %s]",
 		clusterId, orgId)
-	return &captenpluginspb.DeleteDockerRegistryResponse{
+	return &captenpluginspb.DeleteContainerRegistryResponse{
 		Status:        resp.Status,
-		StatusMessage: "delete docker registry successful",
+		StatusMessage: "delete Container registry successful",
 	}, nil
 
 }
-func (s *Server) GetDockerRegistry(ctx context.Context, request *captenpluginspb.GetDockerRegistryRequest) (
-	*captenpluginspb.GetDockerRegistryResponse, error) {
+func (s *Server) GetContainerRegistry(ctx context.Context, request *captenpluginspb.GetContainerRegistryRequest) (
+	*captenpluginspb.GetContainerRegistryResponse, error) {
 
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
-		return &captenpluginspb.GetDockerRegistryResponse{
+		return &captenpluginspb.GetContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
 	}
-	s.log.Infof("get docker registry for cluster %s recieved, [org: %s]",
+	s.log.Infof("get Container registry for cluster %s recieved, [org: %s]",
 		clusterId, orgId)
 
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &captenpluginspb.GetDockerRegistryResponse{
+		return &captenpluginspb.GetContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to initialize agent",
 		}, err
 	}
 
-	resp, err := agent.GetCaptenPluginsClient().GetDockerRegistry(ctx, request)
+	resp, err := agent.GetCaptenPluginsClient().GetContainerRegistry(ctx, request)
 	if err != nil {
-		s.log.Errorf("failed to get docker registry, %v", err)
-		return &captenpluginspb.GetDockerRegistryResponse{
+		s.log.Errorf("failed to get Container registry, %v", err)
+		return &captenpluginspb.GetContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to update docker registry",
+			StatusMessage: "failed to update Container registry",
 		}, err
 	}
 
-	s.log.Infof("docker regsitry get for cluster %s successful, [org: %s]",
+	s.log.Infof("Container regsitry get for cluster %s successful, [org: %s]",
 		clusterId, orgId)
-	return &captenpluginspb.GetDockerRegistryResponse{
+	return &captenpluginspb.GetContainerRegistryResponse{
 		Registries:    resp.Registries,
 		Status:        resp.Status,
-		StatusMessage: "update docker registry successful",
+		StatusMessage: "update Container registry successful",
 	}, nil
 }

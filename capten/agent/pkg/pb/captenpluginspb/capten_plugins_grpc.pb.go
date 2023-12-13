@@ -29,10 +29,10 @@ const (
 	CaptenPlugins_GetConfiguredTektonPipelines_FullMethodName = "/captenpluginspb.capten_plugins/GetConfiguredTektonPipelines"
 	CaptenPlugins_CreateTektonPipelines_FullMethodName        = "/captenpluginspb.capten_plugins/CreateTektonPipelines"
 	CaptenPlugins_UpdateTektonPipelines_FullMethodName        = "/captenpluginspb.capten_plugins/UpdateTektonPipelines"
-	CaptenPlugins_AddDockerRegistry_FullMethodName            = "/captenpluginspb.capten_plugins/AddDockerRegistry"
-	CaptenPlugins_UpdateDockerRegistry_FullMethodName         = "/captenpluginspb.capten_plugins/UpdateDockerRegistry"
-	CaptenPlugins_DeleteDockerRegistry_FullMethodName         = "/captenpluginspb.capten_plugins/DeleteDockerRegistry"
-	CaptenPlugins_GetDockerRegistry_FullMethodName            = "/captenpluginspb.capten_plugins/GetDockerRegistry"
+	CaptenPlugins_AddContainerRegistry_FullMethodName         = "/captenpluginspb.capten_plugins/AddContainerRegistry"
+	CaptenPlugins_UpdateContainerRegistry_FullMethodName      = "/captenpluginspb.capten_plugins/UpdateContainerRegistry"
+	CaptenPlugins_DeleteContainerRegistry_FullMethodName      = "/captenpluginspb.capten_plugins/DeleteContainerRegistry"
+	CaptenPlugins_GetContainerRegistry_FullMethodName         = "/captenpluginspb.capten_plugins/GetContainerRegistry"
 	CaptenPlugins_AddCloudProvider_FullMethodName             = "/captenpluginspb.capten_plugins/AddCloudProvider"
 	CaptenPlugins_UpdateCloudProvider_FullMethodName          = "/captenpluginspb.capten_plugins/UpdateCloudProvider"
 	CaptenPlugins_DeleteCloudProvider_FullMethodName          = "/captenpluginspb.capten_plugins/DeleteCloudProvider"
@@ -69,10 +69,10 @@ type CaptenPluginsClient interface {
 	GetConfiguredTektonPipelines(ctx context.Context, in *GetConfiguredTektonPipelinesRequest, opts ...grpc.CallOption) (*GetConfiguredTektonPipelinesResponse, error)
 	CreateTektonPipelines(ctx context.Context, in *CreateTektonPipelinesRequest, opts ...grpc.CallOption) (*CreateTektonPipelinesResponse, error)
 	UpdateTektonPipelines(ctx context.Context, in *UpdateTektonPipelinesRequest, opts ...grpc.CallOption) (*UpdateTektonPipelinesResponse, error)
-	AddDockerRegistry(ctx context.Context, in *AddDockerRegistryRequest, opts ...grpc.CallOption) (*AddDockerRegistryResponse, error)
-	UpdateDockerRegistry(ctx context.Context, in *UpdateDockerRegistryRequest, opts ...grpc.CallOption) (*UpdateDockerRegistryResponse, error)
-	DeleteDockerRegistry(ctx context.Context, in *DeleteDockerRegistryRequest, opts ...grpc.CallOption) (*DeleteDockerRegistryResponse, error)
-	GetDockerRegistry(ctx context.Context, in *GetDockerRegistryRequest, opts ...grpc.CallOption) (*GetDockerRegistryResponse, error)
+	AddContainerRegistry(ctx context.Context, in *AddContainerRegistryRequest, opts ...grpc.CallOption) (*AddContainerRegistryResponse, error)
+	UpdateContainerRegistry(ctx context.Context, in *UpdateContainerRegistryRequest, opts ...grpc.CallOption) (*UpdateContainerRegistryResponse, error)
+	DeleteContainerRegistry(ctx context.Context, in *DeleteContainerRegistryRequest, opts ...grpc.CallOption) (*DeleteContainerRegistryResponse, error)
+	GetContainerRegistry(ctx context.Context, in *GetContainerRegistryRequest, opts ...grpc.CallOption) (*GetContainerRegistryResponse, error)
 	AddCloudProvider(ctx context.Context, in *AddCloudProviderRequest, opts ...grpc.CallOption) (*AddCloudProviderResponse, error)
 	UpdateCloudProvider(ctx context.Context, in *UpdateCloudProviderRequest, opts ...grpc.CallOption) (*UpdateCloudProviderResponse, error)
 	DeleteCloudProvider(ctx context.Context, in *DeleteCloudProviderRequest, opts ...grpc.CallOption) (*DeleteCloudProviderResponse, error)
@@ -193,36 +193,36 @@ func (c *captenPluginsClient) UpdateTektonPipelines(ctx context.Context, in *Upd
 	return out, nil
 }
 
-func (c *captenPluginsClient) AddDockerRegistry(ctx context.Context, in *AddDockerRegistryRequest, opts ...grpc.CallOption) (*AddDockerRegistryResponse, error) {
-	out := new(AddDockerRegistryResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_AddDockerRegistry_FullMethodName, in, out, opts...)
+func (c *captenPluginsClient) AddContainerRegistry(ctx context.Context, in *AddContainerRegistryRequest, opts ...grpc.CallOption) (*AddContainerRegistryResponse, error) {
+	out := new(AddContainerRegistryResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_AddContainerRegistry_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *captenPluginsClient) UpdateDockerRegistry(ctx context.Context, in *UpdateDockerRegistryRequest, opts ...grpc.CallOption) (*UpdateDockerRegistryResponse, error) {
-	out := new(UpdateDockerRegistryResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_UpdateDockerRegistry_FullMethodName, in, out, opts...)
+func (c *captenPluginsClient) UpdateContainerRegistry(ctx context.Context, in *UpdateContainerRegistryRequest, opts ...grpc.CallOption) (*UpdateContainerRegistryResponse, error) {
+	out := new(UpdateContainerRegistryResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_UpdateContainerRegistry_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *captenPluginsClient) DeleteDockerRegistry(ctx context.Context, in *DeleteDockerRegistryRequest, opts ...grpc.CallOption) (*DeleteDockerRegistryResponse, error) {
-	out := new(DeleteDockerRegistryResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_DeleteDockerRegistry_FullMethodName, in, out, opts...)
+func (c *captenPluginsClient) DeleteContainerRegistry(ctx context.Context, in *DeleteContainerRegistryRequest, opts ...grpc.CallOption) (*DeleteContainerRegistryResponse, error) {
+	out := new(DeleteContainerRegistryResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_DeleteContainerRegistry_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *captenPluginsClient) GetDockerRegistry(ctx context.Context, in *GetDockerRegistryRequest, opts ...grpc.CallOption) (*GetDockerRegistryResponse, error) {
-	out := new(GetDockerRegistryResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_GetDockerRegistry_FullMethodName, in, out, opts...)
+func (c *captenPluginsClient) GetContainerRegistry(ctx context.Context, in *GetContainerRegistryRequest, opts ...grpc.CallOption) (*GetContainerRegistryResponse, error) {
+	out := new(GetContainerRegistryResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_GetContainerRegistry_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -423,10 +423,10 @@ type CaptenPluginsServer interface {
 	GetConfiguredTektonPipelines(context.Context, *GetConfiguredTektonPipelinesRequest) (*GetConfiguredTektonPipelinesResponse, error)
 	CreateTektonPipelines(context.Context, *CreateTektonPipelinesRequest) (*CreateTektonPipelinesResponse, error)
 	UpdateTektonPipelines(context.Context, *UpdateTektonPipelinesRequest) (*UpdateTektonPipelinesResponse, error)
-	AddDockerRegistry(context.Context, *AddDockerRegistryRequest) (*AddDockerRegistryResponse, error)
-	UpdateDockerRegistry(context.Context, *UpdateDockerRegistryRequest) (*UpdateDockerRegistryResponse, error)
-	DeleteDockerRegistry(context.Context, *DeleteDockerRegistryRequest) (*DeleteDockerRegistryResponse, error)
-	GetDockerRegistry(context.Context, *GetDockerRegistryRequest) (*GetDockerRegistryResponse, error)
+	AddContainerRegistry(context.Context, *AddContainerRegistryRequest) (*AddContainerRegistryResponse, error)
+	UpdateContainerRegistry(context.Context, *UpdateContainerRegistryRequest) (*UpdateContainerRegistryResponse, error)
+	DeleteContainerRegistry(context.Context, *DeleteContainerRegistryRequest) (*DeleteContainerRegistryResponse, error)
+	GetContainerRegistry(context.Context, *GetContainerRegistryRequest) (*GetContainerRegistryResponse, error)
 	AddCloudProvider(context.Context, *AddCloudProviderRequest) (*AddCloudProviderResponse, error)
 	UpdateCloudProvider(context.Context, *UpdateCloudProviderRequest) (*UpdateCloudProviderResponse, error)
 	DeleteCloudProvider(context.Context, *DeleteCloudProviderRequest) (*DeleteCloudProviderResponse, error)
@@ -484,17 +484,17 @@ func (UnimplementedCaptenPluginsServer) CreateTektonPipelines(context.Context, *
 func (UnimplementedCaptenPluginsServer) UpdateTektonPipelines(context.Context, *UpdateTektonPipelinesRequest) (*UpdateTektonPipelinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTektonPipelines not implemented")
 }
-func (UnimplementedCaptenPluginsServer) AddDockerRegistry(context.Context, *AddDockerRegistryRequest) (*AddDockerRegistryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddDockerRegistry not implemented")
+func (UnimplementedCaptenPluginsServer) AddContainerRegistry(context.Context, *AddContainerRegistryRequest) (*AddContainerRegistryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddContainerRegistry not implemented")
 }
-func (UnimplementedCaptenPluginsServer) UpdateDockerRegistry(context.Context, *UpdateDockerRegistryRequest) (*UpdateDockerRegistryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateDockerRegistry not implemented")
+func (UnimplementedCaptenPluginsServer) UpdateContainerRegistry(context.Context, *UpdateContainerRegistryRequest) (*UpdateContainerRegistryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateContainerRegistry not implemented")
 }
-func (UnimplementedCaptenPluginsServer) DeleteDockerRegistry(context.Context, *DeleteDockerRegistryRequest) (*DeleteDockerRegistryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteDockerRegistry not implemented")
+func (UnimplementedCaptenPluginsServer) DeleteContainerRegistry(context.Context, *DeleteContainerRegistryRequest) (*DeleteContainerRegistryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteContainerRegistry not implemented")
 }
-func (UnimplementedCaptenPluginsServer) GetDockerRegistry(context.Context, *GetDockerRegistryRequest) (*GetDockerRegistryResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetDockerRegistry not implemented")
+func (UnimplementedCaptenPluginsServer) GetContainerRegistry(context.Context, *GetContainerRegistryRequest) (*GetContainerRegistryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetContainerRegistry not implemented")
 }
 func (UnimplementedCaptenPluginsServer) AddCloudProvider(context.Context, *AddCloudProviderRequest) (*AddCloudProviderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddCloudProvider not implemented")
@@ -749,74 +749,74 @@ func _CaptenPlugins_UpdateTektonPipelines_Handler(srv interface{}, ctx context.C
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CaptenPlugins_AddDockerRegistry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddDockerRegistryRequest)
+func _CaptenPlugins_AddContainerRegistry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddContainerRegistryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CaptenPluginsServer).AddDockerRegistry(ctx, in)
+		return srv.(CaptenPluginsServer).AddContainerRegistry(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: CaptenPlugins_AddDockerRegistry_FullMethodName,
+		FullMethod: CaptenPlugins_AddContainerRegistry_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).AddDockerRegistry(ctx, req.(*AddDockerRegistryRequest))
+		return srv.(CaptenPluginsServer).AddContainerRegistry(ctx, req.(*AddContainerRegistryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CaptenPlugins_UpdateDockerRegistry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateDockerRegistryRequest)
+func _CaptenPlugins_UpdateContainerRegistry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateContainerRegistryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CaptenPluginsServer).UpdateDockerRegistry(ctx, in)
+		return srv.(CaptenPluginsServer).UpdateContainerRegistry(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: CaptenPlugins_UpdateDockerRegistry_FullMethodName,
+		FullMethod: CaptenPlugins_UpdateContainerRegistry_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).UpdateDockerRegistry(ctx, req.(*UpdateDockerRegistryRequest))
+		return srv.(CaptenPluginsServer).UpdateContainerRegistry(ctx, req.(*UpdateContainerRegistryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CaptenPlugins_DeleteDockerRegistry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteDockerRegistryRequest)
+func _CaptenPlugins_DeleteContainerRegistry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteContainerRegistryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CaptenPluginsServer).DeleteDockerRegistry(ctx, in)
+		return srv.(CaptenPluginsServer).DeleteContainerRegistry(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: CaptenPlugins_DeleteDockerRegistry_FullMethodName,
+		FullMethod: CaptenPlugins_DeleteContainerRegistry_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).DeleteDockerRegistry(ctx, req.(*DeleteDockerRegistryRequest))
+		return srv.(CaptenPluginsServer).DeleteContainerRegistry(ctx, req.(*DeleteContainerRegistryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CaptenPlugins_GetDockerRegistry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetDockerRegistryRequest)
+func _CaptenPlugins_GetContainerRegistry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetContainerRegistryRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CaptenPluginsServer).GetDockerRegistry(ctx, in)
+		return srv.(CaptenPluginsServer).GetContainerRegistry(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: CaptenPlugins_GetDockerRegistry_FullMethodName,
+		FullMethod: CaptenPlugins_GetContainerRegistry_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).GetDockerRegistry(ctx, req.(*GetDockerRegistryRequest))
+		return srv.(CaptenPluginsServer).GetContainerRegistry(ctx, req.(*GetContainerRegistryRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1229,20 +1229,20 @@ var CaptenPlugins_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CaptenPlugins_UpdateTektonPipelines_Handler,
 		},
 		{
-			MethodName: "AddDockerRegistry",
-			Handler:    _CaptenPlugins_AddDockerRegistry_Handler,
+			MethodName: "AddContainerRegistry",
+			Handler:    _CaptenPlugins_AddContainerRegistry_Handler,
 		},
 		{
-			MethodName: "UpdateDockerRegistry",
-			Handler:    _CaptenPlugins_UpdateDockerRegistry_Handler,
+			MethodName: "UpdateContainerRegistry",
+			Handler:    _CaptenPlugins_UpdateContainerRegistry_Handler,
 		},
 		{
-			MethodName: "DeleteDockerRegistry",
-			Handler:    _CaptenPlugins_DeleteDockerRegistry_Handler,
+			MethodName: "DeleteContainerRegistry",
+			Handler:    _CaptenPlugins_DeleteContainerRegistry_Handler,
 		},
 		{
-			MethodName: "GetDockerRegistry",
-			Handler:    _CaptenPlugins_GetDockerRegistry_Handler,
+			MethodName: "GetContainerRegistry",
+			Handler:    _CaptenPlugins_GetContainerRegistry_Handler,
 		},
 		{
 			MethodName: "AddCloudProvider",

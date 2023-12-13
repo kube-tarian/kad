@@ -18,10 +18,10 @@ service capten_plugins {
     rpc CreateTektonPipelines(CreateTektonPipelinesRequest) returns (CreateTektonPipelinesResponse) {}
     rpc UpdateTektonPipelines(UpdateTektonPipelinesRequest) returns (UpdateTektonPipelinesResponse) {}
 
-    rpc AddDockerRegistry(AddDockerRegistryRequest) returns (AddDockerRegistryResponse) {}
-    rpc UpdateDockerRegistry(UpdateDockerRegistryRequest) returns (UpdateDockerRegistryResponse) {}
-    rpc DeleteDockerRegistry(DeleteDockerRegistryRequest) returns (DeleteDockerRegistryResponse) {}
-    rpc GetDockerRegistry(GetDockerRegistryRequest) returns (GetDockerRegistryResponse) {}
+    rpc AddContainerRegistry(AddContainerRegistryRequest) returns (AddContainerRegistryResponse) {}
+    rpc UpdateContainerRegistry(UpdateContainerRegistryRequest) returns (UpdateContainerRegistryResponse) {}
+    rpc DeleteContainerRegistry(DeleteContainerRegistryRequest) returns (DeleteContainerRegistryResponse) {}
+    rpc GetContainerRegistry(GetContainerRegistryRequest) returns (GetContainerRegistryResponse) {}
 
     rpc AddCloudProvider(AddCloudProviderRequest) returns (AddCloudProviderResponse) {}
     rpc UpdateCloudProvider(UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
@@ -381,20 +381,22 @@ message GetManagedClusterKubeconfigResponse {
     string kubeconfig = 3;
 }
 
-message AddDockerRegistryRequest {
+message AddContainerRegistryRequest {
     string registryUrl = 1;
     repeated string labels = 2;
     string password = 3;
     string userName = 4;
+    string token = 5;
+    string vendor = 6;
 }
 
-message AddDockerRegistryResponse {
+message AddContainerRegistryResponse {
     string id = 1;
     StatusCode status = 2;
     string statusMessage = 3;
 }
 
-message UpdateDockerRegistryRequest {
+message UpdateContainerRegistryRequest {
     string id = 1;
     string registryUrl = 2;
     repeated string labels = 3;
@@ -402,34 +404,35 @@ message UpdateDockerRegistryRequest {
     string userName = 5;
 }
 
-message UpdateDockerRegistryResponse {
+message UpdateContainerRegistryResponse {
     StatusCode status = 1;
     string statusMessage = 2;
 }
 
-message DeleteDockerRegistryRequest {
+message DeleteContainerRegistryRequest {
     string id = 1;
 }
 
-message DeleteDockerRegistryResponse {
+message DeleteContainerRegistryResponse {
     StatusCode status = 1;
     string statusMessage = 2;
 }
 
-message GetDockerRegistryRequest {
+message GetContainerRegistryRequest {
 }
 
-message DockerRegistry {
+message ContainerRegistry {
     string id = 1;
     string registryUrl = 2;
-    repeated string labels = 3;
+    map<string, string> labels = 3;
     string lastUpdateTime = 4;
-    string registryToken = 5;
-    string userID = 6;
+    string token = 5;
+    string userName = 6;
+    string password = 7;
 }
 
-message GetDockerRegistryResponse {
-    repeated DockerRegistry registries = 1;
+message GetContainerRegistryResponse {
+    repeated ContainerRegistry registries = 1;
     StatusCode status = 2;
     string statusMessage = 3;
 }
