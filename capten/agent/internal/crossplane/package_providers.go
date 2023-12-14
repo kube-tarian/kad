@@ -177,10 +177,6 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 				ProviderName:    dbProvider.ProviderName,
 			}
 
-			fmt.Println("Action => " + action)
-			v, _ := json.Marshal(provider)
-			fmt.Println("Provider ===>" + string(v))
-
 			if err := h.dbStore.UpdateCrossplaneProvider(&provider); err != nil {
 				h.log.Errorf("failed to update provider %s details in db, %v", k8sProvider.Name, err)
 				continue
