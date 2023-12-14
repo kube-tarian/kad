@@ -38,8 +38,7 @@ func Start() {
 	}
 
 	if err := configureDB(); err != nil {
-		// log.Fatalf("%v", err)
-		fmt.Println("Error => " + err.Error())
+		log.Fatalf("%v", err)
 	}
 
 	as, err := captenstore.NewStore(log)
