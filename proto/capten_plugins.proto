@@ -384,7 +384,7 @@ message GetManagedClusterKubeconfigResponse {
 message AddContainerRegistryRequest {
     string registryUrl = 1;
     repeated string labels = 2;
-    map<string, string> regAttributes = 3;
+    map<string, string> registryAttributes = 3;
     string registryType = 4;
 }
 
@@ -397,8 +397,9 @@ message AddContainerRegistryResponse {
 message UpdateContainerRegistryRequest {
     string id = 1;
     string registryUrl = 2;
-    map<string, string> regAttributes = 3;
-    string registryType = 4;
+    repeated string labels = 3;
+    map<string, string> registryAttributes = 4;
+    string registryType = 5;
 }
 
 message UpdateContainerRegistryResponse {
@@ -423,7 +424,7 @@ message ContainerRegistry {
     string registryUrl = 2;
     repeated string labels = 3;
     string lastUpdateTime = 4;
-    map<string, string> regAttributes = 5;
+    map<string, string> registryAttributes = 5;
     string registryType = 6;
 }
 
@@ -438,6 +439,9 @@ message TektonPipelines {
     string pipelineName = 2;
     string webhookURL = 3;
     string status = 4;
+    string gitOrgId = 5;
+    repeated string containerRegistryId = 6;
+    string lastUpdateTime = 7;
 }
 
 message SyncTektonPipelinesRequest {
@@ -462,18 +466,19 @@ message GetTektonPipelinesResponse {
 message CreateTektonPipelinesRequest {
     string pipelineName = 1;
     string gitOrgId = 2;
-    repeated string registryId = 3;
+    repeated string containerRegistryId = 3;
 }
 
 message CreateTektonPipelinesResponse {
-    StatusCode status = 1;
-    string statusMessage = 2;
+    string id = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
 }
 
 message UpdateTektonPipelinesRequest {
     string id = 1;
     string gitOrgId = 2;
-    repeated string registryId = 3;
+    repeated string containerRegistryId = 3;
 }
 
 message UpdateTektonPipelinesResponse {
