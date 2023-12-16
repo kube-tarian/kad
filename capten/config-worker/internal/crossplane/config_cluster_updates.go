@@ -218,7 +218,7 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 	fmt.Printf("req.ManagedClusterName => %s \n", req.ManagedClusterName)
 	fmt.Printf("dirToDelete => %s \n", dirToDelete)
 
-	err = cp.helper.AddToGitByPath(ctx, dirToDelete, accessToken)
+	err = cp.helper.AddToGit(ctx, model.CrossPlaneProjectDelete, req.RepoURL, accessToken)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
 	}
