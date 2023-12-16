@@ -383,7 +383,7 @@ message GetManagedClusterKubeconfigResponse {
 
 message AddContainerRegistryRequest {
     string registryUrl = 1;
-    repeated string labels = 2;
+    map<string, string> labels = 2;
     string password = 3;
     string userName = 4;
     string token = 5;
@@ -399,9 +399,10 @@ message AddContainerRegistryResponse {
 message UpdateContainerRegistryRequest {
     string id = 1;
     string registryUrl = 2;
-    repeated string labels = 3;
+    map<string, string> labels = 3;
     string password = 4;
     string userName = 5;
+    string token = 6;
 }
 
 message UpdateContainerRegistryResponse {
@@ -429,6 +430,7 @@ message ContainerRegistry {
     string token = 5;
     string userName = 6;
     string password = 7;
+    string vendor = 8;
 }
 
 message GetContainerRegistryResponse {
@@ -468,14 +470,14 @@ message GetConfiguredTektonPipelinesForLabelsResponse {
 }
 
 message CreateTektonPipelinesRequest {
-    string id = 1;
+    string defaultPipelineName = 1;
     string orgName = 2;
+    string pipelineName = 3;
 }
 
 message CreateTektonPipelinesResponse {
-    string pipelineName = 1;
-    StatusCode status = 2;
-    string statusMessage = 3;
+    StatusCode status = 1;
+    string statusMessage = 2;
 }
 
 message GetTektonPipelinesResponse {
