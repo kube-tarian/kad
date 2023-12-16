@@ -62,19 +62,19 @@ func readCrossPlanePluginConfig(pluginFile string) (*crossplanePluginConfig, err
 }
 
 func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {
-	accessToken, err := cp.helper.GetAccessToken(ctx, req.VaultCredIdentifier)
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
-	}
-
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
-	templateRepo, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
+	templateRepo, err := cp.helper.CloneTemplateRepo(cp.pluginConfig.TemplateGitRepo)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
+	}
+	defer os.RemoveAll(templateRepo)
+
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.VaultCredIdentifier)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
 	logger.Infof("cloned default templates to project %s", req.RepoURL)
 
-	defer os.RemoveAll(templateRepo)
 	defer os.RemoveAll(customerRepo)
 
 	err = cp.synchProviders(req, templateRepo, customerRepo)
@@ -89,9 +89,14 @@ func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model
 	}
 	logger.Infof("updated resource configurations in cloned project %s", req.RepoURL)
 
-	err = cp.helper.AddToGit(ctx, req.Type, req.RepoURL, accessToken)
+	err = cp.helper.AddFilesToRepo([]string{"."})
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
+	}
+
+	err = cp.helper.CommitRepoChanges()
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to commit git repo")
 	}
 	logger.Infof("added cloned project %s changed to git", req.RepoURL)
 
@@ -231,7 +236,7 @@ func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.Crossp
 			cloudType, pkg, cloudType,
 		)
 		return providerConfigString, nil
-	case "AZUR":
+	case "AZURE":
 		providerConfigString := fmt.Sprintf(
 			crossplaneAzureProviderTemplate,
 			cloudType, secretPath, secretPath,
