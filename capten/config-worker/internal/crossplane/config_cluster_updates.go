@@ -182,6 +182,96 @@ func (cp *CrossPlaneApp) syncDefaultAppVaules(clusterName, defaultAppVaulesPath,
 	return nil
 }
 
+func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
+	logger.Infof("configuring crossplane project for cluster %s delete", req.ManagedClusterName)
+
+	accessToken, err := cp.helper.GetAccessToken(ctx, req.GitProjectId)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
+	}
+
+	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
+	_, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
+	}
+	logger.Infof("cloned default templates to project %s", req.RepoURL)
+
+	defer os.RemoveAll(customerRepo)
+
+	clusterValuesFile := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterValuesFile)
+	err = removeClusterValues(clusterValuesFile, req.ManagedClusterName)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace the file")
+	}
+
+	dirToDelete := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName)
+	logger.Infof("for the culster %s, removing the cluster folder from git repo through path %s", req.ManagedClusterName, dirToDelete)
+	if err := os.RemoveAll(dirToDelete); err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
+	}
+
+	fmt.Printf("accesstoken => %s \n", accessToken)
+	fmt.Printf("cp.pluginConfig.TemplateGitRepo => %s \n", cp.pluginConfig.TemplateGitRepo)
+	fmt.Printf("req.RepoURL => %s \n", req.RepoURL)
+	fmt.Printf("clusterValuesFile => %s \n", clusterValuesFile)
+	fmt.Printf("req.ManagedClusterName => %s \n", req.ManagedClusterName)
+	fmt.Printf("dirToDelete => %s \n", dirToDelete)
+
+	err = cp.helper.AddToGit(ctx, model.CrossPlaneProjectDelete, req.RepoURL, accessToken)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
+	}
+
+	logger.Infof("added cloned project %s changed to git", req.RepoURL)
+
+	return string(agentmodel.WorkFlowStatusCompleted), nil
+}
+
+func removeClusterValues(valuesFileName, clusterName string) error {
+	logger.Infof("for the culster %s, removing the cluster values from %s file", clusterName, valuesFileName)
+	data, err := os.ReadFile(valuesFileName)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := k8s.ConvertYamlToJson(data)
+	if err != nil {
+		return err
+	}
+
+	var clusterConfig ClusterConfigValues
+	err = json.Unmarshal(jsonData, &clusterConfig)
+	if err != nil {
+		return err
+	}
+
+	clusters := []Cluster{}
+	if clusterConfig.Clusters != nil {
+		clusters = *clusterConfig.Clusters
+	}
+
+	for _, cluster := range clusters {
+		if cluster.Name != clusterName {
+			clusters = append(clusters, cluster)
+		}
+	}
+
+	clusterConfig.Clusters = &clusters
+	jsonBytes, err := json.Marshal(clusterConfig)
+	if err != nil {
+		return err
+	}
+
+	yamlBytes, err := k8s.ConvertJsonToYaml(jsonBytes)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
+	return err
+}
+
 func (cp *CrossPlaneApp) prepareTemplateVaules(clusterName string) map[string]string {
 	val := map[string]string{
 		"DomainName":  cp.cfg.DomainName,
