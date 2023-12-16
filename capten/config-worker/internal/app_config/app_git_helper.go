@@ -200,3 +200,20 @@ func (ca *AppGitConfigHelper) AddToGit(ctx context.Context, paramType, repoUrl, 
 	}
 	return nil
 }
+
+func (ca *AppGitConfigHelper) AddToGitByPath(ctx context.Context, path, token string) error {
+	if err := ca.gitClient.Commit(path, "configure requested app",
+		ca.cfg.GitDefaultCommiterName, ca.cfg.GitDefaultCommiterEmail); err != nil {
+		return fmt.Errorf("failed to commit the changes to user repo, err: %v", err)
+	}
+
+	defaultBranch, err := ca.gitClient.GetDefaultBranchName()
+	if err != nil {
+		return fmt.Errorf("failed to get default branch of user repo, err: %v", err)
+	}
+
+	if err := ca.gitClient.Push(defaultBranch, token); err != nil {
+		return fmt.Errorf("failed to get push to default branch, err: %v", err)
+	}
+	return nil
+}
