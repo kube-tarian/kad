@@ -49,19 +49,19 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to CreateCluster in argocd app")
 	}
 
-	accessToken, err := cp.helper.GetAccessToken(ctx, req.GitProjectId)
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
-	}
-
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
-	templateRepo, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
+	templateRepo, err := cp.helper.CloneTemplateRepo(cp.pluginConfig.TemplateGitRepo)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
+	}
+	defer os.RemoveAll(templateRepo)
+
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.GitProjectId)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
 	logger.Infof("cloned default templates to project %s", req.RepoURL)
 
-	defer os.RemoveAll(templateRepo)
 	defer os.RemoveAll(customerRepo)
 
 	clusterValuesFile := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterValuesFile)
@@ -90,9 +90,14 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 
 	logger.Infof("default app vaules synched for cluster %s", req.ManagedClusterName)
 
-	err = cp.helper.AddToGit(ctx, model.CrossPlaneClusterUpdate, req.RepoURL, accessToken)
+	err = cp.helper.AddFilesToRepo([]string{"."})
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
+	}
+
+	err = cp.helper.CommitRepoChanges()
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to commit git repo")
 	}
 
 	logger.Infof("added cloned project %s changed to git", req.RepoURL)
@@ -185,13 +190,7 @@ func (cp *CrossPlaneApp) syncDefaultAppVaules(clusterName, defaultAppVaulesPath,
 func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
 	logger.Infof("configuring crossplane project for cluster %s delete", req.ManagedClusterName)
 
-	accessToken, err := cp.helper.GetAccessToken(ctx, req.GitProjectId)
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get token from vault")
-	}
-
-	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
-	_, customerRepo, err := cp.helper.CloneRepos(ctx, cp.pluginConfig.TemplateGitRepo, req.RepoURL, accessToken)
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.GitProjectId)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
@@ -205,26 +204,25 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace the file")
 	}
 
+	dirToDeleteInRepoPath := filepath.Join(".", cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName)
+	logger.Infof("removing the cluster '%s' from git repo path %s", req.ManagedClusterName, dirToDeleteInRepoPath)
+
+	err = cp.helper.RemoveFilesFromRepo([]string{dirToDeleteInRepoPath})
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove from git repo")
+	}
+
 	dirToDelete := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName)
-	logger.Infof("for the culster %s, removing the cluster folder from git repo through path %s", req.ManagedClusterName, dirToDelete)
 	if err := os.RemoveAll(dirToDelete); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
 	}
 
-	fmt.Printf("accesstoken => %s \n", accessToken)
-	fmt.Printf("cp.pluginConfig.TemplateGitRepo => %s \n", cp.pluginConfig.TemplateGitRepo)
-	fmt.Printf("req.RepoURL => %s \n", req.RepoURL)
-	fmt.Printf("clusterValuesFile => %s \n", clusterValuesFile)
-	fmt.Printf("req.ManagedClusterName => %s \n", req.ManagedClusterName)
-	fmt.Printf("dirToDelete => %s \n", dirToDelete)
-
-	err = cp.helper.AddToGit(ctx, model.CrossPlaneProjectDelete, req.RepoURL, accessToken)
+	err = cp.helper.CommitRepoChanges()
 	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to commit git repo")
 	}
 
-	logger.Infof("added cloned project %s changed to git", req.RepoURL)
-
+	logger.Infof("commited project %s changed to git", req.RepoURL)
 	return string(agentmodel.WorkFlowStatusCompleted), nil
 }
 

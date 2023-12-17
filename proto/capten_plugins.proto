@@ -13,6 +13,16 @@ service capten_plugins {
     rpc GetGitProjects(GetGitProjectsRequest) returns (GetGitProjectsResponse) {}
     rpc GetGitProjectsForLabels(GetGitProjectsForLabelsRequest) returns (GetGitProjectsForLabelsResponse) {}
 
+    rpc GetTektonPipelines(GetTektonPipelinesRequest) returns (GetTektonPipelinesResponse) {}
+    rpc CreateTektonPipelines(CreateTektonPipelinesRequest) returns (CreateTektonPipelinesResponse) {}
+    rpc UpdateTektonPipelines(UpdateTektonPipelinesRequest) returns (UpdateTektonPipelinesResponse) {}
+    rpc SyncTektonPipelines(SyncTektonPipelinesRequest) returns (SyncTektonPipelinesResponse) {}
+
+    rpc AddContainerRegistry(AddContainerRegistryRequest) returns (AddContainerRegistryResponse) {}
+    rpc UpdateContainerRegistry(UpdateContainerRegistryRequest) returns (UpdateContainerRegistryResponse) {}
+    rpc DeleteContainerRegistry(DeleteContainerRegistryRequest) returns (DeleteContainerRegistryResponse) {}
+    rpc GetContainerRegistry(GetContainerRegistryRequest) returns (GetContainerRegistryResponse) {}
+
     rpc AddCloudProvider(AddCloudProviderRequest) returns (AddCloudProviderResponse) {}
     rpc UpdateCloudProvider(UpdateCloudProviderRequest) returns (UpdateCloudProviderResponse) {}
     rpc DeleteCloudProvider(DeleteCloudProviderRequest) returns (DeleteCloudProviderResponse) {}
@@ -369,4 +379,110 @@ message GetManagedClusterKubeconfigResponse {
     StatusCode status = 1;
     string statusMessage = 2;
     string kubeconfig = 3;
+}
+
+message AddContainerRegistryRequest {
+    string registryUrl = 1;
+    repeated string labels = 2;
+    map<string, string> registryAttributes = 3;
+    string registryType = 4;
+}
+
+message AddContainerRegistryResponse {
+    string id = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message UpdateContainerRegistryRequest {
+    string id = 1;
+    string registryUrl = 2;
+    repeated string labels = 3;
+    map<string, string> registryAttributes = 4;
+    string registryType = 5;
+}
+
+message UpdateContainerRegistryResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message DeleteContainerRegistryRequest {
+    string id = 1;
+}
+
+message DeleteContainerRegistryResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
+}
+
+message GetContainerRegistryRequest {
+}
+
+message ContainerRegistry {
+    string id = 1;
+    string registryUrl = 2;
+    repeated string labels = 3;
+    string lastUpdateTime = 4;
+    map<string, string> registryAttributes = 5;
+    string registryType = 6;
+}
+
+message GetContainerRegistryResponse {
+    repeated ContainerRegistry registries = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message TektonPipelines {
+    string id = 1;
+    string pipelineName = 2;
+    string webhookURL = 3;
+    string status = 4;
+    string gitOrgId = 5;
+    repeated string containerRegistryId = 6;
+    string lastUpdateTime = 7;
+}
+
+message SyncTektonPipelinesRequest {
+}
+
+message SyncTektonPipelinesResponse {
+    repeated TektonPipelines pipelines = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message GetTektonPipelinesRequest {
+}
+
+
+message GetTektonPipelinesResponse {
+    repeated TektonPipelines pipelines = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message CreateTektonPipelinesRequest {
+    string pipelineName = 1;
+    string gitOrgId = 2;
+    repeated string containerRegistryId = 3;
+}
+
+message CreateTektonPipelinesResponse {
+    string id = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message UpdateTektonPipelinesRequest {
+    string id = 1;
+    string gitOrgId = 2;
+    repeated string containerRegistryId = 3;
+}
+
+message UpdateTektonPipelinesResponse {
+    string id = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
 }
