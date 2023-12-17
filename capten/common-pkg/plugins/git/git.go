@@ -39,13 +39,34 @@ func (g *GitClient) Clone(directory, url, token string) error {
 	return nil
 }
 
-func (g *GitClient) Commit(path, msg, name, email string) error {
+func (g *GitClient) Add(path string) error {
 	w, err := g.repository.Worktree()
 	if err != nil {
 		return err
 	}
 
 	_, err = w.Add(path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *GitClient) Remove(path string) error {
+	w, err := g.repository.Worktree()
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Remove(path)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *GitClient) Commit(msg, name, email string) error {
+	w, err := g.repository.Worktree()
 	if err != nil {
 		return err
 	}
@@ -61,7 +82,6 @@ func (g *GitClient) Commit(path, msg, name, email string) error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
