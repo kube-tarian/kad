@@ -71,6 +71,15 @@ func (g *GitClient) Commit(msg, name, email string) error {
 		return err
 	}
 
+	status, err := w.Status()
+	if err != nil {
+		return err
+	}
+
+	if status.IsClean() {
+		return nil
+	}
+
 	_, err = w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  name,
