@@ -1,0 +1,331 @@
+package tekton
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
+	appconfig "github.com/kube-tarian/kad/capten/config-worker/internal/app_config"
+	"github.com/kube-tarian/kad/capten/model"
+	agentmodel "github.com/kube-tarian/kad/capten/model"
+	"github.com/otiai10/copy"
+	"github.com/pkg/errors"
+)
+
+var (
+	secrets = []string{"gitcred", "docker-credentials", "github-webhook-secret"}
+)
+
+type Config struct {
+	PluginConfigFile string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
+}
+
+type TektonApp struct {
+	helper       *appconfig.AppGitConfigHelper
+	pluginConfig *tektonPluginConfig
+	cfg          Config
+}
+
+func NewTektonApp() (*TektonApp, error) {
+	cfg := Config{}
+	if err := envconfig.Process("", &cfg); err != nil {
+		return nil, err
+	}
+
+	helper, err := appconfig.NewAppGitConfigHelper()
+	if err != nil {
+		return nil, err
+	}
+
+	pluginConfig, err := readTektonPluginConfig(cfg.PluginConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	return &TektonApp{pluginConfig: pluginConfig, helper: helper, cfg: cfg}, err
+}
+
+func readTektonPluginConfig(pluginFile string) (*tektonPluginConfig, error) {
+	data, err := os.ReadFile(filepath.Clean(pluginFile))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read pluginConfig File: %s, err: %w", pluginFile, err)
+	}
+
+	var pluginData tektonPluginConfig
+	err = json.Unmarshal(data, &pluginData)
+	if err != nil {
+		return nil, fmt.Errorf("%w", err)
+	}
+	return &pluginData, nil
+}
+
+func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.TektonPipelineUseCase) (status string, err error) {
+	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
+	templateRepo, err := cp.helper.CloneTemplateRepo(cp.pluginConfig.TemplateGitRepo)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
+	}
+	defer os.RemoveAll(templateRepo)
+
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.GitCredId)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
+	}
+	logger.Infof("cloned default templates to project %s", req.RepoURL)
+
+	defer os.RemoveAll(customerRepo)
+
+	err = cp.synchPipelineConfig(req, templateRepo, customerRepo)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update configs to repo")
+	}
+	logger.Infof("added provider config resources to cloned project %s", req.RepoURL)
+
+	// update git project url
+	if err := replaceCaptenUrls(customerRepo, cp.pluginConfig.TemplateGitRepo, req.RepoURL); err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace template url")
+	}
+	logger.Infof("updated resource configurations in cloned project %s", req.RepoURL)
+
+	err = updateArgoCDTemplate(filepath.Join(customerRepo, cp.pluginConfig.PipelineSyncUpdate.MainAppValues), req.PipelineName)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updateArgoCDTemplate")
+	}
+
+	err = updatePipelineTemplate(filepath.Join(customerRepo,
+		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updatePipelineTemplate")
+	}
+
+	// CREATE K8s Secret for docker, github-secret, github-webook
+
+	err = cp.helper.AddFilesToRepo([]string{"."})
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
+	}
+
+	err = cp.helper.CommitRepoChanges()
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to commit git repo")
+	}
+	logger.Infof("added cloned project %s changed to git", req.RepoURL)
+
+	err = cp.deployArgoCDApps(ctx, customerRepo)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to depoy argoCD apps")
+	}
+
+	return string(agentmodel.WorkFlowStatusCompleted), nil
+}
+
+func (cp *TektonApp) synchPipelineConfig(req *model.TektonPipelineUseCase, templateDir, reqRepo string) error {
+	for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.TektonPipelinePath, cp.pluginConfig.PipelineClusterConfigSyncPath)} {
+		err := copy.Copy(filepath.Join(templateDir, config), filepath.Join(reqRepo, config),
+			copy.Options{
+				OnDirExists: func(src, dest string) copy.DirExistsAction {
+					return copy.Replace
+				}})
+		if err != nil {
+			return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
+		}
+	}
+
+	// Copy pipeline specific config
+	err := copy.Copy(filepath.Join(templateDir, cp.pluginConfig.TektonPipelinePath, cp.pluginConfig.PipelineConfigSyncPath),
+		filepath.Join(reqRepo, cp.pluginConfig.TektonPipelinePath, req.PipelineName),
+		copy.Options{
+			OnDirExists: func(src, dest string) copy.DirExistsAction {
+				return copy.Replace
+			}})
+	if err != nil {
+		return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
+	}
+
+	return nil
+}
+
+func (cp *TektonApp) deployArgoCDApps(ctx context.Context, customerRepo string) (err error) {
+	logger.Infof("%d main apps to deploy", len(cp.pluginConfig.ArgoCDApps))
+
+	for _, argoApp := range cp.pluginConfig.ArgoCDApps {
+		appPath := filepath.Join(customerRepo, argoApp.MainAppGitPath)
+		err = cp.deployArgoCDApp(ctx, appPath, nil, argoApp.SynchApp)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (cp *TektonApp) deployArgoCDApp(ctx context.Context, appPath string, childApps []string, synchApp bool) (err error) {
+	ns, resName, err := cp.helper.DeployMainApp(ctx, appPath)
+	if err != nil {
+		return errors.WithMessage(err, "failed to deploy main app")
+	}
+	logger.Infof("deployed provider config main-app %s", resName)
+
+	if synchApp {
+		err = cp.helper.SyncArgoCDApp(ctx, ns, resName)
+		if err != nil {
+			return errors.WithMessage(err, "failed to sync argocd app")
+		}
+		logger.Infof("synched provider config main-app %s", resName)
+
+		err = cp.helper.WaitForArgoCDToSync(ctx, ns, resName)
+		if err != nil {
+			return errors.WithMessage(err, "failed to fetch argocd app")
+		}
+
+		err = cp.syncArgoCDChildApps(ctx, ns, childApps)
+		if err != nil {
+			return errors.WithMessage(err, "failed to synch argocd child app")
+		}
+		logger.Infof("synched provider config child apps")
+	}
+	return nil
+}
+
+func (cp *TektonApp) syncArgoCDChildApps(ctx context.Context, namespace string, apps []string) error {
+	for _, appName := range apps {
+		err := cp.helper.SyncArgoCDApp(ctx, namespace, appName)
+		if err != nil {
+			return fmt.Errorf("failed to sync app %s, %v", appName, err)
+		}
+		logger.Infof("synched provider config child-app %s", appName)
+
+		err = cp.helper.WaitForArgoCDToSync(ctx, namespace, appName)
+		if err != nil {
+			return fmt.Errorf("failed to get sync status of app %s, %v", appName, err)
+		}
+	}
+	return nil
+}
+
+func replaceCaptenUrls(dir string, src, target string) error {
+	if !strings.HasSuffix(src, ".git") {
+		src += ".git"
+	}
+
+	if !strings.HasSuffix(target, ".git") {
+		target += ".git"
+	}
+
+	fileList := []string{}
+	if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if !info.IsDir() && strings.HasSuffix(path, ".yaml") {
+			fileList = append(fileList, path)
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	for _, filePath := range fileList {
+		err := replaceInFile(filePath, src, target)
+		if err != nil {
+			logger.Errorf("Error replacing in %s: %v\n", filePath, err)
+		}
+	}
+	return nil
+}
+
+func replaceInFile(filePath, target, replacement string) error {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return err
+	}
+
+	newData := strings.Replace(string(data), target, replacement, -1)
+	err = os.WriteFile(filePath, []byte(newData), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func updateArgoCDTemplate(valuesFileName, pipelineName string) error {
+	data, err := os.ReadFile(valuesFileName)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := k8s.ConvertYamlToJson(data)
+	if err != nil {
+		return err
+	}
+
+	var tektonConfig TektonConfigValues
+	err = json.Unmarshal(jsonData, &tektonConfig)
+	if err != nil {
+		return err
+	}
+
+	tektonPipelines := []TektonPipeline{{Name: pipelineName}}
+
+	for _, pipeline := range *tektonConfig.TektonPipelines {
+		tektonPipelines = append(tektonPipelines, TektonPipeline{Name: pipeline.Name})
+	}
+
+	tektonConfig.TektonPipelines = &tektonPipelines
+
+	jsonBytes, err := json.Marshal(tektonConfig)
+	if err != nil {
+		return err
+	}
+
+	yamlBytes, err := k8s.ConvertJsonToYaml(jsonBytes)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
+	return err
+}
+
+func updatePipelineTemplate(valuesFileName, pipelineName string) error {
+	data, err := os.ReadFile(valuesFileName)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := k8s.ConvertYamlToJson(data)
+	if err != nil {
+		return err
+	}
+
+	var tektonPipelineConfig TektonPieplineConfigValues
+	err = json.Unmarshal(jsonData, &tektonPipelineConfig)
+	if err != nil {
+		return err
+	}
+
+	// GET dashboard and ingress domain suffix.
+	tektonPipelineConfig.IngressDomainName = strings.ReplaceAll(tektonPipelineConfig.IngressDomainName, "<NAME>", pipelineName)
+	tektonPipelineConfig.PipelineName = pipelineName
+	tektonPipelineConfig.TektonDashboard = pipelineName
+	secretName := []SecretNames{}
+
+	for _, secret := range secrets {
+		secretName = append(secretName, SecretNames{Name: secret + "-" + pipelineName})
+	}
+
+	tektonPipelineConfig.SecretName = &secretName
+
+	jsonBytes, err := json.Marshal(tektonPipelineConfig)
+	if err != nil {
+		return err
+	}
+
+	yamlBytes, err := k8s.ConvertJsonToYaml(jsonBytes)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
+	return err
+}

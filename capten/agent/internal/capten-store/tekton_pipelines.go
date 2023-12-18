@@ -6,22 +6,23 @@ import (
 	"time"
 
 	"github.com/gocql/gocql"
-	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
 )
 
 const (
-	insertTektonPipelines        = "INSERT INTO %s.TektonPipelines(id, pipeline_name, git_org_id, container_registry_id, last_update_time) VALUES (?,?,?,?,?)"
+	insertTektonPipelines        = "INSERT INTO %s.TektonPipelines(id, pipeline_name, git_org_id, container_registry_id, status, last_update_time, workflow_id, workflow_status) VALUES (?,?,?,?,?,?,?,?)"
 	updateTektonPipelinesById    = "UPDATE %s.TektonPipelines SET %s WHERE id=?"
 	selectAllTektonPipelines     = "SELECT id, pipeline_name, git_org_id, container_registry_id, last_update_time FROM %s.TektonPipelines"
 	selectGetTektonPipelinesById = "SELECT id, pipeline_name, git_org_id, container_registry_id, last_update_time FROM %s.TektonPipelines WHERE id=%s;"
 )
 
-func (a *Store) UpsertTektonPipelines(config *captenpluginspb.TektonPipelines) error {
+func (a *Store) UpsertTektonPipelines(config *model.TektonPipeline) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(insertTektonPipelines, a.keyspace), config.Id,
-		config.PipelineName, config.GitOrgId, config.ContainerRegistryId, config.LastUpdateTime)
+		config.PipelineName, config.GitProjectId, config.ContainerRegId, config.Status,
+		config.LastUpdateTime, config.WorkflowId, config.WorkflowStatus)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
 		updatePlaceholders, values := formUpdateKvPairsForTektonPipelines(config)
@@ -37,7 +38,7 @@ func (a *Store) UpsertTektonPipelines(config *captenpluginspb.TektonPipelines) e
 	return err
 }
 
-func (a *Store) GetTektonPipelinesForID(id string) (*captenpluginspb.TektonPipelines, error) {
+func (a *Store) GetTektonPipelinesForID(id string) (*model.TektonPipeline, error) {
 	query := fmt.Sprintf(selectGetTektonPipelinesById, a.keyspace, id)
 	projects, err := a.executeTektonPipelinessSelectQuery(query)
 	if err != nil {
@@ -50,29 +51,29 @@ func (a *Store) GetTektonPipelinesForID(id string) (*captenpluginspb.TektonPipel
 	return projects[0], nil
 }
 
-func (a *Store) GetTektonPipeliness() ([]*captenpluginspb.TektonPipelines, error) {
+func (a *Store) GetTektonPipeliness() ([]*model.TektonPipeline, error) {
 	query := fmt.Sprintf(selectAllTektonPipelines, a.keyspace)
 	return a.executeTektonPipelinessSelectQuery(query)
 }
 
-func (a *Store) executeTektonPipelinessSelectQuery(query string) ([]*captenpluginspb.TektonPipelines, error) {
+func (a *Store) executeTektonPipelinessSelectQuery(query string) ([]*model.TektonPipeline, error) {
 	selectQuery := a.client.Session().Query(query)
 	iter := selectQuery.Iter()
 
-	project := captenpluginspb.TektonPipelines{}
+	project := &model.TektonPipeline{}
 
-	ret := make([]*captenpluginspb.TektonPipelines, 0)
+	ret := make([]*model.TektonPipeline, 0)
 	for iter.Scan(
 		&project.Id, &project.PipelineName,
-		&project.GitOrgId, &project.ContainerRegistryId, &project.Status, &project.LastUpdateTime,
+		&project.GitProjectId, &project.ContainerRegId, &project.Status, &project.LastUpdateTime,
 	) {
-		TektonPipelines := &captenpluginspb.TektonPipelines{
-			Id:                  project.Id,
-			PipelineName:        project.PipelineName,
-			LastUpdateTime:      project.LastUpdateTime,
-			GitOrgId:            project.GitOrgId,
-			ContainerRegistryId: project.ContainerRegistryId,
-			Status:              project.Status,
+		TektonPipelines := &model.TektonPipeline{
+			Id:             project.Id,
+			PipelineName:   project.PipelineName,
+			LastUpdateTime: project.LastUpdateTime,
+			GitProjectId:   project.GitProjectId,
+			ContainerRegId: project.ContainerRegId,
+			Status:         project.Status,
 		}
 		ret = append(ret, TektonPipelines)
 	}
@@ -84,12 +85,12 @@ func (a *Store) executeTektonPipelinessSelectQuery(query string) ([]*captenplugi
 	return ret, nil
 }
 
-func formUpdateKvPairsForTektonPipelines(config *captenpluginspb.TektonPipelines) (updatePlaceholders string, values []interface{}) {
+func formUpdateKvPairsForTektonPipelines(config *model.TektonPipeline) (updatePlaceholders string, values []interface{}) {
 	params := []string{}
 
-	if config.GitOrgId != "" {
+	if config.GitProjectId != "" {
 		params = append(params, "git_org_id = ?")
-		values = append(values, config.GitOrgId)
+		values = append(values, config.GitProjectId)
 	}
 
 	if config.LastUpdateTime != "" {
@@ -97,13 +98,23 @@ func formUpdateKvPairsForTektonPipelines(config *captenpluginspb.TektonPipelines
 		values = append(values, config.LastUpdateTime)
 	}
 
-	if len(config.ContainerRegistryId) != 0 {
+	if len(config.ContainerRegId) != 0 {
 		params = append(params, "container_registry_id = ?")
-		values = append(values, config.ContainerRegistryId)
+		values = append(values, config.ContainerRegId)
 	}
 
 	if config.Status != "" {
 		params = append(params, "status = ?")
+		values = append(values, config.Status)
+	}
+
+	if config.WorkflowStatus != "" {
+		params = append(params, "workflow_status = ?")
+		values = append(values, config.Status)
+	}
+
+	if config.WorkflowId != "" {
+		params = append(params, "workflow_id = ?")
 		values = append(values, config.Status)
 	}
 
