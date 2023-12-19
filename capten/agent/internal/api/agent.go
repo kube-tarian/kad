@@ -8,8 +8,8 @@ import (
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 )
 
 var _ agentpb.AgentServer = &Agent{}
