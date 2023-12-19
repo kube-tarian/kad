@@ -53,7 +53,7 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 	}, nil
 }
 
-func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenpluginspb.UpdateTektonPipelinesRequest) (
+func (a *Agent) UpdateTektonPipelines(ctx context.Context, request *captenpluginspb.UpdateTektonPipelinesRequest) (
 	*captenpluginspb.UpdateTektonPipelinesResponse, error) {
 	if err := validateArgs(request.GitOrgId, request.Id, request.ContainerRegistryId); err != nil {
 		a.log.Infof("request validation failed", err)
@@ -94,7 +94,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 	}, nil
 }
 
-func (a *Agent) GetTektonPipeline(ctx context.Context, request *captenpluginspb.GetTektonPipelinesRequest) (
+func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb.GetTektonPipelinesRequest) (
 	*captenpluginspb.GetTektonPipelinesResponse, error) {
 	a.log.Infof("Get tekton pipeline request recieved")
 	res, err := a.as.GetTektonPipeliness()
