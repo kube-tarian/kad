@@ -43,8 +43,8 @@ func processConfigurationActivity(ctx context.Context, params model.ConfigurePar
 		}
 		status, err := cp.configureProjectAndApps(ctx, reqLocal)
 		if err != nil {
-			logger.Errorf("failed to configure crossplane project for %s, %v", model.TektonPipelineSync, err)
-			return status, fmt.Errorf("failed to configure crossplane project for %s", model.TektonPipelineSync)
+			logger.Errorf("failed to configure tekton project for %s, %v", model.TektonPipelineSync, err)
+			return status, fmt.Errorf("failed to configure tekton project for %s", model.TektonPipelineSync)
 		}
 		return status, nil
 	default:

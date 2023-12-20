@@ -70,14 +70,20 @@ func (ca *AppGitConfigHelper) getAccessToken(ctx context.Context, projectId stri
 	return cred[gitProjectAccessTokenAttribute], nil
 }
 
-func (ca *AppGitConfigHelper) CloneTemplateRepo(repoURL string) (templateDir string, err error) {
+func (ca *AppGitConfigHelper) CloneTemplateRepo(ctx context.Context, repoURL, projectId string) (templateDir string, err error) {
+	accessToken, err := ca.getAccessToken(ctx, projectId)
+	if err != nil {
+		err = fmt.Errorf("failed to get token from vault, %v", err)
+		return
+	}
+
 	templateDir, err = os.MkdirTemp(ca.cfg.GitCloneDir, tmpGitProjectCloneStr)
 	if err != nil {
 		err = fmt.Errorf("failed to create template tmp dir, err: %v", err)
 		return
 	}
 
-	if err = ca.gitClient.Clone(templateDir, repoURL, ""); err != nil {
+	if err = ca.gitClient.Clone(templateDir, repoURL, accessToken); err != nil {
 		os.RemoveAll(templateDir)
 		err = fmt.Errorf("failed to Clone template repo, err: %v", err)
 		return
