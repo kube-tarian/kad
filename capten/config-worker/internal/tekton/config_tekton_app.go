@@ -269,6 +269,10 @@ func updateArgoCDTemplate(valuesFileName, pipelineName string) error {
 
 	tektonPipelines := []TektonPipeline{{Name: pipelineName}}
 
+	if tektonConfig.TektonPipelines == nil {
+		tektonConfig.TektonPipelines = &[]TektonPipeline{}
+	}
+
 	for _, pipeline := range *tektonConfig.TektonPipelines {
 		tektonPipelines = append(tektonPipelines, TektonPipeline{Name: pipeline.Name})
 	}
