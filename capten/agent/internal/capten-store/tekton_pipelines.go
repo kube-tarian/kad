@@ -13,8 +13,8 @@ import (
 const (
 	insertTektonPipelines        = "INSERT INTO %s.TektonPipelines(id, pipeline_name, git_org_id, container_registry_id, status, last_update_time, workflow_id, workflow_status) VALUES (?,?,?,?,?,?,?,?)"
 	updateTektonPipelinesById    = "UPDATE %s.TektonPipelines SET %s WHERE id=?"
-	selectAllTektonPipelines     = "SELECT id, pipeline_name, git_org_id, container_registry_id, last_update_time FROM %s.TektonPipelines"
-	selectGetTektonPipelinesById = "SELECT id, pipeline_name, git_org_id, container_registry_id, last_update_time FROM %s.TektonPipelines WHERE id=%s;"
+	selectAllTektonPipelines     = "SELECT id, pipeline_name, git_org_id, container_registry_id, status, last_update_time FROM %s.TektonPipelines"
+	selectGetTektonPipelinesById = "SELECT id, pipeline_name, git_org_id, container_registry_id, status, last_update_time FROM %s.TektonPipelines WHERE id=%s;"
 )
 
 func (a *Store) UpsertTektonPipelines(config *model.TektonPipeline) error {

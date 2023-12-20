@@ -124,14 +124,16 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 }
 
 func (cp *TektonApp) synchPipelineConfig(req *model.TektonPipelineUseCase, templateDir, reqRepo string) error {
-	for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.TektonPipelinePath, cp.pluginConfig.PipelineClusterConfigSyncPath)} {
-		err := copy.Copy(filepath.Join(templateDir, config), filepath.Join(reqRepo, config),
-			copy.Options{
-				OnDirExists: func(src, dest string) copy.DirExistsAction {
-					return copy.Replace
-				}})
-		if err != nil {
-			return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
+	if _, err := os.Stat(filepath.Join(reqRepo, cp.pluginConfig.TektonProject)); err != nil {
+		for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.TektonPipelinePath, cp.pluginConfig.PipelineClusterConfigSyncPath)} {
+			err := copy.Copy(filepath.Join(templateDir, config), filepath.Join(reqRepo, config),
+				copy.Options{
+					OnDirExists: func(src, dest string) copy.DirExistsAction {
+						return copy.Replace
+					}})
+			if err != nil {
+				return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
+			}
 		}
 	}
 
@@ -305,7 +307,7 @@ func updatePipelineTemplate(valuesFileName, pipelineName string) error {
 	}
 
 	// GET dashboard and ingress domain suffix.
-	tektonPipelineConfig.IngressDomainName = strings.ReplaceAll(tektonPipelineConfig.IngressDomainName, "<NAME>", pipelineName)
+	tektonPipelineConfig.IngressDomainName = "test"
 	tektonPipelineConfig.PipelineName = pipelineName
 	tektonPipelineConfig.TektonDashboard = pipelineName
 	secretName := []SecretNames{}
