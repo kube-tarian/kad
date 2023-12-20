@@ -16,12 +16,6 @@ func (a *ArgoCDClient) CreateRepository(ctx context.Context, repo *Repository) (
 	}
 	defer io.Close(conn)
 
-	var repoUpsert bool
-	existingRepo, err := a.GetRepository(ctx, repo.Repo)
-	if existingRepo != nil && err == nil {
-		repoUpsert = true
-	}
-
 	resp, err := appClient.CreateRepository(ctx, &repository.RepoCreateRequest{
 		Repo: &v1alpha1.Repository{
 			Project:               repo.Project,
@@ -37,7 +31,7 @@ func (a *ArgoCDClient) CreateRepository(ctx context.Context, repo *Repository) (
 				Message: repo.ConnectionState.Message,
 			},
 		},
-		Upsert: repoUpsert,
+		Upsert: repo.Upsert,
 	})
 	if err != nil {
 		return nil, err
