@@ -204,10 +204,6 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 
 	for _, clusterCliam := range clusterCliams {
 
-		// if ok := h.checkForClusterUpdate(clusterCliam); !ok {
-		// 	continue
-		// }
-
 		h.log.Infof("processing cluster claim %s", clusterCliam.Metadata.Name)
 		readyStatus := h.getClusterClaimStatus(clusterCliam.Status.Conditions)
 		h.log.Infof("cluster claim %s status: %s-%s-%s", clusterCliam.Metadata.Name,
