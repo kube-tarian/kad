@@ -447,43 +447,6 @@ func (h *ClusterClaimSyncHandler) syncClusterClaimsWithDB(clusterClaims []model.
 	return nil
 }
 
-func (h *ClusterClaimSyncHandler) checkForClusterUpdate(clusterCliam model.ClusterClaim) bool {
-
-	var statues []string
-	for _, condition := range clusterCliam.Status.Conditions {
-		statues = append(statues, condition.Status)
-	}
-
-	sameStatues := isSameStatues(clusterCache[clusterCliam.Metadata.Name].Statuses, statues)
-	if !sameStatues || clusterCache[clusterCliam.Metadata.Name].NodePoolStatus != clusterCliam.Status.NodePoolStatus ||
-		clusterCache[clusterCliam.Metadata.Name].ControlPlaneStatus != clusterCliam.Status.ControlPlaneStatus {
-		clusterCache[clusterCliam.Metadata.Name] = ClusterCache{
-			Statuses:           statues,
-			NodePoolStatus:     clusterCliam.Status.NodePoolStatus,
-			ControlPlaneStatus: clusterCliam.Status.ControlPlaneStatus,
-		}
-
-		return true
-	}
-
-	return false
-}
-
-func isSameStatues(oldValues, newValues []string) bool {
-	mu.Lock()
-	defer mu.Unlock()
-
-	// Sort the values in lexicographical order
-	sort.Strings(newValues)
-
-	// Check if the new set of values is different from the previous one
-	if !reflect.DeepEqual(oldValues, newValues) {
-		return false
-	} else {
-		return true
-	}
-}
-
 func clusterUpdateCheck(clusterCliams []model.ClusterClaim) {
 	mu.Lock()
 	defer mu.Unlock()
