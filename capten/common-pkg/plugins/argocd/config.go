@@ -27,4 +27,5 @@ type Repository struct {
 	EnableLFS             bool            `json:"EnableLFS"`
 	InsecureIgnoreHostKey bool            `json:"InsecureIgnoreHostKey"`
 	ConnectionState       ConnectionState `json:"ConnectionState"`
+	Upsert                bool            `json:"Upsert"`
 }
