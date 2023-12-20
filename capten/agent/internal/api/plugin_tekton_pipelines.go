@@ -127,14 +127,17 @@ func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb
 }
 
 func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline) error {
+	a.log.Infof("configuring tekton pipeline for the git repo %s", req.GitProjectUrl)
 	tektonProject := model.TektonPipeline{}
 	proj, err := a.as.GetGitProjectForID(req.GitProjectId)
 	if err != nil {
 		tektonProject.Status = string(model.TektonPipelineConfigurationFailed)
 		tektonProject.WorkflowId = "NA"
 		if err := a.as.UpsertTektonPipelines(req); err != nil {
+			a.log.Errorf("failed to configure tekton pipelines for Gitopts Project, %v", err)
 			return fmt.Errorf("failed to configure tekton pipelines for Gitopts Project, %v", err)
 		}
+		a.log.Errorf("failed to send event to workflow to configure, %v", err)
 		return fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectId, err)
 	}
 
@@ -143,8 +146,10 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline) error
 		tektonProject.Status = string(model.TektonPipelineConfigurationFailed)
 		tektonProject.WorkflowId = "NA"
 		if err := a.as.UpsertTektonPipelines(req); err != nil {
+			a.log.Errorf("failed to onfigure tekton pipelines for Gitopts Project %v", err)
 			return fmt.Errorf("failed to configure tekton pipelines for Gitopts Project, %v", err)
 		}
+		a.log.Errorf("failed to send event to workflow to configure, %v", err)
 		return fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectId, err)
 	}
 	containerRegURLIdMap := make(map[string]string)
@@ -164,8 +169,10 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline) error
 		tektonProject.Status = string(model.TektonPipelineConfigurationFailed)
 		tektonProject.WorkflowId = "NA"
 		if err := a.as.UpsertTektonPipelines(req); err != nil {
+			a.log.Errorf("failed to tekton pipelines for Gitopts Project, %v", err)
 			return fmt.Errorf("failed to tekton pipelines for Gitopts Project, %v", err)
 		}
+		a.log.Errorf("failed to send event to workflow to configure, %v", err)
 		return fmt.Errorf("failed to send event to workflow to configure %s, %v", proj.ProjectUrl, err)
 	}
 
