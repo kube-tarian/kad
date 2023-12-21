@@ -51,7 +51,7 @@ type ManagedCluster struct {
 type ManagedClusterData map[string]ManagedCluster
 
 var (
-	managedClusterData ManagedClusterData
+	managedClusterData = make(ManagedClusterData)
 	mu                 sync.Mutex
 )
 
