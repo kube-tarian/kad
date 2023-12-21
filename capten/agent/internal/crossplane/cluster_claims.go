@@ -500,7 +500,7 @@ func updateCreds(clustername string, creds map[string]string) bool {
 
 		fmt.Println("cluster.Creds[k8sClusterCA] != creds[k8sClusterCA]")
 		fmt.Println(cluster.Creds[k8sClusterCA] != creds[k8sClusterCA])
-		fmt.Printf("cluster.Creds[kubeConfig] =>%s \n", cluster.Creds[kubeConfig])
+		fmt.Printf("cluster.Creds[k8sClusterCA] =>%s \n", cluster.Creds[k8sClusterCA])
 		fmt.Printf("creds[k8sClusterCA] =>%s \n", creds[k8sClusterCA])
 
 		fmt.Println("cluster.Creds[k8sEndpoint] != creds[k8sEndpoint]")
