@@ -248,6 +248,8 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 		cred[k8sEndpoint] = clusterEndpoint
 
 		if ok := updateCreds(clusterCliam.Metadata.Name, cred); ok {
+			h.log.Infof("updated creds for %s ", managedCluster.ClusterName)
+
 			err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, managedCluster.Id, cred)
 			if err != nil {
 				h.log.Errorf("failed to store credential for %s, %v", managedCluster.Id, err)
@@ -487,13 +489,6 @@ func clusterUpdateCheck(clusterCliams []model.ClusterClaim) {
 func updateCreds(clustername string, creds map[string]string) bool {
 	mu.Lock()
 	defer mu.Unlock()
-	v, _ := json.Marshal(managedClusterData)
-	fmt.Println("managedClusterData => \n" + string(v))
-
-	fmt.Println("clustername =>" + clustername)
-
-	y, _ := json.Marshal(creds)
-	fmt.Println("creds => \n" + string(y))
 
 	if cluster, ok := managedClusterData[clustername]; ok {
 		if cluster.Creds[kubeConfig] != creds[kubeConfig] || cluster.Creds[k8sClusterCA] != creds[k8sClusterCA] || cluster.Creds[k8sEndpoint] != creds[k8sEndpoint] {
