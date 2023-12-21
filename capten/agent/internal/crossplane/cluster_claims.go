@@ -469,6 +469,8 @@ func clusterUpdateCheck(clusterCliams []model.ClusterClaim) {
 				cluster.UpdateCluster = false
 			}
 		} else {
+			fmt.Println("Below cluster is getting added")
+			fmt.Println(clusterCliam.Metadata.Name)
 			managedClusterData[clusterCliam.Metadata.Name] = ManagedCluster{
 				Statuses:           statues,
 				NodePoolStatus:     clusterCliam.Status.NodePoolStatus,
