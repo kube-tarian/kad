@@ -1,5 +1,21 @@
 {
-    "git_repo": "https://github.com/intelops/capten-templates",
-    "git_config_path": "tekton",
-    "configure_main_app": "argocd/main-apps/tekton-main-app.yaml"
+    "templateGitRepo": "https://github.com/intelops/capten-templates",
+    "tektonProject": "cicd/tekton",
+    "tektonPipelinePath": "cicd/tekton-pipelines",
+    "pipelineClusterConfigSyncPath": "cluster-config",
+    "pipelineConfigSyncPath": "pipeline-template",
+    "pipelineSyncUpdate":{
+        "mainAppValues": "cicd/tekton/argocd-apps/values.yaml",
+        "pipelineValues": "cicd/tekton-pipelines/<NAME>/values.yaml"
+    },
+    "argoCDApps": [
+        {
+            "mainAppGitPath": "cicd/tekton/tekton-main-app.yaml",
+            "synchApp": true
+        },
+        {
+            "mainAppGitPath": "cicd/tekton/tekton-pipeline-cluster-config.yaml",
+            "synchApp": false
+        }
+    ]
 }

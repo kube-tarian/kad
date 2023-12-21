@@ -7,9 +7,9 @@ import (
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 )
 
 var _ agentpb.AgentServer = &Agent{}
@@ -57,6 +57,10 @@ func validateArgs(args ...any) error {
 				if len(v) == 0 {
 					return fmt.Errorf("map value empty for key: %v", k)
 				}
+			}
+		case []string:
+			if len(item) == 0 {
+				return fmt.Errorf("empty []string not allowed for arg index: %v", index)
 			}
 		default:
 			return fmt.Errorf("validation not implemented for this type")

@@ -5,7 +5,14 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/model"
+	captenmodel "github.com/kube-tarian/kad/capten/model"
+)
+
+const (
+	tektonPipelineConfigUseCase string = "tektonpipelines"
 )
 
 func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenpluginspb.CreateTektonPipelinesRequest) (
@@ -22,11 +29,11 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 
 	id := uuid.New()
 
-	TektonPipeline := captenpluginspb.TektonPipelines{
-		Id:                  id.String(),
-		PipelineName:        request.PipelineName,
-		GitOrgId:            request.GitOrgId,
-		ContainerRegistryId: request.ContainerRegistryId,
+	TektonPipeline := model.TektonPipeline{
+		Id:             id.String(),
+		PipelineName:   request.PipelineName,
+		GitProjectId:   request.GitOrgId,
+		ContainerRegId: request.ContainerRegistryId,
 	}
 	if err := a.as.UpsertTektonPipelines(&TektonPipeline); err != nil {
 		a.log.Errorf("failed to store create pipelines req to DB, %v", err)
@@ -36,6 +43,8 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
+	go a.configureTektonPipelinesGitRepo(&TektonPipeline)
+
 	a.log.Infof("create pipelines %s added with id %s", request.PipelineName, id.String())
 	return &captenpluginspb.CreateTektonPipelinesResponse{
 		Id:            id.String(),
@@ -44,7 +53,7 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 	}, nil
 }
 
-func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenpluginspb.UpdateTektonPipelinesRequest) (
+func (a *Agent) UpdateTektonPipelines(ctx context.Context, request *captenpluginspb.UpdateTektonPipelinesRequest) (
 	*captenpluginspb.UpdateTektonPipelinesResponse, error) {
 	if err := validateArgs(request.GitOrgId, request.Id, request.ContainerRegistryId); err != nil {
 		a.log.Infof("request validation failed", err)
@@ -64,10 +73,10 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		}, nil
 	}
 
-	TektonPipeline := captenpluginspb.TektonPipelines{
-		Id:                  id.String(),
-		ContainerRegistryId: request.ContainerRegistryId,
-		GitOrgId:            request.GitOrgId,
+	TektonPipeline := model.TektonPipeline{
+		Id:             id.String(),
+		ContainerRegId: request.ContainerRegistryId,
+		GitProjectId:   request.GitOrgId,
 	}
 
 	if err := a.as.UpsertTektonPipelines(&TektonPipeline); err != nil {
@@ -85,7 +94,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 	}, nil
 }
 
-func (a *Agent) GetTektonPipeline(ctx context.Context, request *captenpluginspb.GetTektonPipelinesRequest) (
+func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb.GetTektonPipelinesRequest) (
 	*captenpluginspb.GetTektonPipelinesResponse, error) {
 	a.log.Infof("Get tekton pipeline request recieved")
 	res, err := a.as.GetTektonPipeliness()
@@ -97,16 +106,111 @@ func (a *Agent) GetTektonPipeline(ctx context.Context, request *captenpluginspb.
 		}, nil
 	}
 
+	pipeline := make([]*captenpluginspb.TektonPipelines, len(res))
+
 	for _, r := range res {
 		// ## TODO Replace the host with tekton static name
 		r.WebhookURL = "" + r.PipelineName
+		p := &captenpluginspb.TektonPipelines{Id: r.Id, PipelineName: r.PipelineName,
+			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
+			ContainerRegistryId: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime}
+		pipeline = append(pipeline, p)
 	}
 
 	a.log.Infof("Found %d tekton pipelines", len(res))
 	return &captenpluginspb.GetTektonPipelinesResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "successful",
-		Pipelines:     res,
+		Pipelines:     pipeline,
 	}, nil
 
+}
+
+func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline) error {
+	a.log.Infof("configuring tekton pipeline for the git repo %s", req.GitProjectUrl)
+	tektonProject := model.TektonPipeline{}
+	proj, err := a.as.GetGitProjectForID(req.GitProjectId)
+	if err != nil {
+		tektonProject.Status = string(model.TektonPipelineConfigurationFailed)
+		tektonProject.WorkflowId = "NA"
+		if err := a.as.UpsertTektonPipelines(req); err != nil {
+			a.log.Errorf("failed to configure tekton pipelines for Gitopts Project, %v", err)
+			return fmt.Errorf("failed to configure tekton pipelines for Gitopts Project, %v", err)
+		}
+		a.log.Errorf("failed to send event to workflow to configure, %v", err)
+		return fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectId, err)
+	}
+
+	containerRegs, err := a.as.GetContainerRegistrys()
+	if err != nil {
+		tektonProject.Status = string(model.TektonPipelineConfigurationFailed)
+		tektonProject.WorkflowId = "NA"
+		if err := a.as.UpsertTektonPipelines(req); err != nil {
+			a.log.Errorf("failed to onfigure tekton pipelines for Gitopts Project %v", err)
+			return fmt.Errorf("failed to configure tekton pipelines for Gitopts Project, %v", err)
+		}
+		a.log.Errorf("failed to send event to workflow to configure, %v", err)
+		return fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectId, err)
+	}
+	containerRegURLIdMap := make(map[string]string)
+	for _, containerReg := range containerRegs {
+		containerRegURLIdMap[containerReg.Id] = containerReg.RegistryUrl
+	}
+
+	ci := captenmodel.TektonPipelineUseCase{Type: tektonPipelineConfigUseCase,
+		PipelineName: req.PipelineName, RepoURL: proj.ProjectUrl,
+		GitCredId: req.GitProjectId, ContainerRegUrlIdMap: containerRegURLIdMap,
+		ContainerRegCredIdentifier: containerRegEntityName, GitCredIdentifier: gitProjectEntityName}
+	wd := workers.NewConfig(a.tc, a.log)
+
+	wkfId, err := wd.SendAsyncEvent(context.TODO(),
+		&captenmodel.ConfigureParameters{Resource: tektonPipelineConfigUseCase, Action: model.TektonPipelineSync}, ci)
+	if err != nil {
+		tektonProject.Status = string(model.TektonPipelineConfigurationFailed)
+		tektonProject.WorkflowId = "NA"
+		if err := a.as.UpsertTektonPipelines(req); err != nil {
+			a.log.Errorf("failed to tekton pipelines for Gitopts Project, %v", err)
+			return fmt.Errorf("failed to tekton pipelines for Gitopts Project, %v", err)
+		}
+		a.log.Errorf("failed to send event to workflow to configure, %v", err)
+		return fmt.Errorf("failed to send event to workflow to configure %s, %v", proj.ProjectUrl, err)
+	}
+
+	a.log.Infof("tekton pipelines for Git project %s config workflow %s created", proj.ProjectUrl, wkfId)
+
+	tektonProject.Status = string(model.TektonPipelineConfigured)
+	tektonProject.WorkflowId = wkfId
+	tektonProject.WorkflowStatus = string(model.WorkFlowStatusStarted)
+	if err := a.as.UpsertTektonPipelines(req); err != nil {
+		a.log.Errorf("failed to update tekton pipelines for Gitopts Project, %v", err)
+		return nil
+	}
+
+	go a.monitorTektonPipelineWorkflow(req, wkfId)
+	a.log.Infof("tekton pipelines for Git project %s registration workflow monitor started", tektonProject.GitProjectUrl)
+	return nil
+}
+
+func (a *Agent) monitorTektonPipelineWorkflow(req *model.TektonPipeline, wkfId string) {
+	// during system reboot start monitoring, add it in map or somewhere.
+	wd := workers.NewConfig(a.tc, a.log)
+	wkfResp, err := wd.GetWorkflowInformation(context.TODO(), wkfId)
+	if err != nil {
+		req.Status = string(model.TektonPipelineConfigurationFailed)
+		req.WorkflowStatus = string(model.WorkFlowStatusFailed)
+		if err := a.as.UpsertTektonPipelines(req); err != nil {
+			a.log.Errorf("failed to configure tekton pipelines for Gitopts Project, %v", err)
+			return
+		}
+		a.log.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectUrl, err)
+		return
+	}
+
+	req.Status = string(model.TektonPipelineConfigured)
+	req.WorkflowStatus = wkfResp.Status
+	if err := a.as.UpsertTektonPipelines(req); err != nil {
+		a.log.Errorf("failed to configure tekton pipelines for Gitopts Project, %v", err)
+		return
+	}
+	a.log.Infof("tekton pipelines for Git project %s config workflow %s completed", req.GitProjectUrl, wkfId)
 }

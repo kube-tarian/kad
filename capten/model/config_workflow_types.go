@@ -30,6 +30,18 @@ type CrossplaneUseCase struct {
 	CrossplaneProviders []CrossplaneProvider `json:"ProviderInfo,omitempty"`
 }
 
+type TektonPipelineUseCase struct {
+	Type                       string            `json:"Type,omitempty"`
+	RepoURL                    string            `json:"RepoURL,omitempty"`
+	PipelineName               string            `json:"PipelineName,omitempty"`
+	GitCredIdentifier          string            `json:"GitCredIdentifier,omitempty"`
+	GitCredId                  string            `json:"GitCredId,omitempty"`
+	ContainerRegCredIdentifier string            `json:"ContainerRegCredIdentifier,omitempty"`
+	ContainerRegUrlIdMap       map[string]string `json:"ContainerRegUrlIdMap,omitempty"`
+	Timeout                    uint32            `json:"Timeout,omitempty"`
+	OverrideValues             map[string]string `json:"OverrideValues,omitempty"`
+}
+
 type CrossplaneClusterUpdate struct {
 	ManagedClusterName string `json:"managedClusterName,omitempty"`
 	ManagedClusterId   string `json:"managedClusterId,omitempty"`

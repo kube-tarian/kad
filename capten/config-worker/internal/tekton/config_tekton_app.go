@@ -1,4 +1,4 @@
-package crossplane
+package tekton
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/intelops/go-common/credentials"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	appconfig "github.com/kube-tarian/kad/capten/config-worker/internal/app_config"
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
@@ -17,19 +17,21 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	secrets = []string{"gitcred", "docker-credentials", "github-webhook-secret"}
+)
+
 type Config struct {
-	PluginConfigFile        string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
-	CloudProviderEntityName string `envconfig:"CLOUD_PROVIDER_ENTITY_NAME" default:"cloud-provider"`
-	DomainName              string `envconfig:"DOMAIN_NAME" default:"capten"`
+	PluginConfigFile string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
 }
 
-type CrossPlaneApp struct {
+type TektonApp struct {
 	helper       *appconfig.AppGitConfigHelper
-	pluginConfig *crossplanePluginConfig
+	pluginConfig *tektonPluginConfig
 	cfg          Config
 }
 
-func NewCrossPlaneApp() (*CrossPlaneApp, error) {
+func NewTektonApp() (*TektonApp, error) {
 	cfg := Config{}
 	if err := envconfig.Process("", &cfg); err != nil {
 		return nil, err
@@ -40,20 +42,20 @@ func NewCrossPlaneApp() (*CrossPlaneApp, error) {
 		return nil, err
 	}
 
-	pluginConfig, err := readCrossPlanePluginConfig(cfg.PluginConfigFile)
+	pluginConfig, err := readTektonPluginConfig(cfg.PluginConfigFile)
 	if err != nil {
 		return nil, err
 	}
-	return &CrossPlaneApp{pluginConfig: pluginConfig, helper: helper, cfg: cfg}, err
+	return &TektonApp{pluginConfig: pluginConfig, helper: helper, cfg: cfg}, err
 }
 
-func readCrossPlanePluginConfig(pluginFile string) (*crossplanePluginConfig, error) {
+func readTektonPluginConfig(pluginFile string) (*tektonPluginConfig, error) {
 	data, err := os.ReadFile(filepath.Clean(pluginFile))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read pluginConfig File: %s, err: %w", pluginFile, err)
 	}
 
-	var pluginData crossplanePluginConfig
+	var pluginData tektonPluginConfig
 	err = json.Unmarshal(data, &pluginData)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
@@ -61,15 +63,15 @@ func readCrossPlanePluginConfig(pluginFile string) (*crossplanePluginConfig, err
 	return &pluginData, nil
 }
 
-func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {
+func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.TektonPipelineUseCase) (status string, err error) {
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
-	templateRepo, err := cp.helper.CloneTemplateRepo(ctx, cp.pluginConfig.TemplateGitRepo, req.VaultCredIdentifier)
+	templateRepo, err := cp.helper.CloneTemplateRepo(ctx, cp.pluginConfig.TemplateGitRepo, req.GitCredId)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
 	defer os.RemoveAll(templateRepo)
 
-	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.VaultCredIdentifier)
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.GitCredId)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
@@ -77,7 +79,7 @@ func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model
 
 	defer os.RemoveAll(customerRepo)
 
-	err = cp.synchProviders(req, templateRepo, customerRepo)
+	err = cp.synchPipelineConfig(req, templateRepo, customerRepo)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update configs to repo")
 	}
@@ -88,6 +90,19 @@ func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace template url")
 	}
 	logger.Infof("updated resource configurations in cloned project %s", req.RepoURL)
+
+	err = updateArgoCDTemplate(filepath.Join(customerRepo, cp.pluginConfig.PipelineSyncUpdate.MainAppValues), req.PipelineName)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updateArgoCDTemplate")
+	}
+
+	err = updatePipelineTemplate(filepath.Join(customerRepo,
+		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updatePipelineTemplate")
+	}
+
+	// CREATE K8s Secret for docker, github-secret, github-webook
 
 	err = cp.helper.AddFilesToRepo([]string{"."})
 	if err != nil {
@@ -108,14 +123,23 @@ func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model
 	return string(agentmodel.WorkFlowStatusCompleted), nil
 }
 
-func (cp *CrossPlaneApp) synchProviders(req *model.CrossplaneUseCase, templateDir, reqRepo string) error {
-	err := cp.createProviderConfigs(filepath.Join(templateDir, cp.pluginConfig.ProviderConfigSyncPath), req)
-	if err != nil {
-		return fmt.Errorf("failed to create provider config, %v", err)
+func (cp *TektonApp) synchPipelineConfig(req *model.TektonPipelineUseCase, templateDir, reqRepo string) error {
+	if _, err := os.Stat(filepath.Join(reqRepo, cp.pluginConfig.TektonProject)); err != nil {
+		for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.TektonPipelinePath, cp.pluginConfig.PipelineClusterConfigSyncPath)} {
+			err := copy.Copy(filepath.Join(templateDir, config), filepath.Join(reqRepo, config),
+				copy.Options{
+					OnDirExists: func(src, dest string) copy.DirExistsAction {
+						return copy.Replace
+					}})
+			if err != nil {
+				return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
+			}
+		}
 	}
 
-	err = copy.Copy(filepath.Join(templateDir, cp.pluginConfig.CrossplaneConfigSyncPath),
-		filepath.Join(reqRepo, cp.pluginConfig.CrossplaneConfigSyncPath),
+	// Copy pipeline specific config
+	err := copy.Copy(filepath.Join(templateDir, cp.pluginConfig.TektonPipelinePath, cp.pluginConfig.PipelineConfigSyncPath),
+		filepath.Join(reqRepo, cp.pluginConfig.TektonPipelinePath, req.PipelineName),
 		copy.Options{
 			OnDirExists: func(src, dest string) copy.DirExistsAction {
 				return copy.Replace
@@ -123,15 +147,16 @@ func (cp *CrossPlaneApp) synchProviders(req *model.CrossplaneUseCase, templateDi
 	if err != nil {
 		return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
 	}
+
 	return nil
 }
 
-func (cp *CrossPlaneApp) deployArgoCDApps(ctx context.Context, customerRepo string) (err error) {
+func (cp *TektonApp) deployArgoCDApps(ctx context.Context, customerRepo string) (err error) {
 	logger.Infof("%d main apps to deploy", len(cp.pluginConfig.ArgoCDApps))
 
 	for _, argoApp := range cp.pluginConfig.ArgoCDApps {
 		appPath := filepath.Join(customerRepo, argoApp.MainAppGitPath)
-		err = cp.deployArgoCDApp(ctx, appPath, argoApp.ChildAppNames, argoApp.SynchApp)
+		err = cp.deployArgoCDApp(ctx, appPath, nil, argoApp.SynchApp)
 		if err != nil {
 			return err
 		}
@@ -139,7 +164,7 @@ func (cp *CrossPlaneApp) deployArgoCDApps(ctx context.Context, customerRepo stri
 	return nil
 }
 
-func (cp *CrossPlaneApp) deployArgoCDApp(ctx context.Context, appPath string, childApps []string, synchApp bool) (err error) {
+func (cp *TektonApp) deployArgoCDApp(ctx context.Context, appPath string, childApps []string, synchApp bool) (err error) {
 	ns, resName, err := cp.helper.DeployMainApp(ctx, appPath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to deploy main app")
@@ -167,7 +192,7 @@ func (cp *CrossPlaneApp) deployArgoCDApp(ctx context.Context, appPath string, ch
 	return nil
 }
 
-func (cp *CrossPlaneApp) syncArgoCDChildApps(ctx context.Context, namespace string, apps []string) error {
+func (cp *TektonApp) syncArgoCDChildApps(ctx context.Context, namespace string, apps []string) error {
 	for _, appName := range apps {
 		err := cp.helper.SyncArgoCDApp(ctx, namespace, appName)
 		if err != nil {
@@ -181,72 +206,6 @@ func (cp *CrossPlaneApp) syncArgoCDChildApps(ctx context.Context, namespace stri
 		}
 	}
 	return nil
-}
-
-func (cp *CrossPlaneApp) createProviderConfigs(dir string, req *model.CrossplaneUseCase) error {
-	logger.Infof("processing %d crossplane providers to generate provider config", len(req.CrossplaneProviders))
-	for _, provider := range req.CrossplaneProviders {
-		providerName := strings.ToLower(provider.ProviderName)
-		providerFile := filepath.Join(dir, fmt.Sprintf("%s-provider.yaml", providerName))
-		dir := filepath.Dir(providerFile)
-		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-			return fmt.Errorf("failed to create dir %s, %v", dir, err)
-		}
-
-		file, err := os.Create(providerFile)
-		if err != nil {
-			return fmt.Errorf("failed to create file %s, %v", providerFile, err)
-		}
-		defer file.Close()
-
-		providerConfigString, err := cp.createProviderConfigResource(provider, req)
-		if err != nil {
-			return fmt.Errorf("failed prepare provider %s config: %v", providerName, err)
-		}
-
-		if _, err := file.WriteString(providerConfigString); err != nil {
-			return fmt.Errorf("failed to write provider %s config to %s, %v", providerName, providerFile, err)
-		}
-		logger.Infof("crossplane provider %s config written to %s", providerName, providerFile)
-	}
-	return nil
-}
-
-func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.CrossplaneProvider, req *model.CrossplaneUseCase) (string, error) {
-	cloudType := strings.ToLower(provider.CloudType)
-	pkg, found := cp.pluginConfig.ProviderPackages[cloudType]
-	if !found {
-		return "", fmt.Errorf("plugin package not found")
-	}
-
-	secretPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, cp.cfg.CloudProviderEntityName, provider.CloudProviderId)
-
-	switch provider.CloudType {
-	case "AWS":
-		providerConfigString := fmt.Sprintf(
-			crossplaneAWSProviderTemplate,
-			cloudType, secretPath, secretPath,
-			cloudType, pkg, cloudType,
-		)
-		return providerConfigString, nil
-	case "GCP":
-		providerConfigString := fmt.Sprintf(
-			crossplaneGCPProviderTemplate,
-			cloudType, secretPath, secretPath,
-			cloudType, pkg, cloudType,
-		)
-		return providerConfigString, nil
-	case "AZURE":
-		providerConfigString := fmt.Sprintf(
-			crossplaneAzureProviderTemplate,
-			cloudType, secretPath, secretPath,
-			cloudType, pkg, cloudType,
-		)
-		return providerConfigString, nil
-	default:
-		return "", fmt.Errorf("cloud type %s not supported", provider.CloudType)
-	}
-
 }
 
 func replaceCaptenUrls(dir string, src, target string) error {
@@ -289,4 +248,90 @@ func replaceInFile(filePath, target, replacement string) error {
 		return err
 	}
 	return nil
+}
+
+func updateArgoCDTemplate(valuesFileName, pipelineName string) error {
+	data, err := os.ReadFile(valuesFileName)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := k8s.ConvertYamlToJson(data)
+	if err != nil {
+		return err
+	}
+
+	var tektonConfig TektonConfigValues
+	err = json.Unmarshal(jsonData, &tektonConfig)
+	if err != nil {
+		return err
+	}
+
+	tektonPipelines := []TektonPipeline{{Name: pipelineName}}
+
+	if tektonConfig.TektonPipelines == nil {
+		tektonConfig.TektonPipelines = &[]TektonPipeline{}
+	}
+
+	for _, pipeline := range *tektonConfig.TektonPipelines {
+		tektonPipelines = append(tektonPipelines, TektonPipeline{Name: pipeline.Name})
+	}
+
+	tektonConfig.TektonPipelines = &tektonPipelines
+
+	jsonBytes, err := json.Marshal(tektonConfig)
+	if err != nil {
+		return err
+	}
+
+	yamlBytes, err := k8s.ConvertJsonToYaml(jsonBytes)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
+	return err
+}
+
+func updatePipelineTemplate(valuesFileName, pipelineName string) error {
+	data, err := os.ReadFile(valuesFileName)
+	if err != nil {
+		return err
+	}
+
+	jsonData, err := k8s.ConvertYamlToJson(data)
+	if err != nil {
+		return err
+	}
+
+	var tektonPipelineConfig TektonPieplineConfigValues
+	err = json.Unmarshal(jsonData, &tektonPipelineConfig)
+	if err != nil {
+		return err
+	}
+
+	// GET dashboard and ingress domain suffix.
+	tektonPipelineConfig.IngressDomainName = "test"
+	tektonPipelineConfig.PipelineName = pipelineName
+	tektonPipelineConfig.TektonDashboard = pipelineName
+	secretName := []SecretNames{}
+
+	for _, secret := range secrets {
+		secretName = append(secretName, SecretNames{Name: secret + "-" + pipelineName})
+	}
+
+	tektonPipelineConfig.SecretName = &secretName
+
+	jsonBytes, err := json.Marshal(tektonPipelineConfig)
+	if err != nil {
+		return err
+	}
+
+	yamlBytes, err := k8s.ConvertJsonToYaml(jsonBytes)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
+	return err
 }

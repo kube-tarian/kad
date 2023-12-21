@@ -16,7 +16,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/intelops/go-common/credentials"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 )
 
 const ManagedClusterEntityName = "managedcluster"

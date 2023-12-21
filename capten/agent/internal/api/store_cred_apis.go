@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 
 	"github.com/intelops/go-common/credentials"
