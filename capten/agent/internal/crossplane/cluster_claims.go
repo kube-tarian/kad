@@ -464,10 +464,14 @@ func clusterUpdateCheck(clusterCliams []model.ClusterClaim) {
 
 			if !isSameStatus || cluster.NodePoolStatus != clusterCliam.Status.NodePoolStatus ||
 				cluster.ControlPlaneStatus != clusterCliam.Status.ControlPlaneStatus {
+				cluster.Statuses = statues
+				cluster.NodePoolStatus = clusterCliam.Status.NodePoolStatus
+				cluster.ControlPlaneStatus = clusterCliam.Status.ControlPlaneStatus
 				cluster.UpdateCluster = true
 			} else {
 				cluster.UpdateCluster = false
 			}
+			managedClusterData[clusterCliam.Metadata.Name] = cluster
 		} else {
 			fmt.Println("Below cluster is getting added")
 			fmt.Println(clusterCliam.Metadata.Name)
@@ -491,6 +495,7 @@ func updateCreds(clustername string, creds map[string]string) bool {
 			cluster.Creds[kubeConfig] = creds[kubeConfig]
 			cluster.Creds[k8sClusterCA] = creds[k8sClusterCA]
 			cluster.Creds[k8sEndpoint] = creds[k8sEndpoint]
+			managedClusterData[clustername] = cluster
 			return true
 		}
 	}
