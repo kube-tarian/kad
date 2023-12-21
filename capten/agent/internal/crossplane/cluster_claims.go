@@ -473,8 +473,6 @@ func clusterUpdateCheck(clusterCliams []model.ClusterClaim) {
 			}
 			managedClusterData[clusterCliam.Metadata.Name] = cluster
 		} else {
-			fmt.Println("Below cluster is getting added")
-			fmt.Println(clusterCliam.Metadata.Name)
 			managedClusterData[clusterCliam.Metadata.Name] = ManagedCluster{
 				Statuses:           statues,
 				NodePoolStatus:     clusterCliam.Status.NodePoolStatus,
@@ -489,6 +487,13 @@ func clusterUpdateCheck(clusterCliams []model.ClusterClaim) {
 func updateCreds(clustername string, creds map[string]string) bool {
 	mu.Lock()
 	defer mu.Unlock()
+	v, _ := json.Marshal(managedClusterData)
+	fmt.Println("managedClusterData => \n" + string(v))
+
+	fmt.Println("clustername =>" + clustername)
+
+	y, _ := json.Marshal(creds)
+	fmt.Println("creds => \n" + string(y))
 
 	if cluster, ok := managedClusterData[clustername]; ok {
 		if cluster.Creds[kubeConfig] != creds[kubeConfig] || cluster.Creds[k8sClusterCA] != creds[k8sClusterCA] || cluster.Creds[k8sEndpoint] != creds[k8sEndpoint] {
