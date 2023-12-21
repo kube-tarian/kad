@@ -497,9 +497,11 @@ func updateCreds(clustername string, creds map[string]string) bool {
 
 	if cluster, ok := managedClusterData[clustername]; ok {
 		if cluster.Creds[kubeConfig] != creds[kubeConfig] || cluster.Creds[k8sClusterCA] != creds[k8sClusterCA] || cluster.Creds[k8sEndpoint] != creds[k8sEndpoint] {
-			cluster.Creds[kubeConfig] = creds[kubeConfig]
-			cluster.Creds[k8sClusterCA] = creds[k8sClusterCA]
-			cluster.Creds[k8sEndpoint] = creds[k8sEndpoint]
+			cluster.Creds = map[string]string{
+				kubeConfig:   creds[kubeConfig],
+				k8sClusterCA: creds[k8sClusterCA],
+				k8sEndpoint:  creds[k8sEndpoint],
+			}
 			managedClusterData[clustername] = cluster
 			return true
 		}
