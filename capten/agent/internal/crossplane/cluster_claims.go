@@ -491,6 +491,23 @@ func updateCreds(clustername string, creds map[string]string) bool {
 	defer mu.Unlock()
 
 	if cluster, ok := managedClusterData[clustername]; ok {
+		fmt.Println("clustername => " + clustername)
+
+		fmt.Println("cluster.Creds[kubeConfig] != creds[kubeConfig]")
+		fmt.Println(cluster.Creds[kubeConfig] != creds[kubeConfig])
+		fmt.Printf("cluster.Creds[kubeConfig] =>%s \n", cluster.Creds[kubeConfig])
+		fmt.Printf("creds[kubeConfig] =>%s \n", creds[kubeConfig])
+
+		fmt.Println("cluster.Creds[k8sClusterCA] != creds[k8sClusterCA]")
+		fmt.Println(cluster.Creds[k8sClusterCA] != creds[k8sClusterCA])
+		fmt.Printf("cluster.Creds[kubeConfig] =>%s \n", cluster.Creds[kubeConfig])
+		fmt.Printf("creds[k8sClusterCA] =>%s \n", creds[k8sClusterCA])
+
+		fmt.Println("cluster.Creds[k8sEndpoint] != creds[k8sEndpoint]")
+		fmt.Println(cluster.Creds[k8sEndpoint] != creds[k8sEndpoint])
+		fmt.Printf("cluster.Creds[k8sEndpoint] =>%s \n", cluster.Creds[k8sEndpoint])
+		fmt.Printf("creds[k8sEndpoint]=>%s \n", creds[k8sEndpoint])
+
 		if cluster.Creds[kubeConfig] != creds[kubeConfig] || cluster.Creds[k8sClusterCA] != creds[k8sClusterCA] || cluster.Creds[k8sEndpoint] != creds[k8sEndpoint] {
 			cluster.Creds = map[string]string{
 				kubeConfig:   creds[kubeConfig],
