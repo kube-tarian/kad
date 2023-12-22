@@ -226,9 +226,11 @@ func (cp *TektonApp) createSecrets(ctx context.Context, req *model.TektonPipelin
 
 	for _, secret := range secrets {
 		if secret == "docker-credentials" {
+			strData := make(map[string][]byte)
+			strData[".dockerconfigjson"] = []byte(`dummy`)
 			_, err := k8sclient.Clientset.CoreV1().Secrets(pipelineNamespace).Create(ctx,
 				&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secret + "-" + req.PipelineName},
-					Type: v1.SecretTypeDockerConfigJson},
+					Type: v1.SecretTypeDockerConfigJson, Data: strData},
 				metav1.CreateOptions{})
 			if err != nil {
 				return fmt.Errorf("failed to create k8s secret, %v", err)
