@@ -12,10 +12,6 @@
         {
             "mainAppGitPath": "cicd/tekton/tekton-main-app.yaml",
             "synchApp": true
-        },
-        {
-            "mainAppGitPath": "cicd/tekton/tekton-pipeline-cluster-config.yaml",
-            "synchApp": false
         }
     ]
 }

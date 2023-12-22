@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	appconfig "github.com/kube-tarian/kad/capten/config-worker/internal/app_config"
@@ -15,14 +16,18 @@ import (
 	agentmodel "github.com/kube-tarian/kad/capten/model"
 	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
-	secrets = []string{"gitcred", "docker-credentials", "github-webhook-secret"}
+	secrets           = []string{"gitcred", "docker-credentials", "github-webhook-secret"}
+	pipelineNamespace = "tekton-pipelines"
 )
 
 type Config struct {
 	PluginConfigFile string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
+	DomainName       string `envconfig:"DOMAIN_NAME" default:"capten"`
 }
 
 type TektonApp struct {
@@ -97,7 +102,7 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 	}
 
 	err = updatePipelineTemplate(filepath.Join(customerRepo,
-		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName)
+		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName, cp.cfg.DomainName)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updatePipelineTemplate")
 	}
@@ -114,6 +119,11 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to commit git repo")
 	}
 	logger.Infof("added cloned project %s changed to git", req.RepoURL)
+
+	err = cp.createSecrets(ctx, req)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to create k8s secrets")
+	}
 
 	err = cp.deployArgoCDApps(ctx, customerRepo)
 	if err != nil {
@@ -208,6 +218,43 @@ func (cp *TektonApp) syncArgoCDChildApps(ctx context.Context, namespace string, 
 	return nil
 }
 
+func (cp *TektonApp) createSecrets(ctx context.Context, req *model.TektonPipelineUseCase) error {
+	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
+	if err != nil {
+		return fmt.Errorf("failed to initalize k8s client, %v", err)
+	}
+
+	for _, secret := range secrets {
+		if secret == "docker-credentials" {
+			_, err := k8sclient.Clientset.CoreV1().Secrets(pipelineNamespace).Create(ctx,
+				&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secret + "-" + req.PipelineName},
+					Type: v1.SecretTypeDockerConfigJson},
+				metav1.CreateOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to create k8s secret, %v", err)
+			}
+		} else {
+			strData := make(map[string][]byte)
+			username, token, err := cp.helper.GetGitCreds(ctx, req.GitCredId)
+			if err != nil {
+				return fmt.Errorf("failed to get git secret, %v", err)
+			}
+			strData["username"] = []byte(username)
+			strData["password"] = []byte(token)
+			_, err = k8sclient.Clientset.CoreV1().Secrets(pipelineNamespace).Create(ctx,
+				&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secret + "-" + req.PipelineName,
+					Annotations: map[string]string{"tekton.dev/git-0": "https://github.com"},
+				}, Type: v1.SecretTypeBasicAuth, Data: strData},
+				metav1.CreateOptions{})
+			if err != nil {
+				return fmt.Errorf("failed to create k8s secret, %v", err)
+			}
+		}
+	}
+
+	return nil
+}
+
 func replaceCaptenUrls(dir string, src, target string) error {
 	if !strings.HasSuffix(src, ".git") {
 		src += ".git"
@@ -293,7 +340,7 @@ func updateArgoCDTemplate(valuesFileName, pipelineName string) error {
 	return err
 }
 
-func updatePipelineTemplate(valuesFileName, pipelineName string) error {
+func updatePipelineTemplate(valuesFileName, pipelineName, domainName string) error {
 	data, err := os.ReadFile(valuesFileName)
 	if err != nil {
 		return err
@@ -311,7 +358,7 @@ func updatePipelineTemplate(valuesFileName, pipelineName string) error {
 	}
 
 	// GET dashboard and ingress domain suffix.
-	tektonPipelineConfig.IngressDomainName = "test"
+	tektonPipelineConfig.IngressDomainName = "tekton." + domainName
 	tektonPipelineConfig.PipelineName = pipelineName
 	tektonPipelineConfig.TektonDashboard = pipelineName
 	secretName := []SecretNames{}
