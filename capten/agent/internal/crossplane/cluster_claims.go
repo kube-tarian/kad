@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"sort"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/intelops/go-common/credentials"
@@ -36,6 +39,20 @@ var (
 	k8sEndpoint                 = "endpoint"
 	k8sClusterCA                = "clusterCA"
 	managedClusterEntityName    = "managedcluster"
+)
+
+type ManagedCluster struct {
+	Statuses           []string
+	NodePoolStatus     string
+	ControlPlaneStatus string
+	Creds              map[string]string
+	UpdateCluster      bool
+}
+type ManagedClusterData map[string]ManagedCluster
+
+var (
+	managedClusterData ManagedClusterData
+	mu                 sync.Mutex
 )
 
 var (
@@ -178,12 +195,15 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 		return fmt.Errorf("failed to get k8s client, %v", err)
 	}
 
+	clusterUpdateCheck(clusterCliams)
+
 	clusters, err := h.getManagedClusters()
 	if err != nil {
 		return fmt.Errorf("failed to get managed clusters from DB, %v", err)
 	}
 
 	for _, clusterCliam := range clusterCliams {
+
 		h.log.Infof("processing cluster claim %s", clusterCliam.Metadata.Name)
 		readyStatus := h.getClusterClaimStatus(clusterCliam.Status.Conditions)
 		h.log.Infof("cluster claim %s status: %s-%s-%s", clusterCliam.Metadata.Name,
@@ -227,26 +247,30 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 		cred[k8sClusterCA] = resp.Data[k8sClusterCA]
 		cred[k8sEndpoint] = clusterEndpoint
 
-		err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, managedCluster.Id, cred)
-		if err != nil {
-			h.log.Errorf("failed to store credential for %s, %v", managedCluster.Id, err)
-			continue
-		}
-
-		err = h.dbStore.UpsertManagedCluster(managedCluster)
-		if err != nil {
-			h.log.Info("failed to update information to db, %v", err)
-			continue
-		}
-		h.log.Infof("updated the cluster claim %s with status %s", managedCluster.ClusterName, managedCluster.ClusterDeployStatus)
-
-		if managedCluster.ClusterDeployStatus == clusterReadyStatus {
-			err = h.triggerClusterUpdates(clusterCliam.Spec.Id, managedCluster.Id)
+		if ok := updateCreds(clusterCliam.Metadata.Name, cred); ok {
+			err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, managedCluster.Id, cred)
 			if err != nil {
-				h.log.Info("failed to trigger cluster update workflow, %v", err)
+				h.log.Errorf("failed to store credential for %s, %v", managedCluster.Id, err)
 				continue
 			}
-			h.log.Infof("triggered cluster update workflow for cluster %s", managedCluster.ClusterName)
+		}
+
+		if ok := updateCluster(clusterCliam.Metadata.Name); ok {
+			err = h.dbStore.UpsertManagedCluster(managedCluster)
+			if err != nil {
+				h.log.Info("failed to update information to db, %v", err)
+				continue
+			}
+			h.log.Infof("updated the cluster claim %s with status %s", managedCluster.ClusterName, managedCluster.ClusterDeployStatus)
+
+			if managedCluster.ClusterDeployStatus == clusterReadyStatus {
+				err = h.triggerClusterUpdates(clusterCliam.Spec.Id, managedCluster.Id)
+				if err != nil {
+					h.log.Info("failed to trigger cluster update workflow, %v", err)
+					continue
+				}
+				h.log.Infof("triggered cluster update workflow for cluster %s", managedCluster.ClusterName)
+			}
 		}
 	}
 	return nil
@@ -421,4 +445,60 @@ func (h *ClusterClaimSyncHandler) syncClusterClaimsWithDB(clusterClaims []model.
 		}
 	}
 	return nil
+}
+
+func clusterUpdateCheck(clusterCliams []model.ClusterClaim) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	for _, clusterCliam := range clusterCliams {
+		var statues []string
+		for _, condition := range clusterCliam.Status.Conditions {
+			statues = append(statues, condition.Status)
+		}
+		sort.Strings(statues)
+
+		if cluster, ok := managedClusterData[clusterCliam.Metadata.Name]; ok {
+
+			isSameStatus := reflect.DeepEqual(cluster.Statuses, statues)
+
+			if !isSameStatus || cluster.NodePoolStatus != clusterCliam.Status.NodePoolStatus ||
+				cluster.ControlPlaneStatus != clusterCliam.Status.ControlPlaneStatus {
+				cluster.UpdateCluster = true
+			} else {
+				cluster.UpdateCluster = false
+			}
+		} else {
+			managedClusterData[clusterCliam.Metadata.Name] = ManagedCluster{
+				Statuses:           statues,
+				NodePoolStatus:     clusterCliam.Status.NodePoolStatus,
+				ControlPlaneStatus: clusterCliam.Status.ControlPlaneStatus,
+				UpdateCluster:      true,
+			}
+		}
+
+	}
+}
+
+func updateCreds(clustername string, creds map[string]string) bool {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if cluster, ok := managedClusterData[clustername]; ok {
+		if cluster.Creds[kubeConfig] != creds[kubeConfig] || cluster.Creds[k8sClusterCA] != creds[k8sClusterCA] || cluster.Creds[k8sEndpoint] != creds[k8sEndpoint] {
+			cluster.Creds[kubeConfig] = creds[kubeConfig]
+			cluster.Creds[k8sClusterCA] = creds[k8sClusterCA]
+			cluster.Creds[k8sEndpoint] = creds[k8sEndpoint]
+			return true
+		}
+	}
+
+	return false
+}
+
+func updateCluster(clustername string) bool {
+	if cluster, ok := managedClusterData[clustername]; ok && cluster.UpdateCluster {
+		return true
+	}
+	return false
 }

@@ -162,6 +162,7 @@ func (a *Agent) addProjectToArgoCD(ctx context.Context, projectUrl, userID, acce
 		Insecure:              false,
 		EnableLFS:             false,
 		InsecureIgnoreHostKey: false,
+		Upsert:                true,
 		ConnectionState: argocd.ConnectionState{
 			Status:  "Connected",
 			Message: "Repository is connected",

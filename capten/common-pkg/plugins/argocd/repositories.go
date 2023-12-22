@@ -31,6 +31,7 @@ func (a *ArgoCDClient) CreateRepository(ctx context.Context, repo *Repository) (
 				Message: repo.ConnectionState.Message,
 			},
 		},
+		Upsert: repo.Upsert,
 	})
 	if err != nil {
 		return nil, err
