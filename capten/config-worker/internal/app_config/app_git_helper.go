@@ -71,6 +71,24 @@ func (ca *AppGitConfigHelper) GetGitCreds(ctx context.Context, projectId string)
 	return cred[gitProjectUserId], cred[gitProjectAccessTokenAttribute], nil
 }
 
+func (ca *AppGitConfigHelper) GetContainerRegCreds(ctx context.Context, entityName, projectId string) (string, string, error) {
+	credReader, err := credentials.NewCredentialReader(ctx)
+	if err != nil {
+		err = errors.WithMessage(err, "error in initializing credential reader")
+		return "", "", err
+	}
+
+	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
+		entityName, projectId)
+	if err != nil {
+		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
+			entityName, projectId)
+		return "", "", err
+	}
+
+	return cred["username"], cred["password"], nil
+}
+
 func (ca *AppGitConfigHelper) CloneTemplateRepo(ctx context.Context, repoURL, projectId string) (templateDir string, err error) {
 	_, accessToken, err := ca.GetGitCreds(ctx, projectId)
 	if err != nil {

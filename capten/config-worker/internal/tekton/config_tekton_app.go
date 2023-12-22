@@ -2,6 +2,7 @@ package tekton
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -225,15 +226,27 @@ func (cp *TektonApp) createSecrets(ctx context.Context, req *model.TektonPipelin
 	}
 
 	for _, secret := range secrets {
+		strdata := make(map[string][]byte)
 		if secret == "docker-credentials" {
-			strData := make(map[string][]byte)
-			strData[".dockerconfigjson"] = []byte(`dummy`)
-			_, err := k8sclient.Clientset.CoreV1().Secrets(pipelineNamespace).Create(ctx,
-				&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secret + "-" + req.PipelineName},
-					Type: v1.SecretTypeDockerConfigJson, Data: strData},
-				metav1.CreateOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to create k8s secret, %v", err)
+			// multiple reg needs to be verifed
+			for id, url := range req.ContainerRegUrlIdMap {
+				username, password, err := cp.helper.GetContainerRegCreds(ctx, req.ContainerRegCredIdentifier, id)
+				if err != nil {
+					return fmt.Errorf("failed to get docker cfg secret, %v", err)
+				}
+
+				data, err := handleDockerCfgJSONContent(username, password, "test@test.com", url)
+				if err != nil {
+					return fmt.Errorf("failed to get docker cfg secret, %v", err)
+				}
+				strdata[".dockerconfigjson"] = data
+				_, err = k8sclient.Clientset.CoreV1().Secrets(pipelineNamespace).Create(ctx,
+					&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secret + "-" + req.PipelineName},
+						Type: v1.SecretTypeDockerConfigJson, Data: strdata},
+					metav1.CreateOptions{})
+				if err != nil {
+					return fmt.Errorf("failed to create k8s secret, %v", err)
+				}
 			}
 		} else {
 			strData := make(map[string][]byte)
@@ -383,4 +396,25 @@ func updatePipelineTemplate(valuesFileName, pipelineName, domainName string) err
 
 	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
 	return err
+}
+
+// handleDockerCfgJSONContent serializes a ~/.docker/config.json file
+func handleDockerCfgJSONContent(username, password, email, server string) ([]byte, error) {
+	dockerConfigAuth := DockerConfigEntry{
+		Username: username,
+		Password: password,
+		Email:    email,
+		Auth:     encodeDockerConfigFieldAuth(username, password),
+	}
+	dockerConfigJSON := DockerConfigJSON{
+		Auths: map[string]DockerConfigEntry{server: dockerConfigAuth},
+	}
+
+	return json.Marshal(dockerConfigJSON)
+}
+
+// encodeDockerConfigFieldAuth returns base64 encoding of the username and password string
+func encodeDockerConfigFieldAuth(username, password string) string {
+	fieldValue := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(fieldValue))
 }
