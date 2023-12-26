@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/agentpb"
 )
 
 func (a *Agent) SyncApp(ctx context.Context, request *agentpb.SyncAppRequest) (
