@@ -9,7 +9,7 @@ import (
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"

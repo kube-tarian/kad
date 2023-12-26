@@ -16,7 +16,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/crossplane"
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/util"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
