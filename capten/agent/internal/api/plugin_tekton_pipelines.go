@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/kube-tarian/kad/capten/agent/pkg/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 )
 
 func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenpluginspb.CreateTektonPipelinesRequest) (

@@ -7,7 +7,8 @@ BUILD := 0.1.1
 
 gen-protoc:
 	mkdir -p server/pkg/pb/serverpb
-	mkdir -p capten/agent/pkg/pb/agentpb
+	mkdir -p capten/agent/internal/pb/agentpb
+	mkdir -p capten/agent/internal/pb/captenpluginspb
 	mkdir -p server/pkg/pb/agentpb
 	mkdir -p server/pkg/pb/captenpluginspb
 
@@ -15,8 +16,8 @@ gen-protoc:
     		--go-grpc_out=../server/pkg/pb/serverpb  --go-grpc_opt=paths=source_relative \
     		./server.proto
 
-	cd proto && protoc --go_out=../capten/agent/pkg/pb/agentpb/ --go_opt=paths=source_relative \
-    		--go-grpc_out=../capten/agent/pkg/pb/agentpb/ --go-grpc_opt=paths=source_relative \
+	cd proto && protoc --go_out=../capten/agent/internal/pb/agentpb/ --go_opt=paths=source_relative \
+    		--go-grpc_out=../capten/agent/internal/pb/agentpb/ --go-grpc_opt=paths=source_relative \
     		./agent.proto
 
 	cd proto && protoc --go_out=../server/pkg/pb/agentpb --go_opt=paths=source_relative \
@@ -27,8 +28,8 @@ gen-protoc:
     		--go-grpc_out=../server/pkg/pb/captenpluginspb --go-grpc_opt=paths=source_relative \
     		./capten_plugins.proto
 
-	cd proto && protoc --go_out=../capten/agent/pkg/pb/captenpluginspb --go_opt=paths=source_relative \
-    		--go-grpc_out=../capten/agent/pkg/pb/captenpluginspb --go-grpc_opt=paths=source_relative \
+	cd proto && protoc --go_out=../capten/agent/internal/pb/captenpluginspb --go_opt=paths=source_relative \
+    		--go-grpc_out=../capten/agent/internal/pb/captenpluginspb --go-grpc_opt=paths=source_relative \
     		./capten_plugins.proto
 
 docker-build-server:
