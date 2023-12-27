@@ -43,7 +43,7 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	go a.configureTektonPipelinesGitRepo(&TektonPipeline)
+	go a.configureTektonPipelinesGitRepo(&TektonPipeline, model.TektonPipelineSync)
 
 	a.log.Infof("create pipelines %s added with id %s", request.PipelineName, id.String())
 	return &captenpluginspb.CreateTektonPipelinesResponse{
@@ -87,6 +87,23 @@ func (a *Agent) UpdateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
+	pipeline, err := a.as.GetTektonPipelinesForID(id.String())
+	if err != nil {
+		a.log.Infof("failed to get the tekton pipeline", err)
+		return &captenpluginspb.UpdateTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: fmt.Sprintf("failed to get the tekton pipeline: %s", request.Id),
+		}, nil
+	}
+
+	if err := a.configureTektonPipelinesGitRepo(pipeline, model.TektonPipelineUpdate); err != nil {
+		a.log.Errorf("failed to configure TektonPipeline in db, %v", err)
+		return &captenpluginspb.UpdateTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to configure TektonPipeline in db",
+		}, nil
+	}
+
 	a.log.Infof("TektonPipeline, %s updated", request.Id)
 	return &captenpluginspb.UpdateTektonPipelinesResponse{
 		Status:        captenpluginspb.StatusCode_OK,
@@ -126,7 +143,34 @@ func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb
 
 }
 
-func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline) error {
+func (a *Agent) SyncTektonPipelines(ctx context.Context, request *captenpluginspb.SyncTektonPipelinesRequest) (
+	*captenpluginspb.SyncTektonPipelinesResponse, error) {
+	a.log.Infof("Get tekton pipeline request recieved")
+	res, err := a.as.GetTektonPipeliness()
+	if err != nil {
+		a.log.Errorf("failed to get TektonPipeline from db, %v", err)
+		return &captenpluginspb.SyncTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to fetch TektonPipelines",
+		}, nil
+	}
+
+	pipelines := make([]*captenpluginspb.TektonPipelines, len(res))
+	for index, pipeline := range res {
+		if err := a.configureTektonPipelinesGitRepo(pipeline, model.TektonPipelineUpdate); err != nil {
+			pipelines[index].Status = "failed to trigger the sync"
+			continue
+		}
+	}
+
+	return &captenpluginspb.SyncTektonPipelinesResponse{
+		Pipelines:     pipelines,
+		Status:        captenpluginspb.StatusCode_OK,
+		StatusMessage: "Successfully triggered the sync",
+	}, nil
+}
+
+func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, action string) error {
 	a.log.Infof("configuring tekton pipeline for the git repo %s", req.GitProjectUrl)
 	tektonProject := model.TektonPipeline{}
 	proj, err := a.as.GetGitProjectForID(req.GitProjectId)
@@ -164,7 +208,7 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline) error
 	wd := workers.NewConfig(a.tc, a.log)
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(),
-		&captenmodel.ConfigureParameters{Resource: tektonPipelineConfigUseCase, Action: model.TektonPipelineSync}, ci)
+		&captenmodel.ConfigureParameters{Resource: tektonPipelineConfigUseCase, Action: action}, ci)
 	if err != nil {
 		tektonProject.Status = string(model.TektonPipelineConfigurationFailed)
 		tektonProject.WorkflowId = "NA"

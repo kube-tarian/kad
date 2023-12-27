@@ -18,7 +18,6 @@ import (
 	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -121,7 +120,7 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 	}
 	logger.Infof("added cloned project %s changed to git", req.RepoURL)
 
-	err = cp.createSecrets(ctx, req)
+	err = cp.createOrUpdateSecrets(ctx, req)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to create k8s secrets")
 	}
@@ -219,7 +218,7 @@ func (cp *TektonApp) syncArgoCDChildApps(ctx context.Context, namespace string, 
 	return nil
 }
 
-func (cp *TektonApp) createSecrets(ctx context.Context, req *model.TektonPipelineUseCase) error {
+func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.TektonPipelineUseCase) error {
 	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
 	if err != nil {
 		return fmt.Errorf("failed to initalize k8s client, %v", err)
@@ -240,12 +239,9 @@ func (cp *TektonApp) createSecrets(ctx context.Context, req *model.TektonPipelin
 					return fmt.Errorf("failed to get docker cfg secret, %v", err)
 				}
 				strdata[".dockerconfigjson"] = data
-				_, err = k8sclient.Clientset.CoreV1().Secrets(pipelineNamespace).Create(ctx,
-					&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secret + "-" + req.PipelineName},
-						Type: v1.SecretTypeDockerConfigJson, Data: strdata},
-					metav1.CreateOptions{})
-				if err != nil {
-					return fmt.Errorf("failed to create k8s secret, %v", err)
+				if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName,
+					v1.SecretTypeDockerConfigJson, strdata, map[string]string{}); err != nil {
+					return fmt.Errorf("failed to create/update k8s secret, %v", err)
 				}
 			}
 		} else {
@@ -256,13 +252,9 @@ func (cp *TektonApp) createSecrets(ctx context.Context, req *model.TektonPipelin
 			}
 			strData["username"] = []byte(username)
 			strData["password"] = []byte(token)
-			_, err = k8sclient.Clientset.CoreV1().Secrets(pipelineNamespace).Create(ctx,
-				&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secret + "-" + req.PipelineName,
-					Annotations: map[string]string{"tekton.dev/git-0": "https://github.com"},
-				}, Type: v1.SecretTypeBasicAuth, Data: strData},
-				metav1.CreateOptions{})
-			if err != nil {
-				return fmt.Errorf("failed to create k8s secret, %v", err)
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName,
+				v1.SecretTypeBasicAuth, strdata, map[string]string{"tekton.dev/git-0": "https://github.com"}); err != nil {
+				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
 		}
 	}
