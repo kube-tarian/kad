@@ -63,19 +63,19 @@ func readCrossPlanePluginConfig(pluginFile string) (*crossplanePluginConfig, err
 
 func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model.CrossplaneUseCase) (status string, err error) {
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
-	templateRepo, err := cp.helper.CloneTemplateRepo(cp.pluginConfig.TemplateGitRepo)
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
-	}
-	defer os.RemoveAll(templateRepo)
 
 	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.VaultCredIdentifier)
 	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessagef(err, "failed to clone repo %s", req.RepoURL)
 	}
-	logger.Infof("cloned default templates to project %s", req.RepoURL)
-
 	defer os.RemoveAll(customerRepo)
+
+	logger.Infof("cloned project %s", req.RepoURL)
+	templateRepo, err := cp.helper.CloneTemplateRepo(cp.pluginConfig.TemplateGitRepo)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessagef(err, "failed to clone repo %s", cp.pluginConfig.TemplateGitRepo)
+	}
+	defer os.RemoveAll(templateRepo)
 
 	err = cp.synchProviders(req, templateRepo, customerRepo)
 	if err != nil {

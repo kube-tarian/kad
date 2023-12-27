@@ -77,7 +77,8 @@ func (ca *AppGitConfigHelper) CloneTemplateRepo(repoURL string) (templateDir str
 		return
 	}
 
-	if err = ca.gitClient.Clone(templateDir, repoURL, ""); err != nil {
+	gitClient := git.NewClient()
+	if err = gitClient.Clone(templateDir, repoURL, ""); err != nil {
 		os.RemoveAll(templateDir)
 		err = fmt.Errorf("failed to Clone template repo, err: %v", err)
 		return
