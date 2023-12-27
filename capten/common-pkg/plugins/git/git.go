@@ -10,6 +10,7 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
+	"github.com/intelops/go-common/logging"
 )
 
 type GitClient struct {
@@ -69,6 +70,16 @@ func (g *GitClient) Commit(msg, name, email string) error {
 	w, err := g.repository.Worktree()
 	if err != nil {
 		return err
+	}
+
+	status, err := w.Status()
+	if err != nil {
+		return err
+	}
+
+	if status.IsClean() {
+		logging.NewLogger().Info("No commit changes found.")
+		return nil
 	}
 
 	_, err = w.Commit(msg, &git.CommitOptions{
