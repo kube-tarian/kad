@@ -8,19 +8,8 @@ Namespace: "tekton"
 ReleaseName: "tekton"
 Version: "0.1.4"
 PluginName: "Tekton"
-Icon: "tekton.svg"
 PluginDescription: "Configure Build pipeline with Tekton"
 CreateNamespace: true
-LaunchURL: https://tekton.{{.DomainName}}
+Icon: "tekton.svg"
 LaunchUIDescription: "Intelops Tekton"
 LaunchUIIcon: "tekton.svg"
-LaunchUIValues:
-  configs:
-    cm:
-      oidc.config: |
-        name: Intelops
-        issuer: "{{.OAuthBaseURL}}"
-        clientID: "{{.ClientId}}"
-        clientSecret: "{{.ClientSecret}}"
-OverrideValues:
-  DomainName: "{{.DomainName}}"
