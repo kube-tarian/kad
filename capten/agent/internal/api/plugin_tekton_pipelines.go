@@ -104,6 +104,7 @@ func (a *Agent) UpdateTektonPipelines(ctx context.Context, request *captenplugin
 
 	a.log.Infof("TektonPipeline, %s updated", request.Id)
 	return &captenpluginspb.UpdateTektonPipelinesResponse{
+		Id:            id.String(),
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "ok",
 	}, nil
@@ -153,8 +154,13 @@ func (a *Agent) SyncTektonPipelines(ctx context.Context, request *captenpluginsp
 	}
 
 	pipelines := make([]*captenpluginspb.TektonPipelines, len(res))
-	for index, pipeline := range res {
-		if err := a.configureTektonPipelinesGitRepo(pipeline, model.TektonPipelineUpdate); err != nil {
+	for index, r := range res {
+		pipelines[index] = &captenpluginspb.TektonPipelines{
+			Id: r.Id, PipelineName: r.PipelineName,
+			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
+			ContainerRegistryId: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime,
+		}
+		if err := a.configureTektonPipelinesGitRepo(r, model.TektonPipelineUpdate); err != nil {
 			pipelines[index].Status = "failed to trigger the sync"
 			continue
 		}
