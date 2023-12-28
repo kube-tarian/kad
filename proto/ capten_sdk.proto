@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+option go_package = "/captensdkpb";
+
+package captensdkpb;
+
+service capten_plugins {
+    rpc GetGitProjectById(GetGitProjectByIdRequest) returns (GetGitProjectByIdResponse) {}
+    rpc GetContainerRegistryById(GetContainerRegistryByIdRequest) returns (GetContainerRegistryByIdResponse) {}
+}
+
+enum StatusCode {
+    OK = 0;
+    INTERNAL_ERROR = 1;
+    INVALID_ARGUMENT = 2;
+    NOT_FOUND = 3;
+}
+
+message GitProject {
+    string id = 1;
+    string projectUrl = 2;
+    string accessToken = 3;
+    repeated string labels = 4;
+    string lastUpdateTime = 5;
+}
+
+message GetGitProjectByIdRequest {
+    string id  = 1;
+}
+
+message GetGitProjectByIdResponse {
+    GitProject project = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message ContainerRegistry {
+    string id = 1;
+    string registryUrl = 2;
+    repeated string labels = 3;
+    string lastUpdateTime = 4;
+    map<string, string> registryAttributes = 5;
+    string registryType = 6;
+}
+
+message GetContainerRegistryByIdRequest {
+    string id  = 1;
+}
+
+message GetContainerRegistryByIdResponse {
+    ContainerRegistry registry = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
