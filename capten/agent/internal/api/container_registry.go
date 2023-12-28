@@ -167,6 +167,11 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 				StatusMessage: "failed to fetch container registry",
 			}, nil
 		}
+
+		if r.RegistryAttributes == nil {
+			r.RegistryAttributes = map[string]string{}
+		}
+
 		r.RegistryAttributes["token"] = token
 		r.RegistryAttributes["username"] = username
 		r.RegistryAttributes["password"] = password

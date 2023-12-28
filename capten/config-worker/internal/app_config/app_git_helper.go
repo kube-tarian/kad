@@ -20,6 +20,7 @@ import (
 const (
 	tmpGitProjectCloneStr          = "clone*"
 	gitProjectAccessTokenAttribute = "accessToken"
+	gitProjectUserId               = "userID"
 	gitUrlSuffix                   = ".git"
 	kubeConfig                     = "kubeconfig"
 	k8sEndpoint                    = "endpoint"
@@ -52,11 +53,11 @@ func NewAppGitConfigHelper() (*AppGitConfigHelper, error) {
 	return &AppGitConfigHelper{cfg: cfg, gitClient: git.NewClient()}, nil
 }
 
-func (ca *AppGitConfigHelper) getAccessToken(ctx context.Context, projectId string) (string, error) {
+func (ca *AppGitConfigHelper) GetGitCreds(ctx context.Context, projectId string) (string, string, error) {
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
 		err = errors.WithMessage(err, "error in initializing credential reader")
-		return "", err
+		return "", "", err
 	}
 
 	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
@@ -64,21 +65,44 @@ func (ca *AppGitConfigHelper) getAccessToken(ctx context.Context, projectId stri
 	if err != nil {
 		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
 			ca.cfg.GitVaultEntityName, projectId)
-		return "", err
+		return "", "", err
 	}
 
-	return cred[gitProjectAccessTokenAttribute], nil
+	return cred[gitProjectUserId], cred[gitProjectAccessTokenAttribute], nil
 }
 
-func (ca *AppGitConfigHelper) CloneTemplateRepo(repoURL string) (templateDir string, err error) {
+func (ca *AppGitConfigHelper) GetContainerRegCreds(ctx context.Context, entityName, projectId string) (string, string, error) {
+	credReader, err := credentials.NewCredentialReader(ctx)
+	if err != nil {
+		err = errors.WithMessage(err, "error in initializing credential reader")
+		return "", "", err
+	}
+
+	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
+		entityName, projectId)
+	if err != nil {
+		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
+			entityName, projectId)
+		return "", "", err
+	}
+
+	return cred["username"], cred["password"], nil
+}
+
+func (ca *AppGitConfigHelper) CloneTemplateRepo(ctx context.Context, repoURL, projectId string) (templateDir string, err error) {
+	_, accessToken, err := ca.GetGitCreds(ctx, projectId)
+	if err != nil {
+		err = fmt.Errorf("failed to get token from vault, %v", err)
+		return
+	}
+
 	templateDir, err = os.MkdirTemp(ca.cfg.GitCloneDir, tmpGitProjectCloneStr)
 	if err != nil {
 		err = fmt.Errorf("failed to create template tmp dir, err: %v", err)
 		return
 	}
 
-	gitClient := git.NewClient()
-	if err = gitClient.Clone(templateDir, repoURL, ""); err != nil {
+	if err = ca.gitClient.Clone(templateDir, repoURL, accessToken); err != nil {
 		os.RemoveAll(templateDir)
 		err = fmt.Errorf("failed to Clone template repo, err: %v", err)
 		return
@@ -87,7 +111,7 @@ func (ca *AppGitConfigHelper) CloneTemplateRepo(repoURL string) (templateDir str
 }
 
 func (ca *AppGitConfigHelper) CloneUserRepo(ctx context.Context, repoURL, projectId string) (reqRepo string, err error) {
-	accessToken, err := ca.getAccessToken(ctx, projectId)
+	_, accessToken, err := ca.GetGitCreds(ctx, projectId)
 	if err != nil {
 		err = fmt.Errorf("failed to get token from vault, %v", err)
 		return

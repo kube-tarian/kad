@@ -58,6 +58,10 @@ func validateArgs(args ...any) error {
 					return fmt.Errorf("map value empty for key: %v", k)
 				}
 			}
+		case []string:
+			if len(item) == 0 {
+				return fmt.Errorf("empty []string not allowed for arg index: %v", index)
+			}
 		default:
 			return fmt.Errorf("validation not implemented for this type")
 		}
