@@ -13,6 +13,7 @@ import (
 
 const (
 	tektonPipelineConfigUseCase string = "tektonpipelines"
+	tektonHostName              string = "tekton"
 )
 
 func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenpluginspb.CreateTektonPipelinesRequest) (
@@ -126,8 +127,7 @@ func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb
 	pipeline := make([]*captenpluginspb.TektonPipelines, len(res))
 
 	for _, r := range res {
-		// ## TODO Replace the host with tekton static name
-		r.WebhookURL = "" + r.PipelineName
+		r.WebhookURL = tektonHostName + "." + a.cfg.DomainName + "/" + r.PipelineName
 		p := &captenpluginspb.TektonPipelines{Id: r.Id, PipelineName: r.PipelineName,
 			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
 			ContainerRegistryId: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime}

@@ -245,13 +245,12 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 				}
 			}
 		} else {
-			strData := make(map[string][]byte)
 			username, token, err := cp.helper.GetGitCreds(ctx, req.GitCredId)
 			if err != nil {
 				return fmt.Errorf("failed to get git secret, %v", err)
 			}
-			strData["username"] = []byte(username)
-			strData["password"] = []byte(token)
+			strdata["username"] = []byte(username)
+			strdata["password"] = []byte(token)
 			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName,
 				v1.SecretTypeBasicAuth, strdata, map[string]string{"tekton.dev/git-0": "https://github.com"}); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)

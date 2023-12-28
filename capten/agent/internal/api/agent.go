@@ -20,6 +20,7 @@ type Agent struct {
 	tc       *temporalclient.Client
 	as       *captenstore.Store
 	log      logging.Logger
+	cfg      *config.SericeConfig
 	createPr bool
 }
 
@@ -35,6 +36,7 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Stor
 	agent := &Agent{
 		tc:  tc,
 		as:  as,
+		cfg: cfg,
 		log: log,
 	}
 	return agent, nil
