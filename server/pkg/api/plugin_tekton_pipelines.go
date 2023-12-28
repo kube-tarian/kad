@@ -122,3 +122,42 @@ func (s *Server) UpdateTektonPipelines(ctx context.Context, request *captenplugi
 		Status:        captenpluginspb.StatusCode_OK,
 	}, nil
 }
+
+func (s *Server) SyncTektonPipelines(ctx context.Context, request *captenpluginspb.SyncTektonPipelinesRequest) (*captenpluginspb.SyncTektonPipelinesResponse, error) {
+	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
+	if err != nil {
+		s.log.Infof("request validation failed", err)
+		return &captenpluginspb.SyncTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+	s.log.Infof("Sync TektonPipelines for cluster %s recieved, [org: %s]",
+		clusterId, orgId)
+
+	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
+	if err != nil {
+		s.log.Errorf("failed to initialize agent, %v", err)
+		return &captenpluginspb.SyncTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to initialize agent",
+		}, err
+	}
+
+	resp, err := agent.GetCaptenPluginsClient().SyncTektonPipelines(ctx, request)
+	if err != nil {
+		s.log.Errorf("failed to sync TektonPipelines , %v", err)
+		return &captenpluginspb.SyncTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to sync TektonPipelines",
+		}, err
+	}
+
+	s.log.Infof("sync the TektonPipelines for cluster %s, [org: %s]",
+		clusterId, orgId)
+	return &captenpluginspb.SyncTektonPipelinesResponse{
+		Pipelines:     resp.Pipelines,
+		StatusMessage: "sync of TektonPipelines successful",
+		Status:        captenpluginspb.StatusCode_OK,
+	}, nil
+}

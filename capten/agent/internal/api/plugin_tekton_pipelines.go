@@ -74,26 +74,23 @@ func (a *Agent) UpdateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	TektonPipeline := model.TektonPipeline{
-		Id:             id.String(),
-		ContainerRegId: request.ContainerRegistryId,
-		GitProjectId:   request.GitOrgId,
-	}
-
-	if err := a.as.UpsertTektonPipelines(&TektonPipeline); err != nil {
-		a.log.Errorf("failed to update TektonPipeline in db, %v", err)
-		return &captenpluginspb.UpdateTektonPipelinesResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to update TektonPipeline in db",
-		}, nil
-	}
-
 	pipeline, err := a.as.GetTektonPipelinesForID(id.String())
 	if err != nil {
 		a.log.Infof("failed to get the tekton pipeline", err)
 		return &captenpluginspb.UpdateTektonPipelinesResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: fmt.Sprintf("failed to get the tekton pipeline: %s", request.Id),
+		}, nil
+	}
+
+	pipeline.ContainerRegId = request.ContainerRegistryId
+	pipeline.GitProjectId = request.GitOrgId
+
+	if err := a.as.UpsertTektonPipelines(pipeline); err != nil {
+		a.log.Errorf("failed to update TektonPipeline in db, %v", err)
+		return &captenpluginspb.UpdateTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to update TektonPipeline in db",
 		}, nil
 	}
 
@@ -126,12 +123,12 @@ func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb
 
 	pipeline := make([]*captenpluginspb.TektonPipelines, len(res))
 
-	for _, r := range res {
+	for index, r := range res {
 		r.WebhookURL = tektonHostName + "." + a.cfg.DomainName + "/" + r.PipelineName
 		p := &captenpluginspb.TektonPipelines{Id: r.Id, PipelineName: r.PipelineName,
 			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
 			ContainerRegistryId: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime}
-		pipeline = append(pipeline, p)
+		pipeline[index] = p
 	}
 
 	a.log.Infof("Found %d tekton pipelines", len(res))
