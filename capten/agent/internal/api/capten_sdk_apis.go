@@ -72,7 +72,7 @@ func (a *Agent) GetContainerRegistryById(ctx context.Context, request *captensdk
 		a.log.Errorf("failed to get ContainerRegistry from db, %v", err)
 		return &captensdkpb.GetContainerRegistryByIdResponse{
 			Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to fetch git projects",
+			StatusMessage: "failed to fetch container registry for " + request.Id,
 		}, nil
 	}
 
