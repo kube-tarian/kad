@@ -10,7 +10,7 @@ type SericeConfig struct {
 	Mode                      string `envconfig:"MODE" default:"production"`
 	AuthEnabled               bool   `envconfig:"AUTH_ENABLED" default:"false"`
 	CrossplaneSyncJobEnabled  bool   `envconfig:"CROSSPLANE_SYNC_JOB_ENABLED" default:"true"`
-	CrossplaneSyncJobInterval string `envconfig:"CROSSPLANE_SYNC_JOB_INTERVAL" default:"@every 1h"`
+	CrossplaneSyncJobInterval string `envconfig:"CROSSPLANE_SYNC_JOB_INTERVAL" default:"@every 5m"`
 }
 
 func GetServiceConfig() (*SericeConfig, error) {

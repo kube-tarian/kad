@@ -20,6 +20,13 @@ var (
 	pgvk = schema.GroupVersionResource{Group: "pkg.crossplane.io", Version: "v1", Resource: "providers"}
 )
 
+const (
+	updateCrossplaneProviderAddAction    = "OnAdd"
+	updateCrossplaneProviderUpdateAction = "OnUpdate"
+	updateCrossplaneProviderDeleteAction = "OnDelete"
+	updateCrossplaneProviderSyncAction   = "Sync"
+)
+
 type ProvidersSyncHandler struct {
 	log     logging.Logger
 	dbStore *captenstore.Store
@@ -56,7 +63,7 @@ func (h *ProvidersSyncHandler) OnAdd(obj interface{}) {
 		return
 	}
 
-	if err := h.updateCrossplaneProvider([]model.Provider{*newCcObj}); err != nil {
+	if err := h.updateCrossplaneProvider([]model.Provider{*newCcObj}, updateCrossplaneProviderAddAction); err != nil {
 		h.log.Errorf("failed to update Provider object, %v", err)
 		return
 	}
@@ -76,7 +83,7 @@ func (h *ProvidersSyncHandler) OnUpdate(oldObj, newObj interface{}) {
 		return
 	}
 
-	if err := h.updateCrossplaneProvider([]model.Provider{*newCcObj}); err != nil {
+	if err := h.updateCrossplaneProvider([]model.Provider{*newCcObj}, updateCrossplaneProviderUpdateAction); err != nil {
 		h.log.Errorf("failed to update Provider object, %v", err)
 		return
 	}
@@ -84,6 +91,17 @@ func (h *ProvidersSyncHandler) OnUpdate(oldObj, newObj interface{}) {
 
 func (h *ProvidersSyncHandler) OnDelete(obj interface{}) {
 	h.log.Info("Crossplane Provider Delete Callback")
+	// need to update the state as not in sync.
+	provider, err := getProviderObj(obj)
+	if provider == nil {
+		h.log.Errorf("failed to read Provider object %v", err)
+		return
+	}
+
+	if err := h.updateCrossplaneProvider([]model.Provider{*provider}, updateCrossplaneProviderDeleteAction); err != nil {
+		h.log.Errorf("failed to update Provider object %v", err)
+		return
+	}
 }
 
 func (h *ProvidersSyncHandler) Sync() error {
@@ -110,14 +128,14 @@ func (h *ProvidersSyncHandler) Sync() error {
 		return fmt.Errorf("failed to un-marshall the data, %s", err)
 	}
 
-	if err = h.updateCrossplaneProvider(providerObj.Items); err != nil {
+	if err = h.updateCrossplaneProvider(providerObj.Items, updateCrossplaneProviderSyncAction); err != nil {
 		return fmt.Errorf("failed to update providers in DB, %v", err)
 	}
 	h.log.Debug("Crossplane Provider resources synched")
 	return nil
 }
 
-func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Provider) error {
+func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Provider, action string) error {
 	dbProviders, err := h.dbStore.GetCrossplaneProviders()
 	if err != nil {
 		return fmt.Errorf("failed to get Crossplane Providers, %v", err)
@@ -131,20 +149,26 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 	for _, k8sProvider := range k8sProviders {
 		h.log.Infof("processing Crossplane Provider %s", k8sProvider.Name)
 		for _, providerStatus := range k8sProvider.Status.Conditions {
+			status := model.CrossPlaneProviderNotReady
+
 			if providerStatus.Type != model.TypeHealthy {
 				continue
 			}
 
 			dbProvider, ok := dbProviderMap[k8sProvider.Name]
 			if !ok {
-				h.log.Infof("Provider name %s is not found in the db, skipping the update", k8sProvider.Name)
+				h.log.Infof("Provider name %s is not found in the db, skipped the provider update", k8sProvider.Name)
 				continue
 			}
 
-			status := model.CrossPlaneProviderNotReady
 			if strings.EqualFold(string(providerStatus.Status), "true") {
 				status = model.CrossPlaneProviderReady
 			}
+
+			if action == updateCrossplaneProviderDeleteAction {
+				status = model.CrossPlaneProviderOutofSynch
+			}
+
 			provider := model.CrossplaneProvider{
 				Id:              dbProvider.Id,
 				Status:          string(status),
@@ -152,9 +176,6 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 				CloudProviderId: dbProvider.CloudProviderId,
 				ProviderName:    dbProvider.ProviderName,
 			}
-
-			v, _ := json.Marshal(provider)
-			fmt.Println("Provider ===>" + string(v))
 
 			if err := h.dbStore.UpdateCrossplaneProvider(&provider); err != nil {
 				h.log.Errorf("failed to update provider %s details in db, %v", k8sProvider.Name, err)
