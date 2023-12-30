@@ -23,6 +23,7 @@ import (
 var (
 	secrets           = []string{"gitcred", "docker-credentials", "github-webhook-secret"}
 	pipelineNamespace = "tekton-pipelines"
+	tektonChildTasks  = []string{"tekton-cluster-tasks"}
 )
 
 type Config struct {
@@ -107,8 +108,6 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updatePipelineTemplate")
 	}
 
-	// CREATE K8s Secret for docker, github-secret, github-webook
-
 	err = cp.helper.AddFilesToRepo([]string{"."})
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
@@ -125,7 +124,7 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to create k8s secrets")
 	}
 
-	err = cp.deployArgoCDApps(ctx, customerRepo)
+	err = cp.deployArgoCDApps(ctx, customerRepo, req.PipelineName)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to depoy argoCD apps")
 	}
@@ -161,12 +160,12 @@ func (cp *TektonApp) synchPipelineConfig(req *model.TektonPipelineUseCase, templ
 	return nil
 }
 
-func (cp *TektonApp) deployArgoCDApps(ctx context.Context, customerRepo string) (err error) {
+func (cp *TektonApp) deployArgoCDApps(ctx context.Context, customerRepo, pipelineName string) (err error) {
 	logger.Infof("%d main apps to deploy", len(cp.pluginConfig.ArgoCDApps))
 
 	for _, argoApp := range cp.pluginConfig.ArgoCDApps {
 		appPath := filepath.Join(customerRepo, argoApp.MainAppGitPath)
-		err = cp.deployArgoCDApp(ctx, appPath, nil, argoApp.SynchApp)
+		err = cp.deployArgoCDApp(ctx, appPath, append(tektonChildTasks, pipelineName), argoApp.SynchApp)
 		if err != nil {
 			return err
 		}
@@ -234,7 +233,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 					return fmt.Errorf("failed to get docker cfg secret, %v", err)
 				}
 
-				data, err := handleDockerCfgJSONContent(username, password, "test@test.com", url)
+				data, err := handleDockerCfgJSONContent(username, password, url)
 				if err != nil {
 					return fmt.Errorf("failed to get docker cfg secret, %v", err)
 				}
@@ -364,7 +363,7 @@ func updatePipelineTemplate(valuesFileName, pipelineName, domainName string) err
 	}
 
 	// GET dashboard and ingress domain suffix.
-	tektonPipelineConfig.IngressDomainName = "tekton." + domainName
+	tektonPipelineConfig.IngressDomainName = model.TektonHostName + "." + domainName
 	tektonPipelineConfig.PipelineName = pipelineName
 	tektonPipelineConfig.TektonDashboard = pipelineName
 	secretName := []SecretNames{}
@@ -390,11 +389,10 @@ func updatePipelineTemplate(valuesFileName, pipelineName, domainName string) err
 }
 
 // handleDockerCfgJSONContent serializes a ~/.docker/config.json file
-func handleDockerCfgJSONContent(username, password, email, server string) ([]byte, error) {
+func handleDockerCfgJSONContent(username, password, server string) ([]byte, error) {
 	dockerConfigAuth := DockerConfigEntry{
 		Username: username,
 		Password: password,
-		Email:    email,
 		Auth:     encodeDockerConfigFieldAuth(username, password),
 	}
 	dockerConfigJSON := DockerConfigJSON{

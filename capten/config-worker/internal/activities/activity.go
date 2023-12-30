@@ -23,7 +23,7 @@ func (c *Activities) ConfigurationActivity(ctx context.Context, params model.Con
 	case "crossplane":
 		ca := crossplane.CrossPlaneActivities{}
 		return ca.ConfigurationActivity(ctx, params, payload)
-	case "tektonpipelines":
+	case model.TektonPipelineConfigUseCase:
 		tek := tekton.TektonpipelineActivty{}
 		return tek.ConfigurationActivity(ctx, params, payload)
 	default:

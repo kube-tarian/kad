@@ -24,13 +24,8 @@ func (a *Agent) AddContainerRegistry(ctx context.Context, request *captenplugins
 	a.log.Infof("Add Container registry %s request received", request.RegistryUrl)
 
 	id := uuid.New()
-	credentialMap := map[string]string{
-		"token":    request.RegistryAttributes["token"],
-		"username": request.RegistryAttributes["username"],
-		"password": request.RegistryAttributes["password"],
-	}
 
-	if err := a.storeContainerRegCredential(ctx, id.String(), credentialMap); err != nil {
+	if err := a.storeContainerRegCredential(ctx, id.String(), request.RegistryAttributes); err != nil {
 		return &captenpluginspb.AddContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add Container registry credential in vault",
@@ -79,13 +74,7 @@ func (a *Agent) UpdateContainerRegistry(ctx context.Context, request *captenplug
 		}, nil
 	}
 
-	credentialMap := map[string]string{
-		"token":    request.RegistryAttributes["token"],
-		"username": request.RegistryAttributes["username"],
-		"password": request.RegistryAttributes["password"],
-	}
-
-	if err := a.storeContainerRegCredential(ctx, request.Id, credentialMap); err != nil {
+	if err := a.storeContainerRegCredential(ctx, request.Id, request.RegistryAttributes); err != nil {
 		return &captenpluginspb.UpdateContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add ContainerRegistry credential in vault",
@@ -149,7 +138,7 @@ func (a *Agent) DeleteContainerRegistry(ctx context.Context, request *captenplug
 func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenpluginspb.GetContainerRegistryRequest) (
 	*captenpluginspb.GetContainerRegistryResponse, error) {
 	a.log.Infof("Get Git projects request recieved")
-	res, err := a.as.GetContainerRegistrys()
+	res, err := a.as.GetContainerRegistries()
 	if err != nil {
 		a.log.Errorf("failed to get ContainerRegistry from db, %v", err)
 		return &captenpluginspb.GetContainerRegistryResponse{
@@ -159,7 +148,7 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 	}
 
 	for _, r := range res {
-		token, username, password, err := a.getContainerRegCredential(ctx, r.Id)
+		cred, err := a.getContainerRegCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetContainerRegistryResponse{
@@ -168,13 +157,7 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 			}, nil
 		}
 
-		if r.RegistryAttributes == nil {
-			r.RegistryAttributes = map[string]string{}
-		}
-
-		r.RegistryAttributes["token"] = token
-		r.RegistryAttributes["username"] = username
-		r.RegistryAttributes["password"] = password
+		r.RegistryAttributes = cred
 	}
 
 	a.log.Infof("Found %d container registry", len(res))
@@ -186,21 +169,21 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 
 }
 
-func (a *Agent) getContainerRegCredential(ctx context.Context, id string) (string, string, string, error) {
+func (a *Agent) getContainerRegCredential(ctx context.Context, id string) (map[string]string, error) {
 	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, containerRegEntityName, id)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
 		a.log.Errorf("failed to get crendential for %s, %v", credPath, err)
-		return "", "", "", err
+		return nil, err
 	}
 
 	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, containerRegEntityName, id)
 	if err != nil {
 		a.log.Errorf("failed to get credential for %s, %v", credPath, err)
-		return "", "", "", err
+		return nil, err
 	}
-	return cred["token"], cred["username"], cred["password"], nil
+	return cred, nil
 }
 
 func (a *Agent) storeContainerRegCredential(ctx context.Context, id string, credentialMap map[string]string) error {

@@ -66,7 +66,7 @@ spec:
             - name: VAULT_ADDR
               value: {{ .Values.vault.address }}
             - name: DOMAIN_NAME
-              value: {{ .Values.domainName }}
+              value: {{ .Values.DomainName }}
             - name: VAULT_ROLE
               value: {{ .Values.vault.role }}
             - name: DB_ADDRESSES

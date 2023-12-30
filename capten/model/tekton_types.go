@@ -10,8 +10,10 @@ const (
 )
 
 const (
-	TektonPipelineSync   = "tekton-pipeline-sync"
-	TektonPipelineUpdate = "tekton-pipeline-update"
+	TektonPipelineConfigUseCase = "tekton-pipelines"
+	TektonHostName              = "tekton"
+	TektonPipelineCreate        = "tekton-pipeline-create"
+	TektonPipelineSync          = "tekton-pipeline-sync"
 )
 
 type TektonPipelineStatus string
