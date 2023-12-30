@@ -7,6 +7,7 @@ require (
 	github.com/gocql/gocql v1.3.1
 	github.com/gogo/status v1.1.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
+	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/intelops/go-common v1.0.15
@@ -20,7 +21,6 @@ require (
 	go.temporal.io/sdk v1.19.0
 	go.uber.org/atomic v1.9.0
 	google.golang.org/grpc v1.55.0
-	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
 	helm.sh/helm/v3 v3.10.3
 	k8s.io/api v0.25.2
@@ -33,8 +33,8 @@ require (
 
 require (
 	github.com/cloudflare/circl v1.3.3 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
 )
 
 require (
@@ -102,7 +102,6 @@ require (
 	github.com/google/gnostic v0.6.9 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-github/v41 v41.0.0 // indirect
-	github.com/google/go-github/v55 v55.0.0
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect

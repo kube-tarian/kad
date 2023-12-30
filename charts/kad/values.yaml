@@ -42,7 +42,7 @@ service:
   type: ClusterIP
   port: 8080
 
-domainName: capten
+DomainName: capten
 
 vault:
   address: http://vault:8200

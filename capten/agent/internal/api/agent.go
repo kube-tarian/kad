@@ -20,6 +20,7 @@ type Agent struct {
 	tc       *temporalclient.Client
 	as       *captenstore.Store
 	log      logging.Logger
+	cfg      *config.SericeConfig
 	createPr bool
 }
 
@@ -35,6 +36,7 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Stor
 	agent := &Agent{
 		tc:  tc,
 		as:  as,
+		cfg: cfg,
 		log: log,
 	}
 	return agent, nil
@@ -57,6 +59,10 @@ func validateArgs(args ...any) error {
 				if len(v) == 0 {
 					return fmt.Errorf("map value empty for key: %v", k)
 				}
+			}
+		case []string:
+			if len(item) == 0 {
+				return fmt.Errorf("empty []string not allowed for arg index: %v", index)
 			}
 		default:
 			return fmt.Errorf("validation not implemented for this type")

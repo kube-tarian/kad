@@ -7,6 +7,8 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	k8serror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -102,6 +104,27 @@ func (k *K8SClient) GetSecretData(namespace, secretName string) (*SecretData, er
 	return &SecretData{
 		Data: data,
 	}, nil
+}
+
+func (k *K8SClient) CreateOrUpdateSecret(ctx context.Context, namespace, secretName string, secretType v1.SecretType,
+	data map[string][]byte, annotation map[string]string) error {
+	_, err := k.Clientset.CoreV1().Secrets(namespace).Create(ctx,
+		&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secretName,
+			Annotations: annotation},
+			Type: secretType, Data: data},
+		metav1.CreateOptions{})
+	if k8serror.IsAlreadyExists(err) {
+		_, err := k.Clientset.CoreV1().Secrets(namespace).Update(ctx,
+			&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secretName, Annotations: annotation},
+				Type: secretType, Data: data},
+			metav1.UpdateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to update k8s secret, %v", err)
+		}
+	} else if err != nil {
+		return fmt.Errorf("failed to create k8s secret, %v", err)
+	}
+	return nil
 }
 
 func (k *K8SClient) GetServiceData(namespace, serviceName string) (*ServiceData, error) {
