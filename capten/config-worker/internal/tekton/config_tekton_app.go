@@ -18,6 +18,7 @@ import (
 	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -222,6 +223,8 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 	if err != nil {
 		return fmt.Errorf("failed to initalize k8s client, %v", err)
 	}
+
+	k8sclient.Clientset.CoreV1().Namespaces().Create(ctx, &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: pipelineNamespace}}, metav1.CreateOptions{})
 
 	for _, secret := range secrets {
 		strdata := make(map[string][]byte)
