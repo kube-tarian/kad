@@ -3,7 +3,7 @@ package app
 import (
 	"github.com/intelops/go-common/logging"
 	workerframework "github.com/kube-tarian/kad/capten/common-pkg/worker-framework"
-	"github.com/kube-tarian/kad/capten/config-worker/internal/crossplane"
+	"github.com/kube-tarian/kad/capten/config-worker/internal/activities"
 	"github.com/kube-tarian/kad/capten/config-worker/internal/workflows"
 )
 
@@ -15,7 +15,7 @@ func Start() {
 	logger := logging.NewLogger()
 	logger.Infof("Starting config worker..\n")
 
-	worker, err := workerframework.NewWorker(WorkflowTaskQueueName, workflows.Workflow, &crossplane.CrossPlaneActivities{}, logger)
+	worker, err := workerframework.NewWorker(WorkflowTaskQueueName, workflows.Workflow, &activities.Activities{}, logger)
 	if err != nil {
 		logger.Fatalf("Worker initialization failed, Reason: %v\n", err)
 	}

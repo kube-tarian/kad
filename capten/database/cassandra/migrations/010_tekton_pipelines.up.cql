@@ -1,10 +1,12 @@
 CREATE TABLE TektonPipelines (
     id UUID,
     pipeline_name TEXT,
-    git_org_id TEXT,
-    container_registry_id TEXT,
+    git_org_id UUID,
+    container_registry_id set<UUID>,
     status TEXT,
     last_update_time TEXT,
+    workflow_id TEXT,
+    workflow_status TEXT,
     PRIMARY KEY (id)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}

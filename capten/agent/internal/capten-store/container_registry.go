@@ -61,7 +61,7 @@ func (a *Store) GetContainerRegistryForID(id string) (*captenpluginspb.Container
 	return projects[0], nil
 }
 
-func (a *Store) GetContainerRegistrys() ([]*captenpluginspb.ContainerRegistry, error) {
+func (a *Store) GetContainerRegistries() ([]*captenpluginspb.ContainerRegistry, error) {
 	query := fmt.Sprintf(selectAllContainerRegistrys, a.keyspace)
 	return a.executeContainerRegistrysSelectQuery(query)
 }

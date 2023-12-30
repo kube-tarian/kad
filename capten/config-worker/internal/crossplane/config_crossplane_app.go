@@ -71,7 +71,7 @@ func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model
 	defer os.RemoveAll(customerRepo)
 
 	logger.Infof("cloned project %s", req.RepoURL)
-	templateRepo, err := cp.helper.CloneTemplateRepo(cp.pluginConfig.TemplateGitRepo)
+	templateRepo, err := cp.helper.CloneTemplateRepo(ctx, cp.pluginConfig.TemplateGitRepo, req.VaultCredIdentifier)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessagef(err, "failed to clone repo %s", cp.pluginConfig.TemplateGitRepo)
 	}
