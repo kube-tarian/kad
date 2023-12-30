@@ -90,19 +90,14 @@ func (ca *AppGitConfigHelper) GetContainerRegCreds(ctx context.Context, entityNa
 }
 
 func (ca *AppGitConfigHelper) CloneTemplateRepo(ctx context.Context, repoURL, projectId string) (templateDir string, err error) {
-	_, accessToken, err := ca.GetGitCreds(ctx, projectId)
-	if err != nil {
-		err = fmt.Errorf("failed to get token from vault, %v", err)
-		return
-	}
-
 	templateDir, err = os.MkdirTemp(ca.cfg.GitCloneDir, tmpGitProjectCloneStr)
 	if err != nil {
 		err = fmt.Errorf("failed to create template tmp dir, err: %v", err)
 		return
 	}
 
-	if err = ca.gitClient.Clone(templateDir, repoURL, accessToken); err != nil {
+	gitClient := git.NewClient()
+	if err = gitClient.Clone(templateDir, repoURL, ""); err != nil {
 		os.RemoveAll(templateDir)
 		err = fmt.Errorf("failed to Clone template repo, err: %v", err)
 		return
