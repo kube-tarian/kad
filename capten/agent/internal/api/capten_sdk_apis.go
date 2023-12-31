@@ -77,15 +77,14 @@ func (a *Agent) GetContainerRegistryById(ctx context.Context, request *captensdk
 	}
 
 	registry := &captensdkpb.ContainerRegistry{
-		Id:                 res.Id,
-		RegistryUrl:        res.RegistryUrl,
-		Labels:             res.Labels,
-		LastUpdateTime:     res.LastUpdateTime,
-		RegistryAttributes: res.RegistryAttributes,
-		RegistryType:       res.RegistryType,
+		Id:             res.Id,
+		RegistryUrl:    res.RegistryUrl,
+		Labels:         res.Labels,
+		LastUpdateTime: res.LastUpdateTime,
+		RegistryType:   res.RegistryType,
 	}
 
-	_, err = a.getContainerRegCredential(ctx, res.Id)
+	cred, err := a.getContainerRegCredential(ctx, res.Id)
 	if err != nil {
 		a.log.Errorf("failed to get container registry credential for %s, %v", request.Id, err)
 		return &captensdkpb.GetContainerRegistryByIdResponse{
@@ -93,6 +92,7 @@ func (a *Agent) GetContainerRegistryById(ctx context.Context, request *captensdk
 			StatusMessage: "failed to fetch container registry for " + request.Id,
 		}, nil
 	}
+	registry.RegistryAttributes = cred
 
 	a.log.Infof("Fetched %s container registry", request.Id)
 	return &captensdkpb.GetContainerRegistryByIdResponse{
