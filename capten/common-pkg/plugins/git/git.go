@@ -92,6 +92,20 @@ func (g *GitClient) Commit(msg, name, email string) error {
 		logging.NewLogger().Info("No commit changes found.")
 		return nil
 	}
+	hasChanges := false
+	for _, entry := range status {
+		vv, _ := json.Marshal(entry)
+		fmt.Println("Entry => \n" + string(vv))
+		if entry.Staging != 0 || entry.Worktree != 0 {
+			hasChanges = true
+			break
+		}
+	}
+	if !hasChanges {
+		logging.NewLogger().Info("No commit changes found.")
+		return nil
+	}
+
 	_, err = w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  name,
