@@ -1,7 +1,6 @@
 package git
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -81,29 +80,8 @@ func (g *GitClient) Commit(msg, name, email string) error {
 		return err
 	}
 
-	v, _ := json.Marshal(status)
-	fmt.Println("Marshalled data => ", string(v))
-	fmt.Printf("status.IsClean() => %v \n", status.IsClean())
-	fmt.Printf("status.String() => %v \n", status.String())
-	fmt.Printf("len(status) == 1  => %v \n", len(status) == 1)
-	fmt.Printf("status.IsUntracked() => %v \n", status.IsUntracked(""))
-
 	untracked := status.IsUntracked("") && len(status) == 1
-
 	if status.IsClean() || (!untracked && len(status) == 1) {
-		logging.NewLogger().Info("No commit changes found.")
-		return nil
-	}
-	hasChanges := false
-	for _, entry := range status {
-		vv, _ := json.Marshal(entry)
-		fmt.Println("Entry => \n" + string(vv))
-		if entry.Staging != 0 || entry.Worktree != 0 {
-			hasChanges = true
-			break
-		}
-	}
-	if !hasChanges {
 		logging.NewLogger().Info("No commit changes found.")
 		return nil
 	}
