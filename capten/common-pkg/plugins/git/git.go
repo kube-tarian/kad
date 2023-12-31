@@ -85,8 +85,10 @@ func (g *GitClient) Commit(msg, name, email string) error {
 	fmt.Println("Marshalled data => ", string(v))
 	fmt.Printf("status.IsClean() => %v \n", status.IsClean())
 	fmt.Printf("status.String() => %v \n", status.String())
+	fmt.Printf("len(status) == 1  => %v \n", len(status) == 1)
+	fmt.Printf("status.IsUntracked() => %v \n", status.IsUntracked(""))
 
-	if status.IsClean() {
+	if status.IsClean() || (len(status) == 1 && status.IsUntracked("")) {
 		logging.NewLogger().Info("No commit changes found.")
 		return nil
 	}
