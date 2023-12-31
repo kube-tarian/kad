@@ -7,6 +7,7 @@ import (
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/config-worker/internal/crossplane"
+	"github.com/kube-tarian/kad/capten/config-worker/internal/tekton"
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
 )
@@ -22,6 +23,9 @@ func (c *Activities) ConfigurationActivity(ctx context.Context, params model.Con
 	case "crossplane":
 		ca := crossplane.CrossPlaneActivities{}
 		return ca.ConfigurationActivity(ctx, params, payload)
+	case model.TektonPipelineConfigUseCase:
+		tek := tekton.TektonpipelineActivty{}
+		return tek.ConfigurationActivity(ctx, params, payload)
 	default:
 		logger.Errorf("unknown resource type: %s in configuration", params.Resource)
 		return model.ResponsePayload{

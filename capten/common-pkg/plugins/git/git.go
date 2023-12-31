@@ -22,16 +22,19 @@ func NewClient() *GitClient {
 }
 
 func (g *GitClient) Clone(directory, url, token string) error {
-	r, err := git.PlainClone(directory, false, &git.CloneOptions{
-		Auth: &http.BasicAuth{
-			Username: "dummy", // yes, this can be anything except an empty string
-			Password: token,
-		},
+	opt := &git.CloneOptions{
 		URL:             url,
 		Progress:        os.Stdout,
 		InsecureSkipTLS: true,
-	})
+	}
+	if len(token) != 0 {
+		opt.Auth = &http.BasicAuth{
+			Username: "dummy", // yes, this can be anything except an empty string
+			Password: token,
+		}
+	}
 
+	r, err := git.PlainClone(directory, false, opt)
 	if err != nil {
 		return err
 	}

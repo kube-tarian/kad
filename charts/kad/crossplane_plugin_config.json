@@ -1,7 +1,7 @@
 {
     "templateGitRepo": "https://github.com/intelops/capten-templates",
     "crossplaneConfigSyncPath": "infra",
-    "providerConfigSyncPath": "infra/crossplane/crossplane-config",
+    "providerConfigSyncPath": "infra/crossplane/providers",
     "providerPackages": {
         "aws": "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0",
         "gcp": "xpkg.upbound.io/crossplane-contrib/provider-gcp:v0.22.0"

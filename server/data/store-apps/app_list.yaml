@@ -4,6 +4,8 @@ enabledApps:
   - crossplane-v1.0.0
   - testkube-v1.0.0
   - testkube-v1.0.1
-  - tekton-v0.1.1
+  - tekton-v0.1.5
 
 disabledApps:
+  - tekton-v0.1.1
+  - tekton-v0.1.4

@@ -9,6 +9,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
 )
 
@@ -17,9 +18,11 @@ var _ agentpb.AgentServer = &Agent{}
 type Agent struct {
 	agentpb.UnimplementedAgentServer
 	captenpluginspb.UnimplementedCaptenPluginsServer
+	captensdkpb.UnimplementedCaptenSdkServer
 	tc       *temporalclient.Client
 	as       *captenstore.Store
 	log      logging.Logger
+	cfg      *config.SericeConfig
 	createPr bool
 }
 
@@ -35,6 +38,7 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Stor
 	agent := &Agent{
 		tc:  tc,
 		as:  as,
+		cfg: cfg,
 		log: log,
 	}
 	return agent, nil
@@ -57,6 +61,10 @@ func validateArgs(args ...any) error {
 				if len(v) == 0 {
 					return fmt.Errorf("map value empty for key: %v", k)
 				}
+			}
+		case []string:
+			if len(item) == 0 {
+				return fmt.Errorf("empty []string not allowed for arg index: %v", index)
 			}
 		default:
 			return fmt.Errorf("validation not implemented for this type")
