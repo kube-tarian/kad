@@ -11,6 +11,7 @@ PluginName: "Tekton"
 PluginDescription: "Configure Build pipeline with Tekton"
 CreateNamespace: true
 Icon: "tekton.svg"
+LaunchURL: https://tekton.{{.DomainName}}/tekton/
 LaunchUIDescription: "Intelops Tekton"
 LaunchUIIcon: "tekton.svg"
 OverrideValues:
