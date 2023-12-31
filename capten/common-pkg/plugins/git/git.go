@@ -1,6 +1,7 @@
 package git
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -79,6 +80,11 @@ func (g *GitClient) Commit(msg, name, email string) error {
 	if err != nil {
 		return err
 	}
+
+	v, _ := json.Marshal(status)
+	fmt.Println("Marshalled data => ", string(v))
+	fmt.Printf("status.IsClean() => %v \n", status.IsClean())
+	fmt.Printf("status.String() => %v \n", status.String())
 
 	if status.IsClean() {
 		logging.NewLogger().Info("No commit changes found.")
