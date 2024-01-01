@@ -440,7 +440,7 @@ message TektonPipelines {
     string webhookURL = 3;
     string status = 4;
     string gitOrgId = 5;
-    repeated string containerRegistryId = 6;
+    repeated string containerRegistryIds = 6;
     string lastUpdateTime = 7;
 }
 
@@ -466,7 +466,7 @@ message GetTektonPipelinesResponse {
 message CreateTektonPipelinesRequest {
     string pipelineName = 1;
     string gitOrgId = 2;
-    repeated string containerRegistryId = 3;
+    repeated string containerRegistryIds = 3;
 }
 
 message CreateTektonPipelinesResponse {
@@ -478,7 +478,7 @@ message CreateTektonPipelinesResponse {
 message UpdateTektonPipelinesRequest {
     string id = 1;
     string gitOrgId = 2;
-    repeated string containerRegistryId = 3;
+    repeated string containerRegistryIds = 3;
 }
 
 message UpdateTektonPipelinesResponse {

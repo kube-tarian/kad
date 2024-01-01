@@ -13,7 +13,7 @@ import (
 
 func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenpluginspb.CreateTektonPipelinesRequest) (
 	*captenpluginspb.CreateTektonPipelinesResponse, error) {
-	if err := validateArgs(request.PipelineName, request.GitOrgId, request.ContainerRegistryId); err != nil {
+	if err := validateArgs(request.PipelineName, request.GitOrgId, request.ContainerRegistryIds); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.CreateTektonPipelinesResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
@@ -21,7 +21,7 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	if len(request.ContainerRegistryId) != 1 {
+	if len(request.ContainerRegistryIds) != 1 {
 		a.log.Infof("currently single container registry supported")
 		return &captenpluginspb.CreateTektonPipelinesResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
@@ -37,7 +37,7 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 		Id:             id.String(),
 		PipelineName:   request.PipelineName,
 		GitProjectId:   request.GitOrgId,
-		ContainerRegId: request.ContainerRegistryId,
+		ContainerRegId: request.ContainerRegistryIds,
 	}
 	if err := a.as.UpsertTektonPipelines(&TektonPipeline); err != nil {
 		a.log.Errorf("failed to store create pipeline req %s to DB, %v", request.PipelineName, err)
@@ -71,7 +71,7 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 
 func (a *Agent) UpdateTektonPipelines(ctx context.Context, request *captenpluginspb.UpdateTektonPipelinesRequest) (
 	*captenpluginspb.UpdateTektonPipelinesResponse, error) {
-	if err := validateArgs(request.GitOrgId, request.Id, request.ContainerRegistryId); err != nil {
+	if err := validateArgs(request.GitOrgId, request.Id, request.ContainerRegistryIds); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.UpdateTektonPipelinesResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
@@ -98,7 +98,7 @@ func (a *Agent) UpdateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	pipeline.ContainerRegId = request.ContainerRegistryId
+	pipeline.ContainerRegId = request.ContainerRegistryIds
 	pipeline.GitProjectId = request.GitOrgId
 
 	if err := a.as.UpsertTektonPipelines(pipeline); err != nil {
@@ -143,7 +143,7 @@ func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb
 		r.WebhookURL = model.TektonHostName + "." + a.cfg.DomainName + "/" + r.PipelineName
 		p := &captenpluginspb.TektonPipelines{Id: r.Id, PipelineName: r.PipelineName,
 			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
-			ContainerRegistryId: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime}
+			ContainerRegistryIds: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime}
 		pipeline[index] = p
 	}
 
@@ -173,7 +173,7 @@ func (a *Agent) SyncTektonPipelines(ctx context.Context, request *captenpluginsp
 		pipelines[index] = &captenpluginspb.TektonPipelines{
 			Id: r.Id, PipelineName: r.PipelineName,
 			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
-			ContainerRegistryId: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime,
+			ContainerRegistryIds: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime,
 		}
 		if err := a.configureTektonPipelinesGitRepo(r, model.TektonPipelineSync); err != nil {
 			a.log.Errorf("failed to trigger the tekton pipeline sync for %s, %v", r.PipelineName, err)
