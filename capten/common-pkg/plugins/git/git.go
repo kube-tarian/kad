@@ -127,8 +127,19 @@ func (g *GitClient) IsEmptyChanges() (bool, error) {
 		return false, err
 	}
 
-	untracked := status.IsUntracked("") && len(status) == 1
-	if status.IsClean() || (!untracked && len(status) == 1) {
+	if status.IsClean() || len(status) == 0 {
+		return true, errors.New("no commit changes found")
+	}
+
+	hasModifiedFiles := false
+	for _, fileStatus := range status {
+		if fileStatus.Staging != git.Untracked {
+			hasModifiedFiles = true
+			break
+		}
+	}
+
+	if !hasModifiedFiles {
 		return true, errors.New("no commit changes found")
 	}
 
