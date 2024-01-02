@@ -235,6 +235,13 @@ func (ca *AppGitConfigHelper) CommitRepoChanges() error {
 		return fmt.Errorf("git project access token empty")
 	}
 
+	if ok, err := ca.gitClient.IsEmptyChanges(); ok {
+		logging.NewLogger().Info("Empty commit changes, %v", err)
+		return nil
+	} else if err != nil {
+		return fmt.Errorf("failed to check for empty changes, %v", err)
+	}
+
 	if err := ca.gitClient.Commit(ca.cfg.GitDefaultCommitMessage,
 		ca.cfg.GitDefaultCommiterName, ca.cfg.GitDefaultCommiterEmail); err != nil {
 		return fmt.Errorf("failed to commit the changes to user repo, %v", err)
