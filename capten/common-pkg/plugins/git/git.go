@@ -84,6 +84,7 @@ func (g *GitClient) Commit(msg, name, email string) error {
 		logging.NewLogger().Info("No commit changes found.")
 		return nil
 	}
+
 	_, err = w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  name,
