@@ -249,13 +249,14 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 		clusters = *clusterConfig.Clusters
 	}
 
+	newclusters := []Cluster{}
 	for _, cluster := range clusters {
 		if cluster.Name != clusterName {
-			clusters = append(clusters, cluster)
+			newclusters = append(newclusters, cluster)
 		}
 	}
 
-	clusterConfig.Clusters = &clusters
+	clusterConfig.Clusters = &newclusters
 	jsonBytes, err := json.Marshal(clusterConfig)
 	if err != nil {
 		return err
@@ -265,6 +266,8 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("Removed Values")
+	fmt.Println(string(yamlBytes))
 
 	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
 	return err
