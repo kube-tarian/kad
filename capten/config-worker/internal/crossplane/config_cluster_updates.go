@@ -266,8 +266,6 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Removed Values")
-	fmt.Println(string(yamlBytes))
 
 	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
 	return err
