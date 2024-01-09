@@ -256,6 +256,8 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 		}
 	}
 
+	fmt.Printf("newclusters \n %+v \n", newclusters)
+
 	clusterConfig.Clusters = &newclusters
 	jsonBytes, err := json.Marshal(clusterConfig)
 	if err != nil {
@@ -266,6 +268,9 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("final file")
+	fmt.Printf("%s \n", string(yamlBytes))
 
 	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
 	return err
