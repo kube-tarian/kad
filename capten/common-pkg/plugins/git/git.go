@@ -49,6 +49,12 @@ func (g *GitClient) Add(path string) error {
 		return err
 	}
 
+	s, err := w.Status()
+	if err != nil {
+		fmt.Println("Error => " + err.Error())
+	}
+	fmt.Printf("Status = \n %+v \n", s)
+
 	_, err = w.Add(path)
 	if err != nil {
 		return err
