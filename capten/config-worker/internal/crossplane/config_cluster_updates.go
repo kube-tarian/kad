@@ -217,6 +217,11 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
 	}
 
+	err = cp.helper.AddFilesToRepo([]string{clusterValuesFile})
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
+	}
+
 	err = cp.helper.CommitRepoChanges()
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to commit git repo")
