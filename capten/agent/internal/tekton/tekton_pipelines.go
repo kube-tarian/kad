@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	pgvk = schema.GroupVersionResource{Group: "triggers.tekton.dev", Version: "v1beta1", Resource: "eventListeners"}
+	pgvk = schema.GroupVersionResource{Group: "triggers.tekton.dev", Version: "v1beta1", Resource: "eventlisteners"}
 )
 
 type TektonPipelineSyncHandler struct {
