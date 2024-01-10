@@ -344,9 +344,9 @@ func (h *ClusterClaimSyncHandler) triggerClusterDelete(clusterName string, manag
 		return fmt.Errorf("failed to send event to workflow to configure %s, %v", managedCluster.ClusterEndpoint, err)
 	}
 
-	h.log.Infof("Crossplane project delete %s config workflow %s created", managedCluster.ClusterEndpoint, wkfId)
-
 	go h.monitorCrossplaneWorkflow(managedCluster, wkfId)
+
+	h.log.Infof("Crossplane project delete %s config workflow %s created", managedCluster.ClusterEndpoint, wkfId)
 
 	return nil
 }

@@ -217,8 +217,7 @@ func (cp *CrossPlaneApp) configureClusterDelete(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove cluster folder")
 	}
 
-	err = cp.helper.AddFilesToRepo([]string{"."})
-	if err != nil {
+	if err := cp.helper.AddFilesToRepo([]string{"."}); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
 	}
 
@@ -261,8 +260,6 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 		}
 	}
 
-	fmt.Printf("newclusters \n %+v \n", newclusters)
-
 	clusterConfig.Clusters = &newclusters
 	jsonBytes, err := json.Marshal(clusterConfig)
 	if err != nil {
@@ -273,9 +270,6 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("final file")
-	fmt.Printf("%s \n", string(yamlBytes))
 
 	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
 	return err
