@@ -15,7 +15,7 @@ import (
 )
 
 type IAMRegister interface {
-	RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error)
+	RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL, organisationid string) (string, string, error)
 	GetOAuthURL() string
 }
 
@@ -87,7 +87,7 @@ func (c *Client) GetOAuthURL() string {
 	return c.oryClient.GetURL()
 }
 
-func (c *Client) RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL string) (string, string, error) {
+func (c *Client) RegisterAppClientSecrets(ctx context.Context, clientName, redirectURL, organisationid string) (string, string, error) {
 	conn, err := grpc.Dial(c.cfg.IAMURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return "", "", err
@@ -95,7 +95,11 @@ func (c *Client) RegisterAppClientSecrets(ctx context.Context, clientName, redir
 	defer conn.Close()
 
 	iamclient := iampb.NewOauthServiceClient(conn)
-	res, err := iamclient.CreateOauthClient(context.Background(), &iampb.OauthClientRequest{
+	md := metadata.Pairs(
+		"organisationid", organisationid,
+	)
+	newCtx := metadata.NewOutgoingContext(ctx, md)
+	res, err := iamclient.CreateOauthClient(newCtx, &iampb.OauthClientRequest{
 		ClientName: clientName, RedirectUris: []string{redirectURL},
 	})
 	if err != nil {
