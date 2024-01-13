@@ -29,6 +29,15 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
+	tektonAvailable, err := a.as.GetTektonProjectForID(request.GitOrgId)
+	if err != nil {
+		a.log.Infof("faile to get git project %s, %v", request.GitOrgId, err)
+		return &captenpluginspb.CreateTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+
 	a.log.Infof("Add Create Tekton Pipeline registry %s request received", request.PipelineName)
 
 	id := uuid.New()
@@ -36,7 +45,7 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 	TektonPipeline := model.TektonPipeline{
 		Id:             id.String(),
 		PipelineName:   request.PipelineName,
-		GitProjectId:   request.GitOrgId,
+		GitProjectId:   tektonAvailable.GitProjectId,
 		ContainerRegId: request.ContainerRegistryIds,
 	}
 	if err := a.as.UpsertTektonPipelines(&TektonPipeline); err != nil {
@@ -47,7 +56,7 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	err := a.configureTektonPipelinesGitRepo(&TektonPipeline, model.TektonPipelineCreate)
+	err = a.configureTektonPipelinesGitRepo(&TektonPipeline, model.TektonPipelineCreate)
 	if err != nil {
 		TektonPipeline.Status = string(model.TektonPipelineConfigurationFailed)
 		TektonPipeline.WorkflowId = "NA"

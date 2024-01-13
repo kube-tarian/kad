@@ -1,5 +1,9 @@
 package model
 
+import (
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 type TektonProjectStatus string
 
 const (
@@ -54,4 +58,21 @@ type TektonPipeline struct {
 	LastUpdateTime string   `json:"last_update_time,omitempty"`
 	WorkflowId     string   `json:"workflow_id,omitempty"`
 	WorkflowStatus string   `json:"workflow_status,omitempty"`
+}
+
+type EventListenerStatus struct {
+	ConditionedStatus `json:",inline"`
+}
+
+type EventListener struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Status EventListenerStatus `json:"status,omitempty"`
+}
+
+type EventListeners struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []EventListener `json:"items"`
 }

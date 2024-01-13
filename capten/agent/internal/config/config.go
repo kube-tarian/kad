@@ -11,6 +11,8 @@ type SericeConfig struct {
 	AuthEnabled               bool   `envconfig:"AUTH_ENABLED" default:"false"`
 	CrossplaneSyncJobEnabled  bool   `envconfig:"CROSSPLANE_SYNC_JOB_ENABLED" default:"true"`
 	CrossplaneSyncJobInterval string `envconfig:"CROSSPLANE_SYNC_JOB_INTERVAL" default:"@every 1h"`
+	TektonSyncJobEnabled      bool   `envconfig:"TEKTON_SYNC_JOB_ENABLED" default:"true"`
+	TektonSyncJobInterval     string `envconfig:"TEKTON_SYNC_JOB_INTERVAL" default:"@every 1h"`
 	DomainName                string `envconfig:"DOMAIN_NAME" default:"example.com"`
 }
 
