@@ -20,7 +20,7 @@ type SyncSecretConfig struct {
 func SyncCassandraAdminSecret(log logging.Logger) error {
 	conf := &SyncSecretConfig{}
 	if err := envconfig.Process("", conf); err != nil {
-		return fmt.Errorf("cassandra config read faile, %v", err)
+		return fmt.Errorf("cassandra config read failed, %v", err)
 	}
 
 	k8sClient, err := k8s.NewK8SClient(log)

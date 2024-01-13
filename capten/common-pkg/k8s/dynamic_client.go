@@ -85,12 +85,16 @@ func (dc *DynamicClientSet) getGVK(data []byte) (obj *unstructured.Unstructured,
 	return
 }
 
-func (dc *DynamicClientSet) CreateResource(ctx context.Context, filename string) (string, string, error) {
+func (dc *DynamicClientSet) CreateResourceFromFile(ctx context.Context, filename string) (string, string, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return "", "", err
 	}
 
+	return dc.CreateResource(ctx, data)
+}
+
+func (dc *DynamicClientSet) CreateResource(ctx context.Context, data []byte) (string, string, error) {
 	jsonData, err := ConvertYamlToJson(data)
 	if err != nil {
 		return "", "", err
