@@ -254,7 +254,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			strdata["username"] = []byte(username)
 			strdata["password"] = []byte(token)
 			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName,
-				v1.SecretTypeBasicAuth, strdata, map[string]string{"tekton.dev/git-0": "https://github.com"}); err != nil {
+				v1.SecretTypeBasicAuth, strdata, nil); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
 		}
