@@ -368,7 +368,7 @@ func updatePipelineTemplate(valuesFileName, pipelineName, domainName string) err
 	// GET dashboard and ingress domain suffix.
 	tektonPipelineConfig.IngressDomainName = model.TektonHostName + "." + domainName
 	tektonPipelineConfig.PipelineName = pipelineName
-	tektonPipelineConfig.TektonDashboard = pipelineName
+	tektonPipelineConfig.TektonDashboard = "http://" + tektonPipelineConfig.IngressDomainName + "/" + pipelineName
 	secretName := []SecretNames{}
 
 	for _, secret := range secrets {
