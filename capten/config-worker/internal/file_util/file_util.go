@@ -2,7 +2,6 @@ package fileutil
 
 import (
 	"bytes"
-	"fmt"
 	"html/template"
 	"io"
 	"os"
@@ -34,8 +33,6 @@ func SyncFiles(sourceFolder, destinationFolder string) error {
 				return err
 			}
 		}
-
-		fmt.Println("File => ", file.Name())
 	}
 	return nil
 }
@@ -77,12 +74,9 @@ func UpdateFilesInFolderWithTempaltes(folderPath string, templateValues map[stri
 		return err
 	}
 
-	fmt.Println("UpdateFilesInFolderWithTempaltes =>", UpdateFilesInFolderWithTempaltes)
 	for _, file := range files {
 		filePath := filepath.Join(folderPath, file.Name())
 
-		fmt.Println("filePath =>", filePath)
-		fmt.Println("templateValues =>", templateValues)
 		err := UpdateFileWithTempaltes(filePath, templateValues)
 		if err != nil {
 			return err

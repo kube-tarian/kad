@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	fileutil "github.com/kube-tarian/kad/capten/config-worker/internal/file_util"
@@ -66,8 +67,6 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 
 	clusterValuesFile := filepath.Join(customerRepo, cp.pluginConfig.ClusterEndpointUpdates.ClusterValuesFile)
 	defaultAppListFile := filepath.Join(templateRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppListFile)
-	fmt.Println("clusterValuesFile => ", clusterValuesFile)
-	fmt.Println("defaultAppListFile =>", defaultAppListFile)
 	err = updateClusterEndpointDetials(clusterValuesFile, req.ManagedClusterName, endpoint, defaultAppListFile)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace the file")
@@ -76,8 +75,6 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	defaultAppValPath := filepath.Join(templateRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppValuesPath)
 	clusterDefaultAppValPath := filepath.Join(customerRepo,
 		cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName)
-	fmt.Println("defaultAppValPath =>", defaultAppValPath)
-	fmt.Println("clusterDefaultAppValPath =>", clusterDefaultAppValPath)
 	err = cp.syncDefaultAppVaules(req.ManagedClusterName, defaultAppValPath, clusterDefaultAppValPath)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync default app value files")
@@ -91,6 +88,8 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	if err := fileutil.UpdateFileWithTempaltes(clusterValuesFile, templateValues); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update cluster config template values")
 	}
+
+	updateKubizAgentValaues(ctx)
 
 	logger.Infof("default app vaules synched for cluster %s", req.ManagedClusterName)
 
@@ -283,7 +282,6 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(clusterName string) map[string]st
 	val := map[string]string{
 		"DomainName":  cp.cfg.DomainName,
 		"ClusterName": clusterName,
-		"NatsHost":    "20.204.97.156",
 	}
 	return val
 }
@@ -309,4 +307,33 @@ func readClusterDefaultApps(clusterDefaultAppsFile string) ([]DefaultApps, error
 	}
 
 	return appList.DefaultApps, nil
+}
+
+func updateKubizAgentValaues(ctx context.Context) {
+	getConfigGlobalValues(ctx)
+
+}
+
+func getConfigGlobalValues(ctx context.Context) error {
+	log := logging.NewLogger()
+	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, "capten-config", "global-values")
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
+		log.Errorf("failed to fetch credential for %s, %v", credPath, err)
+		return err
+	}
+
+	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, "capten-config", "global-values")
+	if err != nil {
+		log.Audit("security", "storecred", "failed", "system", "failed to fetch crendential for %s", credPath)
+		log.Errorf("failed to fetch credential for %s, %v", credPath, err)
+		return err
+	}
+
+	b, _ := json.Marshal(cred)
+	fmt.Printf("Credentials => \n %+v,\n", string(b))
+
+	log.Infof("fetched credential for entity %s", credPath)
+	return nil
 }
