@@ -342,11 +342,28 @@ func getConfigGlobalValues(ctx context.Context) (map[string]string, error) {
 		return nil, err
 	}
 
-	byteCred, _ := json.Marshal(cred["global-values"])
+	fmt.Println("cred")
+	fmt.Println(cred)
+
+	fmt.Println("cred[global-values]")
+	fmt.Println(cred["global-values"])
+
+	byteCred, err := json.Marshal(cred["global-values"])
+	if err != nil {
+		fmt.Println("byteCred error => \n" + err.Error())
+	}
+
+	fmt.Println("byteCred")
+	fmt.Println(byteCred)
 
 	globalValues := make(map[string]string)
 
-	json.Unmarshal(byteCred, &globalValues)
+	if err := json.Unmarshal(byteCred, &globalValues); err != nil {
+		fmt.Println("byteCred error => \n" + err.Error())
+	}
+
+	fmt.Println("globalValues")
+	fmt.Println(globalValues)
 
 	log.Infof("fetched credential for entity %s", credPath)
 	return globalValues, nil
