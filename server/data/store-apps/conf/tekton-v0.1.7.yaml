@@ -6,12 +6,12 @@ RepoName: "tools"
 RepoURL: "https://kube-tarian.github.io/helmrepo-supporting-tools"
 Namespace: "tekton"
 ReleaseName: "tekton"
-Version: "0.1.5"
+Version: "0.1.7"
 PluginName: "Tekton"
 PluginDescription: "Configure Build pipeline with Tekton"
 CreateNamespace: true
 Icon: "tekton.svg"
-LaunchURL: https://tekton.{{.DomainName}}/tekton/
+LaunchURL: https://tekton.{{.DomainName}}/
 LaunchUIDescription: "Intelops Tekton"
 LaunchUIIcon: "tekton.svg"
 OverrideValues:
