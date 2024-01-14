@@ -146,7 +146,7 @@ func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.Tekton
 	defer os.RemoveAll(customerRepo)
 
 	logger.Infof("removing pipeline directory from %s", req.RepoURL)
-	err = os.RemoveAll(filepath.Join(customerRepo, cp.pluginConfig.TektonPipelinePath, req.PipelineName))
+	err = cp.helper.RemoveFilesFromRepo([]string{filepath.Join(cp.pluginConfig.TektonPipelinePath, req.PipelineName)})
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove pipeline from repo")
 	}
