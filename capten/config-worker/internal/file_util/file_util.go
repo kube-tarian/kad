@@ -2,6 +2,7 @@ package fileutil
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"io"
 	"os"
@@ -33,6 +34,8 @@ func SyncFiles(sourceFolder, destinationFolder string) error {
 				return err
 			}
 		}
+
+		fmt.Println("File => ", file.Name())
 	}
 	return nil
 }

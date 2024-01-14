@@ -71,6 +71,9 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to replace the file")
 	}
 
+	fmt.Println("clusterValuesFile => ", clusterValuesFile)
+	fmt.Println("defaultAppListFile =>", defaultAppListFile)
+
 	defaultAppValPath := filepath.Join(templateRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppValuesPath)
 	clusterDefaultAppValPath := filepath.Join(customerRepo,
 		cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName)
@@ -78,6 +81,9 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync default app value files")
 	}
+
+	fmt.Println("defaultAppValPath =>", defaultAppValPath)
+	fmt.Println("clusterDefaultAppValPath =>", clusterDefaultAppValPath)
 
 	templateValues := cp.prepareTemplateVaules(req.ManagedClusterName)
 	if err := fileutil.UpdateFilesInFolderWithTempaltes(clusterDefaultAppValPath, templateValues); err != nil {
