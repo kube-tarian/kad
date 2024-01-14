@@ -283,6 +283,7 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(clusterName string) map[string]st
 	val := map[string]string{
 		"DomainName":  cp.cfg.DomainName,
 		"ClusterName": clusterName,
+		"NatsHost":    "20.204.97.156",
 	}
 	return val
 }
