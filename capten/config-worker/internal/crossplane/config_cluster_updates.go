@@ -80,7 +80,11 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync default app value files")
 	}
 
-	templateValues := cp.prepareTemplateVaules(req.ManagedClusterName)
+	templateValues, err := cp.prepareTemplateVaules(ctx, req.ManagedClusterName)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to prepare template values")
+	}
+
 	if err := fileutil.UpdateFilesInFolderWithTempaltes(clusterDefaultAppValPath, templateValues); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update default app template values")
 	}
@@ -90,7 +94,6 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	}
 
 	fmt.Println("clusterDefaultAppValPath =>", clusterDefaultAppValPath)
-	updateKubizAgentValaues(ctx, clusterDefaultAppValPath)
 
 	logger.Infof("default app vaules synched for cluster %s", req.ManagedClusterName)
 
@@ -279,13 +282,25 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 	return err
 }
 
-func (cp *CrossPlaneApp) prepareTemplateVaules(clusterName string) map[string]string {
+func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName string) (map[string]string, error) {
 	val := map[string]string{
 		"DomainName":  cp.cfg.DomainName,
 		"ClusterName": clusterName,
-		"nats.host":   "test",
 	}
-	return val
+	cred, err := getConfigGlobalValues(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for key, value := range cred {
+		val[key] = value
+	}
+
+	fmt.Println("values")
+	b, _ := json.Marshal(val)
+	fmt.Println(string(b))
+
+	return val, nil
 }
 
 func prepareClusterData(clusterName, endpoint string, defaultApps []DefaultApps) Cluster {
@@ -309,29 +324,6 @@ func readClusterDefaultApps(clusterDefaultAppsFile string) ([]DefaultApps, error
 	}
 
 	return appList.DefaultApps, nil
-}
-
-func updateKubizAgentValaues(ctx context.Context, appValuesDir string) error {
-	data, err := os.ReadFile(filepath.Join(appValuesDir, "kubviz-agent-values.yaml"))
-	if err != nil {
-		fmt.Println("Error =>", err)
-		return err
-	}
-
-	fmt.Println("kubviz-agent-values.yaml")
-	fmt.Println(string(data))
-
-	creds, err := getConfigGlobalValues(ctx)
-	if err != nil {
-		return err
-	}
-
-	if v, ok := creds["LoadBalancerHost"]; ok {
-		fmt.Println("LoadBalancerHost")
-		fmt.Println(v)
-	}
-
-	return nil
 }
 
 func getConfigGlobalValues(ctx context.Context) (map[string]string, error) {
