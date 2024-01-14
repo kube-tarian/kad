@@ -295,6 +295,10 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName 
 		val[key] = value
 	}
 
+	fmt.Println("values")
+	b, _ := json.Marshal(val)
+	fmt.Println(string(b))
+
 	return val, nil
 }
 
