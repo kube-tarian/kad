@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
@@ -344,12 +345,19 @@ func getConfigGlobalValues(ctx context.Context) (map[string]string, error) {
 
 	globalValues := make(map[string]string)
 
+	lines := strings.Split(cred["global-values"], "\n")
+	for _, line := range lines {
+		parts := strings.SplitN(line, ":", 2)
+		if len(parts) == 2 {
+			key, value := strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
+			globalValues[key] = value
+		}
+	}
+
 	fmt.Println("global-valaues")
 	fmt.Println(cred["global-values"])
 
-	if err := json.Unmarshal([]byte(cred["global-values"]), &globalValues); err != nil {
-		fmt.Println("byteCred error => \n" + err.Error())
-	}
+	fmt.Println("********")
 
 	fmt.Println("globalValues")
 	fmt.Println(globalValues)
