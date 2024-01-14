@@ -295,7 +295,9 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName 
 	for key, value := range cred {
 		val[key] = value
 	}
-
+	fmt.Println("XXXXXXX")
+	fmt.Println(val)
+	fmt.Println("-----------")
 	fmt.Println("values")
 	b, _ := json.Marshal(val)
 	fmt.Println(string(b))
