@@ -56,7 +56,7 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	err = a.configureTektonPipelinesGitRepo(&TektonPipeline, model.TektonPipelineCreate)
+	err = a.configureTektonPipelinesGitRepo(&TektonPipeline, model.TektonPipelineCreate, true)
 	if err != nil {
 		TektonPipeline.Status = string(model.TektonPipelineConfigurationFailed)
 		TektonPipeline.WorkflowId = "NA"
@@ -118,7 +118,7 @@ func (a *Agent) UpdateTektonPipelines(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	if err := a.configureTektonPipelinesGitRepo(pipeline, model.TektonPipelineSync); err != nil {
+	if err := a.configureTektonPipelinesGitRepo(pipeline, model.TektonPipelineSync, true); err != nil {
 		a.log.Errorf("failed to configure updates for TektonPipeline: %s, %v", request.Id, err)
 		return &captenpluginspb.UpdateTektonPipelinesResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -165,6 +165,62 @@ func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb
 
 }
 
+func (a *Agent) DeleteTektonPipelines(ctx context.Context, request *captenpluginspb.DeleteTektonPipelinesRequest) (
+	*captenpluginspb.DeleteTektonPipelinesResponse, error) {
+	a.log.Infof("Delete tekton pipeline request recieved")
+	if err := validateArgs(request.Id); err != nil {
+		a.log.Infof("request validation failed", err)
+		return &captenpluginspb.DeleteTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+
+	pipeline, err := a.as.GetTektonPipelinesForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get TektonPipeline from db, %v", err)
+		return &captenpluginspb.DeleteTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to fetch TektonPipelines",
+		}, nil
+	}
+
+	err = a.configureTektonPipelinesGitRepo(pipeline, model.TektonPipelineDelete, false)
+	if err != nil {
+		a.log.Errorf("failed to initiate cleanup of  TektonPipeline from git repo, %v", err)
+		return &captenpluginspb.DeleteTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to  initiate cleanup of  TektonPipeline from git repo",
+		}, nil
+	}
+	a.monitorTektonPipelineWorkflow(pipeline, pipeline.WorkflowId)
+	if pipeline.Status != string(model.TektonPipelineConfigured) {
+		a.log.Infof("failed to delete tekton pipeline %s", pipeline.PipelineName)
+
+		return &captenpluginspb.DeleteTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed",
+		}, nil
+	}
+
+	err = a.as.DeleteTektonPipelinesById(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to delete TektonPipeline from db, %v", err)
+		return &captenpluginspb.DeleteTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete TektonPipelines",
+		}, nil
+	}
+
+	a.log.Infof("Deleted tekton pipeline %s", pipeline.PipelineName)
+
+	return &captenpluginspb.DeleteTektonPipelinesResponse{
+		Status:        captenpluginspb.StatusCode_OK,
+		StatusMessage: "successful",
+	}, nil
+
+}
+
 func (a *Agent) SyncTektonPipelines(ctx context.Context, request *captenpluginspb.SyncTektonPipelinesRequest) (
 	*captenpluginspb.SyncTektonPipelinesResponse, error) {
 	a.log.Infof("Get tekton pipeline request recieved")
@@ -184,7 +240,7 @@ func (a *Agent) SyncTektonPipelines(ctx context.Context, request *captenpluginsp
 			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
 			ContainerRegistryIds: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime,
 		}
-		if err := a.configureTektonPipelinesGitRepo(r, model.TektonPipelineSync); err != nil {
+		if err := a.configureTektonPipelinesGitRepo(r, model.TektonPipelineSync, true); err != nil {
 			a.log.Errorf("failed to trigger the tekton pipeline sync for %s, %v", r.PipelineName, err)
 			pipelines[index].Status = "failed to trigger the sync"
 			continue
@@ -199,7 +255,7 @@ func (a *Agent) SyncTektonPipelines(ctx context.Context, request *captenpluginsp
 	}, nil
 }
 
-func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, action string) error {
+func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, action string, triggerMonitor bool) error {
 	a.log.Infof("configuring tekton pipeline for the git repo %s", req.GitProjectUrl)
 	tektonProject := model.TektonPipeline{}
 	proj, err := a.as.GetGitProjectForID(req.GitProjectId)
@@ -241,7 +297,9 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, actio
 		return nil
 	}
 
-	go a.monitorTektonPipelineWorkflow(req, wkfId)
+	if triggerMonitor {
+		go a.monitorTektonPipelineWorkflow(req, wkfId)
+	}
 	a.log.Infof("started monitoring the tekton pipelines for Git project %s", tektonProject.GitProjectUrl)
 	return nil
 }

@@ -34,13 +34,14 @@ func processConfigurationActivity(ctx context.Context, params model.ConfigurePar
 		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to initialize crossplane plugin")
 	}
 
+	reqLocal := &model.TektonPipelineUseCase{}
+	if err := json.Unmarshal(payload, reqLocal); err != nil {
+		logger.Errorf("failed to unmarshall the tekton pipeline req for %s, %v", model.TektonPipelineCreate, err)
+		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to unmarshall the crossplane req for %s", model.TektonPipelineCreate)
+	}
+
 	switch params.Action {
 	case model.TektonPipelineCreate:
-		reqLocal := &model.TektonPipelineUseCase{}
-		if err := json.Unmarshal(payload, reqLocal); err != nil {
-			logger.Errorf("failed to unmarshall the tekton pipeline req for %s, %v", model.TektonPipelineCreate, err)
-			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to unmarshall the crossplane req for %s", model.TektonPipelineCreate)
-		}
 		status, err := cp.configureProjectAndApps(ctx, reqLocal)
 		if err != nil {
 			logger.Errorf("failed to configure tekton project for %s, %v", model.TektonPipelineCreate, err)
@@ -48,11 +49,13 @@ func processConfigurationActivity(ctx context.Context, params model.ConfigurePar
 		}
 		return status, nil
 	case model.TektonPipelineSync:
-		reqLocal := &model.TektonPipelineUseCase{}
-		if err := json.Unmarshal(payload, reqLocal); err != nil {
-			logger.Errorf("failed to unmarshall the tekton pipeline req for %s, %v", model.TektonPipelineSync, err)
-			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to unmarshall the crossplane req for %s", model.TektonPipelineSync)
+		err := cp.createOrUpdateSecrets(ctx, reqLocal)
+		if err != nil {
+			logger.Errorf("failed to update tekton project for %s, %v", model.TektonPipelineSync, err)
+			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to update tekton project for %s", model.TektonPipelineSync)
 		}
+		return string(model.WorkFlowStatusCompleted), nil
+	case model.TektonPipelineDelete:
 		err := cp.createOrUpdateSecrets(ctx, reqLocal)
 		if err != nil {
 			logger.Errorf("failed to update tekton project for %s, %v", model.TektonPipelineSync, err)

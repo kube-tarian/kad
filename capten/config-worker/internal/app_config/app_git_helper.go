@@ -12,6 +12,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
+	"github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
@@ -150,6 +151,25 @@ func (ca *AppGitConfigHelper) SyncArgoCDApp(ctx context.Context, ns, resName str
 	}
 
 	_, err = client.TriggerAppSync(ctx, ns, resName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ca *AppGitConfigHelper) DeleteArgoCDApp(ctx context.Context, ns, resName, mainApp string) error {
+	client, err := argocd.NewClient(logger)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Delete(&model.DeleteRequestPayload{Namespace: ns, ReleaseName: resName})
+	if err != nil {
+		return err
+	}
+
+	_, err = client.TriggerAppSync(ctx, ns, mainApp)
 	if err != nil {
 		return err
 	}

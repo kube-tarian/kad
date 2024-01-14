@@ -16,6 +16,7 @@ service capten_plugins {
     rpc GetTektonPipelines(GetTektonPipelinesRequest) returns (GetTektonPipelinesResponse) {}
     rpc CreateTektonPipelines(CreateTektonPipelinesRequest) returns (CreateTektonPipelinesResponse) {}
     rpc UpdateTektonPipelines(UpdateTektonPipelinesRequest) returns (UpdateTektonPipelinesResponse) {}
+    rpc DeleteTektonPipelines(DeleteTektonPipelinesRequest) returns(DeleteTektonPipelinesResponse) {}
     rpc SyncTektonPipelines(SyncTektonPipelinesRequest) returns (SyncTektonPipelinesResponse) {}
 
     rpc AddContainerRegistry(AddContainerRegistryRequest) returns (AddContainerRegistryResponse) {}
@@ -485,4 +486,13 @@ message UpdateTektonPipelinesResponse {
     string id = 1;
     StatusCode status = 2;
     string statusMessage = 3;
+}
+
+message DeleteTektonPipelinesRequest {
+    string id = 1;
+}
+
+message DeleteTektonPipelinesResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
 }

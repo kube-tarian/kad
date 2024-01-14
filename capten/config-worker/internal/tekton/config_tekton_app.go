@@ -25,6 +25,9 @@ var (
 	secrets           = []string{"gitcred", "docker-credentials", "github-webhook-secret"}
 	pipelineNamespace = "tekton-pipelines"
 	tektonChildTasks  = []string{"tekton-cluster-tasks"}
+	addPipeline       = "add"
+	deletePipeline    = "delete"
+	mainAppName       = "tekton-apps"
 )
 
 type Config struct {
@@ -98,7 +101,7 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 	}
 	logger.Infof("updated resource configurations in cloned project %s", req.RepoURL)
 
-	err = updateArgoCDTemplate(filepath.Join(customerRepo, cp.pluginConfig.PipelineSyncUpdate.MainAppValues), req.PipelineName)
+	err = updateArgoCDTemplate(filepath.Join(customerRepo, cp.pluginConfig.PipelineSyncUpdate.MainAppValues), req.PipelineName, addPipeline)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updateArgoCDTemplate")
 	}
@@ -128,6 +131,53 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 	err = cp.deployArgoCDApps(ctx, customerRepo, req.PipelineName)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to depoy argoCD apps")
+	}
+
+	return string(agentmodel.WorkFlowStatusCompleted), nil
+}
+
+func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.TektonPipelineUseCase) (status string, err error) {
+	logger.Infof("cloning user repo %s", req.RepoURL)
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.GitCredId)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
+	}
+
+	defer os.RemoveAll(customerRepo)
+
+	logger.Infof("removing pipeline directory from %s", req.RepoURL)
+	err = os.RemoveAll(filepath.Join(customerRepo, cp.pluginConfig.TektonPipelinePath, req.PipelineName))
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove pipeline from repo")
+	}
+	logger.Infof("removed pipeline resources from project %s", req.RepoURL)
+
+	logger.Infof("update main resource values.yaml in cloned project %s", req.RepoURL)
+
+	err = updateArgoCDTemplate(filepath.Join(customerRepo, cp.pluginConfig.PipelineSyncUpdate.MainAppValues), req.PipelineName, deletePipeline)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updateArgoCDTemplate")
+	}
+
+	err = cp.helper.AddFilesToRepo([]string{"."})
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
+	}
+
+	err = cp.helper.CommitRepoChanges()
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to commit git repo")
+	}
+	logger.Infof("added cloned project %s changed to git", req.RepoURL)
+
+	err = cp.deleteSecrets(ctx, req)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to create k8s secrets")
+	}
+
+	err = cp.helper.DeleteArgoCDApp(ctx, pipelineNamespace, req.PipelineName, mainAppName)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to delete argoCD apps")
 	}
 
 	return string(agentmodel.WorkFlowStatusCompleted), nil
@@ -263,6 +313,21 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 	return nil
 }
 
+func (cp *TektonApp) deleteSecrets(ctx context.Context, req *model.TektonPipelineUseCase) error {
+	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
+	if err != nil {
+		return fmt.Errorf("failed to initalize k8s client, %v", err)
+	}
+
+	for _, secret := range secrets {
+		if err := k8sclient.DeleteSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func replaceCaptenUrls(dir string, src, target string) error {
 	if !strings.HasSuffix(src, ".git") {
 		src += ".git"
@@ -305,7 +370,7 @@ func replaceInFile(filePath, target, replacement string) error {
 	return nil
 }
 
-func updateArgoCDTemplate(valuesFileName, pipelineName string) error {
+func updateArgoCDTemplate(valuesFileName, pipelineName, action string) error {
 	data, err := os.ReadFile(valuesFileName)
 	if err != nil {
 		return err
@@ -322,17 +387,30 @@ func updateArgoCDTemplate(valuesFileName, pipelineName string) error {
 		return err
 	}
 
-	tektonPipelines := []TektonPipeline{{Name: pipelineName}}
-
 	if tektonConfig.TektonPipelines == nil {
 		tektonConfig.TektonPipelines = &[]TektonPipeline{}
 	}
 
-	for _, pipeline := range *tektonConfig.TektonPipelines {
-		tektonPipelines = append(tektonPipelines, TektonPipeline{Name: pipeline.Name})
-	}
+	switch action {
+	case addPipeline:
+		tektonPipelines := []TektonPipeline{{Name: pipelineName}}
 
-	tektonConfig.TektonPipelines = &tektonPipelines
+		for _, pipeline := range *tektonConfig.TektonPipelines {
+			tektonPipelines = append(tektonPipelines, TektonPipeline{Name: pipeline.Name})
+		}
+
+		tektonConfig.TektonPipelines = &tektonPipelines
+	case deletePipeline:
+		tektonPipelines := []TektonPipeline{}
+		for _, pipeline := range *tektonConfig.TektonPipelines {
+			if pipeline.Name == pipelineName {
+				continue
+			}
+			tektonPipelines = append(tektonPipelines, TektonPipeline{Name: pipeline.Name})
+		}
+
+		tektonConfig.TektonPipelines = &tektonPipelines
+	}
 
 	jsonBytes, err := json.Marshal(tektonConfig)
 	if err != nil {
@@ -368,7 +446,7 @@ func updatePipelineTemplate(valuesFileName, pipelineName, domainName string) err
 	// GET dashboard and ingress domain suffix.
 	tektonPipelineConfig.IngressDomainName = model.TektonHostName + "." + domainName
 	tektonPipelineConfig.PipelineName = pipelineName
-	tektonPipelineConfig.TektonDashboard = "http://" + tektonPipelineConfig.IngressDomainName + "/" + pipelineName
+	tektonPipelineConfig.TektonDashboard = "http://" + tektonPipelineConfig.IngressDomainName
 	secretName := []SecretNames{}
 
 	for _, secret := range secrets {

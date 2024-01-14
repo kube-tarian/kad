@@ -28,6 +28,7 @@ const (
 	CaptenPlugins_GetTektonPipelines_FullMethodName          = "/captenpluginspb.capten_plugins/GetTektonPipelines"
 	CaptenPlugins_CreateTektonPipelines_FullMethodName       = "/captenpluginspb.capten_plugins/CreateTektonPipelines"
 	CaptenPlugins_UpdateTektonPipelines_FullMethodName       = "/captenpluginspb.capten_plugins/UpdateTektonPipelines"
+	CaptenPlugins_DeleteTektonPipelines_FullMethodName       = "/captenpluginspb.capten_plugins/DeleteTektonPipelines"
 	CaptenPlugins_SyncTektonPipelines_FullMethodName         = "/captenpluginspb.capten_plugins/SyncTektonPipelines"
 	CaptenPlugins_AddContainerRegistry_FullMethodName        = "/captenpluginspb.capten_plugins/AddContainerRegistry"
 	CaptenPlugins_UpdateContainerRegistry_FullMethodName     = "/captenpluginspb.capten_plugins/UpdateContainerRegistry"
@@ -68,6 +69,7 @@ type CaptenPluginsClient interface {
 	GetTektonPipelines(ctx context.Context, in *GetTektonPipelinesRequest, opts ...grpc.CallOption) (*GetTektonPipelinesResponse, error)
 	CreateTektonPipelines(ctx context.Context, in *CreateTektonPipelinesRequest, opts ...grpc.CallOption) (*CreateTektonPipelinesResponse, error)
 	UpdateTektonPipelines(ctx context.Context, in *UpdateTektonPipelinesRequest, opts ...grpc.CallOption) (*UpdateTektonPipelinesResponse, error)
+	DeleteTektonPipelines(ctx context.Context, in *DeleteTektonPipelinesRequest, opts ...grpc.CallOption) (*DeleteTektonPipelinesResponse, error)
 	SyncTektonPipelines(ctx context.Context, in *SyncTektonPipelinesRequest, opts ...grpc.CallOption) (*SyncTektonPipelinesResponse, error)
 	AddContainerRegistry(ctx context.Context, in *AddContainerRegistryRequest, opts ...grpc.CallOption) (*AddContainerRegistryResponse, error)
 	UpdateContainerRegistry(ctx context.Context, in *UpdateContainerRegistryRequest, opts ...grpc.CallOption) (*UpdateContainerRegistryResponse, error)
@@ -178,6 +180,15 @@ func (c *captenPluginsClient) CreateTektonPipelines(ctx context.Context, in *Cre
 func (c *captenPluginsClient) UpdateTektonPipelines(ctx context.Context, in *UpdateTektonPipelinesRequest, opts ...grpc.CallOption) (*UpdateTektonPipelinesResponse, error) {
 	out := new(UpdateTektonPipelinesResponse)
 	err := c.cc.Invoke(ctx, CaptenPlugins_UpdateTektonPipelines_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *captenPluginsClient) DeleteTektonPipelines(ctx context.Context, in *DeleteTektonPipelinesRequest, opts ...grpc.CallOption) (*DeleteTektonPipelinesResponse, error) {
+	out := new(DeleteTektonPipelinesResponse)
+	err := c.cc.Invoke(ctx, CaptenPlugins_DeleteTektonPipelines_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -422,6 +433,7 @@ type CaptenPluginsServer interface {
 	GetTektonPipelines(context.Context, *GetTektonPipelinesRequest) (*GetTektonPipelinesResponse, error)
 	CreateTektonPipelines(context.Context, *CreateTektonPipelinesRequest) (*CreateTektonPipelinesResponse, error)
 	UpdateTektonPipelines(context.Context, *UpdateTektonPipelinesRequest) (*UpdateTektonPipelinesResponse, error)
+	DeleteTektonPipelines(context.Context, *DeleteTektonPipelinesRequest) (*DeleteTektonPipelinesResponse, error)
 	SyncTektonPipelines(context.Context, *SyncTektonPipelinesRequest) (*SyncTektonPipelinesResponse, error)
 	AddContainerRegistry(context.Context, *AddContainerRegistryRequest) (*AddContainerRegistryResponse, error)
 	UpdateContainerRegistry(context.Context, *UpdateContainerRegistryRequest) (*UpdateContainerRegistryResponse, error)
@@ -480,6 +492,9 @@ func (UnimplementedCaptenPluginsServer) CreateTektonPipelines(context.Context, *
 }
 func (UnimplementedCaptenPluginsServer) UpdateTektonPipelines(context.Context, *UpdateTektonPipelinesRequest) (*UpdateTektonPipelinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTektonPipelines not implemented")
+}
+func (UnimplementedCaptenPluginsServer) DeleteTektonPipelines(context.Context, *DeleteTektonPipelinesRequest) (*DeleteTektonPipelinesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTektonPipelines not implemented")
 }
 func (UnimplementedCaptenPluginsServer) SyncTektonPipelines(context.Context, *SyncTektonPipelinesRequest) (*SyncTektonPipelinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SyncTektonPipelines not implemented")
@@ -727,6 +742,24 @@ func _CaptenPlugins_UpdateTektonPipelines_Handler(srv interface{}, ctx context.C
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CaptenPluginsServer).UpdateTektonPipelines(ctx, req.(*UpdateTektonPipelinesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CaptenPlugins_DeleteTektonPipelines_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTektonPipelinesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CaptenPluginsServer).DeleteTektonPipelines(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CaptenPlugins_DeleteTektonPipelines_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CaptenPluginsServer).DeleteTektonPipelines(ctx, req.(*DeleteTektonPipelinesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1223,6 +1256,10 @@ var CaptenPlugins_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateTektonPipelines",
 			Handler:    _CaptenPlugins_UpdateTektonPipelines_Handler,
+		},
+		{
+			MethodName: "DeleteTektonPipelines",
+			Handler:    _CaptenPlugins_DeleteTektonPipelines_Handler,
 		},
 		{
 			MethodName: "SyncTektonPipelines",
