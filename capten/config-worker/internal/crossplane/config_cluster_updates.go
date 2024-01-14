@@ -344,6 +344,9 @@ func getConfigGlobalValues(ctx context.Context) (map[string]string, error) {
 
 	globalValues := make(map[string]string)
 
+	fmt.Println("global-valaues")
+	fmt.Println(cred["global-values"])
+
 	if err := json.Unmarshal([]byte(cred["global-values"]), &globalValues); err != nil {
 		fmt.Println("byteCred error => \n" + err.Error())
 	}
