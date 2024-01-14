@@ -90,7 +90,7 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	}
 
 	fmt.Println("clusterDefaultAppValPath =>", clusterDefaultAppValPath)
-	updateKubizAgentValaues(ctx)
+	updateKubizAgentValaues(ctx, clusterDefaultAppValPath)
 
 	logger.Infof("default app vaules synched for cluster %s", req.ManagedClusterName)
 
@@ -310,7 +310,16 @@ func readClusterDefaultApps(clusterDefaultAppsFile string) ([]DefaultApps, error
 	return appList.DefaultApps, nil
 }
 
-func updateKubizAgentValaues(ctx context.Context) error {
+func updateKubizAgentValaues(ctx context.Context, appValuesDir string) error {
+	data, err := os.ReadFile(filepath.Join(appValuesDir, "kubviz-agent-values.yaml"))
+	if err != nil {
+		fmt.Println("Error =>", err)
+		return err
+	}
+
+	fmt.Println("kubviz-agent-values.yaml")
+	fmt.Println(string(data))
+
 	creds, err := getConfigGlobalValues(ctx)
 	if err != nil {
 		return err
