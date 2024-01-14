@@ -56,12 +56,12 @@ func processConfigurationActivity(ctx context.Context, params model.ConfigurePar
 		}
 		return string(model.WorkFlowStatusCompleted), nil
 	case model.TektonPipelineDelete:
-		err := cp.createOrUpdateSecrets(ctx, reqLocal)
+		status, err := cp.deleteProjectAndApps(ctx, reqLocal)
 		if err != nil {
 			logger.Errorf("failed to update tekton project for %s, %v", model.TektonPipelineSync, err)
-			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to update tekton project for %s", model.TektonPipelineSync)
+			return status, fmt.Errorf("failed to update tekton project for %s", model.TektonPipelineSync)
 		}
-		return string(model.WorkFlowStatusCompleted), nil
+		return status, nil
 	default:
 		return string(model.WorkFlowStatusFailed), fmt.Errorf("invalid tekton pipeline action")
 	}
