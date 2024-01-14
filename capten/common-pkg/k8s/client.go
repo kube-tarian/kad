@@ -52,6 +52,32 @@ func NewK8SClient(log logging.Logger) (*K8SClient, error) {
 	}, nil
 }
 
+func NewK8SClientForCluster(log logging.Logger, kubeconfig, clusterCA, endpoint string) (*K8SClient, error) {
+	config, err := clientcmd.RESTConfigFromKubeConfig([]byte(kubeconfig))
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	config.Host = endpoint
+	config.CAData = []byte(clusterCA)
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	dcClient, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize dynamic client failed: %v", err)
+	}
+
+	return &K8SClient{
+		log:                    log,
+		Clientset:              clientset,
+		DynamicClientInterface: dcClient,
+		DynamicClient:          NewDynamicClientSet(dcClient),
+	}, nil
+}
+
 func GetK8SConfig(log logging.Logger) (*rest.Config, error) {
 	conf, err := FetchConfiguration()
 	if err != nil {
