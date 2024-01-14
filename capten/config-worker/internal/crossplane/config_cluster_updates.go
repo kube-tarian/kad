@@ -89,7 +89,7 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update cluster config template values")
 	}
 
-	fmt.Println("defaultAppValPath =>", defaultAppValPath)
+	fmt.Println("clusterDefaultAppValPath =>", clusterDefaultAppValPath)
 	updateKubizAgentValaues(ctx)
 
 	logger.Infof("default app vaules synched for cluster %s", req.ManagedClusterName)
