@@ -344,9 +344,9 @@ func (h *ClusterClaimSyncHandler) triggerClusterDelete(clusterName string, manag
 		return fmt.Errorf("failed to send event to workflow to configure %s, %v", managedCluster.ClusterEndpoint, err)
 	}
 
-	h.log.Infof("Crossplane project delete %s config workflow %s created", managedCluster.ClusterEndpoint, wkfId)
-
 	go h.monitorCrossplaneWorkflow(managedCluster, wkfId)
+
+	h.log.Infof("Crossplane project delete %s config workflow %s created", managedCluster.ClusterEndpoint, wkfId)
 
 	return nil
 }
@@ -364,16 +364,19 @@ func (h *ClusterClaimSyncHandler) monitorCrossplaneWorkflow(managedCluster *capt
 		h.log.Errorf("failed to send event to workflow to configure %s, %v", managedCluster.ClusterEndpoint, err)
 		return
 	}
+	h.log.Infof("Successfuly removed the %s app config from clusters", managedCluster.ClusterName)
 
 	if err := h.dbStore.DeleteManagedClusterById(managedCluster.Id); err != nil {
 		h.log.Errorf("failed to delete managed cluster from DB, %v", err)
 		return
 	}
+	h.log.Infof("Successfuly deleted managed cluster record for %s. cluster Id - %s", managedCluster.ClusterName, managedCluster.Id)
 
 	if err = h.deleteManagedClusterCredential(context.TODO(), managedCluster.Id); err != nil {
 		h.log.Errorf("failed to delete credential for %s, %v", managedCluster.Id, err)
 		return
 	}
+	h.log.Infof("Successfuly deleted managed cluster credential for %s. cluster Id - %s", managedCluster.ClusterName, managedCluster.Id)
 
 	h.log.Infof("Crossplane project delete %s config workflow %s completed", managedCluster.ClusterEndpoint, wkfId)
 }

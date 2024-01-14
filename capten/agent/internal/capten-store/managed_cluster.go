@@ -11,32 +11,39 @@ import (
 )
 
 const (
-	insertManagedCluster             = "INSERT INTO %s.ManagedClusters(id, cluster_name, cluster_endpoint, cluster_deploy_status, app_deploy_status, last_update_time) VALUES (?,?,?,?,?,?)"
-	insertManagedClusterId           = "INSERT INTO %s.ManagedClusters(id) VALUES (?)"
-	updateManagedClusterById         = "UPDATE %s.ManagedClusters SET %s WHERE id=?"
-	deleteManagedClusterById         = "DELETE FROM %s.ManagedClusters WHERE id= ?"
-	selectAllManagedClusters         = "SELECT id, cluster_name, cluster_endpoint, cluster_deploy_status, app_deploy_status, last_update_time FROM %s.ManagedClusters"
-	selectAllManagedClustersByLabels = "SELECT id, cluster_name, cluster_endpoint, cluster_deploy_status, app_deploy_status, last_update_time FROM %s.ManagedClusters WHERE %s"
-	selectGetManagedClusterById      = "SELECT id, cluster_name, cluster_endpoint, cluster_deploy_status, app_deploy_status, last_update_time FROM %s.ManagedClusters WHERE id=%s;"
+	insertManagedCluster                 = "INSERT INTO %s.ManagedClusters(id, cluster_name, cluster_endpoint, cluster_deploy_status, app_deploy_status, last_update_time) VALUES (?,?,?,?,?,?)"
+	insertManagedClusterId               = "INSERT INTO %s.ManagedClusters(id) VALUES (?)"
+	updateManagedClusterById             = "UPDATE %s.ManagedClusters SET %s WHERE id=?"
+	deleteManagedClusterById             = "DELETE FROM %s.ManagedClusters WHERE id= ?"
+	selectAllManagedClusters             = "SELECT id, cluster_name, cluster_endpoint, cluster_deploy_status, app_deploy_status, last_update_time FROM %s.ManagedClusters"
+	selectAllManagedClustersByLabels     = "SELECT id, cluster_name, cluster_endpoint, cluster_deploy_status, app_deploy_status, last_update_time FROM %s.ManagedClusters WHERE %s"
+	selectGetManagedClusterById          = "SELECT id, cluster_name, cluster_endpoint, cluster_deploy_status, app_deploy_status, last_update_time FROM %s.ManagedClusters WHERE id=%s;"
+	selectGetManagedClusterByClusterName = "SELECT id, cluster_name, cluster_endpoint, cluster_deploy_status, app_deploy_status, last_update_time FROM %s.ManagedClusters WHERE cluster_name=%s ALLOW FILTERING;"
 )
 
 func (a *Store) UpsertManagedCluster(config *captenpluginspb.ManagedCluster) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertManagedCluster, a.keyspace), config.Id, config.ClusterName, config.ClusterEndpoint, config.ClusterDeployStatus, config.AppDeployStatus, config.LastUpdateTime)
-	err := a.client.Session().ExecuteBatch(batch)
+
+	query := fmt.Sprintf(selectGetManagedClusterByClusterName, a.keyspace, config.ClusterName)
+	clusters, err := a.executeManagedClustersSelectQuery(query)
 	if err != nil {
+		batch.Query(fmt.Sprintf(insertManagedCluster, a.keyspace), config.Id, config.ClusterName, config.ClusterEndpoint, config.ClusterDeployStatus, config.AppDeployStatus, config.LastUpdateTime)
+	} else if len(clusters) > 0 {
 		updatePlaceholders, values := formUpdateKvPairsForManagedCluster(config)
 		if updatePlaceholders == "" {
-			return err
+			return fmt.Errorf("empty values found")
 		}
 		query := fmt.Sprintf(updateManagedClusterById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
-		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
-		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return err
+
+	if err := a.client.Session().ExecuteBatch(batch); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Store) DeleteManagedClusterById(id string) error {

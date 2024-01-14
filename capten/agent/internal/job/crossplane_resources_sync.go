@@ -19,12 +19,16 @@ func NewCrossplaneResourcesSync(log logging.Logger, frequency string, dbStore *c
 	if err != nil {
 		return nil, err
 	}
+	providerObj, err := crossplane.NewProvidersSyncHandler(log, dbStore)
+	if err != nil {
+		return nil, err
+	}
 	return &CrossplaneResourcesSync{
 		log:             log,
 		frequency:       frequency,
 		dbStore:         dbStore,
 		clusterHandler:  ccObj,
-		providerHandler: crossplane.NewProvidersSyncHandler(log, dbStore),
+		providerHandler: providerObj,
 	}, nil
 }
 

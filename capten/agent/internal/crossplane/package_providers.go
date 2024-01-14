@@ -8,6 +8,8 @@ import (
 
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
+	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
+	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
@@ -22,15 +24,25 @@ var (
 
 type ProvidersSyncHandler struct {
 	log     logging.Logger
+	tc      *temporalclient.Client
 	dbStore *captenstore.Store
 }
 
-func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) *ProvidersSyncHandler {
-	return &ProvidersSyncHandler{log: log, dbStore: dbStore}
+func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*ProvidersSyncHandler, error) {
+	tc, err := temporalclient.NewClient(log)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ProvidersSyncHandler{log: log, dbStore: dbStore, tc: tc}, nil
 }
 
 func registerK8SProviderWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
-	return k8s.RegisterDynamicInformers(NewProvidersSyncHandler(log, dbStore), dynamicClient, pgvk)
+	provider, err := NewProvidersSyncHandler(log, dbStore)
+	if err != nil {
+		return err
+	}
+	return k8s.RegisterDynamicInformers(provider, dynamicClient, pgvk)
 }
 
 func getProviderObj(obj any) (*model.Provider, error) {
@@ -161,7 +173,48 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 				continue
 			}
 			h.log.Infof("updated the crossplane provider %s", k8sProvider.Name)
+
+			err = h.triggerProviderUpdate(provider.ProviderName, provider)
+			if err != nil {
+				return fmt.Errorf("failed to trigger crossplane provider update workflow, %v", err)
+			}
+
+			h.log.Infof("triggered crossplane provider update workflow for provider %s", provider.ProviderName)
 		}
 	}
 	return nil
+}
+
+func (h *ProvidersSyncHandler) triggerProviderUpdate(clusterName string, provider model.CrossplaneProvider) error {
+	wd := workers.NewConfig(h.tc, h.log)
+
+	proj, err := h.dbStore.GetCrossplaneProject()
+	if err != nil {
+		return err
+	}
+	ci := model.CrossplaneClusterUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId,
+		ManagedClusterName: clusterName, ManagedClusterId: provider.Id}
+
+	wkfId, err := wd.SendAsyncEvent(context.TODO(), &model.ConfigureParameters{Resource: model.CrossPlaneResource, Action: model.CrossPlaneProviderUpdate}, ci)
+	if err != nil {
+		return fmt.Errorf("failed to send event to crossplane provider update workflow to configure %s, %v", provider.ProviderName, err)
+	}
+
+	h.log.Infof("Crossplane provider update %s config workflow %s created", provider.ProviderName, wkfId)
+
+	go h.monitorProviderUpdateWorkflow(&provider, wkfId)
+
+	return nil
+}
+
+func (h *ProvidersSyncHandler) monitorProviderUpdateWorkflow(provider *model.CrossplaneProvider, wkfId string) {
+	// during system reboot start monitoring, add it in map or somewhere.
+	wd := workers.NewConfig(h.tc, h.log)
+	_, err := wd.GetWorkflowInformation(context.TODO(), wkfId)
+	if err != nil {
+		h.log.Errorf("failed to send crossplane provider update event to workflow to configure %s, %v", provider.ProviderName, err)
+		return
+	}
+
+	h.log.Infof("Crossplane provider update %s config workflow %s completed", provider.ProviderName, wkfId)
 }
