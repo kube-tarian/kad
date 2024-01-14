@@ -93,8 +93,6 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update cluster config template values")
 	}
 
-	fmt.Println("clusterDefaultAppValPath =>", clusterDefaultAppValPath)
-
 	logger.Infof("default app vaules synched for cluster %s", req.ManagedClusterName)
 
 	err = cp.helper.AddFilesToRepo([]string{"."})
@@ -287,6 +285,7 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName 
 		"DomainName":  cp.cfg.DomainName,
 		"ClusterName": clusterName,
 	}
+
 	cred, err := getConfigGlobalValues(ctx)
 	if err != nil {
 		return nil, err
@@ -295,10 +294,6 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName 
 	for key, value := range cred {
 		val[key] = value
 	}
-
-	fmt.Println("values")
-	b, _ := json.Marshal(val)
-	fmt.Println(string(b))
 
 	return val, nil
 }
