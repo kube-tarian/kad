@@ -292,16 +292,9 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName 
 		return nil, err
 	}
 
-	fmt.Println("XXXXXXX")
-	fmt.Println(val)
-	fmt.Println("-----------")
-
 	for key, value := range cred {
 		val[key] = value
 	}
-	fmt.Println("values")
-	b, _ := json.Marshal(val)
-	fmt.Println(string(b))
 
 	return val, nil
 }
@@ -356,14 +349,6 @@ func getConfigGlobalValues(ctx context.Context) (map[string]string, error) {
 			globalValues[key] = value
 		}
 	}
-
-	fmt.Println("global-valaues")
-	fmt.Println(cred["global-values"])
-
-	fmt.Println("********")
-
-	fmt.Println("globalValues")
-	fmt.Println(globalValues)
 
 	log.Infof("fetched credential for entity %s", credPath)
 	return globalValues, nil
