@@ -123,6 +123,44 @@ func (s *Server) UpdateTektonPipelines(ctx context.Context, request *captenplugi
 	}, nil
 }
 
+func (s *Server) DeleteTektonPipelines(ctx context.Context, request *captenpluginspb.DeleteTektonPipelinesRequest) (*captenpluginspb.DeleteTektonPipelinesResponse, error) {
+	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
+	if err != nil {
+		s.log.Infof("request validation failed", err)
+		return &captenpluginspb.DeleteTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, nil
+	}
+	s.log.Infof("delete TektonPipelines for cluster %s recieved, [org: %s]",
+		clusterId, orgId)
+
+	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
+	if err != nil {
+		s.log.Errorf("failed to initialize agent, %v", err)
+		return &captenpluginspb.DeleteTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to initialize agent",
+		}, err
+	}
+
+	_, err = agent.GetCaptenPluginsClient().DeleteTektonPipelines(ctx, request)
+	if err != nil {
+		s.log.Errorf("failed to delete TektonPipelines , %v", err)
+		return &captenpluginspb.DeleteTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete TektonPipelines",
+		}, err
+	}
+
+	s.log.Infof("deleted the TektonPipelines for cluster %s, [org: %s]",
+		clusterId, orgId)
+	return &captenpluginspb.DeleteTektonPipelinesResponse{
+		StatusMessage: "delete of TektonPipelines successful",
+		Status:        captenpluginspb.StatusCode_OK,
+	}, nil
+}
+
 func (s *Server) SyncTektonPipelines(ctx context.Context, request *captenpluginspb.SyncTektonPipelinesRequest) (*captenpluginspb.SyncTektonPipelinesResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {
