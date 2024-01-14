@@ -89,6 +89,7 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update cluster config template values")
 	}
 
+	fmt.Println("defaultAppValPath =>", defaultAppValPath)
 	updateKubizAgentValaues(ctx)
 
 	logger.Infof("default app vaules synched for cluster %s", req.ManagedClusterName)
@@ -309,31 +310,37 @@ func readClusterDefaultApps(clusterDefaultAppsFile string) ([]DefaultApps, error
 	return appList.DefaultApps, nil
 }
 
-func updateKubizAgentValaues(ctx context.Context) {
-	getConfigGlobalValues(ctx)
+func updateKubizAgentValaues(ctx context.Context) error {
+	creds, err := getConfigGlobalValues(ctx)
+	if err != nil {
+		return err
+	}
 
+	if v, ok := creds["LoadBalancerHost"]; ok {
+		fmt.Println("LoadBalancerHost")
+		fmt.Println(v)
+	}
+
+	return nil
 }
 
-func getConfigGlobalValues(ctx context.Context) error {
+func getConfigGlobalValues(ctx context.Context) (map[string]string, error) {
 	log := logging.NewLogger()
 	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, "capten-config", "global-values")
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
 		log.Errorf("failed to fetch credential for %s, %v", credPath, err)
-		return err
+		return nil, err
 	}
 
 	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, "capten-config", "global-values")
 	if err != nil {
 		log.Audit("security", "storecred", "failed", "system", "failed to fetch crendential for %s", credPath)
 		log.Errorf("failed to fetch credential for %s, %v", credPath, err)
-		return err
+		return nil, err
 	}
 
-	b, _ := json.Marshal(cred)
-	fmt.Printf("Credentials => \n %+v,\n", string(b))
-
 	log.Infof("fetched credential for entity %s", credPath)
-	return nil
+	return cred, nil
 }
