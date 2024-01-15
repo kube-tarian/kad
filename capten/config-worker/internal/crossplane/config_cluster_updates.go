@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	fileutil "github.com/kube-tarian/kad/capten/config-worker/internal/file_util"
 	"github.com/kube-tarian/kad/capten/model"
@@ -287,14 +286,30 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName 
 		"ClusterName": clusterName,
 	}
 
-	cred, err := getConfigGlobalValues(ctx)
+	cred, err := credential.GetClusterGlobalValues(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	for key, value := range cred {
-		val[key] = value
+	b, err := yaml.Marshal(cred)
+	if err != nil {
+		fmt.Println(err.Error())
 	}
+	fmt.Println("B => \n" + string(b))
+
+	map1 := make(map[string]string)
+
+	err = yaml.Unmarshal(b, &map1)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	fmt.Println("Map1")
+	fmt.Println(map1)
+
+	// for key, value := range cred {
+	// 	val[key] = value
+	// }
 
 	return val, nil
 }
@@ -320,36 +335,4 @@ func readClusterDefaultApps(clusterDefaultAppsFile string) ([]DefaultApps, error
 	}
 
 	return appList.DefaultApps, nil
-}
-
-func getConfigGlobalValues(ctx context.Context) (map[string]string, error) {
-	log := logging.NewLogger()
-	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, "capten-config", "global-values")
-	credAdmin, err := credentials.NewCredentialAdmin(ctx)
-	if err != nil {
-		log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
-		log.Errorf("failed to fetch credential for %s, %v", credPath, err)
-		return nil, err
-	}
-
-	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, "capten-config", "global-values")
-	if err != nil {
-		log.Audit("security", "storecred", "failed", "system", "failed to fetch crendential for %s", credPath)
-		log.Errorf("failed to fetch credential for %s, %v", credPath, err)
-		return nil, err
-	}
-
-	globalValues := make(map[string]string)
-
-	lines := strings.Split(cred["global-values"], "\n")
-	for _, line := range lines {
-		parts := strings.SplitN(line, ":", 2)
-		if len(parts) == 2 {
-			key, value := strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
-			globalValues[key] = value
-		}
-	}
-
-	log.Infof("fetched credential for entity %s", credPath)
-	return globalValues, nil
 }
