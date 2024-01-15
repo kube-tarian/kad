@@ -3,12 +3,17 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/model"
 	captenmodel "github.com/kube-tarian/kad/capten/model"
+)
+
+var (
+	pipelineSuffix = "-pipeline"
 )
 
 func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenpluginspb.CreateTektonPipelinesRequest) (
@@ -26,6 +31,14 @@ func (a *Agent) CreateTektonPipelines(ctx context.Context, request *captenplugin
 		return &captenpluginspb.CreateTektonPipelinesResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "currently single container registry supported",
+		}, nil
+	}
+
+	if !strings.HasSuffix(request.PipelineName, pipelineSuffix) {
+		a.log.Infof("the pipeline should have the suffix %s in the name", pipelineSuffix)
+		return &captenpluginspb.CreateTektonPipelinesResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "the pipeline should have the suffix -pipeline in the name",
 		}, nil
 	}
 
