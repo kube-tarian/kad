@@ -86,6 +86,8 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to prepare template values")
 	}
 
+	templateValues["NatsHost"] = templateValues["LoadBalancerHost"]
+
 	fmt.Println("templateValues")
 	x, _ := json.Marshal(templateValues)
 	fmt.Println(string(x))
