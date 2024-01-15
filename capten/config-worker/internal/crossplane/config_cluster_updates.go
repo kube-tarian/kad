@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
@@ -291,21 +292,28 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName 
 		return nil, err
 	}
 
-	b, err := yaml.Marshal(cred)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println("B => \n" + string(b))
+	var configMap map[string]interface{}
 
-	map1 := make(map[string]interface{})
-
-	err = yaml.Unmarshal(b, &map1)
-	if err != nil {
-		fmt.Println(err.Error())
+	decoder := yaml.NewDecoder(strings.NewReader(cred))
+	if err := decoder.Decode(&configMap); err != nil {
+		return nil, err
 	}
 
-	fmt.Println("Map1")
-	fmt.Println(map1)
+	// b, err := yaml.Marshal(cred)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// }
+	// fmt.Println("B => \n" + string(b))
+
+	// map1 := make(map[string]interface{})
+
+	// err = yaml.Unmarshal(b, &map1)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// }
+
+	fmt.Println("configMap")
+	fmt.Println(configMap)
 
 	// for key, value := range cred {
 	// 	val[key] = value
