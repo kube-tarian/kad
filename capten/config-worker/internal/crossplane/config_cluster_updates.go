@@ -297,7 +297,7 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName 
 	}
 	fmt.Println("B => \n" + string(b))
 
-	map1 := make(map[string]string)
+	map1 := make(map[string]interface{})
 
 	err = yaml.Unmarshal(b, &map1)
 	if err != nil {
