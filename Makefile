@@ -12,6 +12,7 @@ gen-protoc:
 	mkdir -p server/pkg/pb/agentpb
 	mkdir -p server/pkg/pb/captenpluginspb
 	mkdir -p capten/agent/internal/pb/captensdkpb
+	mkdir -p capten/common-pkg/vault-cred/vaultcredpb
 
 	cd proto && protoc --go_out=../server/pkg/pb/serverpb/ --go_opt=paths=source_relative \
     		--go-grpc_out=../server/pkg/pb/serverpb  --go-grpc_opt=paths=source_relative \
@@ -36,6 +37,10 @@ gen-protoc:
 	cd proto && protoc --go_out=../capten/agent/internal/pb/captensdkpb --go_opt=paths=source_relative \
     		--go-grpc_out=../capten/agent/internal/pb/captensdkpb --go-grpc_opt=paths=source_relative \
     		./capten_sdk.proto
+
+	cd proto && protoc --go_out=../capten/common-pkg/vault-cred/vaultcredpb --go_opt=paths=source_relative \
+    		--go-grpc_out=../capten/common-pkg/vault-cred/vaultcredpb --go-grpc_opt=paths=source_relative \
+    		./vault_cred.proto
 
 docker-build-server:
 	# The prefix for server to changed either as server or intelops-kad-server

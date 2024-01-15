@@ -65,6 +65,8 @@ spec:
               value: "{{ .Values.service.port }}"
             - name: VAULT_ADDR
               value: {{ .Values.vault.address }}
+            - name: VAULT_CRED_ADDR
+              value: {{ .Values.vaultCred.address }}
             - name: DOMAIN_NAME
               value: {{ .Values.DomainName }}
             - name: VAULT_ROLE

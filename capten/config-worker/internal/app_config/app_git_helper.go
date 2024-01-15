@@ -134,8 +134,7 @@ func (ca *AppGitConfigHelper) DeployMainApp(ctx context.Context, fileName string
 		return "", "", fmt.Errorf("failed to initalize k8s client, %v", err)
 	}
 
-	// For the testing change the reqrepo to template one
-	ns, resName, err := k8sclient.DynamicClient.CreateResource(ctx, fileName)
+	ns, resName, err := k8sclient.DynamicClient.CreateResourceFromFile(ctx, fileName)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to create the k8s custom resource: %v", err)
 	}

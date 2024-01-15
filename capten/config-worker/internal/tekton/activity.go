@@ -58,8 +58,8 @@ func processConfigurationActivity(ctx context.Context, params model.ConfigurePar
 	case model.TektonPipelineDelete:
 		status, err := cp.deleteProjectAndApps(ctx, reqLocal)
 		if err != nil {
-			logger.Errorf("failed to update tekton project for %s, %v", model.TektonPipelineSync, err)
-			return status, fmt.Errorf("failed to update tekton project for %s", model.TektonPipelineSync)
+			logger.Errorf("failed to delete tekton project for %s, %v", model.TektonPipelineSync, err)
+			return status, fmt.Errorf("failed to delete tekton project for %s", model.TektonPipelineSync)
 		}
 		return status, nil
 	default:

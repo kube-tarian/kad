@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
@@ -15,14 +14,14 @@ import (
 
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 
-	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
+	managedcluster "github.com/kube-tarian/kad/capten/common-pkg/managed-cluster"
 	"github.com/kube-tarian/kad/capten/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 )
 
-var (
+const (
 	readyStatusType = "ready"
 
 	clusterNotReadyStatus       = "NotReady"
@@ -31,11 +30,6 @@ var (
 	clusterFailedToDeleteStatus = "FailedToDelete"
 	readyStatusValue            = "True"
 	NorReadyStatusValue         = "False"
-	clusterSecretName           = "%s-cluster"
-	kubeConfig                  = "kubeconfig"
-	k8sEndpoint                 = "endpoint"
-	k8sClusterCA                = "clusterCA"
-	managedClusterEntityName    = "managedcluster"
 )
 
 var (
@@ -173,11 +167,6 @@ func (h *ClusterClaimSyncHandler) Sync() error {
 }
 
 func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.ClusterClaim) error {
-	k8sclient, err := k8s.NewK8SClient(h.log)
-	if err != nil {
-		return fmt.Errorf("failed to get k8s client, %v", err)
-	}
-
 	clusters, err := h.getManagedClusters()
 	if err != nil {
 		return fmt.Errorf("failed to get managed clusters from DB, %v", err)
@@ -213,23 +202,9 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 			managedCluster.ClusterDeployStatus = clusterNotReadyStatus
 		}
 
-		secretName := fmt.Sprintf(clusterSecretName, clusterCliam.Spec.Id)
-		resp, err := k8sclient.GetSecretData(clusterCliam.Metadata.Namespace, secretName)
+		err = managedcluster.StoreClusterAccessData(context.Background(), clusterCliam.Metadata.Namespace, managedCluster.Id)
 		if err != nil {
-			h.log.Errorf("failed to get secret %s/%s, %v", clusterCliam.Metadata.Namespace, secretName, err)
-			continue
-		}
-
-		clusterEndpoint := resp.Data[k8sEndpoint]
-		managedCluster.ClusterEndpoint = clusterEndpoint
-		cred := map[string]string{}
-		cred[kubeConfig] = resp.Data[kubeConfig]
-		cred[k8sClusterCA] = resp.Data[k8sClusterCA]
-		cred[k8sEndpoint] = clusterEndpoint
-
-		err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, managedCluster.Id, cred)
-		if err != nil {
-			h.log.Errorf("failed to store credential for %s, %v", managedCluster.Id, err)
+			h.log.Errorf("failed to store cluster access data for %s, %v", managedCluster.Id, err)
 			continue
 		}
 
@@ -372,33 +347,13 @@ func (h *ClusterClaimSyncHandler) monitorCrossplaneWorkflow(managedCluster *capt
 	}
 	h.log.Infof("Successfuly deleted managed cluster record for %s. cluster Id - %s", managedCluster.ClusterName, managedCluster.Id)
 
-	if err = h.deleteManagedClusterCredential(context.TODO(), managedCluster.Id); err != nil {
+	if err = managedcluster.DeleteClusterAccessData(context.Background(), managedCluster.Id); err != nil {
 		h.log.Errorf("failed to delete credential for %s, %v", managedCluster.Id, err)
 		return
 	}
 	h.log.Infof("Successfuly deleted managed cluster credential for %s. cluster Id - %s", managedCluster.ClusterName, managedCluster.Id)
 
 	h.log.Infof("Crossplane project delete %s config workflow %s completed", managedCluster.ClusterEndpoint, wkfId)
-}
-
-func (h *ClusterClaimSyncHandler) deleteManagedClusterCredential(ctx context.Context, id string) error {
-	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, managedClusterEntityName, id)
-	credAdmin, err := credentials.NewCredentialAdmin(ctx)
-	if err != nil {
-		h.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
-		h.log.Errorf("failed to delete credential for %s, %v", credPath, err)
-		return err
-	}
-
-	err = credAdmin.DeleteCredential(ctx, credentials.GenericCredentialType, managedClusterEntityName, id)
-	if err != nil {
-		h.log.Audit("security", "storecred", "failed", "system", "failed to store crendential for %s", credPath)
-		h.log.Errorf("failed to delete credential for %s, %v", credPath, err)
-		return err
-	}
-	h.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
-	h.log.Infof("deleted credential for entity %s", credPath)
-	return nil
 }
 
 func (h *ClusterClaimSyncHandler) syncClusterClaimsWithDB(clusterClaims []model.ClusterClaim) error {

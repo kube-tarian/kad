@@ -1,0 +1,68 @@
+syntax = "proto3";
+option go_package = "/vaultcredpb";
+
+package vaultcredpb;
+
+service VaultCred {
+  // single RPC for all credential types like user/password, certificates etc.
+  // vault secret path  prepated based on <credentialType>/<credEntityName>/<credIdentifier>
+  // for example, client-certs path will be certs/client/clientA
+  // for example, cassandra root user path will be service-cred/cassandra/root
+  // pass authentication token with service account token to authenticate & authorize the request with vault
+  rpc GetCred (GetCredRequest) returns (GetCredResponse) {};
+  rpc PutCred (PutCredRequest) returns (PutCredResponse) {};
+  rpc DeleteCred (DeleteCredRequest) returns (DeleteCredResponse) {};
+  rpc GetAppRoleToken(GetAppRoleTokenRequest) returns (GetAppRoleTokenResponse) {};
+  rpc GetCredentialWithAppRoleToken(GetCredentialWithAppRoleTokenRequest) returns (GetCredentialWithAppRoleTokenResponse) {};
+}
+
+message GetCredRequest {
+   string credentialType = 1;
+   string credEntityName = 2;
+   string credIdentifier = 3;
+}
+
+message GetCredResponse {
+   //service-cred credential, for example: "userName": "iam-root", "password:: "hello"
+   //client-cert credential, for example: "clientId": "intelops-user", "ca.crt": "...", "client.crt": "...", "client.key": "..."
+   map<string, string> credential = 1;
+}
+
+message PutCredRequest {
+   string credentialType = 1;
+   string credEntityName = 2;
+   string credIdentifier = 3;
+   //service-cred credential, for example: "userName": "iam-root", "password:: "hello"
+   //client-cert credential, for example: "clientId": "intelops-user", "ca.crt": "...", "client.crt": "...", "client.key": "..."
+   map<string, string> credential = 6;
+}
+
+message PutCredResponse {
+}
+
+message DeleteCredRequest {
+   string credentialType = 1;
+   string credEntityName = 2;
+   string credIdentifier = 3;
+}
+
+message DeleteCredResponse {
+}
+
+message GetAppRoleTokenRequest {
+   string appRoleName = 1;
+   repeated string credentialPaths = 2;
+}
+
+message GetAppRoleTokenResponse {
+   string token = 1;
+}
+
+message GetCredentialWithAppRoleTokenRequest {
+   string token = 1;
+   string credentialPath = 2;
+}
+
+message GetCredentialWithAppRoleTokenResponse {
+   map<string, string> credential = 1;
+}
