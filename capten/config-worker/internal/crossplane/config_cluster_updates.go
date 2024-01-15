@@ -86,6 +86,10 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to prepare template values")
 	}
 
+	fmt.Println("templateValues")
+	x, _ := json.Marshal(templateValues)
+	fmt.Println(string(x))
+
 	if err := fileutil.UpdateFilesInFolderWithTempaltes(clusterDefaultAppValPath, templateValues); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update default app template values")
 	}
@@ -292,32 +296,16 @@ func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName 
 		return nil, err
 	}
 
-	var configMap map[string]interface{}
+	var gvMap map[string]interface{}
 
 	decoder := yaml.NewDecoder(strings.NewReader(cred))
-	if err := decoder.Decode(&configMap); err != nil {
+	if err := decoder.Decode(&gvMap); err != nil {
 		return nil, err
 	}
 
-	// b, err := yaml.Marshal(cred)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-	// fmt.Println("B => \n" + string(b))
-
-	// map1 := make(map[string]interface{})
-
-	// err = yaml.Unmarshal(b, &map1)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-
-	fmt.Println("configMap")
-	fmt.Println(configMap)
-
-	// for key, value := range cred {
-	// 	val[key] = value
-	// }
+	for key, value := range gvMap {
+		val[key] = value.(string)
+	}
 
 	return val, nil
 }
