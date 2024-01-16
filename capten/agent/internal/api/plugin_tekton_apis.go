@@ -110,21 +110,21 @@ func (a *Agent) GetTektonProjects(ctx context.Context, request *captenpluginspb.
 		}, err
 	}
 
-	tekTonProjects := []*captenpluginspb.TektonProject{}
+	tekTonProject := &captenpluginspb.TektonProject{}
 	for _, project := range projects {
 		tekTonProject := &captenpluginspb.TektonProject{
 			Id:            project.Id,
 			GitProjectUrl: project.GitProjectUrl,
 			Status:        project.Status,
 		}
-		tekTonProjects = append(tekTonProjects, tekTonProject)
+		tekTonProject = tekTonProject
 	}
 
-	a.log.Infof("Fetched %d Tekton Git projects", len(tekTonProjects))
+	a.log.Infof("Fetched Tekton Git projects")
 	return &captenpluginspb.GetTektonProjectsResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "successfully fetched the tekton projects",
-		Projects:      tekTonProjects,
+		Project:       tekTonProject,
 	}, nil
 }
 

@@ -165,40 +165,6 @@ func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb
 
 }
 
-func (a *Agent) SyncTektonPipelines(ctx context.Context, request *captenpluginspb.SyncTektonPipelinesRequest) (
-	*captenpluginspb.SyncTektonPipelinesResponse, error) {
-	a.log.Infof("Get tekton pipeline request recieved")
-	res, err := a.as.GetTektonPipeliness()
-	if err != nil {
-		a.log.Errorf("failed to get TektonPipeline from db, %v", err)
-		return &captenpluginspb.SyncTektonPipelinesResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to fetch TektonPipelines",
-		}, nil
-	}
-
-	pipelines := make([]*captenpluginspb.TektonPipelines, len(res))
-	for index, r := range res {
-		pipelines[index] = &captenpluginspb.TektonPipelines{
-			Id: r.Id, PipelineName: r.PipelineName,
-			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
-			ContainerRegistryIds: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime,
-		}
-		if err := a.configureTektonPipelinesGitRepo(r, model.TektonPipelineSync); err != nil {
-			a.log.Errorf("failed to trigger the tekton pipeline sync for %s, %v", r.PipelineName, err)
-			pipelines[index].Status = "failed to trigger the sync"
-			continue
-		}
-	}
-
-	a.log.Infof("Successfully triggered the sync")
-	return &captenpluginspb.SyncTektonPipelinesResponse{
-		Pipelines:     pipelines,
-		Status:        captenpluginspb.StatusCode_OK,
-		StatusMessage: "Successfully triggered the sync",
-	}, nil
-}
-
 func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, action string) error {
 	a.log.Infof("configuring tekton pipeline for the git repo %s", req.GitProjectUrl)
 	tektonProject := model.TektonPipeline{}

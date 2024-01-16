@@ -14,9 +14,9 @@ service capten_plugins {
     rpc GetGitProjectsForLabels(GetGitProjectsForLabelsRequest) returns (GetGitProjectsForLabelsResponse) {}
 
     rpc GetTektonPipelines(GetTektonPipelinesRequest) returns (GetTektonPipelinesResponse) {}
-    rpc CreateTektonPipelines(CreateTektonPipelinesRequest) returns (CreateTektonPipelinesResponse) {}
-    rpc UpdateTektonPipelines(UpdateTektonPipelinesRequest) returns (UpdateTektonPipelinesResponse) {}
-    rpc SyncTektonPipelines(SyncTektonPipelinesRequest) returns (SyncTektonPipelinesResponse) {}
+    rpc CreateTektonPipeline(CreateTektonPipelinesRequest) returns (CreateTektonPipelinesResponse) {}
+    rpc UpdateTektonPipeline(UpdateTektonPipelinesRequest) returns (UpdateTektonPipelinesResponse) {}
+    rpc DeleteTektonPipeline(DeleteTektonPipelinesRequest) returns(DeleteTektonPipelinesResponse) {}
 
     rpc AddContainerRegistry(AddContainerRegistryRequest) returns (AddContainerRegistryResponse) {}
     rpc UpdateContainerRegistry(UpdateContainerRegistryRequest) returns (UpdateContainerRegistryResponse) {}
@@ -34,7 +34,7 @@ service capten_plugins {
     rpc UnRegisterArgoCDProject(UnRegisterArgoCDProjectRequest) returns (UnRegisterArgoCDProjectResponse) {}
 
     rpc RegisterTektonProject(RegisterTektonProjectRequest) returns (RegisterTektonProjectResponse) {}
-    rpc GetTektonProjects(GetTektonProjectsRequest) returns (GetTektonProjectsResponse) {}
+    rpc GetTektonProject(GetTektonProjectsRequest) returns (GetTektonProjectsResponse) {}
     rpc UnRegisterTektonProject(UnRegisterTektonProjectRequest) returns (UnRegisterTektonProjectResponse) {}
 
     rpc AddCrossplanProvider(AddCrossplanProviderRequest) returns(AddCrossplanProviderResponse){}
@@ -296,7 +296,7 @@ message GetTektonProjectsRequest {
 message GetTektonProjectsResponse {
     StatusCode status = 1;
     string statusMessage = 2;
-    repeated TektonProject projects = 3;
+    TektonProject project = 3;
 }
 
 message CaptenPlugin {
@@ -444,15 +444,6 @@ message TektonPipelines {
     string lastUpdateTime = 7;
 }
 
-message SyncTektonPipelinesRequest {
-}
-
-message SyncTektonPipelinesResponse {
-    repeated TektonPipelines pipelines = 1;
-    StatusCode status = 2;
-    string statusMessage = 3;
-}
-
 message GetTektonPipelinesRequest {
 }
 
@@ -485,4 +476,13 @@ message UpdateTektonPipelinesResponse {
     string id = 1;
     StatusCode status = 2;
     string statusMessage = 3;
+}
+
+message DeleteTektonPipelinesRequest {
+    string id = 1;
+}
+
+message DeleteTektonPipelinesResponse {
+    StatusCode status = 1;
+    string statusMessage = 2;
 }

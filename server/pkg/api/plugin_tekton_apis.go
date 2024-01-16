@@ -106,7 +106,7 @@ func (s *Server) GetTektonProjects(ctx context.Context, request *captenpluginspb
 		}, err
 	}
 
-	tektonResp, err := agent.GetCaptenPluginsClient().GetTektonProjects(ctx, &captenpluginspb.GetTektonProjectsRequest{})
+	tektonResp, err := agent.GetCaptenPluginsClient().GetTektonProject(ctx, &captenpluginspb.GetTektonProjectsRequest{})
 	if err != nil {
 		s.log.Errorf("failed to register the tekton, %v", err)
 		return &captenpluginspb.GetTektonProjectsResponse{
@@ -115,11 +115,10 @@ func (s *Server) GetTektonProjects(ctx context.Context, request *captenpluginspb
 		}, err
 	}
 
-	s.log.Infof("Fetched %d Tekton Git projects for cluster %s, [org: %s]",
-		len(tektonResp.Projects), clusterId, orgId)
+	s.log.Infof("Fetched Tekton Git projects for cluster %s, [org: %s]", clusterId, orgId)
 	return &captenpluginspb.GetTektonProjectsResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "Tekton Get successful",
-		Projects:      tektonResp.Projects,
+		Project:       tektonResp.Project,
 	}, nil
 }
