@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	fileutil "github.com/kube-tarian/kad/capten/config-worker/internal/file_util"
 	"github.com/kube-tarian/kad/capten/model"
@@ -79,7 +81,11 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync default app value files")
 	}
 
-	templateValues := cp.prepareTemplateVaules(req.ManagedClusterName)
+	templateValues, err := cp.prepareTemplateVaules(ctx, req.ManagedClusterName)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to prepare template values")
+	}
+
 	if err := fileutil.UpdateFilesInFolderWithTempaltes(clusterDefaultAppValPath, templateValues); err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update default app template values")
 	}
@@ -279,12 +285,29 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 	return err
 }
 
-func (cp *CrossPlaneApp) prepareTemplateVaules(clusterName string) map[string]string {
+func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName string) (map[string]string, error) {
 	val := map[string]string{
 		"DomainName":  cp.cfg.DomainName,
 		"ClusterName": clusterName,
 	}
-	return val
+
+	cred, err := credential.GetClusterGlobalValues(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var gvMap map[string]interface{}
+
+	decoder := yaml.NewDecoder(strings.NewReader(cred))
+	if err := decoder.Decode(&gvMap); err != nil {
+		return nil, err
+	}
+
+	for key, value := range gvMap {
+		val[key] = value.(string)
+	}
+
+	return val, nil
 }
 
 func prepareClusterData(clusterName, endpoint string, defaultApps []DefaultApps) Cluster {
