@@ -153,6 +153,16 @@ func (k *K8SClient) CreateOrUpdateSecret(ctx context.Context, namespace, secretN
 	return nil
 }
 
+func (k *K8SClient) DeleteSecret(ctx context.Context, namespace, secretName string) error {
+	err := k.Clientset.CoreV1().Secrets(namespace).Delete(ctx, secretName, metav1.DeleteOptions{})
+	if k8serror.IsNotFound(err) {
+		k.log.Info("k8s secret not found %s in namespace", secretName, namespace)
+	} else if err != nil {
+		return fmt.Errorf("failed to delete k8s secret, %v", err)
+	}
+	return nil
+}
+
 func (k *K8SClient) GetServiceData(namespace, serviceName string) (*ServiceData, error) {
 	service, err := k.Clientset.CoreV1().Services(namespace).Get(context.TODO(), serviceName, metav1.GetOptions{})
 	if err != nil {

@@ -18,6 +18,7 @@ const (
 	TektonHostName              = "tekton"
 	TektonPipelineCreate        = "tekton-pipeline-create"
 	TektonPipelineSync          = "tekton-pipeline-sync"
+	TektonPipelineDelete        = "tekton-pipeline-delete"
 )
 
 type TektonPipelineStatus string

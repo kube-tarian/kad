@@ -13,6 +13,7 @@ import (
 const (
 	insertTektonPipelines        = "INSERT INTO %s.TektonPipelines(id, pipeline_name, git_org_id, container_registry_id, status, last_update_time, workflow_id, workflow_status) VALUES (?,?,?,?,?,?,?,?)"
 	updateTektonPipelinesById    = "UPDATE %s.TektonPipelines SET %s WHERE id=?"
+	deleteTektonPipelinesById    = "DELETE FROM %s.TektonPipelines WHERE id= ?"
 	selectAllTektonPipelines     = "SELECT id, pipeline_name, git_org_id, container_registry_id, status, last_update_time FROM %s.TektonPipelines"
 	selectGetTektonPipelinesById = "SELECT id, pipeline_name, git_org_id, container_registry_id, status, last_update_time FROM %s.TektonPipelines WHERE id=%s;"
 )
@@ -49,6 +50,16 @@ func (a *Store) GetTektonPipelinesForID(id string) (*model.TektonPipeline, error
 		return nil, fmt.Errorf("pipelines not found")
 	}
 	return projects[0], nil
+}
+
+func (a *Store) DeleteTektonPipelinesById(id string) error {
+	deleteAction := a.client.Session().Query(fmt.Sprintf(deleteTektonPipelinesById,
+		a.keyspace), id)
+	err := deleteAction.Exec()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (a *Store) GetTektonPipeliness() ([]*model.TektonPipeline, error) {

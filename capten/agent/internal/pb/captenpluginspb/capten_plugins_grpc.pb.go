@@ -66,9 +66,9 @@ type CaptenPluginsClient interface {
 	GetGitProjects(ctx context.Context, in *GetGitProjectsRequest, opts ...grpc.CallOption) (*GetGitProjectsResponse, error)
 	GetGitProjectsForLabels(ctx context.Context, in *GetGitProjectsForLabelsRequest, opts ...grpc.CallOption) (*GetGitProjectsForLabelsResponse, error)
 	GetTektonPipelines(ctx context.Context, in *GetTektonPipelinesRequest, opts ...grpc.CallOption) (*GetTektonPipelinesResponse, error)
-	CreateTektonPipeline(ctx context.Context, in *CreateTektonPipelinesRequest, opts ...grpc.CallOption) (*CreateTektonPipelinesResponse, error)
-	UpdateTektonPipeline(ctx context.Context, in *UpdateTektonPipelinesRequest, opts ...grpc.CallOption) (*UpdateTektonPipelinesResponse, error)
-	DeleteTektonPipeline(ctx context.Context, in *DeleteTektonPipelinesRequest, opts ...grpc.CallOption) (*DeleteTektonPipelinesResponse, error)
+	CreateTektonPipeline(ctx context.Context, in *CreateTektonPipelineRequest, opts ...grpc.CallOption) (*CreateTektonPipelineResponse, error)
+	UpdateTektonPipeline(ctx context.Context, in *UpdateTektonPipelineRequest, opts ...grpc.CallOption) (*UpdateTektonPipelineResponse, error)
+	DeleteTektonPipeline(ctx context.Context, in *DeleteTektonPipelineRequest, opts ...grpc.CallOption) (*DeleteTektonPipelineResponse, error)
 	AddContainerRegistry(ctx context.Context, in *AddContainerRegistryRequest, opts ...grpc.CallOption) (*AddContainerRegistryResponse, error)
 	UpdateContainerRegistry(ctx context.Context, in *UpdateContainerRegistryRequest, opts ...grpc.CallOption) (*UpdateContainerRegistryResponse, error)
 	DeleteContainerRegistry(ctx context.Context, in *DeleteContainerRegistryRequest, opts ...grpc.CallOption) (*DeleteContainerRegistryResponse, error)
@@ -82,7 +82,7 @@ type CaptenPluginsClient interface {
 	GetArgoCDProjects(ctx context.Context, in *GetArgoCDProjectsRequest, opts ...grpc.CallOption) (*GetArgoCDProjectsResponse, error)
 	UnRegisterArgoCDProject(ctx context.Context, in *UnRegisterArgoCDProjectRequest, opts ...grpc.CallOption) (*UnRegisterArgoCDProjectResponse, error)
 	RegisterTektonProject(ctx context.Context, in *RegisterTektonProjectRequest, opts ...grpc.CallOption) (*RegisterTektonProjectResponse, error)
-	GetTektonProject(ctx context.Context, in *GetTektonProjectsRequest, opts ...grpc.CallOption) (*GetTektonProjectsResponse, error)
+	GetTektonProject(ctx context.Context, in *GetTektonProjectRequest, opts ...grpc.CallOption) (*GetTektonProjectResponse, error)
 	UnRegisterTektonProject(ctx context.Context, in *UnRegisterTektonProjectRequest, opts ...grpc.CallOption) (*UnRegisterTektonProjectResponse, error)
 	AddCrossplanProvider(ctx context.Context, in *AddCrossplanProviderRequest, opts ...grpc.CallOption) (*AddCrossplanProviderResponse, error)
 	DeleteCrossplanProvider(ctx context.Context, in *DeleteCrossplanProviderRequest, opts ...grpc.CallOption) (*DeleteCrossplanProviderResponse, error)
@@ -166,8 +166,8 @@ func (c *captenPluginsClient) GetTektonPipelines(ctx context.Context, in *GetTek
 	return out, nil
 }
 
-func (c *captenPluginsClient) CreateTektonPipeline(ctx context.Context, in *CreateTektonPipelinesRequest, opts ...grpc.CallOption) (*CreateTektonPipelinesResponse, error) {
-	out := new(CreateTektonPipelinesResponse)
+func (c *captenPluginsClient) CreateTektonPipeline(ctx context.Context, in *CreateTektonPipelineRequest, opts ...grpc.CallOption) (*CreateTektonPipelineResponse, error) {
+	out := new(CreateTektonPipelineResponse)
 	err := c.cc.Invoke(ctx, CaptenPlugins_CreateTektonPipeline_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -175,8 +175,8 @@ func (c *captenPluginsClient) CreateTektonPipeline(ctx context.Context, in *Crea
 	return out, nil
 }
 
-func (c *captenPluginsClient) UpdateTektonPipeline(ctx context.Context, in *UpdateTektonPipelinesRequest, opts ...grpc.CallOption) (*UpdateTektonPipelinesResponse, error) {
-	out := new(UpdateTektonPipelinesResponse)
+func (c *captenPluginsClient) UpdateTektonPipeline(ctx context.Context, in *UpdateTektonPipelineRequest, opts ...grpc.CallOption) (*UpdateTektonPipelineResponse, error) {
+	out := new(UpdateTektonPipelineResponse)
 	err := c.cc.Invoke(ctx, CaptenPlugins_UpdateTektonPipeline_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -184,8 +184,8 @@ func (c *captenPluginsClient) UpdateTektonPipeline(ctx context.Context, in *Upda
 	return out, nil
 }
 
-func (c *captenPluginsClient) DeleteTektonPipeline(ctx context.Context, in *DeleteTektonPipelinesRequest, opts ...grpc.CallOption) (*DeleteTektonPipelinesResponse, error) {
-	out := new(DeleteTektonPipelinesResponse)
+func (c *captenPluginsClient) DeleteTektonPipeline(ctx context.Context, in *DeleteTektonPipelineRequest, opts ...grpc.CallOption) (*DeleteTektonPipelineResponse, error) {
+	out := new(DeleteTektonPipelineResponse)
 	err := c.cc.Invoke(ctx, CaptenPlugins_DeleteTektonPipeline_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -310,8 +310,8 @@ func (c *captenPluginsClient) RegisterTektonProject(ctx context.Context, in *Reg
 	return out, nil
 }
 
-func (c *captenPluginsClient) GetTektonProject(ctx context.Context, in *GetTektonProjectsRequest, opts ...grpc.CallOption) (*GetTektonProjectsResponse, error) {
-	out := new(GetTektonProjectsResponse)
+func (c *captenPluginsClient) GetTektonProject(ctx context.Context, in *GetTektonProjectRequest, opts ...grpc.CallOption) (*GetTektonProjectResponse, error) {
+	out := new(GetTektonProjectResponse)
 	err := c.cc.Invoke(ctx, CaptenPlugins_GetTektonProject_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -420,9 +420,9 @@ type CaptenPluginsServer interface {
 	GetGitProjects(context.Context, *GetGitProjectsRequest) (*GetGitProjectsResponse, error)
 	GetGitProjectsForLabels(context.Context, *GetGitProjectsForLabelsRequest) (*GetGitProjectsForLabelsResponse, error)
 	GetTektonPipelines(context.Context, *GetTektonPipelinesRequest) (*GetTektonPipelinesResponse, error)
-	CreateTektonPipeline(context.Context, *CreateTektonPipelinesRequest) (*CreateTektonPipelinesResponse, error)
-	UpdateTektonPipeline(context.Context, *UpdateTektonPipelinesRequest) (*UpdateTektonPipelinesResponse, error)
-	DeleteTektonPipeline(context.Context, *DeleteTektonPipelinesRequest) (*DeleteTektonPipelinesResponse, error)
+	CreateTektonPipeline(context.Context, *CreateTektonPipelineRequest) (*CreateTektonPipelineResponse, error)
+	UpdateTektonPipeline(context.Context, *UpdateTektonPipelineRequest) (*UpdateTektonPipelineResponse, error)
+	DeleteTektonPipeline(context.Context, *DeleteTektonPipelineRequest) (*DeleteTektonPipelineResponse, error)
 	AddContainerRegistry(context.Context, *AddContainerRegistryRequest) (*AddContainerRegistryResponse, error)
 	UpdateContainerRegistry(context.Context, *UpdateContainerRegistryRequest) (*UpdateContainerRegistryResponse, error)
 	DeleteContainerRegistry(context.Context, *DeleteContainerRegistryRequest) (*DeleteContainerRegistryResponse, error)
@@ -436,7 +436,7 @@ type CaptenPluginsServer interface {
 	GetArgoCDProjects(context.Context, *GetArgoCDProjectsRequest) (*GetArgoCDProjectsResponse, error)
 	UnRegisterArgoCDProject(context.Context, *UnRegisterArgoCDProjectRequest) (*UnRegisterArgoCDProjectResponse, error)
 	RegisterTektonProject(context.Context, *RegisterTektonProjectRequest) (*RegisterTektonProjectResponse, error)
-	GetTektonProject(context.Context, *GetTektonProjectsRequest) (*GetTektonProjectsResponse, error)
+	GetTektonProject(context.Context, *GetTektonProjectRequest) (*GetTektonProjectResponse, error)
 	UnRegisterTektonProject(context.Context, *UnRegisterTektonProjectRequest) (*UnRegisterTektonProjectResponse, error)
 	AddCrossplanProvider(context.Context, *AddCrossplanProviderRequest) (*AddCrossplanProviderResponse, error)
 	DeleteCrossplanProvider(context.Context, *DeleteCrossplanProviderRequest) (*DeleteCrossplanProviderResponse, error)
@@ -475,13 +475,13 @@ func (UnimplementedCaptenPluginsServer) GetGitProjectsForLabels(context.Context,
 func (UnimplementedCaptenPluginsServer) GetTektonPipelines(context.Context, *GetTektonPipelinesRequest) (*GetTektonPipelinesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTektonPipelines not implemented")
 }
-func (UnimplementedCaptenPluginsServer) CreateTektonPipeline(context.Context, *CreateTektonPipelinesRequest) (*CreateTektonPipelinesResponse, error) {
+func (UnimplementedCaptenPluginsServer) CreateTektonPipeline(context.Context, *CreateTektonPipelineRequest) (*CreateTektonPipelineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTektonPipeline not implemented")
 }
-func (UnimplementedCaptenPluginsServer) UpdateTektonPipeline(context.Context, *UpdateTektonPipelinesRequest) (*UpdateTektonPipelinesResponse, error) {
+func (UnimplementedCaptenPluginsServer) UpdateTektonPipeline(context.Context, *UpdateTektonPipelineRequest) (*UpdateTektonPipelineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTektonPipeline not implemented")
 }
-func (UnimplementedCaptenPluginsServer) DeleteTektonPipeline(context.Context, *DeleteTektonPipelinesRequest) (*DeleteTektonPipelinesResponse, error) {
+func (UnimplementedCaptenPluginsServer) DeleteTektonPipeline(context.Context, *DeleteTektonPipelineRequest) (*DeleteTektonPipelineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTektonPipeline not implemented")
 }
 func (UnimplementedCaptenPluginsServer) AddContainerRegistry(context.Context, *AddContainerRegistryRequest) (*AddContainerRegistryResponse, error) {
@@ -523,7 +523,7 @@ func (UnimplementedCaptenPluginsServer) UnRegisterArgoCDProject(context.Context,
 func (UnimplementedCaptenPluginsServer) RegisterTektonProject(context.Context, *RegisterTektonProjectRequest) (*RegisterTektonProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterTektonProject not implemented")
 }
-func (UnimplementedCaptenPluginsServer) GetTektonProject(context.Context, *GetTektonProjectsRequest) (*GetTektonProjectsResponse, error) {
+func (UnimplementedCaptenPluginsServer) GetTektonProject(context.Context, *GetTektonProjectRequest) (*GetTektonProjectResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTektonProject not implemented")
 }
 func (UnimplementedCaptenPluginsServer) UnRegisterTektonProject(context.Context, *UnRegisterTektonProjectRequest) (*UnRegisterTektonProjectResponse, error) {
@@ -696,7 +696,7 @@ func _CaptenPlugins_GetTektonPipelines_Handler(srv interface{}, ctx context.Cont
 }
 
 func _CaptenPlugins_CreateTektonPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTektonPipelinesRequest)
+	in := new(CreateTektonPipelineRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -708,13 +708,13 @@ func _CaptenPlugins_CreateTektonPipeline_Handler(srv interface{}, ctx context.Co
 		FullMethod: CaptenPlugins_CreateTektonPipeline_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).CreateTektonPipeline(ctx, req.(*CreateTektonPipelinesRequest))
+		return srv.(CaptenPluginsServer).CreateTektonPipeline(ctx, req.(*CreateTektonPipelineRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CaptenPlugins_UpdateTektonPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTektonPipelinesRequest)
+	in := new(UpdateTektonPipelineRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -726,13 +726,13 @@ func _CaptenPlugins_UpdateTektonPipeline_Handler(srv interface{}, ctx context.Co
 		FullMethod: CaptenPlugins_UpdateTektonPipeline_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).UpdateTektonPipeline(ctx, req.(*UpdateTektonPipelinesRequest))
+		return srv.(CaptenPluginsServer).UpdateTektonPipeline(ctx, req.(*UpdateTektonPipelineRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CaptenPlugins_DeleteTektonPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTektonPipelinesRequest)
+	in := new(DeleteTektonPipelineRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -744,7 +744,7 @@ func _CaptenPlugins_DeleteTektonPipeline_Handler(srv interface{}, ctx context.Co
 		FullMethod: CaptenPlugins_DeleteTektonPipeline_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).DeleteTektonPipeline(ctx, req.(*DeleteTektonPipelinesRequest))
+		return srv.(CaptenPluginsServer).DeleteTektonPipeline(ctx, req.(*DeleteTektonPipelineRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -984,7 +984,7 @@ func _CaptenPlugins_RegisterTektonProject_Handler(srv interface{}, ctx context.C
 }
 
 func _CaptenPlugins_GetTektonProject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTektonProjectsRequest)
+	in := new(GetTektonProjectRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -996,7 +996,7 @@ func _CaptenPlugins_GetTektonProject_Handler(srv interface{}, ctx context.Contex
 		FullMethod: CaptenPlugins_GetTektonProject_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).GetTektonProject(ctx, req.(*GetTektonProjectsRequest))
+		return srv.(CaptenPluginsServer).GetTektonProject(ctx, req.(*GetTektonProjectRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

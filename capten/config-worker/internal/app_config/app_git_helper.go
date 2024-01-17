@@ -156,6 +156,25 @@ func (ca *AppGitConfigHelper) SyncArgoCDApp(ctx context.Context, ns, resName str
 	return nil
 }
 
+func (ca *AppGitConfigHelper) DeleteArgoCDApp(ctx context.Context, ns, resName, mainApp string) error {
+	client, err := argocd.NewClient(logger)
+	if err != nil {
+		return err
+	}
+
+	// _, err = client.Delete(&model.DeleteRequestPayload{Namespace: ns, ReleaseName: resName})
+	// if err != nil {
+	// 	return err
+	// }
+
+	_, err = client.TriggerAppSync(ctx, ns, mainApp)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (ca *AppGitConfigHelper) CreateCluster(ctx context.Context, id, clusterName string) (string, error) {
 	credReader, err := credentials.NewCredentialReader(ctx)
 	if err != nil {
