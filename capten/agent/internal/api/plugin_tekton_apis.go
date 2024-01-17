@@ -15,6 +15,7 @@ const (
 
 func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenpluginspb.RegisterTektonProjectRequest) (
 	*captenpluginspb.RegisterTektonProjectResponse, error) {
+	a.log.Infof("registering the tekton project")
 	if err := validateArgs(request.Id); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.RegisterTektonProjectResponse{
@@ -22,42 +23,34 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 			StatusMessage: "request validation failed",
 		}, nil
 	}
-	a.log.Infof("Register Tekton Git project %s request recieved", request.Id)
 
-	tektonProject, err := a.as.GetTektonProjectForID(request.Id)
+	res, err := a.as.GetTektonPipeliness()
 	if err != nil {
-		a.log.Infof("failed to get git project %s, %v", request.Id, err)
-		return &captenpluginspb.RegisterTektonProjectResponse{
-			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
-			StatusMessage: "request validation failed",
-		}, nil
-	}
-
-	if tektonProject.Status == string(model.TektonProjectConfigurationOngoing) ||
-		tektonProject.Status == string(model.TektonProjectConfigured) {
-		a.log.Infof("currently the tekton project configuration on-going/configured %s, %v", request.Id, tektonProject.Status)
-		return &captenpluginspb.RegisterTektonProjectResponse{
-			Status:        captenpluginspb.StatusCode_OK,
-			StatusMessage: "tekton configuration on-going/configured",
-		}, nil
-	}
-
-	tektonProject.Status = string(model.TektonProjectConfigurationOngoing)
-	if err := a.as.UpsertTektonProject(tektonProject); err != nil {
-		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
+		a.log.Errorf("failed to get TektonPipeline from db, %v", err)
 		return &captenpluginspb.RegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "inserting data to tekton db got failed",
-		}, err
+			StatusMessage: "failed to fetch TektonPipelines",
+		}, nil
 	}
 
-	// start the config-worker routine
-	a.configureTektonGitRepo(tektonProject)
+	pipelines := make([]*captenpluginspb.TektonPipelines, len(res))
+	for index, r := range res {
+		pipelines[index] = &captenpluginspb.TektonPipelines{
+			Id: r.Id, PipelineName: r.PipelineName,
+			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
+			ContainerRegistryIds: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime,
+		}
+		if _, err := a.configureTektonPipelinesGitRepo(r, model.TektonPipelineSync, true); err != nil {
+			a.log.Errorf("failed to trigger the tekton pipeline sync for %s, %v", r.PipelineName, err)
+			pipelines[index].Status = "failed to trigger the sync"
+			continue
+		}
+	}
 
-	a.log.Infof("Tekton Git project %s registration triggerred", request.Id)
+	a.log.Infof("Successfully registered the project")
 	return &captenpluginspb.RegisterTektonProjectResponse{
 		Status:        captenpluginspb.StatusCode_OK,
-		StatusMessage: "successfully registered tekton",
+		StatusMessage: "Successfully registered the project",
 	}, nil
 }
 
@@ -97,7 +90,7 @@ func (a *Agent) UnRegisterTektonProject(ctx context.Context, request *captenplug
 	}, nil
 }
 
-func (a *Agent) GetTektonProjects(ctx context.Context, request *captenpluginspb.GetTektonProjectsRequest) (
+func (a *Agent) GetTektonProject(ctx context.Context, request *captenpluginspb.GetTektonProjectsRequest) (
 	*captenpluginspb.GetTektonProjectsResponse, error) {
 	a.log.Infof("Get Tekton Git projects request recieved")
 
@@ -112,12 +105,11 @@ func (a *Agent) GetTektonProjects(ctx context.Context, request *captenpluginspb.
 
 	tekTonProject := &captenpluginspb.TektonProject{}
 	for _, project := range projects {
-		tekTonProject := &captenpluginspb.TektonProject{
+		tekTonProject = &captenpluginspb.TektonProject{
 			Id:            project.Id,
 			GitProjectUrl: project.GitProjectUrl,
 			Status:        project.Status,
 		}
-		tekTonProject = tekTonProject
 	}
 
 	a.log.Infof("Fetched Tekton Git projects")

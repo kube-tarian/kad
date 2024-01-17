@@ -12,7 +12,7 @@ import (
 const gitProjectEntityName = "git-project"
 
 // add more labels here if needed
-var whitelistedLabels = []string{"crossplane"}
+var whitelistedLabels = []string{"crossplane", "tekton"}
 
 func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddGitProjectRequest) (
 	*captenpluginspb.AddGitProjectResponse, error) {
