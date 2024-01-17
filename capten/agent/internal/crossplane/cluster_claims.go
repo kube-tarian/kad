@@ -94,13 +94,7 @@ func (h *ClusterClaimSyncHandler) OnAdd(obj interface{}) {
 func (h *ClusterClaimSyncHandler) OnUpdate(oldObj, newObj interface{}) {
 	h.log.Info("Crossplane ClusterCliam Update Callback")
 
-	prevObj, err := getClusterClaimObj(oldObj)
-	if prevObj == nil {
-		h.log.Errorf("failed to read ClusterCliam old object %v", err)
-		return
-	}
-
-	newCcObj, err := getClusterClaimObj(oldObj)
+	newCcObj, err := getClusterClaimObj(newObj)
 	if newCcObj == nil {
 		h.log.Errorf("failed to read ClusterCliam new object %v", err)
 		return
@@ -202,7 +196,7 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 			managedCluster.ClusterDeployStatus = clusterNotReadyStatus
 		}
 
-		err = managedcluster.StoreClusterAccessData(context.Background(), clusterCliam.Metadata.Namespace, managedCluster.Id)
+		err = managedcluster.StoreClusterAccessData(context.Background(), clusterCliam.Metadata.Namespace, managedCluster.ClusterName, managedCluster.Id)
 		if err != nil {
 			h.log.Errorf("failed to store cluster access data for %s, %v", managedCluster.Id, err)
 			continue
