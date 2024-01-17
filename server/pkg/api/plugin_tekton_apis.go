@@ -84,12 +84,12 @@ func (s *Server) UnRegisterTektonProject(ctx context.Context, request *captenplu
 	}, nil
 }
 
-func (s *Server) GetTektonProjects(ctx context.Context, request *captenpluginspb.GetTektonProjectsRequest) (
-	*captenpluginspb.GetTektonProjectsResponse, error) {
+func (s *Server) GetTektonProjects(ctx context.Context, request *captenpluginspb.GetTektonProjectRequest) (
+	*captenpluginspb.GetTektonProjectResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
-		return &captenpluginspb.GetTektonProjectsResponse{
+		return &captenpluginspb.GetTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
@@ -100,23 +100,23 @@ func (s *Server) GetTektonProjects(ctx context.Context, request *captenpluginspb
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &captenpluginspb.GetTektonProjectsResponse{
+		return &captenpluginspb.GetTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to initialize agent",
 		}, err
 	}
 
-	tektonResp, err := agent.GetCaptenPluginsClient().GetTektonProject(ctx, &captenpluginspb.GetTektonProjectsRequest{})
+	tektonResp, err := agent.GetCaptenPluginsClient().GetTektonProject(ctx, &captenpluginspb.GetTektonProjectRequest{})
 	if err != nil {
 		s.log.Errorf("failed to register the tekton, %v", err)
-		return &captenpluginspb.GetTektonProjectsResponse{
+		return &captenpluginspb.GetTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to register the tekton",
 		}, err
 	}
 
 	s.log.Infof("Fetched Tekton Git projects for cluster %s, [org: %s]", clusterId, orgId)
-	return &captenpluginspb.GetTektonProjectsResponse{
+	return &captenpluginspb.GetTektonProjectResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "Tekton Get successful",
 		Project:       tektonResp.Project,

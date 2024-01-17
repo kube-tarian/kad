@@ -90,14 +90,14 @@ func (a *Agent) UnRegisterTektonProject(ctx context.Context, request *captenplug
 	}, nil
 }
 
-func (a *Agent) GetTektonProject(ctx context.Context, request *captenpluginspb.GetTektonProjectsRequest) (
-	*captenpluginspb.GetTektonProjectsResponse, error) {
+func (a *Agent) GetTektonProject(ctx context.Context, request *captenpluginspb.GetTektonProjectRequest) (
+	*captenpluginspb.GetTektonProjectResponse, error) {
 	a.log.Infof("Get Tekton Git projects request recieved")
 
 	projects, err := a.as.GetTektonProjects()
 	if err != nil {
 		a.log.Errorf("failed to get tekton Project, %v", err)
-		return &captenpluginspb.GetTektonProjectsResponse{
+		return &captenpluginspb.GetTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get tekton Project",
 		}, err
@@ -113,7 +113,7 @@ func (a *Agent) GetTektonProject(ctx context.Context, request *captenpluginspb.G
 	}
 
 	a.log.Infof("Fetched Tekton Git projects")
-	return &captenpluginspb.GetTektonProjectsResponse{
+	return &captenpluginspb.GetTektonProjectResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "successfully fetched the tekton projects",
 		Project:       tekTonProject,

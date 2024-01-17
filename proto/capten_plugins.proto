@@ -14,9 +14,9 @@ service capten_plugins {
     rpc GetGitProjectsForLabels(GetGitProjectsForLabelsRequest) returns (GetGitProjectsForLabelsResponse) {}
 
     rpc GetTektonPipelines(GetTektonPipelinesRequest) returns (GetTektonPipelinesResponse) {}
-    rpc CreateTektonPipeline(CreateTektonPipelinesRequest) returns (CreateTektonPipelinesResponse) {}
-    rpc UpdateTektonPipeline(UpdateTektonPipelinesRequest) returns (UpdateTektonPipelinesResponse) {}
-    rpc DeleteTektonPipeline(DeleteTektonPipelinesRequest) returns(DeleteTektonPipelinesResponse) {}
+    rpc CreateTektonPipeline(CreateTektonPipelineRequest) returns (CreateTektonPipelineResponse) {}
+    rpc UpdateTektonPipeline(UpdateTektonPipelineRequest) returns (UpdateTektonPipelineResponse) {}
+    rpc DeleteTektonPipeline(DeleteTektonPipelineRequest) returns(DeleteTektonPipelineResponse) {}
 
     rpc AddContainerRegistry(AddContainerRegistryRequest) returns (AddContainerRegistryResponse) {}
     rpc UpdateContainerRegistry(UpdateContainerRegistryRequest) returns (UpdateContainerRegistryResponse) {}
@@ -34,7 +34,7 @@ service capten_plugins {
     rpc UnRegisterArgoCDProject(UnRegisterArgoCDProjectRequest) returns (UnRegisterArgoCDProjectResponse) {}
 
     rpc RegisterTektonProject(RegisterTektonProjectRequest) returns (RegisterTektonProjectResponse) {}
-    rpc GetTektonProject(GetTektonProjectsRequest) returns (GetTektonProjectsResponse) {}
+    rpc GetTektonProject(GetTektonProjectRequest) returns (GetTektonProjectResponse) {}
     rpc UnRegisterTektonProject(UnRegisterTektonProjectRequest) returns (UnRegisterTektonProjectResponse) {}
 
     rpc AddCrossplanProvider(AddCrossplanProviderRequest) returns(AddCrossplanProviderResponse){}
@@ -290,10 +290,10 @@ message TektonProject {
     string lastUpdateTime = 4;
 }
 
-message GetTektonProjectsRequest {
+message GetTektonProjectRequest {
 }
 
-message GetTektonProjectsResponse {
+message GetTektonProjectResponse {
     StatusCode status = 1;
     string statusMessage = 2;
     TektonProject project = 3;
@@ -454,35 +454,35 @@ message GetTektonPipelinesResponse {
     string statusMessage = 3;
 }
 
-message CreateTektonPipelinesRequest {
+message CreateTektonPipelineRequest {
     string pipelineName = 1;
     string gitOrgId = 2;
     repeated string containerRegistryIds = 3;
 }
 
-message CreateTektonPipelinesResponse {
+message CreateTektonPipelineResponse {
     string id = 1;
     StatusCode status = 2;
     string statusMessage = 3;
 }
 
-message UpdateTektonPipelinesRequest {
+message UpdateTektonPipelineRequest {
     string id = 1;
     string gitOrgId = 2;
     repeated string containerRegistryIds = 3;
 }
 
-message UpdateTektonPipelinesResponse {
+message UpdateTektonPipelineResponse {
     string id = 1;
     StatusCode status = 2;
     string statusMessage = 3;
 }
 
-message DeleteTektonPipelinesRequest {
+message DeleteTektonPipelineRequest {
     string id = 1;
 }
 
-message DeleteTektonPipelinesResponse {
+message DeleteTektonPipelineResponse {
     StatusCode status = 1;
     string statusMessage = 2;
 }

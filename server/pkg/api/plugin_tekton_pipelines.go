@@ -46,12 +46,12 @@ func (s *Server) GetTektonPipelines(ctx context.Context, request *captenpluginsp
 	}, nil
 }
 
-func (s *Server) CreateTektonPipelines(ctx context.Context, request *captenpluginspb.CreateTektonPipelinesRequest) (
-	*captenpluginspb.CreateTektonPipelinesResponse, error) {
+func (s *Server) CreateTektonPipelines(ctx context.Context, request *captenpluginspb.CreateTektonPipelineRequest) (
+	*captenpluginspb.CreateTektonPipelineResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
-		return &captenpluginspb.CreateTektonPipelinesResponse{
+		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
@@ -62,7 +62,7 @@ func (s *Server) CreateTektonPipelines(ctx context.Context, request *captenplugi
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &captenpluginspb.CreateTektonPipelinesResponse{
+		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to initialize agent",
 		}, err
@@ -71,7 +71,7 @@ func (s *Server) CreateTektonPipelines(ctx context.Context, request *captenplugi
 	tektonResp, err := agent.GetCaptenPluginsClient().CreateTektonPipeline(ctx, request)
 	if err != nil {
 		s.log.Errorf("failed to create TektonPipelines , %v", err)
-		return &captenpluginspb.CreateTektonPipelinesResponse{
+		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to create TektonPipelines",
 		}, err
@@ -79,17 +79,17 @@ func (s *Server) CreateTektonPipelines(ctx context.Context, request *captenplugi
 
 	s.log.Infof("Created the TektonPipelines for cluster %s, [org: %s]",
 		clusterId, orgId)
-	return &captenpluginspb.CreateTektonPipelinesResponse{
+	return &captenpluginspb.CreateTektonPipelineResponse{
 		Status:        tektonResp.Status,
 		StatusMessage: "Creation of TektonPipelines successful",
 	}, nil
 }
 
-func (s *Server) UpdateTektonPipelines(ctx context.Context, request *captenpluginspb.UpdateTektonPipelinesRequest) (*captenpluginspb.UpdateTektonPipelinesResponse, error) {
+func (s *Server) UpdateTektonPipelines(ctx context.Context, request *captenpluginspb.UpdateTektonPipelineRequest) (*captenpluginspb.UpdateTektonPipelineResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
-		return &captenpluginspb.UpdateTektonPipelinesResponse{
+		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
@@ -100,7 +100,7 @@ func (s *Server) UpdateTektonPipelines(ctx context.Context, request *captenplugi
 	agent, err := s.agentHandeler.GetAgent(orgId, clusterId)
 	if err != nil {
 		s.log.Errorf("failed to initialize agent, %v", err)
-		return &captenpluginspb.UpdateTektonPipelinesResponse{
+		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to initialize agent",
 		}, err
@@ -109,7 +109,7 @@ func (s *Server) UpdateTektonPipelines(ctx context.Context, request *captenplugi
 	_, err = agent.GetCaptenPluginsClient().UpdateTektonPipeline(ctx, request)
 	if err != nil {
 		s.log.Errorf("failed to update TektonPipelines , %v", err)
-		return &captenpluginspb.UpdateTektonPipelinesResponse{
+		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to update TektonPipelines",
 		}, err
@@ -117,7 +117,7 @@ func (s *Server) UpdateTektonPipelines(ctx context.Context, request *captenplugi
 
 	s.log.Infof("updated the TektonPipelines for cluster %s, [org: %s]",
 		clusterId, orgId)
-	return &captenpluginspb.UpdateTektonPipelinesResponse{
+	return &captenpluginspb.UpdateTektonPipelineResponse{
 		StatusMessage: "update of TektonPipelines successful",
 		Status:        captenpluginspb.StatusCode_OK,
 	}, nil
