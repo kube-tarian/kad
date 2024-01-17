@@ -175,10 +175,10 @@ func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.Tekton
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to create k8s secrets")
 	}
 
-	err = cp.helper.DeleteArgoCDApp(ctx, pipelineNamespace, req.PipelineName, mainAppName)
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to delete argoCD apps")
-	}
+	// err = cp.helper.DeleteArgoCDApp(ctx, pipelineNamespace, req.PipelineName, mainAppName)
+	// if err != nil {
+	// 	return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to delete argoCD apps")
+	// }
 
 	return string(agentmodel.WorkFlowStatusCompleted), nil
 }
