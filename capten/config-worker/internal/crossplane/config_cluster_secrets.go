@@ -14,11 +14,13 @@ var (
 	natsNameSpace         = "observability"
 	vaultAppRoleToken     = "vault-cluster-token"
 	vaultAddress          = "http://vault.%s"
+	cluserAppRoleName     = "approle-%s"
 )
 
 func (cp *CrossPlaneApp) configureExternalSecretsOnCluster(ctx context.Context, clusterName, clusterID string) error {
 	credentialPaths := getCrdentialPaths()
-	token, err := vaultcred.GetAppRoleToken("", credentialPaths)
+	cluserAppRoleNameStr := fmt.Sprintf(cluserAppRoleName, clusterName)
+	token, err := vaultcred.GetAppRoleToken(cluserAppRoleNameStr, credentialPaths)
 	if err != nil {
 		return err
 	}

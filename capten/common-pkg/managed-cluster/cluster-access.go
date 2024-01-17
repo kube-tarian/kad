@@ -20,13 +20,13 @@ const (
 
 var logger = logging.NewLogger()
 
-func StoreClusterAccessData(ctx context.Context, namespace, clusterID string) error {
+func StoreClusterAccessData(ctx context.Context, namespace, clusterName, clusterID string) error {
 	k8sclient, err := k8s.NewK8SClient(logger)
 	if err != nil {
 		return fmt.Errorf("failed to get k8s client, %v", err)
 	}
 
-	secretName := fmt.Sprintf(clusterSecretName, clusterID)
+	secretName := fmt.Sprintf(clusterSecretName, clusterName)
 	resp, err := k8sclient.GetSecretData(namespace, secretName)
 	if err != nil {
 		return fmt.Errorf("failed to get secret %s/%s, %v", namespace, secretName, err)

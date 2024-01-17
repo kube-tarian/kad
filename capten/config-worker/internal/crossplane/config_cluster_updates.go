@@ -123,9 +123,9 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to fetch argocd app")
 	}
 
-	err = cp.configureExternalSecretsOnCluster(ctx, req.ManagedClusterId, req.ManagedClusterName)
+	err = cp.configureExternalSecretsOnCluster(ctx, req.ManagedClusterName, req.ManagedClusterId)
 	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to create cluster secrets")
+		logger.Errorf("%v", errors.WithMessage(err, "failed to create cluster secrets"))
 	}
 	return string(agentmodel.WorkFlowStatusCompleted), nil
 }
