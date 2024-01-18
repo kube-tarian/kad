@@ -2,21 +2,31 @@ package crossplane
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 
 	"github.com/kube-tarian/kad/capten/model"
+	agentmodel "github.com/kube-tarian/kad/capten/model"
+	"github.com/pkg/errors"
+)
+
+const (
+	CrossPlaneResource  = "crossplane"
+	CrossplaneNamespace = "crossplane-system"
 )
 
 func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
 	logger.Infof("configuring config provider %s update", req.ManagedClusterName)
 
-	x, _ := json.Marshal(req)
+	err = cp.helper.SyncArgoCDApp(ctx, CrossPlaneResource, CrossPlaneResource)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync config providers")
+	}
 
-	fmt.Println("configureConfigProviderUpdate request")
+	logger.Infof("synched config providers %s", CrossPlaneResource)
 
-	fmt.Println(string(x))
+	err = cp.helper.WaitForArgoCDToSync(ctx, CrossPlaneResource, CrossPlaneResource)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to fetch config providers")
+	}
 
-	return "", nil
-
+	return string(agentmodel.WorkFlowStatusCompleted), nil
 }
