@@ -243,15 +243,13 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, actio
 		return "", fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectId, err)
 	}
 
-	containerRegs, err := a.as.GetContainerRegistries()
+	containerReg, err := a.as.GetContainerRegistryForID(req.ContainerRegId[0])
 	if err != nil {
 		a.log.Errorf("failed to send event to workflow to configure, %v", err)
 		return "", fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectId, err)
 	}
 	containerRegURLIdMap := make(map[string]string)
-	for _, containerReg := range containerRegs {
-		containerRegURLIdMap[containerReg.Id] = containerReg.RegistryUrl
-	}
+	containerRegURLIdMap[containerReg.Id] = containerReg.RegistryUrl
 
 	ci := captenmodel.TektonPipelineUseCase{Type: model.TektonPipelineConfigUseCase,
 		PipelineName: req.PipelineName, RepoURL: proj.ProjectUrl,
