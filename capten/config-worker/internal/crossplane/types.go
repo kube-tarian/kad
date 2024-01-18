@@ -133,7 +133,7 @@ spec:
       version: "v2"
       auth:
         tokenSecretRef:
-          name: "vault-token"
+          name: "%s"
           key: "token"
           `
 	natsVaultExternalSecret = `
@@ -153,6 +153,6 @@ spec:
   - secretKey: credentials
     remoteRef:
       key: %s
-      property: access_key
+      property: nats
   `
 )

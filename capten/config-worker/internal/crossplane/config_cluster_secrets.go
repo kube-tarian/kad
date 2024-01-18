@@ -12,7 +12,7 @@ import (
 var (
 	clusterCredVaultPaths = map[string]string{"NATS": "generic/nats/auth-token"}
 	natsNameSpace         = "observability"
-	vaultAppRoleToken     = "vault-cluster-token"
+	vaultAppRoleToken     = "vault-capten-token"
 	vaultAddress          = "http://vault.%s"
 	cluserAppRoleName     = "approle-%s"
 )
@@ -37,8 +37,8 @@ func (cp *CrossPlaneApp) configureExternalSecretsOnCluster(ctx context.Context, 
 		return fmt.Errorf("failed to create cluter vault token secret, %v", err)
 	}
 
-	vaultAddress = fmt.Sprintf(vaultAddress, cp.cfg.DomainName)
-	vaultStoreCRData := fmt.Sprintf(vaultStore, natsNameSpace, vaultAddress)
+	vaultAddressStr := fmt.Sprintf(vaultAddress, cp.cfg.DomainName)
+	vaultStoreCRData := fmt.Sprintf(vaultStore, natsNameSpace, vaultAddressStr, vaultAppRoleToken)
 	ns, resource, err := k8sclient.DynamicClient.CreateResource(ctx, []byte(vaultStoreCRData))
 	if err != nil {
 		return fmt.Errorf("failed to create cluter vault token secret, %v", err)
