@@ -291,6 +291,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 					return fmt.Errorf("failed to get docker cfg secret, %v", err)
 				}
 				strdata[".dockerconfigjson"] = data
+				strdata["config.json"] = data
 				if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName,
 					v1.SecretTypeDockerConfigJson, strdata, map[string]string{}); err != nil {
 					return fmt.Errorf("failed to create/update k8s secret, %v", err)
