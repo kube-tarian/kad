@@ -184,8 +184,6 @@ func (ca *AppGitConfigHelper) DeployMainApp(ctx context.Context, fileName string
 func (ca *AppGitConfigHelper) SyncArgoCDApp(ctx context.Context, ns, resName string) error {
 	client, err := argocd.NewClient(logger)
 	if err != nil {
-		fmt.Println("Client error ")
-		fmt.Println(err.Error())
 		return err
 	}
 
