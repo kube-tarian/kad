@@ -191,6 +191,8 @@ func (ca *AppGitConfigHelper) SyncArgoCDApp(ctx context.Context, ns, resName str
 
 	_, err = client.TriggerAppSync(ctx, ns, resName)
 	if err != nil {
+		fmt.Println("TriggerAppSync")
+		fmt.Println(err.Error())
 		return err
 	}
 
