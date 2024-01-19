@@ -24,6 +24,8 @@ func GetConfig(logger logging.Logger) (*Configuration, error) {
 
 	k8sClient, err := k8s.NewK8SClient(logger)
 	if err != nil {
+		fmt.Println("k8sClient")
+		fmt.Println(err)
 		return nil, err
 	}
 
@@ -39,7 +41,6 @@ func GetConfig(logger logging.Logger) (*Configuration, error) {
 		}
 
 		cfg.Password = password
-
 	}
 
 	if !cfg.IsSSLEnabled {
@@ -58,6 +59,8 @@ func NewClient(logger logging.Logger) (*ArgoCDClient, error) {
 
 	client, err := getNewAPIClient(cfg)
 	if err != nil {
+		fmt.Println("getNewAPIClient")
+		fmt.Println(err)
 		return nil, err
 	}
 
