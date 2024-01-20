@@ -214,6 +214,9 @@ func (cp *CrossPlaneApp) createProviderConfigs(dir string, req *model.Crossplane
 
 func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.CrossplaneProvider, req *model.CrossplaneUseCase) (string, error) {
 	cloudType := strings.ToLower(provider.CloudType)
+	fmt.Println("cloudType => " + cloudType)
+	x, _ := json.Marshal(cp.pluginConfig.ProviderPackages)
+	fmt.Printf("cp.pluginConfig.ProviderPackages => \n %s \n", string(x))
 	pkg, found := cp.pluginConfig.ProviderPackages[cloudType]
 	if !found {
 		return "", fmt.Errorf("plugin package not found")
