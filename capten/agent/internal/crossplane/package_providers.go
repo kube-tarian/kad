@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
@@ -23,9 +24,11 @@ var (
 )
 
 type ProvidersSyncHandler struct {
-	log     logging.Logger
-	tc      *temporalclient.Client
-	dbStore *captenstore.Store
+	log             logging.Logger
+	tc              *temporalclient.Client
+	dbStore         *captenstore.Store
+	activeProviders map[string]bool
+	mutex           sync.Mutex
 }
 
 func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*ProvidersSyncHandler, error) {
@@ -34,7 +37,7 @@ func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*P
 		return nil, err
 	}
 
-	return &ProvidersSyncHandler{log: log, dbStore: dbStore, tc: tc}, nil
+	return &ProvidersSyncHandler{log: log, dbStore: dbStore, tc: tc, activeProviders: map[string]bool{}}, nil
 }
 
 func registerK8SProviderWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
@@ -62,6 +65,9 @@ func getProviderObj(obj any) (*model.Provider, error) {
 
 func (h *ProvidersSyncHandler) OnAdd(obj interface{}) {
 	h.log.Info("Crossplane Provider Add Callback")
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
 	newCcObj, err := getProviderObj(obj)
 	if newCcObj == nil {
 		h.log.Errorf("failed to read Provider object, %v", err)
@@ -75,14 +81,11 @@ func (h *ProvidersSyncHandler) OnAdd(obj interface{}) {
 }
 
 func (h *ProvidersSyncHandler) OnUpdate(oldObj, newObj interface{}) {
-	h.log.Info("Crossplane Provider Update Callback")
-	prevObj, err := getProviderObj(oldObj)
-	if prevObj == nil {
-		h.log.Errorf("failed to read Provider old object %v", err)
-		return
-	}
+	h.log.Debug("Crossplane Provider Update Callback")
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
-	newCcObj, err := getProviderObj(oldObj)
+	newCcObj, err := getProviderObj(newObj)
 	if newCcObj == nil {
 		h.log.Errorf("failed to read Provider new object %v", err)
 		return
@@ -96,10 +99,18 @@ func (h *ProvidersSyncHandler) OnUpdate(oldObj, newObj interface{}) {
 
 func (h *ProvidersSyncHandler) OnDelete(obj interface{}) {
 	h.log.Info("Crossplane Provider Delete Callback")
+	newCcObj, err := getProviderObj(obj)
+	if newCcObj == nil {
+		h.log.Errorf("failed to read Provider object, %v", err)
+		return
+	}
+	delete(h.activeProviders, newCcObj.Name)
 }
 
 func (h *ProvidersSyncHandler) Sync() error {
 	h.log.Debug("started to sync CrossplaneProvider resources")
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
 	k8sclient, err := k8s.NewK8SClient(h.log)
 	if err != nil {
@@ -141,7 +152,7 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 	}
 
 	for _, k8sProvider := range k8sProviders {
-		h.log.Infof("processing Crossplane Provider %s", k8sProvider.Name)
+		h.log.Debugf("processing Crossplane Provider %s", k8sProvider.Name)
 		for _, providerStatus := range k8sProvider.Status.Conditions {
 			if providerStatus.Type != model.TypeHealthy {
 				continue
@@ -150,6 +161,13 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 			dbProvider, ok := dbProviderMap[k8sProvider.Name]
 			if !ok {
 				h.log.Infof("Provider name %s is not found in the db, skipping the update", k8sProvider.Name)
+				delete(h.activeProviders, k8sProvider.Name)
+				continue
+			}
+
+			_, ok = h.activeProviders[k8sProvider.Name]
+			if !ok {
+				h.log.Debugf("Provider name %s is already configured, skipping the update", k8sProvider.Name)
 				continue
 			}
 
@@ -169,14 +187,15 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 				h.log.Errorf("failed to update provider %s details in db, %v", k8sProvider.Name, err)
 				continue
 			}
-			h.log.Infof("updated the crossplane provider %s", k8sProvider.Name)
+			h.log.Infof("updated the crossplane provider %s, status: %s", k8sProvider.Name, status)
 
-			err = h.triggerProviderUpdate(provider.ProviderName, provider)
-			if err != nil {
-				return fmt.Errorf("failed to trigger crossplane provider update workflow, %v", err)
+			if status == model.CrossPlaneProviderReady {
+				err = h.triggerProviderUpdate(provider.ProviderName, provider)
+				if err != nil {
+					return fmt.Errorf("failed to trigger crossplane provider update workflow, %v", err)
+				}
+				h.log.Infof("triggered crossplane provider update workflow for provider %s", provider.ProviderName)
 			}
-
-			h.log.Infof("triggered crossplane provider update workflow for provider %s", provider.ProviderName)
 		}
 	}
 	return nil
@@ -212,6 +231,6 @@ func (h *ProvidersSyncHandler) monitorProviderUpdateWorkflow(provider *model.Cro
 		h.log.Errorf("failed to send crossplane provider update event to workflow to configure %s, %v", provider.ProviderName, err)
 		return
 	}
-
+	h.activeProviders[model.PrepareCrossplaneProviderName(provider.CloudType)] = true
 	h.log.Infof("Crossplane provider update %s config workflow %s completed", provider.ProviderName, wkfId)
 }
