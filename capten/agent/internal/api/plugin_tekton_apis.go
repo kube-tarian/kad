@@ -106,9 +106,10 @@ func (a *Agent) GetTektonProject(ctx context.Context, request *captenpluginspb.G
 	tekTonProject := &captenpluginspb.TektonProject{}
 	for _, project := range projects {
 		tekTonProject = &captenpluginspb.TektonProject{
-			Id:            project.Id,
-			GitProjectUrl: project.GitProjectUrl,
-			Status:        project.Status,
+			Id:             project.Id,
+			GitProjectUrl:  project.GitProjectUrl,
+			Status:         project.Status,
+			LastUpdateTime: project.LastUpdateTime,
 		}
 	}
 
