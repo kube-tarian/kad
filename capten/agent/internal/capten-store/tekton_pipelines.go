@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	insertTektonPipelines        = "INSERT INTO %s.TektonPipelines(id, pipeline_name, git_org_id, container_registry_id, status, last_update_time, workflow_id, workflow_status) VALUES (?,?,?,?,?,?,?,?)"
+	insertTektonPipelines        = "INSERT INTO %s.TektonPipelines(id, pipeline_name, git_org_id, container_registry_id, managed_cluster_id, crossplane_git_project_id, status, last_update_time, workflow_id, workflow_status) VALUES (?,?,?,?,?,?,?,?,?,?)"
 	updateTektonPipelinesById    = "UPDATE %s.TektonPipelines SET %s WHERE id=?"
 	deleteTektonPipelinesById    = "DELETE FROM %s.TektonPipelines WHERE id= ?"
-	selectAllTektonPipelines     = "SELECT id, pipeline_name, git_org_id, container_registry_id, status, last_update_time FROM %s.TektonPipelines"
-	selectGetTektonPipelinesById = "SELECT id, pipeline_name, git_org_id, container_registry_id, status, last_update_time FROM %s.TektonPipelines WHERE id=%s;"
+	selectAllTektonPipelines     = "SELECT id, pipeline_name, git_org_id, container_registry_id, managed_cluster_id, crossplane_git_project_id, status, last_update_time FROM %s.TektonPipelines"
+	selectGetTektonPipelinesById = "SELECT id, pipeline_name, git_org_id, container_registry_id, managed_cluster_id, crossplane_git_project_id, status, last_update_time FROM %s.TektonPipelines WHERE id=%s;"
 )
 
 func (a *Store) UpsertTektonPipelines(config *model.TektonPipeline) error {
@@ -76,15 +76,18 @@ func (a *Store) executeTektonPipelinessSelectQuery(query string) ([]*model.Tekto
 	ret := make([]*model.TektonPipeline, 0)
 	for iter.Scan(
 		&project.Id, &project.PipelineName,
-		&project.GitProjectId, &project.ContainerRegId, &project.Status, &project.LastUpdateTime,
+		&project.GitProjectId, &project.ContainerRegId, &project.ManagedClusterId, &project.CrossplaneGitProjectId,
+		&project.Status, &project.LastUpdateTime,
 	) {
 		TektonPipelines := &model.TektonPipeline{
-			Id:             project.Id,
-			PipelineName:   project.PipelineName,
-			LastUpdateTime: project.LastUpdateTime,
-			GitProjectId:   project.GitProjectId,
-			ContainerRegId: project.ContainerRegId,
-			Status:         project.Status,
+			Id:                     project.Id,
+			PipelineName:           project.PipelineName,
+			LastUpdateTime:         project.LastUpdateTime,
+			GitProjectId:           project.GitProjectId,
+			ContainerRegId:         project.ContainerRegId,
+			ManagedClusterId:       project.ManagedClusterId,
+			CrossplaneGitProjectId: project.CrossplaneGitProjectId,
+			Status:                 project.Status,
 		}
 		ret = append(ret, TektonPipelines)
 	}
@@ -112,6 +115,16 @@ func formUpdateKvPairsForTektonPipelines(config *model.TektonPipeline) (updatePl
 	if len(config.ContainerRegId) != 0 {
 		params = append(params, "container_registry_id = ?")
 		values = append(values, config.ContainerRegId)
+	}
+
+	if config.ManagedClusterId != "" {
+		params = append(params, "managed_cluster_id = ?")
+		values = append(values, config.Status)
+	}
+
+	if config.CrossplaneGitProjectId != "" {
+		params = append(params, "crossplane_git_project_id = ?")
+		values = append(values, config.Status)
 	}
 
 	if config.Status != "" {
