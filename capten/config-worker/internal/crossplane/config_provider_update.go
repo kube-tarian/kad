@@ -2,8 +2,8 @@ package crossplane
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
@@ -18,21 +18,26 @@ const (
 func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req *model.CrossplaneProviderUpdate) (status string, err error) {
 	logger.Infof("configuring config provider %s update", req.CloudType)
 
-	fmt.Println("provider")
-	x, _ := json.Marshal(req)
-	fmt.Println(string(x))
-	// x := strings.TrimPrefix(req.ManagedClusterName, "provider-")
+	cloudType := strings.ToLower(req.CloudType)
+	syncPath := fmt.Sprintf("/infra/crossplane/argocd-apps/templates/package-k8s/%s-package/%s-k8s-package.yaml", cloudType, cloudType)
 
-	err = cp.helper.SyncArgoCDApp(ctx, CrossPlaneResource, CrossPlaneResource)
+	ns, resName, err := getAppNameNamespace(ctx, syncPath)
 	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync config providers")
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get name and namespace from")
 	}
 
-	logger.Infof("synched config providers %s", CrossPlaneResource)
+	fmt.Println("ns => " + ns)
+	fmt.Println("resname => " + resName)
 
-	err = cp.helper.WaitForArgoCDToSync(ctx, CrossPlaneResource, CrossPlaneResource)
+	err = cp.helper.SyncArgoCDApp(ctx, ns, resName)
 	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to fetch config providers")
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync argocd app")
+	}
+	logger.Infof("synched provider config main-app %s", resName)
+
+	err = cp.helper.WaitForArgoCDToSync(ctx, ns, resName)
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to fetch argocd app")
 	}
 
 	return string(agentmodel.WorkFlowStatusCompleted), nil
