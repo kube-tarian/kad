@@ -25,7 +25,7 @@ type Config struct {
 
 type CrossPlaneApp struct {
 	helper       *appconfig.AppGitConfigHelper
-	pluginConfig *crossplanePluginConfig
+	pluginConfig *CrossplanePluginConfig
 	cfg          Config
 }
 
@@ -40,20 +40,20 @@ func NewCrossPlaneApp() (*CrossPlaneApp, error) {
 		return nil, err
 	}
 
-	pluginConfig, err := readCrossPlanePluginConfig(cfg.PluginConfigFile)
+	pluginConfig, err := ReadCrossPlanePluginConfig(cfg.PluginConfigFile)
 	if err != nil {
 		return nil, err
 	}
 	return &CrossPlaneApp{pluginConfig: pluginConfig, helper: helper, cfg: cfg}, err
 }
 
-func readCrossPlanePluginConfig(pluginFile string) (*crossplanePluginConfig, error) {
+func ReadCrossPlanePluginConfig(pluginFile string) (*CrossplanePluginConfig, error) {
 	data, err := os.ReadFile(filepath.Clean(pluginFile))
 	if err != nil {
 		return nil, fmt.Errorf("failed to read pluginConfig File: %s, err: %w", pluginFile, err)
 	}
 
-	var pluginData crossplanePluginConfig
+	var pluginData CrossplanePluginConfig
 	err = json.Unmarshal(data, &pluginData)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)

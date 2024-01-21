@@ -12,7 +12,9 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
+	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
 	appconfig "github.com/kube-tarian/kad/capten/config-worker/internal/app_config"
+	"github.com/kube-tarian/kad/capten/config-worker/internal/crossplane"
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
 	"github.com/otiai10/copy"
@@ -22,7 +24,12 @@ import (
 )
 
 var (
-	secrets           = []string{"gitcred", "docker-credentials", "github-webhook-secret"}
+	gitCred           = "gitcred"
+	dockerCred        = "docker-credentials"
+	githubWebhook     = "github-webhook-secret"
+	argoCred          = "argocd"
+	extraConfig       = "extraConfig"
+	secrets           = []string{gitCred, dockerCred, githubWebhook, argoCred, extraConfig}
 	pipelineNamespace = "tekton-pipelines"
 	tektonChildTasks  = []string{"tekton-cluster-tasks"}
 	addPipeline       = "add"
@@ -31,14 +38,16 @@ var (
 )
 
 type Config struct {
-	PluginConfigFile string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
-	DomainName       string `envconfig:"DOMAIN_NAME" default:"capten"`
+	PluginConfigFile     string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
+	CrossplaneConfigFile string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
+	DomainName           string `envconfig:"DOMAIN_NAME" default:"capten"`
 }
 
 type TektonApp struct {
-	helper       *appconfig.AppGitConfigHelper
-	pluginConfig *tektonPluginConfig
-	cfg          Config
+	helper          *appconfig.AppGitConfigHelper
+	pluginConfig    *tektonPluginConfig
+	crossplanConfig *crossplane.CrossplanePluginConfig
+	cfg             Config
 }
 
 func NewTektonApp() (*TektonApp, error) {
@@ -56,7 +65,12 @@ func NewTektonApp() (*TektonApp, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &TektonApp{pluginConfig: pluginConfig, helper: helper, cfg: cfg}, err
+
+	crossplaneConfig, err := crossplane.ReadCrossPlanePluginConfig(cfg.CrossplaneConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	return &TektonApp{pluginConfig: pluginConfig, helper: helper, cfg: cfg, crossplanConfig: crossplaneConfig}, err
 }
 
 func readTektonPluginConfig(pluginFile string) (*tektonPluginConfig, error) {
@@ -269,7 +283,8 @@ func (cp *TektonApp) syncArgoCDChildApps(ctx context.Context, namespace string, 
 }
 
 func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.TektonPipelineUseCase) error {
-	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
+	log := logging.NewLogger()
+	k8sclient, err := k8s.NewK8SClient(log)
 	if err != nil {
 		return fmt.Errorf("failed to initalize k8s client, %v", err)
 	}
@@ -278,7 +293,9 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 
 	for _, secret := range secrets {
 		strdata := make(map[string][]byte)
-		if secret == "docker-credentials" {
+		secName := secret + "-" + req.PipelineName
+		switch secret {
+		case dockerCred:
 			username, password, err := cp.helper.GetContainerRegCreds(ctx,
 				req.CredentialIdentifiers[agentmodel.Container].Identifier, req.CredentialIdentifiers[agentmodel.Container].Id)
 			if err != nil {
@@ -291,21 +308,59 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			}
 			strdata[".dockerconfigjson"] = data
 			strdata["config.json"] = data
-			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName,
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
 				v1.SecretTypeDockerConfigJson, strdata, map[string]string{}); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
-		} else {
+
+		case gitCred, githubWebhook:
 			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.Git].Id)
 			if err != nil {
 				return fmt.Errorf("failed to get git secret, %v", err)
 			}
 			strdata["username"] = []byte(username)
 			strdata["password"] = []byte(token)
-			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName,
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
 				v1.SecretTypeBasicAuth, strdata, nil); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
+		case argoCred:
+			cfg, err := argocd.GetConfig(log)
+			if err != nil {
+				return fmt.Errorf("failed to get argo-cd secret, %v", err)
+			}
+			strdata["SERVER_URL"] = []byte(cfg.ServiceURL)
+			strdata["USERNAME"] = []byte(cfg.Username)
+			strdata["PASSWORD"] = []byte(cfg.Password)
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
+				v1.SecretTypeBasicAuth, strdata, map[string]string{}); err != nil {
+				return fmt.Errorf("failed to create/update k8s secret, %v", err)
+			}
+		case extraConfig:
+			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.ExtraGitProject].Id)
+			if err != nil {
+				return fmt.Errorf("failed to get git secret, %v", err)
+			}
+
+			kubeConfig, kubeCa, kubeEndpoint, err := cp.helper.GetClusterCreds(ctx, req.CredentialIdentifiers[agentmodel.ManagedCluster].Identifier, req.CredentialIdentifiers[agentmodel.ManagedCluster].Id)
+			if err != nil {
+				return fmt.Errorf("failed to get GetClusterCreds, %v", err)
+			}
+			strdata["GIT_USER_NAME"] = []byte(username)
+			strdata["GIT_TOKEN"] = []byte(token)
+			strdata["GIT_PROJECT_URL"] = []byte(req.CredentialIdentifiers[agentmodel.ExtraGitProject].Url)
+			strdata["APP_CONFIG_PATH"] = []byte(filepath.Join(cp.crossplanConfig.ClusterEndpointUpdates.DefaultAppValuesPath, req.CredentialIdentifiers[agentmodel.ManagedCluster].Url))
+			strdata["CLUSTER_CA"] = []byte(kubeCa)
+			strdata["CLUSTER_ENDPOINT"] = []byte(kubeEndpoint)
+			strdata["CLUSTER_CONFIG"] = []byte(kubeConfig)
+
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
+				v1.SecretTypeBasicAuth, strdata, nil); err != nil {
+				return fmt.Errorf("failed to create/update k8s secret, %v", err)
+			}
+
+		default:
+			return fmt.Errorf("secret step: %s type not found", secret)
 		}
 	}
 

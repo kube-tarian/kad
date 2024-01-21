@@ -309,6 +309,19 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, actio
 		a.log.Errorf("failed to send event to workflow to configure, %v", err)
 		return "", fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectId, err)
 	}
+
+	extraGitProject, err := a.as.GetCrossplaneProjectForID(req.CrossplaneGitProjectId)
+	if err != nil {
+		a.log.Infof("failed to get crossplane git project %s, %v", req.CrossplaneGitProjectId, err)
+		return "", fmt.Errorf("failed to get crossplane git project %s, %v", req.CrossplaneGitProjectId, err)
+	}
+
+	managedCluster, err := a.as.GetManagedClusterForID(req.ManagedClusterId)
+	if err != nil {
+		a.log.Infof("failed to get managed clsuter %s, %v", req.ManagedClusterId, err)
+		return "", fmt.Errorf("failed to get managed clsuter  %s, %v", req.ManagedClusterId, err)
+	}
+
 	containerRegURLIdMap := make(map[string]string)
 	containerRegURLIdMap[containerReg.Id] = containerReg.RegistryUrl
 
@@ -318,8 +331,8 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, actio
 			captenmodel.Git: {Identifier: gitProjectEntityName, Id: req.GitProjectId},
 			captenmodel.Container: {Identifier: containerRegEntityName,
 				Id: req.ContainerRegId[0], Url: containerReg.RegistryUrl},
-			captenmodel.ManagedCluster:  {Identifier: ManagedClusterEntityName, Id: req.ManagedClusterId},
-			captenmodel.ExtraGitProject: {Identifier: gitProjectEntityName, Id: req.CrossplaneGitProjectId},
+			captenmodel.ManagedCluster:  {Identifier: ManagedClusterEntityName, Id: req.ManagedClusterId, Url: managedCluster.ClusterName},
+			captenmodel.ExtraGitProject: {Identifier: gitProjectEntityName, Id: req.CrossplaneGitProjectId, Url: extraGitProject.GitProjectUrl},
 		}}
 	wd := workers.NewConfig(a.tc, a.log)
 

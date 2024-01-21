@@ -14,7 +14,7 @@ type clusterUpdateConfig struct {
 	ClusterDefaultAppValuesPath string `json:"clusterDefaultAppValuesPath"`
 }
 
-type crossplanePluginConfig struct {
+type CrossplanePluginConfig struct {
 	TemplateGitRepo          string              `json:"templateGitRepo"`
 	CrossplaneConfigSyncPath string              `json:"crossplaneConfigSyncPath"`
 	ProviderConfigSyncPath   string              `json:"providerConfigSyncPath"`
