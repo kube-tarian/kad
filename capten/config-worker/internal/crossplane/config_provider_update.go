@@ -2,6 +2,8 @@ package crossplane
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
@@ -13,9 +15,12 @@ const (
 	CrossplaneNamespace = "crossplane-system"
 )
 
-func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
-	logger.Infof("configuring config provider %s update", req.ManagedClusterName)
+func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req *model.CrossplaneProviderUpdate) (status string, err error) {
+	logger.Infof("configuring config provider %s update", req.CloudType)
 
+	fmt.Println("provider")
+	x, _ := json.Marshal(req)
+	fmt.Println(string(x))
 	// x := strings.TrimPrefix(req.ManagedClusterName, "provider-")
 
 	err = cp.helper.SyncArgoCDApp(ctx, CrossPlaneResource, CrossPlaneResource)

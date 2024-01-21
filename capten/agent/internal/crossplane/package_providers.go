@@ -155,20 +155,20 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 		h.log.Debugf("processing Crossplane Provider %s", k8sProvider.Name)
 		for _, providerStatus := range k8sProvider.Status.Conditions {
 			if providerStatus.Type != model.TypeHealthy {
-				continue
+				// continue
 			}
 
 			dbProvider, ok := dbProviderMap[k8sProvider.Name]
 			if !ok {
 				h.log.Infof("Provider name %s is not found in the db, skipping the update", k8sProvider.Name)
 				delete(h.activeProviders, k8sProvider.Name)
-				continue
+				// continue
 			}
 
 			_, ok = h.activeProviders[k8sProvider.Name]
 			if !ok {
 				h.log.Debugf("Provider name %s is already configured, skipping the update", k8sProvider.Name)
-				continue
+				// continue
 			}
 
 			status := model.CrossPlaneProviderNotReady
@@ -183,10 +183,10 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 				ProviderName:    dbProvider.ProviderName,
 			}
 
-			if err := h.dbStore.UpdateCrossplaneProvider(&provider); err != nil {
-				h.log.Errorf("failed to update provider %s details in db, %v", k8sProvider.Name, err)
-				continue
-			}
+			// if err := h.dbStore.UpdateCrossplaneProvider(&provider); err != nil {
+			// 	h.log.Errorf("failed to update provider %s details in db, %v", k8sProvider.Name, err)
+			// 	continue
+			// }
 			h.log.Infof("updated the crossplane provider %s, status: %s", k8sProvider.Name, status)
 
 			if status == model.CrossPlaneProviderReady {
@@ -208,8 +208,8 @@ func (h *ProvidersSyncHandler) triggerProviderUpdate(clusterName string, provide
 	if err != nil {
 		return err
 	}
-	ci := model.CrossplaneClusterUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId,
-		ManagedClusterName: clusterName, ManagedClusterId: provider.Id}
+	ci := model.CrossplaneProviderUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId, ProviderId: provider.Id,
+		ProviderName: provider.ProviderName, CloudType: provider.CloudType}
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(), &model.ConfigureParameters{Resource: model.CrossPlaneResource, Action: model.CrossPlaneProviderUpdate}, ci)
 	if err != nil {
