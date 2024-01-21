@@ -16,6 +16,8 @@ const (
 func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req *model.CrossplaneClusterUpdate) (status string, err error) {
 	logger.Infof("configuring config provider %s update", req.ManagedClusterName)
 
+	// x := strings.TrimPrefix(req.ManagedClusterName, "provider-")
+
 	err = cp.helper.SyncArgoCDApp(ctx, CrossPlaneResource, CrossPlaneResource)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync config providers")
