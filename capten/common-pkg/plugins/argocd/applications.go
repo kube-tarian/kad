@@ -3,7 +3,6 @@ package argocd
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apiclient/application"
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -106,8 +105,6 @@ func (a *ArgoCDClient) List(req *model.ListRequestPayload) (json.RawMessage, err
 func (a *ArgoCDClient) TriggerAppSync(ctx context.Context, namespace, name string) (*v1alpha1.Application, error) {
 	conn, app, err := a.client.NewApplicationClient()
 	if err != nil {
-		fmt.Println("conn")
-		fmt.Println(err.Error())
 		return nil, err
 	}
 
@@ -122,8 +119,6 @@ func (a *ArgoCDClient) TriggerAppSync(ctx context.Context, namespace, name strin
 			Limit: 3,
 		}})
 	if err != nil {
-		fmt.Println("Sync")
-		fmt.Println(err.Error())
 		return nil, err
 	}
 
