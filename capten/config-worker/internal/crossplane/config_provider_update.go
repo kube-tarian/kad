@@ -28,7 +28,7 @@ func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req 
 	defer os.RemoveAll(customerRepo)
 
 	cloudType := strings.ToLower(req.CloudType)
-	syncPath := fmt.Sprintf("/infra/crossplane/argocd-apps/templates/package-k8s/%s-packages/%s-k8s-package.yaml", cloudType, cloudType)
+	syncPath := fmt.Sprintf("infra/crossplane/argocd-apps/templates/package-k8s/%s-packages/%s-k8s-package.yaml", cloudType, cloudType)
 
 	fmt.Println(syncPath)
 
