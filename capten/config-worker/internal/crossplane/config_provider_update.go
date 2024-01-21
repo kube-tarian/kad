@@ -12,34 +12,29 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	CrossPlaneResource  = "crossplane"
-	CrossplaneNamespace = "crossplane-system"
-)
-
 func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req *model.CrossplaneProviderUpdate) (status string, err error) {
-	logger.Infof("configuring config provider %s update", req.CloudType)
+	logger.Infof("configuring config provider %s update", req.ProviderName)
 
 	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.GitProjectId)
 	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repo")
 	}
-	logger.Infof("cloned default templates to project %s", req.RepoURL)
+	logger.Infof("cloned customer to project %s", req.RepoURL)
 
 	defer os.RemoveAll(customerRepo)
 
 	cloudType := strings.ToLower(req.CloudType)
-	syncPath := fmt.Sprintf("infra/crossplane/argocd-apps/templates/package-k8s/%s-packages/%s-k8s-package.yaml", cloudType, cloudType)
-
-	fmt.Println(syncPath)
+	var syncPath string
+	if cp.pluginConfig.ProviderEndpointUpdates.SyncAppPath == "" {
+		syncPath = fmt.Sprintf("infra/crossplane/argocd-apps/templates/package-k8s/%s-packages/%s-k8s-package.yaml", cloudType, cloudType)
+	} else {
+		syncPath = fmt.Sprintf("%s/%s-packages/%s-k8s-package.yaml", cp.pluginConfig.ProviderEndpointUpdates.SyncAppPath, cloudType, cloudType)
+	}
 
 	ns, resName, err := getAppNameNamespace(ctx, filepath.Join(customerRepo, syncPath))
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get name and namespace from")
 	}
-
-	fmt.Println("ns => " + ns)
-	fmt.Println("resname => " + resName)
 
 	err = cp.helper.SyncArgoCDApp(ctx, ns, resName)
 	if err != nil {
