@@ -33,7 +33,7 @@ func getAppNameNamespace(ctx context.Context, fileName string) (string, string, 
 	if err != nil {
 		return "", "", err
 	}
-	fmt.Println(string(jsonData))
+
 	// For the testing change the reqrepo to template one
 	ns, resName, err := k8sclient.DynamicClient.GetNameNamespace(jsonData)
 	if err != nil {
