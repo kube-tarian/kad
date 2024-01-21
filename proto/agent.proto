@@ -9,6 +9,10 @@ package agentpb;
 service Agent {
   rpc Ping (PingRequest) returns (PingResponse) {}
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
+  rpc ConfigureVaultSecret (ConfigureVaultSecretRequest) returns (ConfigureVaultSecretResponse) {}
+  rpc CreateVaultRole (CreateVaultRoleRequest) returns (CreateVaultRoleResponse) {}
+  rpc UpdateVaultRole (UpdateVaultRoleRequest) returns (UpdateVaultRoleResponse) {}
+  rpc DeleteVaultRole (DeleteVaultRoleRequest) returns (DeleteVaultRoleResponse) {}
 
   rpc SyncApp(SyncAppRequest) returns (SyncAppResponse) {}
   rpc GetClusterApps (GetClusterAppsRequest) returns (GetClusterAppsResponse) {}
@@ -238,6 +242,58 @@ message UpdateAppValuesRequest {
 }
 
 message UpdateAppValuesResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+
+enum SecretAccess {
+  READ = 0;
+  WRITE = 1;  
+}
+
+message ConfigureVaultSecretRequest {
+  string secretPath = 1;
+  string namespace = 2;
+  string secretName = 3;
+  string managedClusterId = 4;
+}
+
+message secretPolicy { 
+  string secretPath = 1;
+  SecretAccess access = 2;
+}
+
+message ConfigureVaultSecretResponse {
+}
+
+message CreateVaultRoleRequest { 
+  string roleName = 1;
+  repeated secretPolicy secretPolicy = 2;
+  string managedClusterId = 3;
+}
+
+message CreateVaultRoleResponse { 
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UpdateVaultRoleRequest { 
+  string roleName = 1;
+  repeated secretPolicy secretPolicy = 2;
+  string managedClusterId = 3;
+}
+
+message UpdateVaultRoleResponse { 
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message DeleteVaultRoleRequest { 
+  string roleName = 1;
+}
+
+message DeleteVaultRoleResponse { 
   StatusCode status = 1;
   string statusMessage = 2;
 }

@@ -56,3 +56,19 @@ func (a *Agent) GetClusterGlobalValues(ctx context.Context, _ *agentpb.GetCluste
 		GlobalValues: []byte(values),
 	}, nil
 }
+
+func (a *Agent) ConfigureVaultSecret(ctx context.Context, request *agentpb.ConfigureVaultSecretRequest) (*agentpb.ConfigureVaultSecretResponse, error) {
+	return nil, fmt.Errorf("not supported")
+}
+
+func (a *Agent) CreateVaultRole(ctx context.Context, request *agentpb.CreateVaultRoleRequest) (*agentpb.CreateVaultRoleResponse, error) {
+	return nil, fmt.Errorf("not supported")
+}
+
+func (a *Agent) UpdateVaultRole(ctx context.Context, request *agentpb.UpdateVaultRoleRequest) (*agentpb.UpdateVaultRoleResponse, error) {
+	return nil, fmt.Errorf("not supported")
+}
+
+func (a *Agent) DeleteVaultRole(ctx context.Context, request *agentpb.DeleteVaultRoleRequest) (*agentpb.DeleteVaultRoleResponse, error) {
+	return nil, fmt.Errorf("not supported")
+}
