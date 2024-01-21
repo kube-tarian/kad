@@ -155,6 +155,8 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 		x, _ := json.Marshal(k8sProvider)
 		fmt.Println("Provider =>")
 		fmt.Println(string(x))
+		fmt.Println("k8sProvider.Name")
+		fmt.Println(k8sProvider.Name)
 		h.log.Debugf("processing Crossplane Provider %s", k8sProvider.Name)
 		for _, providerStatus := range k8sProvider.Status.Conditions {
 			if providerStatus.Type != model.TypeHealthy {
