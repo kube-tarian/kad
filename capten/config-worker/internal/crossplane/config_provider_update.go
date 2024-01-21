@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/kube-tarian/kad/capten/model"
@@ -32,7 +33,7 @@ func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req 
 
 	fmt.Println(syncPath)
 
-	ns, resName, err := getAppNameNamespace(ctx, syncPath)
+	ns, resName, err := getAppNameNamespace(ctx, filepath.Join(customerRepo, syncPath))
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get name and namespace from")
 	}
