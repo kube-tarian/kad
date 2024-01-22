@@ -25,6 +25,6 @@
     }
   ],
   "providerUpdate": {
-    "syncAppPath": "/infra/crossplane/argocd-apps/templates/package-k8s"
+    "syncAppPath": "infra/crossplane/argocd-apps/templates/package-k8s"
   }
 }
