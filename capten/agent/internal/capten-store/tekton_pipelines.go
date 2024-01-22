@@ -22,7 +22,7 @@ func (a *Store) UpsertTektonPipelines(config *model.TektonPipeline) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(insertTektonPipelines, a.keyspace), config.Id,
-		config.PipelineName, config.GitProjectId, config.ContainerRegId, config.Status,
+		config.PipelineName, config.GitProjectId, config.ContainerRegId, config.ManagedClusterId, config.CrossplaneGitProjectId, config.Status,
 		config.LastUpdateTime, config.WorkflowId, config.WorkflowStatus)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
