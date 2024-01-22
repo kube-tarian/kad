@@ -337,22 +337,22 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
 		case extraConfig:
-			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.ExtraGitProject].Id)
-			if err != nil {
-				return fmt.Errorf("failed to get git secret, %v", err)
-			}
+			// username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.ExtraGitProject].Id)
+			// if err != nil {
+			// 	return fmt.Errorf("failed to get git secret, %v", err)
+			// }
 
-			kubeConfig, kubeCa, kubeEndpoint, err := cp.helper.GetClusterCreds(ctx, req.CredentialIdentifiers[agentmodel.ManagedCluster].Identifier, req.CredentialIdentifiers[agentmodel.ManagedCluster].Id)
-			if err != nil {
-				return fmt.Errorf("failed to get GetClusterCreds, %v", err)
-			}
-			strdata["GIT_USER_NAME"] = []byte(username)
-			strdata["GIT_TOKEN"] = []byte(token)
+			// kubeConfig, kubeCa, kubeEndpoint, err := cp.helper.GetClusterCreds(ctx, req.CredentialIdentifiers[agentmodel.ManagedCluster].Identifier, req.CredentialIdentifiers[agentmodel.ManagedCluster].Id)
+			// if err != nil {
+			// 	return fmt.Errorf("failed to get GetClusterCreds, %v", err)
+			// }
+			strdata["GIT_USER_NAME"] = []byte("username")
+			strdata["GIT_TOKEN"] = []byte("token")
 			strdata["GIT_PROJECT_URL"] = []byte(req.CredentialIdentifiers[agentmodel.ExtraGitProject].Url)
 			strdata["APP_CONFIG_PATH"] = []byte(filepath.Join(cp.crossplanConfig.ClusterEndpointUpdates.DefaultAppValuesPath, req.CredentialIdentifiers[agentmodel.ManagedCluster].Url))
-			strdata["CLUSTER_CA"] = []byte(kubeCa)
-			strdata["CLUSTER_ENDPOINT"] = []byte(kubeEndpoint)
-			strdata["CLUSTER_CONFIG"] = []byte(kubeConfig)
+			strdata["CLUSTER_CA"] = []byte("kubeCa")
+			strdata["CLUSTER_ENDPOINT"] = []byte("kubeEndpoint")
+			strdata["CLUSTER_CONFIG"] = []byte("kubeConfig")
 
 			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
 				v1.SecretTypeBasicAuth, strdata, nil); err != nil {
