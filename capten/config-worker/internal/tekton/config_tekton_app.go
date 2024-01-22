@@ -333,7 +333,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			strdata["USERNAME"] = []byte(cfg.Username)
 			strdata["PASSWORD"] = []byte(cfg.Password)
 			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
-				v1.SecretTypeBasicAuth, strdata, map[string]string{}); err != nil {
+				v1.SecretTypeOpaque, strdata, map[string]string{}); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
 		case extraConfig:
@@ -355,7 +355,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			strdata["CLUSTER_CONFIG"] = []byte(kubeConfig)
 
 			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
-				v1.SecretTypeBasicAuth, strdata, nil); err != nil {
+				v1.SecretTypeOpaque, strdata, nil); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
 
