@@ -40,12 +40,15 @@ func GetConfig(logger logging.Logger) (*Configuration, error) {
 
 		cfg.Password = password
 
+		logger.Info("PasswordDATA : ", cfg.ServiceURL, cfg.Password, cfg.Username)
 	}
 
 	if !cfg.IsSSLEnabled {
 		// TODO: Configure SSL certificates
 		logger.Errorf("SSL not yet supported, continuing with insecure verify true")
 	}
+
+	logger.Info("DATA : ", cfg.ServiceURL, cfg.Password, cfg.Username)
 
 	return cfg, nil
 }
