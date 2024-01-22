@@ -329,6 +329,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			if err != nil {
 				return fmt.Errorf("failed to get argo-cd secret, %v", err)
 			}
+			log.Info("DATA : ", cfg)
 			strdata["SERVER_URL"] = []byte(cfg.ServiceURL)
 			strdata["USERNAME"] = []byte(cfg.Username)
 			strdata["PASSWORD"] = []byte(cfg.Password)
