@@ -20,7 +20,63 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type GetCredRequest struct {
+type StatusCode int32
+
+const (
+	StatusCode_OK               StatusCode = 0
+	StatusCode_INTERNRAL_ERROR  StatusCode = 1
+	StatusCode_INVALID_ARGUMENT StatusCode = 2
+	StatusCode_NOT_FOUND        StatusCode = 3
+)
+
+var StatusCode_name = map[int32]string{
+	0: "OK",
+	1: "INTERNRAL_ERROR",
+	2: "INVALID_ARGUMENT",
+	3: "NOT_FOUND",
+}
+
+var StatusCode_value = map[string]int32{
+	"OK":               0,
+	"INTERNRAL_ERROR":  1,
+	"INVALID_ARGUMENT": 2,
+	"NOT_FOUND":        3,
+}
+
+func (x StatusCode) String() string {
+	return proto.EnumName(StatusCode_name, int32(x))
+}
+
+func (StatusCode) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{0}
+}
+
+type SecretAccess int32
+
+const (
+	SecretAccess_READ  SecretAccess = 0
+	SecretAccess_WRITE SecretAccess = 1
+)
+
+var SecretAccess_name = map[int32]string{
+	0: "READ",
+	1: "WRITE",
+}
+
+var SecretAccess_value = map[string]int32{
+	"READ":  0,
+	"WRITE": 1,
+}
+
+func (x SecretAccess) String() string {
+	return proto.EnumName(SecretAccess_name, int32(x))
+}
+
+func (SecretAccess) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{1}
+}
+
+type GetCredentialRequest struct {
 	CredentialType       string   `protobuf:"bytes,1,opt,name=credentialType,proto3" json:"credentialType,omitempty"`
 	CredEntityName       string   `protobuf:"bytes,2,opt,name=credEntityName,proto3" json:"credEntityName,omitempty"`
 	CredIdentifier       string   `protobuf:"bytes,3,opt,name=credIdentifier,proto3" json:"credIdentifier,omitempty"`
@@ -29,53 +85,53 @@ type GetCredRequest struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *GetCredRequest) Reset()         { *m = GetCredRequest{} }
-func (m *GetCredRequest) String() string { return proto.CompactTextString(m) }
-func (*GetCredRequest) ProtoMessage()    {}
-func (*GetCredRequest) Descriptor() ([]byte, []int) {
+func (m *GetCredentialRequest) Reset()         { *m = GetCredentialRequest{} }
+func (m *GetCredentialRequest) String() string { return proto.CompactTextString(m) }
+func (*GetCredentialRequest) ProtoMessage()    {}
+func (*GetCredentialRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bfee588ca0905ccc, []int{0}
 }
 
-func (m *GetCredRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetCredRequest.Unmarshal(m, b)
+func (m *GetCredentialRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetCredentialRequest.Unmarshal(m, b)
 }
-func (m *GetCredRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetCredRequest.Marshal(b, m, deterministic)
+func (m *GetCredentialRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetCredentialRequest.Marshal(b, m, deterministic)
 }
-func (m *GetCredRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetCredRequest.Merge(m, src)
+func (m *GetCredentialRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetCredentialRequest.Merge(m, src)
 }
-func (m *GetCredRequest) XXX_Size() int {
-	return xxx_messageInfo_GetCredRequest.Size(m)
+func (m *GetCredentialRequest) XXX_Size() int {
+	return xxx_messageInfo_GetCredentialRequest.Size(m)
 }
-func (m *GetCredRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetCredRequest.DiscardUnknown(m)
+func (m *GetCredentialRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetCredentialRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetCredRequest proto.InternalMessageInfo
+var xxx_messageInfo_GetCredentialRequest proto.InternalMessageInfo
 
-func (m *GetCredRequest) GetCredentialType() string {
+func (m *GetCredentialRequest) GetCredentialType() string {
 	if m != nil {
 		return m.CredentialType
 	}
 	return ""
 }
 
-func (m *GetCredRequest) GetCredEntityName() string {
+func (m *GetCredentialRequest) GetCredEntityName() string {
 	if m != nil {
 		return m.CredEntityName
 	}
 	return ""
 }
 
-func (m *GetCredRequest) GetCredIdentifier() string {
+func (m *GetCredentialRequest) GetCredIdentifier() string {
 	if m != nil {
 		return m.CredIdentifier
 	}
 	return ""
 }
 
-type GetCredResponse struct {
+type GetCredentialResponse struct {
 	//service-cred credential, for example: "userName": "iam-root", "password:: "hello"
 	//client-cert credential, for example: "clientId": "intelops-user", "ca.crt": "...", "client.crt": "...", "client.key": "..."
 	Credential           map[string]string `protobuf:"bytes,1,rep,name=credential,proto3" json:"credential,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
@@ -84,39 +140,39 @@ type GetCredResponse struct {
 	XXX_sizecache        int32             `json:"-"`
 }
 
-func (m *GetCredResponse) Reset()         { *m = GetCredResponse{} }
-func (m *GetCredResponse) String() string { return proto.CompactTextString(m) }
-func (*GetCredResponse) ProtoMessage()    {}
-func (*GetCredResponse) Descriptor() ([]byte, []int) {
+func (m *GetCredentialResponse) Reset()         { *m = GetCredentialResponse{} }
+func (m *GetCredentialResponse) String() string { return proto.CompactTextString(m) }
+func (*GetCredentialResponse) ProtoMessage()    {}
+func (*GetCredentialResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bfee588ca0905ccc, []int{1}
 }
 
-func (m *GetCredResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetCredResponse.Unmarshal(m, b)
+func (m *GetCredentialResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GetCredentialResponse.Unmarshal(m, b)
 }
-func (m *GetCredResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetCredResponse.Marshal(b, m, deterministic)
+func (m *GetCredentialResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GetCredentialResponse.Marshal(b, m, deterministic)
 }
-func (m *GetCredResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetCredResponse.Merge(m, src)
+func (m *GetCredentialResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetCredentialResponse.Merge(m, src)
 }
-func (m *GetCredResponse) XXX_Size() int {
-	return xxx_messageInfo_GetCredResponse.Size(m)
+func (m *GetCredentialResponse) XXX_Size() int {
+	return xxx_messageInfo_GetCredentialResponse.Size(m)
 }
-func (m *GetCredResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetCredResponse.DiscardUnknown(m)
+func (m *GetCredentialResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetCredentialResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetCredResponse proto.InternalMessageInfo
+var xxx_messageInfo_GetCredentialResponse proto.InternalMessageInfo
 
-func (m *GetCredResponse) GetCredential() map[string]string {
+func (m *GetCredentialResponse) GetCredential() map[string]string {
 	if m != nil {
 		return m.Credential
 	}
 	return nil
 }
 
-type PutCredRequest struct {
+type PutCredentialRequest struct {
 	CredentialType string `protobuf:"bytes,1,opt,name=credentialType,proto3" json:"credentialType,omitempty"`
 	CredEntityName string `protobuf:"bytes,2,opt,name=credEntityName,proto3" json:"credEntityName,omitempty"`
 	CredIdentifier string `protobuf:"bytes,3,opt,name=credIdentifier,proto3" json:"credIdentifier,omitempty"`
@@ -128,91 +184,91 @@ type PutCredRequest struct {
 	XXX_sizecache        int32             `json:"-"`
 }
 
-func (m *PutCredRequest) Reset()         { *m = PutCredRequest{} }
-func (m *PutCredRequest) String() string { return proto.CompactTextString(m) }
-func (*PutCredRequest) ProtoMessage()    {}
-func (*PutCredRequest) Descriptor() ([]byte, []int) {
+func (m *PutCredentialRequest) Reset()         { *m = PutCredentialRequest{} }
+func (m *PutCredentialRequest) String() string { return proto.CompactTextString(m) }
+func (*PutCredentialRequest) ProtoMessage()    {}
+func (*PutCredentialRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bfee588ca0905ccc, []int{2}
 }
 
-func (m *PutCredRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PutCredRequest.Unmarshal(m, b)
+func (m *PutCredentialRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PutCredentialRequest.Unmarshal(m, b)
 }
-func (m *PutCredRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PutCredRequest.Marshal(b, m, deterministic)
+func (m *PutCredentialRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PutCredentialRequest.Marshal(b, m, deterministic)
 }
-func (m *PutCredRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PutCredRequest.Merge(m, src)
+func (m *PutCredentialRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PutCredentialRequest.Merge(m, src)
 }
-func (m *PutCredRequest) XXX_Size() int {
-	return xxx_messageInfo_PutCredRequest.Size(m)
+func (m *PutCredentialRequest) XXX_Size() int {
+	return xxx_messageInfo_PutCredentialRequest.Size(m)
 }
-func (m *PutCredRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_PutCredRequest.DiscardUnknown(m)
+func (m *PutCredentialRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PutCredentialRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PutCredRequest proto.InternalMessageInfo
+var xxx_messageInfo_PutCredentialRequest proto.InternalMessageInfo
 
-func (m *PutCredRequest) GetCredentialType() string {
+func (m *PutCredentialRequest) GetCredentialType() string {
 	if m != nil {
 		return m.CredentialType
 	}
 	return ""
 }
 
-func (m *PutCredRequest) GetCredEntityName() string {
+func (m *PutCredentialRequest) GetCredEntityName() string {
 	if m != nil {
 		return m.CredEntityName
 	}
 	return ""
 }
 
-func (m *PutCredRequest) GetCredIdentifier() string {
+func (m *PutCredentialRequest) GetCredIdentifier() string {
 	if m != nil {
 		return m.CredIdentifier
 	}
 	return ""
 }
 
-func (m *PutCredRequest) GetCredential() map[string]string {
+func (m *PutCredentialRequest) GetCredential() map[string]string {
 	if m != nil {
 		return m.Credential
 	}
 	return nil
 }
 
-type PutCredResponse struct {
+type PutCredentialResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PutCredResponse) Reset()         { *m = PutCredResponse{} }
-func (m *PutCredResponse) String() string { return proto.CompactTextString(m) }
-func (*PutCredResponse) ProtoMessage()    {}
-func (*PutCredResponse) Descriptor() ([]byte, []int) {
+func (m *PutCredentialResponse) Reset()         { *m = PutCredentialResponse{} }
+func (m *PutCredentialResponse) String() string { return proto.CompactTextString(m) }
+func (*PutCredentialResponse) ProtoMessage()    {}
+func (*PutCredentialResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bfee588ca0905ccc, []int{3}
 }
 
-func (m *PutCredResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PutCredResponse.Unmarshal(m, b)
+func (m *PutCredentialResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PutCredentialResponse.Unmarshal(m, b)
 }
-func (m *PutCredResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PutCredResponse.Marshal(b, m, deterministic)
+func (m *PutCredentialResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PutCredentialResponse.Marshal(b, m, deterministic)
 }
-func (m *PutCredResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PutCredResponse.Merge(m, src)
+func (m *PutCredentialResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PutCredentialResponse.Merge(m, src)
 }
-func (m *PutCredResponse) XXX_Size() int {
-	return xxx_messageInfo_PutCredResponse.Size(m)
+func (m *PutCredentialResponse) XXX_Size() int {
+	return xxx_messageInfo_PutCredentialResponse.Size(m)
 }
-func (m *PutCredResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_PutCredResponse.DiscardUnknown(m)
+func (m *PutCredentialResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PutCredentialResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PutCredResponse proto.InternalMessageInfo
+var xxx_messageInfo_PutCredentialResponse proto.InternalMessageInfo
 
-type DeleteCredRequest struct {
+type DeleteCredentialRequest struct {
 	CredentialType       string   `protobuf:"bytes,1,opt,name=credentialType,proto3" json:"credentialType,omitempty"`
 	CredEntityName       string   `protobuf:"bytes,2,opt,name=credEntityName,proto3" json:"credEntityName,omitempty"`
 	CredIdentifier       string   `protobuf:"bytes,3,opt,name=credIdentifier,proto3" json:"credIdentifier,omitempty"`
@@ -221,172 +277,258 @@ type DeleteCredRequest struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *DeleteCredRequest) Reset()         { *m = DeleteCredRequest{} }
-func (m *DeleteCredRequest) String() string { return proto.CompactTextString(m) }
-func (*DeleteCredRequest) ProtoMessage()    {}
-func (*DeleteCredRequest) Descriptor() ([]byte, []int) {
+func (m *DeleteCredentialRequest) Reset()         { *m = DeleteCredentialRequest{} }
+func (m *DeleteCredentialRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteCredentialRequest) ProtoMessage()    {}
+func (*DeleteCredentialRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bfee588ca0905ccc, []int{4}
 }
 
-func (m *DeleteCredRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DeleteCredRequest.Unmarshal(m, b)
+func (m *DeleteCredentialRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteCredentialRequest.Unmarshal(m, b)
 }
-func (m *DeleteCredRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DeleteCredRequest.Marshal(b, m, deterministic)
+func (m *DeleteCredentialRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteCredentialRequest.Marshal(b, m, deterministic)
 }
-func (m *DeleteCredRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeleteCredRequest.Merge(m, src)
+func (m *DeleteCredentialRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteCredentialRequest.Merge(m, src)
 }
-func (m *DeleteCredRequest) XXX_Size() int {
-	return xxx_messageInfo_DeleteCredRequest.Size(m)
+func (m *DeleteCredentialRequest) XXX_Size() int {
+	return xxx_messageInfo_DeleteCredentialRequest.Size(m)
 }
-func (m *DeleteCredRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_DeleteCredRequest.DiscardUnknown(m)
+func (m *DeleteCredentialRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteCredentialRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DeleteCredRequest proto.InternalMessageInfo
+var xxx_messageInfo_DeleteCredentialRequest proto.InternalMessageInfo
 
-func (m *DeleteCredRequest) GetCredentialType() string {
+func (m *DeleteCredentialRequest) GetCredentialType() string {
 	if m != nil {
 		return m.CredentialType
 	}
 	return ""
 }
 
-func (m *DeleteCredRequest) GetCredEntityName() string {
+func (m *DeleteCredentialRequest) GetCredEntityName() string {
 	if m != nil {
 		return m.CredEntityName
 	}
 	return ""
 }
 
-func (m *DeleteCredRequest) GetCredIdentifier() string {
+func (m *DeleteCredentialRequest) GetCredIdentifier() string {
 	if m != nil {
 		return m.CredIdentifier
 	}
 	return ""
 }
 
-type DeleteCredResponse struct {
+type DeleteCredentialResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *DeleteCredResponse) Reset()         { *m = DeleteCredResponse{} }
-func (m *DeleteCredResponse) String() string { return proto.CompactTextString(m) }
-func (*DeleteCredResponse) ProtoMessage()    {}
-func (*DeleteCredResponse) Descriptor() ([]byte, []int) {
+func (m *DeleteCredentialResponse) Reset()         { *m = DeleteCredentialResponse{} }
+func (m *DeleteCredentialResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteCredentialResponse) ProtoMessage()    {}
+func (*DeleteCredentialResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bfee588ca0905ccc, []int{5}
 }
 
-func (m *DeleteCredResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_DeleteCredResponse.Unmarshal(m, b)
+func (m *DeleteCredentialResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteCredentialResponse.Unmarshal(m, b)
 }
-func (m *DeleteCredResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_DeleteCredResponse.Marshal(b, m, deterministic)
+func (m *DeleteCredentialResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteCredentialResponse.Marshal(b, m, deterministic)
 }
-func (m *DeleteCredResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_DeleteCredResponse.Merge(m, src)
+func (m *DeleteCredentialResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteCredentialResponse.Merge(m, src)
 }
-func (m *DeleteCredResponse) XXX_Size() int {
-	return xxx_messageInfo_DeleteCredResponse.Size(m)
+func (m *DeleteCredentialResponse) XXX_Size() int {
+	return xxx_messageInfo_DeleteCredentialResponse.Size(m)
 }
-func (m *DeleteCredResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_DeleteCredResponse.DiscardUnknown(m)
+func (m *DeleteCredentialResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteCredentialResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_DeleteCredResponse proto.InternalMessageInfo
+var xxx_messageInfo_DeleteCredentialResponse proto.InternalMessageInfo
 
-type GetAppRoleTokenRequest struct {
+type CreateAppRoleTokenRequest struct {
 	AppRoleName          string   `protobuf:"bytes,1,opt,name=appRoleName,proto3" json:"appRoleName,omitempty"`
-	CredentialPaths      []string `protobuf:"bytes,2,rep,name=credentialPaths,proto3" json:"credentialPaths,omitempty"`
+	SecretPaths          []string `protobuf:"bytes,2,rep,name=secretPaths,proto3" json:"secretPaths,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *GetAppRoleTokenRequest) Reset()         { *m = GetAppRoleTokenRequest{} }
-func (m *GetAppRoleTokenRequest) String() string { return proto.CompactTextString(m) }
-func (*GetAppRoleTokenRequest) ProtoMessage()    {}
-func (*GetAppRoleTokenRequest) Descriptor() ([]byte, []int) {
+func (m *CreateAppRoleTokenRequest) Reset()         { *m = CreateAppRoleTokenRequest{} }
+func (m *CreateAppRoleTokenRequest) String() string { return proto.CompactTextString(m) }
+func (*CreateAppRoleTokenRequest) ProtoMessage()    {}
+func (*CreateAppRoleTokenRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bfee588ca0905ccc, []int{6}
 }
 
-func (m *GetAppRoleTokenRequest) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetAppRoleTokenRequest.Unmarshal(m, b)
+func (m *CreateAppRoleTokenRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CreateAppRoleTokenRequest.Unmarshal(m, b)
 }
-func (m *GetAppRoleTokenRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetAppRoleTokenRequest.Marshal(b, m, deterministic)
+func (m *CreateAppRoleTokenRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CreateAppRoleTokenRequest.Marshal(b, m, deterministic)
 }
-func (m *GetAppRoleTokenRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetAppRoleTokenRequest.Merge(m, src)
+func (m *CreateAppRoleTokenRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateAppRoleTokenRequest.Merge(m, src)
 }
-func (m *GetAppRoleTokenRequest) XXX_Size() int {
-	return xxx_messageInfo_GetAppRoleTokenRequest.Size(m)
+func (m *CreateAppRoleTokenRequest) XXX_Size() int {
+	return xxx_messageInfo_CreateAppRoleTokenRequest.Size(m)
 }
-func (m *GetAppRoleTokenRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetAppRoleTokenRequest.DiscardUnknown(m)
+func (m *CreateAppRoleTokenRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateAppRoleTokenRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetAppRoleTokenRequest proto.InternalMessageInfo
+var xxx_messageInfo_CreateAppRoleTokenRequest proto.InternalMessageInfo
 
-func (m *GetAppRoleTokenRequest) GetAppRoleName() string {
+func (m *CreateAppRoleTokenRequest) GetAppRoleName() string {
 	if m != nil {
 		return m.AppRoleName
 	}
 	return ""
 }
 
-func (m *GetAppRoleTokenRequest) GetCredentialPaths() []string {
+func (m *CreateAppRoleTokenRequest) GetSecretPaths() []string {
 	if m != nil {
-		return m.CredentialPaths
+		return m.SecretPaths
 	}
 	return nil
 }
 
-type GetAppRoleTokenResponse struct {
+type CreateAppRoleTokenResponse struct {
 	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *GetAppRoleTokenResponse) Reset()         { *m = GetAppRoleTokenResponse{} }
-func (m *GetAppRoleTokenResponse) String() string { return proto.CompactTextString(m) }
-func (*GetAppRoleTokenResponse) ProtoMessage()    {}
-func (*GetAppRoleTokenResponse) Descriptor() ([]byte, []int) {
+func (m *CreateAppRoleTokenResponse) Reset()         { *m = CreateAppRoleTokenResponse{} }
+func (m *CreateAppRoleTokenResponse) String() string { return proto.CompactTextString(m) }
+func (*CreateAppRoleTokenResponse) ProtoMessage()    {}
+func (*CreateAppRoleTokenResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_bfee588ca0905ccc, []int{7}
 }
 
-func (m *GetAppRoleTokenResponse) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_GetAppRoleTokenResponse.Unmarshal(m, b)
+func (m *CreateAppRoleTokenResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CreateAppRoleTokenResponse.Unmarshal(m, b)
 }
-func (m *GetAppRoleTokenResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_GetAppRoleTokenResponse.Marshal(b, m, deterministic)
+func (m *CreateAppRoleTokenResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CreateAppRoleTokenResponse.Marshal(b, m, deterministic)
 }
-func (m *GetAppRoleTokenResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_GetAppRoleTokenResponse.Merge(m, src)
+func (m *CreateAppRoleTokenResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateAppRoleTokenResponse.Merge(m, src)
 }
-func (m *GetAppRoleTokenResponse) XXX_Size() int {
-	return xxx_messageInfo_GetAppRoleTokenResponse.Size(m)
+func (m *CreateAppRoleTokenResponse) XXX_Size() int {
+	return xxx_messageInfo_CreateAppRoleTokenResponse.Size(m)
 }
-func (m *GetAppRoleTokenResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_GetAppRoleTokenResponse.DiscardUnknown(m)
+func (m *CreateAppRoleTokenResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateAppRoleTokenResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_GetAppRoleTokenResponse proto.InternalMessageInfo
+var xxx_messageInfo_CreateAppRoleTokenResponse proto.InternalMessageInfo
 
-func (m *GetAppRoleTokenResponse) GetToken() string {
+func (m *CreateAppRoleTokenResponse) GetToken() string {
 	if m != nil {
 		return m.Token
 	}
 	return ""
 }
 
+type DeleteAppRoleRequest struct {
+	RoleName             string   `protobuf:"bytes,1,opt,name=roleName,proto3" json:"roleName,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeleteAppRoleRequest) Reset()         { *m = DeleteAppRoleRequest{} }
+func (m *DeleteAppRoleRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteAppRoleRequest) ProtoMessage()    {}
+func (*DeleteAppRoleRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{8}
+}
+
+func (m *DeleteAppRoleRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteAppRoleRequest.Unmarshal(m, b)
+}
+func (m *DeleteAppRoleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteAppRoleRequest.Marshal(b, m, deterministic)
+}
+func (m *DeleteAppRoleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteAppRoleRequest.Merge(m, src)
+}
+func (m *DeleteAppRoleRequest) XXX_Size() int {
+	return xxx_messageInfo_DeleteAppRoleRequest.Size(m)
+}
+func (m *DeleteAppRoleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteAppRoleRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteAppRoleRequest proto.InternalMessageInfo
+
+func (m *DeleteAppRoleRequest) GetRoleName() string {
+	if m != nil {
+		return m.RoleName
+	}
+	return ""
+}
+
+type DeleteAppRoleResponse struct {
+	Status               StatusCode `protobuf:"varint,1,opt,name=status,proto3,enum=vaultcredpb.StatusCode" json:"status,omitempty"`
+	StatusMessage        string     `protobuf:"bytes,2,opt,name=statusMessage,proto3" json:"statusMessage,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *DeleteAppRoleResponse) Reset()         { *m = DeleteAppRoleResponse{} }
+func (m *DeleteAppRoleResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteAppRoleResponse) ProtoMessage()    {}
+func (*DeleteAppRoleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{9}
+}
+
+func (m *DeleteAppRoleResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteAppRoleResponse.Unmarshal(m, b)
+}
+func (m *DeleteAppRoleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteAppRoleResponse.Marshal(b, m, deterministic)
+}
+func (m *DeleteAppRoleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteAppRoleResponse.Merge(m, src)
+}
+func (m *DeleteAppRoleResponse) XXX_Size() int {
+	return xxx_messageInfo_DeleteAppRoleResponse.Size(m)
+}
+func (m *DeleteAppRoleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteAppRoleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteAppRoleResponse proto.InternalMessageInfo
+
+func (m *DeleteAppRoleResponse) GetStatus() StatusCode {
+	if m != nil {
+		return m.Status
+	}
+	return StatusCode_OK
+}
+
+func (m *DeleteAppRoleResponse) GetStatusMessage() string {
+	if m != nil {
+		return m.StatusMessage
+	}
+	return ""
+}
+
 type GetCredentialWithAppRoleTokenRequest struct {
 	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	CredentialPath       string   `protobuf:"bytes,2,opt,name=credentialPath,proto3" json:"credentialPath,omitempty"`
+	SecretPath           string   `protobuf:"bytes,2,opt,name=secretPath,proto3" json:"secretPath,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -396,7 +538,7 @@ func (m *GetCredentialWithAppRoleTokenRequest) Reset()         { *m = GetCredent
 func (m *GetCredentialWithAppRoleTokenRequest) String() string { return proto.CompactTextString(m) }
 func (*GetCredentialWithAppRoleTokenRequest) ProtoMessage()    {}
 func (*GetCredentialWithAppRoleTokenRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bfee588ca0905ccc, []int{8}
+	return fileDescriptor_bfee588ca0905ccc, []int{10}
 }
 
 func (m *GetCredentialWithAppRoleTokenRequest) XXX_Unmarshal(b []byte) error {
@@ -424,9 +566,9 @@ func (m *GetCredentialWithAppRoleTokenRequest) GetToken() string {
 	return ""
 }
 
-func (m *GetCredentialWithAppRoleTokenRequest) GetCredentialPath() string {
+func (m *GetCredentialWithAppRoleTokenRequest) GetSecretPath() string {
 	if m != nil {
-		return m.CredentialPath
+		return m.SecretPath
 	}
 	return ""
 }
@@ -442,7 +584,7 @@ func (m *GetCredentialWithAppRoleTokenResponse) Reset()         { *m = GetCreden
 func (m *GetCredentialWithAppRoleTokenResponse) String() string { return proto.CompactTextString(m) }
 func (*GetCredentialWithAppRoleTokenResponse) ProtoMessage()    {}
 func (*GetCredentialWithAppRoleTokenResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_bfee588ca0905ccc, []int{9}
+	return fileDescriptor_bfee588ca0905ccc, []int{11}
 }
 
 func (m *GetCredentialWithAppRoleTokenResponse) XXX_Unmarshal(b []byte) error {
@@ -470,55 +612,540 @@ func (m *GetCredentialWithAppRoleTokenResponse) GetCredential() map[string]strin
 	return nil
 }
 
+type SecretPolicy struct {
+	SecretPath           string       `protobuf:"bytes,1,opt,name=secretPath,proto3" json:"secretPath,omitempty"`
+	Access               SecretAccess `protobuf:"varint,2,opt,name=access,proto3,enum=vaultcredpb.SecretAccess" json:"access,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *SecretPolicy) Reset()         { *m = SecretPolicy{} }
+func (m *SecretPolicy) String() string { return proto.CompactTextString(m) }
+func (*SecretPolicy) ProtoMessage()    {}
+func (*SecretPolicy) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{12}
+}
+
+func (m *SecretPolicy) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_SecretPolicy.Unmarshal(m, b)
+}
+func (m *SecretPolicy) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_SecretPolicy.Marshal(b, m, deterministic)
+}
+func (m *SecretPolicy) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SecretPolicy.Merge(m, src)
+}
+func (m *SecretPolicy) XXX_Size() int {
+	return xxx_messageInfo_SecretPolicy.Size(m)
+}
+func (m *SecretPolicy) XXX_DiscardUnknown() {
+	xxx_messageInfo_SecretPolicy.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SecretPolicy proto.InternalMessageInfo
+
+func (m *SecretPolicy) GetSecretPath() string {
+	if m != nil {
+		return m.SecretPath
+	}
+	return ""
+}
+
+func (m *SecretPolicy) GetAccess() SecretAccess {
+	if m != nil {
+		return m.Access
+	}
+	return SecretAccess_READ
+}
+
+type CreateK8SAuthRoleRequest struct {
+	RoleName             string          `protobuf:"bytes,1,opt,name=roleName,proto3" json:"roleName,omitempty"`
+	SecretPolicy         []*SecretPolicy `protobuf:"bytes,2,rep,name=secretPolicy,proto3" json:"secretPolicy,omitempty"`
+	ClusterName          string          `protobuf:"bytes,3,opt,name=clusterName,proto3" json:"clusterName,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
+}
+
+func (m *CreateK8SAuthRoleRequest) Reset()         { *m = CreateK8SAuthRoleRequest{} }
+func (m *CreateK8SAuthRoleRequest) String() string { return proto.CompactTextString(m) }
+func (*CreateK8SAuthRoleRequest) ProtoMessage()    {}
+func (*CreateK8SAuthRoleRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{13}
+}
+
+func (m *CreateK8SAuthRoleRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CreateK8SAuthRoleRequest.Unmarshal(m, b)
+}
+func (m *CreateK8SAuthRoleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CreateK8SAuthRoleRequest.Marshal(b, m, deterministic)
+}
+func (m *CreateK8SAuthRoleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateK8SAuthRoleRequest.Merge(m, src)
+}
+func (m *CreateK8SAuthRoleRequest) XXX_Size() int {
+	return xxx_messageInfo_CreateK8SAuthRoleRequest.Size(m)
+}
+func (m *CreateK8SAuthRoleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateK8SAuthRoleRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateK8SAuthRoleRequest proto.InternalMessageInfo
+
+func (m *CreateK8SAuthRoleRequest) GetRoleName() string {
+	if m != nil {
+		return m.RoleName
+	}
+	return ""
+}
+
+func (m *CreateK8SAuthRoleRequest) GetSecretPolicy() []*SecretPolicy {
+	if m != nil {
+		return m.SecretPolicy
+	}
+	return nil
+}
+
+func (m *CreateK8SAuthRoleRequest) GetClusterName() string {
+	if m != nil {
+		return m.ClusterName
+	}
+	return ""
+}
+
+type CreateK8SAuthRoleResponse struct {
+	Status               StatusCode `protobuf:"varint,1,opt,name=status,proto3,enum=vaultcredpb.StatusCode" json:"status,omitempty"`
+	StatusMessage        string     `protobuf:"bytes,2,opt,name=statusMessage,proto3" json:"statusMessage,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *CreateK8SAuthRoleResponse) Reset()         { *m = CreateK8SAuthRoleResponse{} }
+func (m *CreateK8SAuthRoleResponse) String() string { return proto.CompactTextString(m) }
+func (*CreateK8SAuthRoleResponse) ProtoMessage()    {}
+func (*CreateK8SAuthRoleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{14}
+}
+
+func (m *CreateK8SAuthRoleResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CreateK8SAuthRoleResponse.Unmarshal(m, b)
+}
+func (m *CreateK8SAuthRoleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CreateK8SAuthRoleResponse.Marshal(b, m, deterministic)
+}
+func (m *CreateK8SAuthRoleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CreateK8SAuthRoleResponse.Merge(m, src)
+}
+func (m *CreateK8SAuthRoleResponse) XXX_Size() int {
+	return xxx_messageInfo_CreateK8SAuthRoleResponse.Size(m)
+}
+func (m *CreateK8SAuthRoleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_CreateK8SAuthRoleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CreateK8SAuthRoleResponse proto.InternalMessageInfo
+
+func (m *CreateK8SAuthRoleResponse) GetStatus() StatusCode {
+	if m != nil {
+		return m.Status
+	}
+	return StatusCode_OK
+}
+
+func (m *CreateK8SAuthRoleResponse) GetStatusMessage() string {
+	if m != nil {
+		return m.StatusMessage
+	}
+	return ""
+}
+
+type UpdateK8SAuthRoleRequest struct {
+	RoleName             string          `protobuf:"bytes,1,opt,name=roleName,proto3" json:"roleName,omitempty"`
+	SecretPolicy         []*SecretPolicy `protobuf:"bytes,2,rep,name=secretPolicy,proto3" json:"secretPolicy,omitempty"`
+	ClusterName          string          `protobuf:"bytes,3,opt,name=clusterName,proto3" json:"clusterName,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
+	XXX_unrecognized     []byte          `json:"-"`
+	XXX_sizecache        int32           `json:"-"`
+}
+
+func (m *UpdateK8SAuthRoleRequest) Reset()         { *m = UpdateK8SAuthRoleRequest{} }
+func (m *UpdateK8SAuthRoleRequest) String() string { return proto.CompactTextString(m) }
+func (*UpdateK8SAuthRoleRequest) ProtoMessage()    {}
+func (*UpdateK8SAuthRoleRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{15}
+}
+
+func (m *UpdateK8SAuthRoleRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpdateK8SAuthRoleRequest.Unmarshal(m, b)
+}
+func (m *UpdateK8SAuthRoleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpdateK8SAuthRoleRequest.Marshal(b, m, deterministic)
+}
+func (m *UpdateK8SAuthRoleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateK8SAuthRoleRequest.Merge(m, src)
+}
+func (m *UpdateK8SAuthRoleRequest) XXX_Size() int {
+	return xxx_messageInfo_UpdateK8SAuthRoleRequest.Size(m)
+}
+func (m *UpdateK8SAuthRoleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateK8SAuthRoleRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateK8SAuthRoleRequest proto.InternalMessageInfo
+
+func (m *UpdateK8SAuthRoleRequest) GetRoleName() string {
+	if m != nil {
+		return m.RoleName
+	}
+	return ""
+}
+
+func (m *UpdateK8SAuthRoleRequest) GetSecretPolicy() []*SecretPolicy {
+	if m != nil {
+		return m.SecretPolicy
+	}
+	return nil
+}
+
+func (m *UpdateK8SAuthRoleRequest) GetClusterName() string {
+	if m != nil {
+		return m.ClusterName
+	}
+	return ""
+}
+
+type UpdateK8SAuthRoleResponse struct {
+	Status               StatusCode `protobuf:"varint,1,opt,name=status,proto3,enum=vaultcredpb.StatusCode" json:"status,omitempty"`
+	StatusMessage        string     `protobuf:"bytes,2,opt,name=statusMessage,proto3" json:"statusMessage,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *UpdateK8SAuthRoleResponse) Reset()         { *m = UpdateK8SAuthRoleResponse{} }
+func (m *UpdateK8SAuthRoleResponse) String() string { return proto.CompactTextString(m) }
+func (*UpdateK8SAuthRoleResponse) ProtoMessage()    {}
+func (*UpdateK8SAuthRoleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{16}
+}
+
+func (m *UpdateK8SAuthRoleResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_UpdateK8SAuthRoleResponse.Unmarshal(m, b)
+}
+func (m *UpdateK8SAuthRoleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_UpdateK8SAuthRoleResponse.Marshal(b, m, deterministic)
+}
+func (m *UpdateK8SAuthRoleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_UpdateK8SAuthRoleResponse.Merge(m, src)
+}
+func (m *UpdateK8SAuthRoleResponse) XXX_Size() int {
+	return xxx_messageInfo_UpdateK8SAuthRoleResponse.Size(m)
+}
+func (m *UpdateK8SAuthRoleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_UpdateK8SAuthRoleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_UpdateK8SAuthRoleResponse proto.InternalMessageInfo
+
+func (m *UpdateK8SAuthRoleResponse) GetStatus() StatusCode {
+	if m != nil {
+		return m.Status
+	}
+	return StatusCode_OK
+}
+
+func (m *UpdateK8SAuthRoleResponse) GetStatusMessage() string {
+	if m != nil {
+		return m.StatusMessage
+	}
+	return ""
+}
+
+type DeleteK8SAuthRoleRequest struct {
+	RoleName             string   `protobuf:"bytes,1,opt,name=roleName,proto3" json:"roleName,omitempty"`
+	ClusterName          string   `protobuf:"bytes,3,opt,name=clusterName,proto3" json:"clusterName,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DeleteK8SAuthRoleRequest) Reset()         { *m = DeleteK8SAuthRoleRequest{} }
+func (m *DeleteK8SAuthRoleRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteK8SAuthRoleRequest) ProtoMessage()    {}
+func (*DeleteK8SAuthRoleRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{17}
+}
+
+func (m *DeleteK8SAuthRoleRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteK8SAuthRoleRequest.Unmarshal(m, b)
+}
+func (m *DeleteK8SAuthRoleRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteK8SAuthRoleRequest.Marshal(b, m, deterministic)
+}
+func (m *DeleteK8SAuthRoleRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteK8SAuthRoleRequest.Merge(m, src)
+}
+func (m *DeleteK8SAuthRoleRequest) XXX_Size() int {
+	return xxx_messageInfo_DeleteK8SAuthRoleRequest.Size(m)
+}
+func (m *DeleteK8SAuthRoleRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteK8SAuthRoleRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteK8SAuthRoleRequest proto.InternalMessageInfo
+
+func (m *DeleteK8SAuthRoleRequest) GetRoleName() string {
+	if m != nil {
+		return m.RoleName
+	}
+	return ""
+}
+
+func (m *DeleteK8SAuthRoleRequest) GetClusterName() string {
+	if m != nil {
+		return m.ClusterName
+	}
+	return ""
+}
+
+type DeleteK8SAuthRoleResponse struct {
+	Status               StatusCode `protobuf:"varint,1,opt,name=status,proto3,enum=vaultcredpb.StatusCode" json:"status,omitempty"`
+	StatusMessage        string     `protobuf:"bytes,2,opt,name=statusMessage,proto3" json:"statusMessage,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *DeleteK8SAuthRoleResponse) Reset()         { *m = DeleteK8SAuthRoleResponse{} }
+func (m *DeleteK8SAuthRoleResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteK8SAuthRoleResponse) ProtoMessage()    {}
+func (*DeleteK8SAuthRoleResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{18}
+}
+
+func (m *DeleteK8SAuthRoleResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_DeleteK8SAuthRoleResponse.Unmarshal(m, b)
+}
+func (m *DeleteK8SAuthRoleResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_DeleteK8SAuthRoleResponse.Marshal(b, m, deterministic)
+}
+func (m *DeleteK8SAuthRoleResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DeleteK8SAuthRoleResponse.Merge(m, src)
+}
+func (m *DeleteK8SAuthRoleResponse) XXX_Size() int {
+	return xxx_messageInfo_DeleteK8SAuthRoleResponse.Size(m)
+}
+func (m *DeleteK8SAuthRoleResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_DeleteK8SAuthRoleResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DeleteK8SAuthRoleResponse proto.InternalMessageInfo
+
+func (m *DeleteK8SAuthRoleResponse) GetStatus() StatusCode {
+	if m != nil {
+		return m.Status
+	}
+	return StatusCode_OK
+}
+
+func (m *DeleteK8SAuthRoleResponse) GetStatusMessage() string {
+	if m != nil {
+		return m.StatusMessage
+	}
+	return ""
+}
+
+type ConfigureClusterK8SAuthRequest struct {
+	Host                 string   `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	CaCert               string   `protobuf:"bytes,2,opt,name=caCert,proto3" json:"caCert,omitempty"`
+	Enable               bool     `protobuf:"varint,3,opt,name=enable,proto3" json:"enable,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ConfigureClusterK8SAuthRequest) Reset()         { *m = ConfigureClusterK8SAuthRequest{} }
+func (m *ConfigureClusterK8SAuthRequest) String() string { return proto.CompactTextString(m) }
+func (*ConfigureClusterK8SAuthRequest) ProtoMessage()    {}
+func (*ConfigureClusterK8SAuthRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{19}
+}
+
+func (m *ConfigureClusterK8SAuthRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ConfigureClusterK8SAuthRequest.Unmarshal(m, b)
+}
+func (m *ConfigureClusterK8SAuthRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ConfigureClusterK8SAuthRequest.Marshal(b, m, deterministic)
+}
+func (m *ConfigureClusterK8SAuthRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConfigureClusterK8SAuthRequest.Merge(m, src)
+}
+func (m *ConfigureClusterK8SAuthRequest) XXX_Size() int {
+	return xxx_messageInfo_ConfigureClusterK8SAuthRequest.Size(m)
+}
+func (m *ConfigureClusterK8SAuthRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConfigureClusterK8SAuthRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConfigureClusterK8SAuthRequest proto.InternalMessageInfo
+
+func (m *ConfigureClusterK8SAuthRequest) GetHost() string {
+	if m != nil {
+		return m.Host
+	}
+	return ""
+}
+
+func (m *ConfigureClusterK8SAuthRequest) GetCaCert() string {
+	if m != nil {
+		return m.CaCert
+	}
+	return ""
+}
+
+func (m *ConfigureClusterK8SAuthRequest) GetEnable() bool {
+	if m != nil {
+		return m.Enable
+	}
+	return false
+}
+
+type ConfigureClusterK8SAuthResponse struct {
+	Status               StatusCode `protobuf:"varint,1,opt,name=status,proto3,enum=vaultcredpb.StatusCode" json:"status,omitempty"`
+	StatusMessage        string     `protobuf:"bytes,2,opt,name=statusMessage,proto3" json:"statusMessage,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *ConfigureClusterK8SAuthResponse) Reset()         { *m = ConfigureClusterK8SAuthResponse{} }
+func (m *ConfigureClusterK8SAuthResponse) String() string { return proto.CompactTextString(m) }
+func (*ConfigureClusterK8SAuthResponse) ProtoMessage()    {}
+func (*ConfigureClusterK8SAuthResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_bfee588ca0905ccc, []int{20}
+}
+
+func (m *ConfigureClusterK8SAuthResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ConfigureClusterK8SAuthResponse.Unmarshal(m, b)
+}
+func (m *ConfigureClusterK8SAuthResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ConfigureClusterK8SAuthResponse.Marshal(b, m, deterministic)
+}
+func (m *ConfigureClusterK8SAuthResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ConfigureClusterK8SAuthResponse.Merge(m, src)
+}
+func (m *ConfigureClusterK8SAuthResponse) XXX_Size() int {
+	return xxx_messageInfo_ConfigureClusterK8SAuthResponse.Size(m)
+}
+func (m *ConfigureClusterK8SAuthResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ConfigureClusterK8SAuthResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ConfigureClusterK8SAuthResponse proto.InternalMessageInfo
+
+func (m *ConfigureClusterK8SAuthResponse) GetStatus() StatusCode {
+	if m != nil {
+		return m.Status
+	}
+	return StatusCode_OK
+}
+
+func (m *ConfigureClusterK8SAuthResponse) GetStatusMessage() string {
+	if m != nil {
+		return m.StatusMessage
+	}
+	return ""
+}
+
 func init() {
-	proto.RegisterType((*GetCredRequest)(nil), "vaultcredpb.GetCredRequest")
-	proto.RegisterType((*GetCredResponse)(nil), "vaultcredpb.GetCredResponse")
-	proto.RegisterMapType((map[string]string)(nil), "vaultcredpb.GetCredResponse.CredentialEntry")
-	proto.RegisterType((*PutCredRequest)(nil), "vaultcredpb.PutCredRequest")
-	proto.RegisterMapType((map[string]string)(nil), "vaultcredpb.PutCredRequest.CredentialEntry")
-	proto.RegisterType((*PutCredResponse)(nil), "vaultcredpb.PutCredResponse")
-	proto.RegisterType((*DeleteCredRequest)(nil), "vaultcredpb.DeleteCredRequest")
-	proto.RegisterType((*DeleteCredResponse)(nil), "vaultcredpb.DeleteCredResponse")
-	proto.RegisterType((*GetAppRoleTokenRequest)(nil), "vaultcredpb.GetAppRoleTokenRequest")
-	proto.RegisterType((*GetAppRoleTokenResponse)(nil), "vaultcredpb.GetAppRoleTokenResponse")
+	proto.RegisterEnum("vaultcredpb.StatusCode", StatusCode_name, StatusCode_value)
+	proto.RegisterEnum("vaultcredpb.SecretAccess", SecretAccess_name, SecretAccess_value)
+	proto.RegisterType((*GetCredentialRequest)(nil), "vaultcredpb.GetCredentialRequest")
+	proto.RegisterType((*GetCredentialResponse)(nil), "vaultcredpb.GetCredentialResponse")
+	proto.RegisterMapType((map[string]string)(nil), "vaultcredpb.GetCredentialResponse.CredentialEntry")
+	proto.RegisterType((*PutCredentialRequest)(nil), "vaultcredpb.PutCredentialRequest")
+	proto.RegisterMapType((map[string]string)(nil), "vaultcredpb.PutCredentialRequest.CredentialEntry")
+	proto.RegisterType((*PutCredentialResponse)(nil), "vaultcredpb.PutCredentialResponse")
+	proto.RegisterType((*DeleteCredentialRequest)(nil), "vaultcredpb.DeleteCredentialRequest")
+	proto.RegisterType((*DeleteCredentialResponse)(nil), "vaultcredpb.DeleteCredentialResponse")
+	proto.RegisterType((*CreateAppRoleTokenRequest)(nil), "vaultcredpb.CreateAppRoleTokenRequest")
+	proto.RegisterType((*CreateAppRoleTokenResponse)(nil), "vaultcredpb.CreateAppRoleTokenResponse")
+	proto.RegisterType((*DeleteAppRoleRequest)(nil), "vaultcredpb.DeleteAppRoleRequest")
+	proto.RegisterType((*DeleteAppRoleResponse)(nil), "vaultcredpb.DeleteAppRoleResponse")
 	proto.RegisterType((*GetCredentialWithAppRoleTokenRequest)(nil), "vaultcredpb.GetCredentialWithAppRoleTokenRequest")
 	proto.RegisterType((*GetCredentialWithAppRoleTokenResponse)(nil), "vaultcredpb.GetCredentialWithAppRoleTokenResponse")
 	proto.RegisterMapType((map[string]string)(nil), "vaultcredpb.GetCredentialWithAppRoleTokenResponse.CredentialEntry")
+	proto.RegisterType((*SecretPolicy)(nil), "vaultcredpb.secretPolicy")
+	proto.RegisterType((*CreateK8SAuthRoleRequest)(nil), "vaultcredpb.CreateK8SAuthRoleRequest")
+	proto.RegisterType((*CreateK8SAuthRoleResponse)(nil), "vaultcredpb.CreateK8SAuthRoleResponse")
+	proto.RegisterType((*UpdateK8SAuthRoleRequest)(nil), "vaultcredpb.UpdateK8SAuthRoleRequest")
+	proto.RegisterType((*UpdateK8SAuthRoleResponse)(nil), "vaultcredpb.UpdateK8SAuthRoleResponse")
+	proto.RegisterType((*DeleteK8SAuthRoleRequest)(nil), "vaultcredpb.DeleteK8SAuthRoleRequest")
+	proto.RegisterType((*DeleteK8SAuthRoleResponse)(nil), "vaultcredpb.DeleteK8SAuthRoleResponse")
+	proto.RegisterType((*ConfigureClusterK8SAuthRequest)(nil), "vaultcredpb.ConfigureClusterK8SAuthRequest")
+	proto.RegisterType((*ConfigureClusterK8SAuthResponse)(nil), "vaultcredpb.ConfigureClusterK8SAuthResponse")
 }
 
 func init() { proto.RegisterFile("vault_cred.proto", fileDescriptor_bfee588ca0905ccc) }
 
 var fileDescriptor_bfee588ca0905ccc = []byte{
-	// 493 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0xdd, 0x6a, 0xd4, 0x40,
-	0x14, 0xde, 0xd9, 0xd0, 0xca, 0x9e, 0x95, 0xdd, 0x76, 0x58, 0x34, 0xac, 0x7f, 0xcb, 0x58, 0x25,
-	0xa0, 0xa4, 0xb8, 0xde, 0x88, 0xe0, 0x85, 0xad, 0xb5, 0x88, 0xa2, 0x25, 0x14, 0x05, 0x2f, 0x94,
-	0xac, 0x39, 0xd2, 0xd0, 0x98, 0xc4, 0x64, 0x52, 0xc8, 0x1b, 0x14, 0xbc, 0xf5, 0xda, 0x07, 0xf2,
-	0x05, 0x7c, 0x1d, 0x99, 0x64, 0x92, 0x49, 0xa6, 0x31, 0xd2, 0x8b, 0x42, 0xef, 0x36, 0xdf, 0x9c,
-	0x9f, 0xef, 0x7c, 0xf3, 0x9d, 0x59, 0xd8, 0x38, 0x71, 0xb3, 0x80, 0x7f, 0xfe, 0x92, 0xa0, 0x67,
-	0xc7, 0x49, 0xc4, 0x23, 0x3a, 0x2e, 0x10, 0x01, 0xc4, 0x2b, 0x76, 0x4a, 0x60, 0xb2, 0x8f, 0x7c,
-	0x37, 0x41, 0xcf, 0xc1, 0xef, 0x19, 0xa6, 0x9c, 0xde, 0x87, 0x89, 0x38, 0xc4, 0x90, 0xfb, 0x6e,
-	0x70, 0x98, 0xc7, 0x68, 0x92, 0x05, 0xb1, 0x46, 0x8e, 0x86, 0x56, 0x71, 0x7b, 0x21, 0xf7, 0x79,
-	0xfe, 0xd6, 0xfd, 0x86, 0xe6, 0x50, 0xc5, 0x29, 0xb4, 0x8a, 0x7b, 0x55, 0xe4, 0x7e, 0xf5, 0x31,
-	0x31, 0x0d, 0x15, 0xa7, 0x50, 0xf6, 0x8b, 0xc0, 0xb4, 0xa6, 0x92, 0xc6, 0x51, 0x98, 0x22, 0x7d,
-	0x03, 0xa0, 0xba, 0x9a, 0x64, 0x61, 0x58, 0xe3, 0xe5, 0x43, 0xbb, 0x31, 0x80, 0xad, 0x65, 0xd8,
-	0xbb, 0x75, 0xf8, 0x5e, 0xc8, 0x93, 0xdc, 0x69, 0xe4, 0xcf, 0x9f, 0xc1, 0x54, 0x3b, 0xa6, 0x1b,
-	0x60, 0x1c, 0x63, 0x2e, 0x27, 0x14, 0x3f, 0xe9, 0x0c, 0xd6, 0x4e, 0xdc, 0x20, 0xab, 0xa6, 0x29,
-	0x3f, 0x9e, 0x0e, 0x9f, 0x10, 0xf6, 0x73, 0x08, 0x93, 0x83, 0xec, 0x32, 0x68, 0x45, 0x5f, 0xb7,
-	0x74, 0x59, 0x2f, 0x74, 0x79, 0xd0, 0xd2, 0xa5, 0x4d, 0xf4, 0x22, 0x65, 0xd9, 0x84, 0x69, 0xdd,
-	0xac, 0xbc, 0x04, 0xf6, 0x83, 0xc0, 0xe6, 0x0b, 0x0c, 0x90, 0xe3, 0x65, 0x30, 0xd6, 0x0c, 0x68,
-	0x93, 0x8c, 0xe4, 0xe8, 0xc1, 0xb5, 0x7d, 0xe4, 0xcf, 0xe3, 0xd8, 0x89, 0x02, 0x3c, 0x8c, 0x8e,
-	0x31, 0xac, 0x78, 0x2e, 0x60, 0xec, 0x96, 0x70, 0xd1, 0xbc, 0x24, 0xd9, 0x84, 0xa8, 0x05, 0x53,
-	0xc5, 0xf9, 0xc0, 0xe5, 0x47, 0xa9, 0x39, 0x5c, 0x18, 0xd6, 0xc8, 0xd1, 0x61, 0xb6, 0x0d, 0xd7,
-	0xcf, 0x74, 0x91, 0xde, 0x9e, 0xc1, 0x1a, 0x17, 0x80, 0x6c, 0x50, 0x7e, 0x30, 0x0f, 0xb6, 0xa4,
-	0xa5, 0xcb, 0x32, 0x1f, 0x7c, 0x7e, 0xd4, 0x45, 0xb2, 0x33, 0xbb, 0x2d, 0xb1, 0x60, 0xd0, 0x94,
-	0x4e, 0xa1, 0xec, 0x37, 0x81, 0x7b, 0xff, 0x69, 0x23, 0x59, 0xae, 0x3a, 0x36, 0x70, 0xa7, 0x6b,
-	0x03, 0xfb, 0xeb, 0x5c, 0xa0, 0x01, 0x97, 0x7f, 0x0c, 0x18, 0xbd, 0x17, 0x84, 0x44, 0x11, 0xfa,
-	0x12, 0xae, 0x48, 0x46, 0xf4, 0x46, 0xf7, 0x4b, 0x51, 0x08, 0x38, 0xbf, 0xd9, 0xf7, 0x8c, 0xb0,
-	0x81, 0xa8, 0x23, 0x6d, 0xad, 0xd5, 0x69, 0x6f, 0x96, 0x56, 0x47, 0xdf, 0x84, 0x01, 0x7d, 0x07,
-	0xa0, 0xdc, 0x47, 0x6f, 0xb7, 0xa2, 0xcf, 0xec, 0xc8, 0xfc, 0xce, 0x3f, 0xcf, 0xeb, 0x82, 0x9f,
-	0x8a, 0x67, 0xb2, 0x29, 0x32, 0xbd, 0xab, 0xcf, 0xd2, 0xe1, 0x98, 0xf9, 0x56, 0x7f, 0x50, 0x5d,
-	0xff, 0x94, 0xc0, 0xad, 0xde, 0x3b, 0xa5, 0x8f, 0xce, 0x73, 0xff, 0x65, 0xf3, 0xe5, 0xf9, 0x2d,
-	0xc3, 0x06, 0x3b, 0x93, 0x8f, 0x57, 0xb7, 0x1b, 0x79, 0xab, 0xf5, 0xe2, 0x1f, 0xec, 0xf1, 0xdf,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x41, 0x04, 0x50, 0xfa, 0xd5, 0x06, 0x00, 0x00,
+	// 896 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0x51, 0x6f, 0xda, 0x56,
+	0x14, 0xc6, 0xd0, 0x20, 0x38, 0x24, 0xd4, 0xbb, 0x23, 0x83, 0x5a, 0x5a, 0xc7, 0xee, 0x92, 0xac,
+	0xea, 0x26, 0xaa, 0x78, 0x2f, 0xd5, 0xa4, 0x3e, 0x50, 0x60, 0x15, 0x6a, 0x6b, 0xba, 0x5b, 0xd2,
+	0x46, 0xd3, 0x24, 0x64, 0xcc, 0x4d, 0x40, 0xf1, 0x6c, 0x66, 0x5f, 0x47, 0xe3, 0x1f, 0xec, 0x69,
+	0xd2, 0x9e, 0x26, 0xed, 0x69, 0xcf, 0xfb, 0x29, 0xfb, 0x55, 0x93, 0xed, 0x6b, 0xec, 0x6b, 0xec,
+	0x90, 0x3c, 0x20, 0xe5, 0xcd, 0x3e, 0x7c, 0xf7, 0x7c, 0xe7, 0x7c, 0x3e, 0xf7, 0x9c, 0x03, 0xc8,
+	0xd7, 0xba, 0x67, 0xb2, 0x89, 0xe1, 0xd0, 0x59, 0x67, 0xe9, 0xd8, 0xcc, 0x46, 0xb5, 0xc0, 0xe2,
+	0x1b, 0x96, 0x53, 0xfc, 0x87, 0x04, 0x8d, 0x57, 0x94, 0xf5, 0x1c, 0x3a, 0xa3, 0x16, 0x5b, 0xe8,
+	0x26, 0xa1, 0xbf, 0x7a, 0xd4, 0x65, 0xe8, 0x04, 0xea, 0xc6, 0xda, 0x38, 0x5e, 0x2d, 0x69, 0x4b,
+	0x6a, 0x4b, 0x4f, 0xaa, 0x24, 0x65, 0x8d, 0x70, 0x03, 0x8b, 0x2d, 0xd8, 0x4a, 0xd3, 0x7f, 0xa1,
+	0xad, 0x62, 0x8c, 0x8b, 0xad, 0x11, 0x6e, 0x18, 0x9c, 0xbd, 0x58, 0x50, 0xa7, 0x55, 0x8a, 0x71,
+	0xb1, 0x15, 0xff, 0x2b, 0xc1, 0x61, 0x2a, 0x20, 0x77, 0x69, 0x5b, 0x2e, 0x45, 0x04, 0x20, 0xe6,
+	0x6e, 0x49, 0xed, 0xd2, 0x93, 0x9a, 0xaa, 0x76, 0x12, 0xc9, 0x74, 0x32, 0xcf, 0x75, 0x62, 0xd3,
+	0xc0, 0x62, 0xce, 0x8a, 0x24, 0xbc, 0x28, 0x2f, 0xe0, 0x61, 0xea, 0x67, 0x24, 0x43, 0xe9, 0x8a,
+	0xae, 0x78, 0xb6, 0xfe, 0x23, 0x6a, 0xc0, 0xde, 0xb5, 0x6e, 0x7a, 0x51, 0x66, 0xe1, 0xcb, 0xf7,
+	0xc5, 0xe7, 0x12, 0xfe, 0xa7, 0x08, 0x8d, 0x77, 0xde, 0xfd, 0x51, 0x0f, 0xfd, 0x28, 0x68, 0x54,
+	0x0e, 0x34, 0x3a, 0x15, 0x34, 0xca, 0x0a, 0x77, 0x97, 0x12, 0x35, 0xe1, 0x30, 0x45, 0x19, 0x7e,
+	0x16, 0xfc, 0xa7, 0x04, 0xcd, 0x3e, 0x35, 0x29, 0xa3, 0xf7, 0xa7, 0xf8, 0x14, 0x68, 0x6d, 0x86,
+	0xc4, 0xe3, 0x9d, 0xc0, 0xa3, 0x9e, 0x43, 0x75, 0x46, 0xbb, 0xcb, 0x25, 0xb1, 0x4d, 0x3a, 0xb6,
+	0xaf, 0xa8, 0x15, 0x05, 0xdc, 0x86, 0x9a, 0x1e, 0x9a, 0x83, 0x28, 0xc2, 0x68, 0x93, 0x26, 0x1f,
+	0xe1, 0x52, 0xc3, 0xa1, 0xec, 0x9d, 0xce, 0xe6, 0x6e, 0xab, 0xd8, 0x2e, 0xf9, 0x88, 0x84, 0x09,
+	0xab, 0xa0, 0x64, 0x11, 0xf0, 0xea, 0x6f, 0xc0, 0x1e, 0xf3, 0x0d, 0xdc, 0x77, 0xf8, 0x82, 0x55,
+	0x68, 0x84, 0x01, 0xf3, 0x33, 0x51, 0x3c, 0x0a, 0x54, 0x1c, 0x31, 0x98, 0xf5, 0x3b, 0xb6, 0xe0,
+	0x30, 0x75, 0x86, 0x53, 0x3c, 0x83, 0xb2, 0xcb, 0x74, 0xe6, 0xb9, 0xc1, 0x91, 0xba, 0xda, 0x14,
+	0x0a, 0xe7, 0x7d, 0xf0, 0x53, 0xcf, 0x9e, 0x51, 0xc2, 0x61, 0xe8, 0x08, 0x0e, 0xc2, 0xa7, 0xb7,
+	0xd4, 0x75, 0xf5, 0xcb, 0x48, 0x7d, 0xd1, 0x88, 0x7f, 0x86, 0x23, 0xe1, 0x62, 0x7e, 0x5c, 0xb0,
+	0x79, 0x96, 0x86, 0x99, 0x19, 0xa2, 0xc7, 0x00, 0xb1, 0x48, 0x9c, 0x20, 0x61, 0xc1, 0xff, 0x49,
+	0x70, 0xbc, 0xc5, 0x3d, 0x4f, 0x6f, 0x9a, 0xd1, 0x3f, 0x5e, 0xe6, 0xf7, 0x8f, 0x3c, 0x3f, 0xbb,
+	0xbc, 0x2c, 0x3a, 0xec, 0xf3, 0xd4, 0x6c, 0x73, 0x61, 0xac, 0x52, 0xc9, 0x4b, 0xe9, 0xe4, 0xd1,
+	0x29, 0x94, 0x75, 0xc3, 0xa0, 0xae, 0x1b, 0xb8, 0xaa, 0xab, 0x8f, 0xc4, 0x2f, 0x16, 0x00, 0xbb,
+	0x01, 0x80, 0x70, 0x20, 0xfe, 0x4b, 0x82, 0x56, 0x58, 0x66, 0xaf, 0x9f, 0xbf, 0xef, 0x7a, 0x6c,
+	0x7e, 0xcb, 0xb2, 0x41, 0x2f, 0xc4, 0xd8, 0x82, 0x0a, 0xae, 0xa5, 0x18, 0x93, 0x00, 0x22, 0xa6,
+	0xd2, 0x86, 0x9a, 0x61, 0x7a, 0x2e, 0xa3, 0x4e, 0xe0, 0x3d, 0xbc, 0x7f, 0x49, 0x13, 0x76, 0xa2,
+	0x0b, 0x26, 0x04, 0xb6, 0xdb, 0xda, 0xf4, 0xd5, 0x38, 0x5b, 0xce, 0xee, 0xa7, 0x1a, 0x19, 0x81,
+	0xed, 0x56, 0x8d, 0xf3, 0xa8, 0xfd, 0xdd, 0x51, 0x8c, 0x5b, 0x65, 0x93, 0xe1, 0x79, 0xb7, 0xd9,
+	0xcc, 0xe0, 0x71, 0xcf, 0xb6, 0x2e, 0x16, 0x97, 0x9e, 0x43, 0x7b, 0x61, 0x2c, 0x11, 0x3b, 0xcf,
+	0x09, 0xc1, 0x83, 0xb9, 0xed, 0x32, 0x9e, 0x4f, 0xf0, 0x8c, 0x3e, 0x83, 0xb2, 0xa1, 0xf7, 0xa8,
+	0xc3, 0xb8, 0x53, 0xfe, 0xe6, 0xdb, 0xa9, 0xa5, 0x4f, 0xcd, 0x30, 0xbd, 0x0a, 0xe1, 0x6f, 0xf8,
+	0x37, 0xf8, 0x22, 0x97, 0x65, 0xa7, 0xf9, 0x3d, 0xd5, 0x00, 0xe2, 0xb3, 0xa8, 0x0c, 0xc5, 0xd1,
+	0x6b, 0xb9, 0x80, 0x3e, 0x85, 0x87, 0x43, 0x6d, 0x3c, 0x20, 0x1a, 0xe9, 0xbe, 0x99, 0x0c, 0x08,
+	0x19, 0x11, 0x59, 0x42, 0x0d, 0x90, 0x87, 0xda, 0x87, 0xee, 0x9b, 0x61, 0x7f, 0xd2, 0x25, 0xaf,
+	0xce, 0xde, 0x0e, 0xb4, 0xb1, 0x5c, 0x44, 0x07, 0x50, 0xd5, 0x46, 0xe3, 0xc9, 0x0f, 0xa3, 0x33,
+	0xad, 0x2f, 0x97, 0x9e, 0x7e, 0x05, 0xfb, 0xc9, 0x8e, 0x81, 0x2a, 0xf0, 0x80, 0x0c, 0xba, 0x7d,
+	0xb9, 0x80, 0xaa, 0xb0, 0xf7, 0x91, 0x0c, 0xc7, 0x03, 0x59, 0x52, 0xff, 0xae, 0x40, 0xf5, 0x83,
+	0x1f, 0xbd, 0xdf, 0xe6, 0xd0, 0x39, 0x1c, 0x08, 0x3d, 0x13, 0x7d, 0x79, 0xd3, 0x3e, 0x16, 0x88,
+	0xae, 0xe0, 0xed, 0x2b, 0x1b, 0x2e, 0xf8, 0x9e, 0x85, 0xb5, 0x21, 0xe5, 0x39, 0x6b, 0x8b, 0x49,
+	0x79, 0xce, 0xde, 0x3a, 0x0a, 0x48, 0x07, 0x39, 0x3d, 0xe3, 0xd1, 0x91, 0x70, 0x32, 0x67, 0x2b,
+	0x51, 0x8e, 0xb7, 0xa0, 0xd6, 0x14, 0x97, 0x80, 0x36, 0x27, 0x39, 0x3a, 0x11, 0x8e, 0xe7, 0xee,
+	0x12, 0xca, 0xd7, 0x5b, 0x71, 0x49, 0x95, 0x84, 0x51, 0x9e, 0x52, 0x29, 0x6b, 0x35, 0x48, 0xa9,
+	0x94, 0xb9, 0x09, 0xe0, 0x02, 0xfa, 0x5d, 0x82, 0xcf, 0x6f, 0x1c, 0x87, 0xe8, 0xf4, 0x2e, 0xa3,
+	0x33, 0xa4, 0x56, 0xef, 0x3e, 0x6d, 0x71, 0x01, 0x5d, 0x43, 0x33, 0xe7, 0x86, 0xa1, 0x6f, 0x44,
+	0xa9, 0x6e, 0xbc, 0xed, 0xca, 0xb7, 0xb7, 0x03, 0xaf, 0x79, 0x67, 0xf0, 0xc9, 0xc6, 0x3c, 0x42,
+	0xc7, 0x19, 0x1f, 0x67, 0xb3, 0x5b, 0x2a, 0x27, 0xdb, 0x60, 0x49, 0x96, 0x8d, 0x3e, 0x9f, 0x62,
+	0xc9, 0x1b, 0x50, 0x29, 0x96, 0xdc, 0x71, 0x11, 0xb2, 0x6c, 0xf4, 0x5f, 0x94, 0x55, 0xcf, 0x5b,
+	0x59, 0x72, 0xdb, 0x38, 0x2e, 0xbc, 0xac, 0xff, 0xb4, 0xff, 0x2c, 0x81, 0x9d, 0x96, 0x83, 0x3f,
+	0x9c, 0xdf, 0xfd, 0x1f, 0x00, 0x00, 0xff, 0xff, 0x67, 0x94, 0x20, 0x14, 0x84, 0x0e, 0x00, 0x00,
 }

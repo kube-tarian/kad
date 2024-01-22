@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/intelops/go-common/logging"
@@ -40,6 +41,7 @@ type ClusterClaimSyncHandler struct {
 	log     logging.Logger
 	tc      *temporalclient.Client
 	dbStore *captenstore.Store
+	mutex   sync.Mutex
 }
 
 func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*ClusterClaimSyncHandler, error) {
@@ -76,6 +78,8 @@ func getClusterClaimObj(obj any) (*model.ClusterClaim, error) {
 
 func (h *ClusterClaimSyncHandler) OnAdd(obj interface{}) {
 	h.log.Info("Crossplane ClusterCliam Add Callback")
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
 	newCcObj, err := getClusterClaimObj(obj)
 	if newCcObj == nil {
@@ -88,11 +92,13 @@ func (h *ClusterClaimSyncHandler) OnAdd(obj interface{}) {
 		return
 	}
 
-	h.log.Info("cluster-claims resources synched")
+	h.log.Info("cluster-claims resource added")
 }
 
 func (h *ClusterClaimSyncHandler) OnUpdate(oldObj, newObj interface{}) {
 	h.log.Info("Crossplane ClusterCliam Update Callback")
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
 	newCcObj, err := getClusterClaimObj(newObj)
 	if newCcObj == nil {
@@ -105,11 +111,13 @@ func (h *ClusterClaimSyncHandler) OnUpdate(oldObj, newObj interface{}) {
 		return
 	}
 
-	h.log.Info("cluster-claims resources synched")
+	h.log.Info("cluster-claims resource updated")
 }
 
 func (h *ClusterClaimSyncHandler) OnDelete(obj interface{}) {
 	h.log.Info("Crossplane ClusterCliam Delete Callback")
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
 	newCcObj, err := getClusterClaimObj(obj)
 	if newCcObj == nil {
@@ -117,7 +125,7 @@ func (h *ClusterClaimSyncHandler) OnDelete(obj interface{}) {
 		return
 	}
 
-	if err = h.deleteManagedClusters(*newCcObj); err != nil {
+	if err = h.deleteManagedCluster(*newCcObj); err != nil {
 		h.log.Errorf("failed to delete ClusterCliam object, %v", err)
 		return
 	}
@@ -126,6 +134,8 @@ func (h *ClusterClaimSyncHandler) OnDelete(obj interface{}) {
 
 func (h *ClusterClaimSyncHandler) Sync() error {
 	h.log.Debug("started to sync ClusterCliam resources")
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
 	k8sclient, err := k8s.NewK8SClient(h.log)
 	if err != nil {
@@ -151,12 +161,12 @@ func (h *ClusterClaimSyncHandler) Sync() error {
 	if err = h.updateManagedClusters(clObj.Items); err != nil {
 		return fmt.Errorf("failed to update clusters in DB, %v", err)
 	}
-	h.log.Info("cluster-claims resources synched")
 
 	if err := h.syncClusterClaimsWithDB(clObj.Items); err != nil {
 		return fmt.Errorf("failed to sync clusters in DB, %v", err)
 	}
 
+	h.log.Info("cluster-claims resources synched")
 	return nil
 }
 
@@ -257,8 +267,7 @@ func (h *ClusterClaimSyncHandler) getClusterClaimStatus(conditions []model.Clust
 	return
 }
 
-func (h *ClusterClaimSyncHandler) deleteManagedClusters(clusterCliam model.ClusterClaim) error {
-
+func (h *ClusterClaimSyncHandler) deleteManagedCluster(clusterCliam model.ClusterClaim) error {
 	clusters, err := h.getManagedClusters()
 	if err != nil {
 		return fmt.Errorf("failed to get managed clusters from DB, %v", err)
@@ -275,7 +284,7 @@ func (h *ClusterClaimSyncHandler) deleteManagedClusters(clusterCliam model.Clust
 	}
 
 	if !clusterFound {
-		h.log.Info("failed to delete managed cluster from DB, %s Cluster is not stored in ManagedClusters table", clusterCliam.Metadata.Name)
+		h.log.Info("Cluster %s is not found in DB", clusterCliam.Metadata.Name)
 		return nil
 	}
 
@@ -284,17 +293,16 @@ func (h *ClusterClaimSyncHandler) deleteManagedClusters(clusterCliam model.Clust
 		return fmt.Errorf("failed to update managed cluster from DB, %v", err)
 	}
 
-	err = h.triggerClusterDelete(clusterCliam.Spec.Id, managedCluster)
+	err = h.triggerClusterDelete(managedCluster)
 	if err != nil {
 		return fmt.Errorf("failed to trigger cluster delete workflow, %v", err)
 	}
 
 	h.log.Infof("triggered cluster delete workflow for cluster %s", managedCluster.ClusterName)
-
 	return nil
 }
 
-func (h *ClusterClaimSyncHandler) triggerClusterDelete(clusterName string, managedCluster *captenpluginspb.ManagedCluster) error {
+func (h *ClusterClaimSyncHandler) triggerClusterDelete(managedCluster *captenpluginspb.ManagedCluster) error {
 	wd := workers.NewConfig(h.tc, h.log)
 
 	proj, err := h.dbStore.GetCrossplaneProject()
@@ -302,7 +310,7 @@ func (h *ClusterClaimSyncHandler) triggerClusterDelete(clusterName string, manag
 		return err
 	}
 	ci := model.CrossplaneClusterUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId,
-		ManagedClusterName: clusterName, ManagedClusterId: managedCluster.Id}
+		ManagedClusterName: managedCluster.ClusterName, ManagedClusterId: managedCluster.Id}
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(), &model.ConfigureParameters{Resource: model.CrossPlaneResource, Action: model.CrossPlaneProjectDelete}, ci)
 	if err != nil {
@@ -351,24 +359,29 @@ func (h *ClusterClaimSyncHandler) monitorCrossplaneWorkflow(managedCluster *capt
 }
 
 func (h *ClusterClaimSyncHandler) syncClusterClaimsWithDB(clusterClaims []model.ClusterClaim) error {
-
 	clusters, err := h.getManagedClusters()
 	if err != nil {
 		return fmt.Errorf("failed to get managed clusters from DB, %v", err)
 	}
 
-	for _, cm := range clusterClaims {
-		var isDeleteManagedCluster = true
-		for _, c := range clusters {
-			if c.ClusterName == cm.Metadata.Name {
-				isDeleteManagedCluster = false
+	for _, cluster := range clusters {
+		var clusterExists bool
+		for _, clusterClaim := range clusterClaims {
+			if cluster.ClusterName == clusterClaim.Metadata.Name {
+				clusterExists = true
 				break
 			}
 		}
 
-		if isDeleteManagedCluster {
-			if err = h.deleteManagedClusters(cm); err != nil {
-				return fmt.Errorf("failed to delete ClusterCliam object, %v", err)
+		if !clusterExists {
+			cluster.ClusterDeployStatus = clusterDeletingStatus
+			if err := h.dbStore.UpsertManagedCluster(cluster); err != nil {
+				return fmt.Errorf("failed to update managed cluster from DB, %v", err)
+			}
+
+			err = h.triggerClusterDelete(cluster)
+			if err != nil {
+				return fmt.Errorf("failed to trigger cluster delete workflow, %v", err)
 			}
 		}
 	}

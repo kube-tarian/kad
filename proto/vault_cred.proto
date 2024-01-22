@@ -9,26 +9,38 @@ service VaultCred {
   // for example, client-certs path will be certs/client/clientA
   // for example, cassandra root user path will be service-cred/cassandra/root
   // pass authentication token with service account token to authenticate & authorize the request with vault
-  rpc GetCred (GetCredRequest) returns (GetCredResponse) {};
-  rpc PutCred (PutCredRequest) returns (PutCredResponse) {};
-  rpc DeleteCred (DeleteCredRequest) returns (DeleteCredResponse) {};
-  rpc GetAppRoleToken(GetAppRoleTokenRequest) returns (GetAppRoleTokenResponse) {};
+  rpc GetCredential (GetCredentialRequest) returns (GetCredentialResponse) {};
+  rpc PutCredential (PutCredentialRequest) returns (PutCredentialResponse) {};
+  rpc DeleteCredential (DeleteCredentialRequest) returns (DeleteCredentialResponse) {};
+  rpc CreateAppRoleToken(CreateAppRoleTokenRequest) returns (CreateAppRoleTokenResponse) {};
+  rpc DeleteAppRole(DeleteAppRoleRequest) returns (DeleteAppRoleResponse) {};
   rpc GetCredentialWithAppRoleToken(GetCredentialWithAppRoleTokenRequest) returns (GetCredentialWithAppRoleTokenResponse) {};
+  rpc ConfigureClusterK8SAuth(ConfigureClusterK8SAuthRequest) returns (ConfigureClusterK8SAuthResponse) {};
+  rpc CreateK8SAuthRole(CreateK8SAuthRoleRequest) returns (CreateK8SAuthRoleResponse) {};
+  rpc UpdateK8SAuthRole(UpdateK8SAuthRoleRequest) returns (UpdateK8SAuthRoleResponse) {};
+  rpc DeleteK8SAuthRole(DeleteK8SAuthRoleRequest) returns (DeleteK8SAuthRoleResponse) {};
 }
 
-message GetCredRequest {
+enum StatusCode {
+   OK = 0;
+   INTERNRAL_ERROR = 1;
+   INVALID_ARGUMENT = 2;
+   NOT_FOUND = 3;
+}
+
+message GetCredentialRequest {
    string credentialType = 1;
    string credEntityName = 2;
    string credIdentifier = 3;
 }
 
-message GetCredResponse {
+message GetCredentialResponse {
    //service-cred credential, for example: "userName": "iam-root", "password:: "hello"
    //client-cert credential, for example: "clientId": "intelops-user", "ca.crt": "...", "client.crt": "...", "client.key": "..."
    map<string, string> credential = 1;
 }
 
-message PutCredRequest {
+message PutCredentialRequest {
    string credentialType = 1;
    string credEntityName = 2;
    string credIdentifier = 3;
@@ -37,32 +49,95 @@ message PutCredRequest {
    map<string, string> credential = 6;
 }
 
-message PutCredResponse {
+message PutCredentialResponse {
 }
 
-message DeleteCredRequest {
+message DeleteCredentialRequest {
    string credentialType = 1;
    string credEntityName = 2;
    string credIdentifier = 3;
 }
 
-message DeleteCredResponse {
+message DeleteCredentialResponse {
 }
 
-message GetAppRoleTokenRequest {
+message CreateAppRoleTokenRequest {
    string appRoleName = 1;
-   repeated string credentialPaths = 2;
+   repeated string secretPaths = 2;
 }
 
-message GetAppRoleTokenResponse {
+message CreateAppRoleTokenResponse {
    string token = 1;
+}
+
+message DeleteAppRoleRequest {
+   string roleName = 1;
+}
+
+message DeleteAppRoleResponse {
+   StatusCode status = 1;
+   string statusMessage = 2;
 }
 
 message GetCredentialWithAppRoleTokenRequest {
    string token = 1;
-   string credentialPath = 2;
+   string secretPath = 2;
 }
 
 message GetCredentialWithAppRoleTokenResponse {
    map<string, string> credential = 1;
+}
+
+
+enum SecretAccess {
+   READ = 0;
+   WRITE = 1;  
+}
+
+message secretPolicy { 
+   string secretPath = 1;
+   SecretAccess access = 2;
+}
+
+message CreateK8SAuthRoleRequest { 
+   string roleName = 1;
+   repeated secretPolicy secretPolicy = 2;
+   string clusterName = 3;
+}
+ 
+message CreateK8SAuthRoleResponse { 
+   StatusCode status = 1;
+   string statusMessage = 2;
+}
+ 
+message UpdateK8SAuthRoleRequest { 
+   string roleName = 1;
+   repeated secretPolicy secretPolicy = 2;
+   string clusterName = 3;
+}
+ 
+message UpdateK8SAuthRoleResponse { 
+   StatusCode status = 1;
+   string statusMessage = 2;
+}
+ 
+message DeleteK8SAuthRoleRequest { 
+   string roleName = 1;
+   string clusterName = 3;
+}
+ 
+message DeleteK8SAuthRoleResponse { 
+   StatusCode status = 1;
+   string statusMessage = 2;
+}
+
+message ConfigureClusterK8SAuthRequest {
+   string host = 1;
+	string caCert = 2;
+   bool enable = 3;
+}
+
+message ConfigureClusterK8SAuthResponse {
+   StatusCode status = 1;
+   string statusMessage = 2;
 }

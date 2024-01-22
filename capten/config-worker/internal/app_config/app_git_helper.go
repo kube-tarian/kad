@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/argoproj/argo-cd/v2/pkg/apis/application/v1alpha1"
@@ -260,7 +261,9 @@ func (ca *AppGitConfigHelper) AddFilesToRepo(paths []string) error {
 func (ca *AppGitConfigHelper) RemoveFilesFromRepo(paths []string) error {
 	for _, path := range paths {
 		if err := ca.gitClient.Remove(path); err != nil {
-			return fmt.Errorf("failed to remove '%s' the changes from repo, %v", path, err)
+			if !strings.Contains(err.Error(), "entry not found") {
+				return fmt.Errorf("failed to remove '%s' the changes from repo, %v", path, err)
+			}
 		}
 	}
 	return nil

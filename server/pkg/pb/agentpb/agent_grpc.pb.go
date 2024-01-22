@@ -21,6 +21,10 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	Agent_Ping_FullMethodName                   = "/agentpb.Agent/Ping"
 	Agent_StoreCredential_FullMethodName        = "/agentpb.Agent/StoreCredential"
+	Agent_ConfigureVaultSecret_FullMethodName   = "/agentpb.Agent/ConfigureVaultSecret"
+	Agent_CreateVaultRole_FullMethodName        = "/agentpb.Agent/CreateVaultRole"
+	Agent_UpdateVaultRole_FullMethodName        = "/agentpb.Agent/UpdateVaultRole"
+	Agent_DeleteVaultRole_FullMethodName        = "/agentpb.Agent/DeleteVaultRole"
 	Agent_SyncApp_FullMethodName                = "/agentpb.Agent/SyncApp"
 	Agent_GetClusterApps_FullMethodName         = "/agentpb.Agent/GetClusterApps"
 	Agent_GetClusterAppLaunches_FullMethodName  = "/agentpb.Agent/GetClusterAppLaunches"
@@ -40,6 +44,10 @@ const (
 type AgentClient interface {
 	Ping(ctx context.Context, in *PingRequest, opts ...grpc.CallOption) (*PingResponse, error)
 	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
+	ConfigureVaultSecret(ctx context.Context, in *ConfigureVaultSecretRequest, opts ...grpc.CallOption) (*ConfigureVaultSecretResponse, error)
+	CreateVaultRole(ctx context.Context, in *CreateVaultRoleRequest, opts ...grpc.CallOption) (*CreateVaultRoleResponse, error)
+	UpdateVaultRole(ctx context.Context, in *UpdateVaultRoleRequest, opts ...grpc.CallOption) (*UpdateVaultRoleResponse, error)
+	DeleteVaultRole(ctx context.Context, in *DeleteVaultRoleRequest, opts ...grpc.CallOption) (*DeleteVaultRoleResponse, error)
 	SyncApp(ctx context.Context, in *SyncAppRequest, opts ...grpc.CallOption) (*SyncAppResponse, error)
 	GetClusterApps(ctx context.Context, in *GetClusterAppsRequest, opts ...grpc.CallOption) (*GetClusterAppsResponse, error)
 	GetClusterAppLaunches(ctx context.Context, in *GetClusterAppLaunchesRequest, opts ...grpc.CallOption) (*GetClusterAppLaunchesResponse, error)
@@ -73,6 +81,42 @@ func (c *agentClient) Ping(ctx context.Context, in *PingRequest, opts ...grpc.Ca
 func (c *agentClient) StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error) {
 	out := new(StoreCredentialResponse)
 	err := c.cc.Invoke(ctx, Agent_StoreCredential_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) ConfigureVaultSecret(ctx context.Context, in *ConfigureVaultSecretRequest, opts ...grpc.CallOption) (*ConfigureVaultSecretResponse, error) {
+	out := new(ConfigureVaultSecretResponse)
+	err := c.cc.Invoke(ctx, Agent_ConfigureVaultSecret_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) CreateVaultRole(ctx context.Context, in *CreateVaultRoleRequest, opts ...grpc.CallOption) (*CreateVaultRoleResponse, error) {
+	out := new(CreateVaultRoleResponse)
+	err := c.cc.Invoke(ctx, Agent_CreateVaultRole_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) UpdateVaultRole(ctx context.Context, in *UpdateVaultRoleRequest, opts ...grpc.CallOption) (*UpdateVaultRoleResponse, error) {
+	out := new(UpdateVaultRoleResponse)
+	err := c.cc.Invoke(ctx, Agent_UpdateVaultRole_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) DeleteVaultRole(ctx context.Context, in *DeleteVaultRoleRequest, opts ...grpc.CallOption) (*DeleteVaultRoleResponse, error) {
+	out := new(DeleteVaultRoleResponse)
+	err := c.cc.Invoke(ctx, Agent_DeleteVaultRole_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -184,6 +228,10 @@ func (c *agentClient) UpdateAppValues(ctx context.Context, in *UpdateAppValuesRe
 type AgentServer interface {
 	Ping(context.Context, *PingRequest) (*PingResponse, error)
 	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
+	ConfigureVaultSecret(context.Context, *ConfigureVaultSecretRequest) (*ConfigureVaultSecretResponse, error)
+	CreateVaultRole(context.Context, *CreateVaultRoleRequest) (*CreateVaultRoleResponse, error)
+	UpdateVaultRole(context.Context, *UpdateVaultRoleRequest) (*UpdateVaultRoleResponse, error)
+	DeleteVaultRole(context.Context, *DeleteVaultRoleRequest) (*DeleteVaultRoleResponse, error)
 	SyncApp(context.Context, *SyncAppRequest) (*SyncAppResponse, error)
 	GetClusterApps(context.Context, *GetClusterAppsRequest) (*GetClusterAppsResponse, error)
 	GetClusterAppLaunches(context.Context, *GetClusterAppLaunchesRequest) (*GetClusterAppLaunchesResponse, error)
@@ -207,6 +255,18 @@ func (UnimplementedAgentServer) Ping(context.Context, *PingRequest) (*PingRespon
 }
 func (UnimplementedAgentServer) StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreCredential not implemented")
+}
+func (UnimplementedAgentServer) ConfigureVaultSecret(context.Context, *ConfigureVaultSecretRequest) (*ConfigureVaultSecretResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfigureVaultSecret not implemented")
+}
+func (UnimplementedAgentServer) CreateVaultRole(context.Context, *CreateVaultRoleRequest) (*CreateVaultRoleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateVaultRole not implemented")
+}
+func (UnimplementedAgentServer) UpdateVaultRole(context.Context, *UpdateVaultRoleRequest) (*UpdateVaultRoleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultRole not implemented")
+}
+func (UnimplementedAgentServer) DeleteVaultRole(context.Context, *DeleteVaultRoleRequest) (*DeleteVaultRoleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteVaultRole not implemented")
 }
 func (UnimplementedAgentServer) SyncApp(context.Context, *SyncAppRequest) (*SyncAppResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SyncApp not implemented")
@@ -286,6 +346,78 @@ func _Agent_StoreCredential_Handler(srv interface{}, ctx context.Context, dec fu
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AgentServer).StoreCredential(ctx, req.(*StoreCredentialRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_ConfigureVaultSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigureVaultSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).ConfigureVaultSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_ConfigureVaultSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).ConfigureVaultSecret(ctx, req.(*ConfigureVaultSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_CreateVaultRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateVaultRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).CreateVaultRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_CreateVaultRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).CreateVaultRole(ctx, req.(*CreateVaultRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_UpdateVaultRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateVaultRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).UpdateVaultRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_UpdateVaultRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).UpdateVaultRole(ctx, req.(*UpdateVaultRoleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_DeleteVaultRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteVaultRoleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).DeleteVaultRole(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_DeleteVaultRole_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).DeleteVaultRole(ctx, req.(*DeleteVaultRoleRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -502,6 +634,22 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StoreCredential",
 			Handler:    _Agent_StoreCredential_Handler,
+		},
+		{
+			MethodName: "ConfigureVaultSecret",
+			Handler:    _Agent_ConfigureVaultSecret_Handler,
+		},
+		{
+			MethodName: "CreateVaultRole",
+			Handler:    _Agent_CreateVaultRole_Handler,
+		},
+		{
+			MethodName: "UpdateVaultRole",
+			Handler:    _Agent_UpdateVaultRole_Handler,
+		},
+		{
+			MethodName: "DeleteVaultRole",
+			Handler:    _Agent_DeleteVaultRole_Handler,
 		},
 		{
 			MethodName: "SyncApp",

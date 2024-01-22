@@ -28,7 +28,7 @@ var (
 	dockerCred        = "docker-credentials"
 	githubWebhook     = "github-webhook-secret"
 	argoCred          = "argocd"
-	extraConfig       = "extraConfig"
+	extraConfig       = "extraconfig"
 	secrets           = []string{gitCred, dockerCred, githubWebhook, argoCred, extraConfig}
 	pipelineNamespace = "tekton-pipelines"
 	tektonChildTasks  = []string{"tekton-cluster-tasks"}

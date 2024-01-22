@@ -26,9 +26,9 @@ func GetAppRoleToken(appRoleName string, credentialPaths []string) (string, erro
 	}
 	vcClient := vaultcredpb.NewVaultCredClient(vc)
 
-	tokenData, err := vcClient.GetAppRoleToken(context.Background(), &vaultcredpb.GetAppRoleTokenRequest{
-		AppRoleName:     appRoleName,
-		CredentialPaths: credentialPaths,
+	tokenData, err := vcClient.CreateAppRoleToken(context.Background(), &vaultcredpb.CreateAppRoleTokenRequest{
+		AppRoleName: appRoleName,
+		SecretPaths: credentialPaths,
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to generate app role token for %s, %v", appRoleName, err)
