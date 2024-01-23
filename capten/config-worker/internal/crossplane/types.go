@@ -18,7 +18,7 @@ type providerUpdateConfig struct {
 	SyncAppPath string `json:"syncAppPath"`
 }
 
-type crossplanePluginConfig struct {
+type CrossplanePluginConfig struct {
 	TemplateGitRepo          string               `json:"templateGitRepo"`
 	CrossplaneConfigSyncPath string               `json:"crossplaneConfigSyncPath"`
 	ProviderConfigSyncPath   string               `json:"providerConfigSyncPath"`

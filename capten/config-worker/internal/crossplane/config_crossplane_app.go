@@ -53,7 +53,7 @@ func ReadCrossPlanePluginConfig(pluginFile string) (*CrossplanePluginConfig, err
 		return nil, fmt.Errorf("failed to read pluginConfig File: %s, err: %w", pluginFile, err)
 	}
 
-	var pluginData crossplanePluginConfig
+	var pluginData CrossplanePluginConfig
 	err = json.Unmarshal(data, &pluginData)
 	if err != nil {
 		return nil, fmt.Errorf("%w", err)
