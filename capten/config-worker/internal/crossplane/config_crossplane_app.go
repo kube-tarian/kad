@@ -226,6 +226,14 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 		file := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", providerName))
 		fmt.Println("File name => ", file)
 	}
+
+	fi, err := os.ReadDir(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath))
+	if err != nil {
+		return err
+	}
+	for _, v := range fi {
+		fmt.Println("file name => ", v.Name())
+	}
 	return nil
 }
 
