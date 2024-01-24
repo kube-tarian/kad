@@ -224,6 +224,27 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 	if err != nil {
 		return err
 	}
+
+	providerMap := map[string]agentmodel.CrossplaneProvider{}
+	for _, provider := range req.CrossplaneProviders {
+		providerMap[strings.ToLower(provider.ProviderName)] = provider
+	}
+
+	for _, v := range fi {
+		fmt.Println("file name => ", v.Name())
+		tsf := strings.TrimSuffix(v.Name(), "-provider.yaml")
+		fmt.Println("TrimSuffix => ", tsf)
+
+		vv, ok := providerMap[tsf]
+		if ok {
+			println("provider available")
+			fmt.Println(vv.ProviderName)
+		} else {
+			println("provider not available")
+			fmt.Println(vv.ProviderName)
+		}
+	}
+
 	for _, provider := range req.CrossplaneProviders {
 		providerName := strings.ToLower(provider.ProviderName)
 		fmt.Println("Provider name =>", provider.ProviderName)
