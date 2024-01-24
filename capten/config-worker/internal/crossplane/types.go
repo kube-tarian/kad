@@ -160,4 +160,23 @@ spec:
       key: %s
       property: nats
   `
+	cosignVaultExternalSecret = `
+  apiVersion: external-secrets.io/v1beta1
+  kind: ExternalSecret
+  metadata:
+    name: vault-cosign-external
+    namespace: %s
+  spec:
+    refreshInterval: "10s"
+    secretStoreRef:
+      name: vault-store
+      kind: SecretStore
+    target:
+      name: vault-cosign-secret
+    data:
+    - secretKey: cosign.pub
+      remoteRef:
+        key: %s
+        property: cosign.pub
+    `
 )
