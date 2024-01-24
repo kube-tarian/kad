@@ -245,17 +245,17 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 		}
 	}
 
-	for _, provider := range req.CrossplaneProviders {
-		providerName := strings.ToLower(provider.ProviderName)
-		fmt.Println("Provider name =>", provider.ProviderName)
-		file := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", providerName))
-		fmt.Println("File name => ", file)
+	// for _, provider := range req.CrossplaneProviders {
+	// 	providerName := strings.ToLower(provider.ProviderName)
+	// 	fmt.Println("Provider name =>", provider.ProviderName)
+	// 	file := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", providerName))
+	// 	fmt.Println("File name => ", file)
 
-		for _, v := range fi {
-			fmt.Println("file name => ", v.Name())
-			fmt.Println("Conteians => ", strings.Contains(v.Name(), providerName))
-		}
-	}
+	// 	for _, v := range fi {
+	// 		fmt.Println("file name => ", v.Name())
+	// 		fmt.Println("Conteians => ", strings.Contains(v.Name(), providerName))
+	// 	}
+	// }
 
 	return nil
 }
