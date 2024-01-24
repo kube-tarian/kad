@@ -227,7 +227,7 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 		fmt.Println("File name => ", file)
 	}
 
-	f, err := os.ReadFile(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", "provider-gcp-")))
+	f, err := os.ReadFile(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", "provider-gcp")))
 	if err != nil {
 		fmt.Println("Read file err")
 		fmt.Println(err.Error())
