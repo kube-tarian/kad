@@ -101,8 +101,8 @@ func (a *Agent) ConfigureVaultSecret(ctx context.Context, request *agentpb.Confi
 		return &agentpb.ConfigureVaultSecretResponse{}, err
 	}
 	log.Printf("Secret %v created in the ns %v", request.SecretName, request.Namespace)
-	//vaultAddressStr := fmt.Sprintf(vaultAddress, cp.cfg.DomainName)
-	vaultAddressStr := "http://capten-dev-vault.platform.svc.cluster.local:8200"
+	vaultAddressStr := fmt.Sprintf(vaultAddress, request.VaultDomainName)
+	//vaultAddressStr := "http://capten-dev-vault.platform.svc.cluster.local:8200"
 	vaultStoreCRData := fmt.Sprintf(vaultStore, request.Namespace, vaultAddressStr, request.SecretName)
 	ns, resource, err := k8sclient.DynamicClient.CreateResource(ctx, []byte(vaultStoreCRData))
 	if err != nil {
