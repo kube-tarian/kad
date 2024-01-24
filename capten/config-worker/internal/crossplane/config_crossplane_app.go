@@ -109,6 +109,10 @@ func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model
 }
 
 func (cp *CrossPlaneApp) synchProviders(req *model.CrossplaneUseCase, templateDir, reqRepo string) error {
+	if err := cp.deleteProviderConfigs(reqRepo, req); err != nil {
+		return fmt.Errorf("failed to delete provider configs, %v", err)
+	}
+
 	err := cp.createProviderConfigs(filepath.Join(templateDir, cp.pluginConfig.ProviderConfigSyncPath), req)
 	if err != nil {
 		return fmt.Errorf("failed to create provider config, %v", err)
@@ -122,10 +126,6 @@ func (cp *CrossPlaneApp) synchProviders(req *model.CrossplaneUseCase, templateDi
 			}})
 	if err != nil {
 		return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
-	}
-
-	if err := cp.deleteProviderConfigs(reqRepo, req); err != nil {
-		return fmt.Errorf("failed to delete provider configs, %v", err)
 	}
 
 	return nil
