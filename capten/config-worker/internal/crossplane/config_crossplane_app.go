@@ -220,28 +220,20 @@ func (cp *CrossPlaneApp) createProviderConfigs(dir string, req *model.Crossplane
 func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.CrossplaneUseCase) error {
 	logger.Infof("processing %d crossplane providers to sync & delete provider configs", len(req.CrossplaneProviders))
 	fmt.Println("reqRepoDir =>", reqRepoDir)
+	fi, err := os.ReadDir(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath))
+	if err != nil {
+		return err
+	}
 	for _, provider := range req.CrossplaneProviders {
 		providerName := strings.ToLower(provider.ProviderName)
 		fmt.Println("Provider name =>", provider.ProviderName)
 		file := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", providerName))
 		fmt.Println("File name => ", file)
-	}
 
-	f, err := os.ReadFile(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", "provider-gcp")))
-	if err != nil {
-		fmt.Println("Read file err")
-		fmt.Println(err.Error())
-	}
-
-	fmt.Println("Read file")
-	fmt.Println(string(f))
-
-	fi, err := os.ReadDir(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath))
-	if err != nil {
-		return err
-	}
-	for _, v := range fi {
-		fmt.Println("file name => ", v.Name())
+		for _, v := range fi {
+			fmt.Println("file name => ", v.Name())
+			fmt.Println("Conteians => ", strings.Contains(v.Name(), providerName))
+		}
 	}
 
 	return nil
