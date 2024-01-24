@@ -301,8 +301,8 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 	}
 
 	if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, cosignSecName,
-		v1.SecretTypeOpaque, map[string][]byte{"COSIGN_KEY": []byte(key), "COSIGN_PUB": []byte(pub)},
-		map[string]string{}); err != nil {
+		v1.SecretTypeOpaque, map[string][]byte{appconfig.CosignKey: []byte(key),
+			appconfig.CosignPub: []byte(pub)}, map[string]string{}); err != nil {
 		return fmt.Errorf("failed to create/update cosign-keys k8s secret, %v", err)
 	}
 

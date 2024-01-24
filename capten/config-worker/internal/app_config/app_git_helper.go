@@ -26,8 +26,8 @@ const (
 	kubeConfig                     = "kubeconfig"
 	k8sEndpoint                    = "endpoint"
 	k8sClusterCA                   = "clusterCA"
-	cosignKey                      = "cosign.key"
-	cosignPub                      = "cosign.pub"
+	CosignKey                      = "cosign.key"
+	CosignPub                      = "cosign.pub"
 )
 
 type Config struct {
@@ -107,7 +107,7 @@ func (ca *AppGitConfigHelper) GetCosingKeys(ctx context.Context, entityName, pro
 		return "", "", err
 	}
 
-	return cred[cosignKey], cred[cosignPub], nil
+	return cred[CosignKey], cred[CosignPub], nil
 }
 
 func (ca *AppGitConfigHelper) GetContainerRegCreds(ctx context.Context, entityName, projectId string) (string, string, error) {
