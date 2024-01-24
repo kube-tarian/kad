@@ -35,6 +35,9 @@ var (
 	addPipeline       = "add"
 	deletePipeline    = "delete"
 	mainAppName       = "tekton-apps"
+	cosignEntityName  = "cosign"
+	cosignVaultId     = "signer"
+	cosignSecName     = "cosign-keys"
 )
 
 type Config struct {
@@ -290,6 +293,18 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 	}
 
 	k8sclient.Clientset.CoreV1().Namespaces().Create(ctx, &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: pipelineNamespace}}, metav1.CreateOptions{})
+
+	// One time activity
+	key, pub, err := cp.helper.GetCosingKeys(ctx, cosignEntityName, cosignVaultId)
+	if err != nil {
+		return fmt.Errorf("failed to get cosign keys from vault, %v", err)
+	}
+
+	if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, cosignSecName,
+		v1.SecretTypeOpaque, map[string][]byte{"COSIGN_KEY": []byte(key), "COSIGN_PUB": []byte(pub)},
+		map[string]string{}); err != nil {
+		return fmt.Errorf("failed to create/update cosign-keys k8s secret, %v", err)
+	}
 
 	for _, secret := range secrets {
 		strdata := make(map[string][]byte)

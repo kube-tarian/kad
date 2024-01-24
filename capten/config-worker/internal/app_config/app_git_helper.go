@@ -26,6 +26,8 @@ const (
 	kubeConfig                     = "kubeconfig"
 	k8sEndpoint                    = "endpoint"
 	k8sClusterCA                   = "clusterCA"
+	cosignKey                      = "cosign.key"
+	cosignPub                      = "cosign.pub"
 )
 
 type Config struct {
@@ -88,6 +90,24 @@ func (ca *AppGitConfigHelper) GetClusterCreds(ctx context.Context, entityName, p
 	}
 
 	return cred[kubeConfig], cred[k8sClusterCA], cred[k8sEndpoint], nil
+}
+
+func (ca *AppGitConfigHelper) GetCosingKeys(ctx context.Context, entityName, projectId string) (string, string, error) {
+	credReader, err := credentials.NewCredentialReader(ctx)
+	if err != nil {
+		err = errors.WithMessage(err, "error in initializing credential reader")
+		return "", "", err
+	}
+
+	cred, err := credReader.GetCredential(ctx, credentials.GenericCredentialType,
+		entityName, projectId)
+	if err != nil {
+		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
+			entityName, projectId)
+		return "", "", err
+	}
+
+	return cred[cosignKey], cred[cosignPub], nil
 }
 
 func (ca *AppGitConfigHelper) GetContainerRegCreds(ctx context.Context, entityName, projectId string) (string, string, error) {
