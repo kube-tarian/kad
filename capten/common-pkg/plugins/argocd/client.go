@@ -39,7 +39,6 @@ func GetConfig(logger logging.Logger) (*Configuration, error) {
 		}
 
 		cfg.Password = password
-
 	}
 
 	if !cfg.IsSSLEnabled {

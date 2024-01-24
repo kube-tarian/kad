@@ -73,15 +73,19 @@ func processConfigurationActivity(ctx context.Context, params model.ConfigurePar
 		return status, nil
 
 	case model.CrossPlaneProviderUpdate:
-		reqLocal := &model.CrossplaneClusterUpdate{}
+		reqLocal := &model.CrossplaneProviderUpdate{}
 		if err := json.Unmarshal(payload, reqLocal); err != nil {
 			logger.Errorf("failed to unmarshall the crossplane provider update req for %s, %v", model.CrossPlaneProviderUpdate, err)
 			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to unmarshall the crossplane provider update req for %s", model.CrossPlaneProviderUpdate)
 		}
 
-		logger.Info("Crossplane Provider update event triggered")
+		status, err := cp.configureConfigProviderUpdate(ctx, reqLocal)
+		if err != nil {
+			logger.Errorf("failed to configure crossplane project, %v", err)
+			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to configure crossplane project")
+		}
 
-		return "", nil
+		return status, nil
 	default:
 		return string(model.WorkFlowStatusFailed), fmt.Errorf("invalid crossplane action")
 	}
