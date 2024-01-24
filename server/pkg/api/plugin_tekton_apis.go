@@ -84,7 +84,7 @@ func (s *Server) UnRegisterTektonProject(ctx context.Context, request *captenplu
 	}, nil
 }
 
-func (s *Server) GetTektonProjects(ctx context.Context, request *captenpluginspb.GetTektonProjectRequest) (
+func (s *Server) GetTektonProject(ctx context.Context, request *captenpluginspb.GetTektonProjectRequest) (
 	*captenpluginspb.GetTektonProjectResponse, error) {
 	orgId, clusterId, err := validateOrgClusterWithArgs(ctx)
 	if err != nil {

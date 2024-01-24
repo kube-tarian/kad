@@ -3,6 +3,8 @@ CREATE TABLE TektonPipelines (
     pipeline_name TEXT,
     git_org_id UUID,
     container_registry_id set<UUID>,
+    managed_cluster_id UUID,
+    crossplane_git_project_id UUID,
     status TEXT,
     last_update_time TEXT,
     workflow_id TEXT,

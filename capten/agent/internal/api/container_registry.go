@@ -82,9 +82,10 @@ func (a *Agent) UpdateContainerRegistry(ctx context.Context, request *captenplug
 	}
 
 	ContainerRegistry := captenpluginspb.ContainerRegistry{
-		Id:          id.String(),
-		RegistryUrl: request.RegistryUrl,
-		Labels:      request.Labels,
+		Id:           id.String(),
+		RegistryUrl:  request.RegistryUrl,
+		Labels:       request.Labels,
+		RegistryType: request.RegistryType,
 	}
 
 	if err := a.as.UpsertContainerRegistry(&ContainerRegistry); err != nil {

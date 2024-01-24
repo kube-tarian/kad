@@ -15,10 +15,10 @@ type ArgoCDClient struct {
 	client apiclient.Client
 }
 
-func NewClient(logger logging.Logger) (*ArgoCDClient, error) {
+func GetConfig(logger logging.Logger) (*Configuration, error) {
 	cfg := &Configuration{}
 	err := envconfig.Process("", cfg)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 
@@ -27,20 +27,33 @@ func NewClient(logger logging.Logger) (*ArgoCDClient, error) {
 		return nil, err
 	}
 
-	res, err := k8sClient.GetSecretData("argo-cd", "argocd-initial-admin-secret")
-	if err != nil {
-		return nil, err
+	if cfg.Password == "" {
+		res, err := k8sClient.GetSecretData("argo-cd", "argocd-initial-admin-secret")
+		if err != nil {
+			return nil, err
+		}
+
+		password := res.Data["password"]
+		if len(password) == 0 {
+			return nil, fmt.Errorf("argo-cd credentials not found in the secret")
+		}
+
+		cfg.Password = password
+
 	}
 
-	password := res.Data["password"]
-	if len(password) == 0 {
-		return nil, fmt.Errorf("credentials not found in the secret")
-	}
-
-	cfg.Password = password
-	if cfg.IsSSLEnabled {
+	if !cfg.IsSSLEnabled {
 		// TODO: Configure SSL certificates
 		logger.Errorf("SSL not yet supported, continuing with insecure verify true")
+	}
+
+	return cfg, nil
+}
+
+func NewClient(logger logging.Logger) (*ArgoCDClient, error) {
+	cfg, err := GetConfig(logger)
+	if err != nil {
+		return nil, err
 	}
 
 	client, err := getNewAPIClient(cfg)

@@ -441,7 +441,9 @@ message TektonPipelines {
     string status = 4;
     string gitOrgId = 5;
     repeated string containerRegistryIds = 6;
-    string lastUpdateTime = 7;
+    string managedClusterId = 7;
+    string crossPlaneGitProjectId = 8;
+    string lastUpdateTime = 9;
 }
 
 message GetTektonPipelinesRequest {
@@ -458,6 +460,8 @@ message CreateTektonPipelineRequest {
     string pipelineName = 1;
     string gitOrgId = 2;
     repeated string containerRegistryIds = 3;
+    string managedClusterId = 4;
+    string crossPlaneGitProjectId = 5;
 }
 
 message CreateTektonPipelineResponse {
@@ -470,6 +474,8 @@ message UpdateTektonPipelineRequest {
     string id = 1;
     string gitOrgId = 2;
     repeated string containerRegistryIds = 3;
+    string managedClusterId = 4;
+    string crossPlaneGitProjectId = 5;
 }
 
 message UpdateTektonPipelineResponse {

@@ -52,7 +52,7 @@ func createDirAndFiles(t *testing.T) string {
 	retDir := dir
 	dir = filepath.Join(dir, pathInRepo)
 	params := &model.CrossplaneUseCase{CrossplaneProviders: dummyProviderInfo()}
-	app := CrossPlaneApp{pluginConfig: &crossplanePluginConfig{ProviderPackages: configMap}}
+	app := CrossPlaneApp{pluginConfig: &CrossplanePluginConfig{ProviderPackages: configMap}}
 	if err := app.createProviderConfigs(dir, params); err != nil {
 		t.Fatal(err)
 	}

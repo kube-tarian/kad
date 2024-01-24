@@ -12,7 +12,9 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
+	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
 	appconfig "github.com/kube-tarian/kad/capten/config-worker/internal/app_config"
+	"github.com/kube-tarian/kad/capten/config-worker/internal/crossplane"
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
 	"github.com/otiai10/copy"
@@ -22,23 +24,33 @@ import (
 )
 
 var (
-	secrets           = []string{"gitcred", "docker-credentials", "github-webhook-secret"}
+	gitCred           = "gitcred"
+	dockerCred        = "docker-credentials"
+	githubWebhook     = "github-webhook-secret"
+	argoCred          = "argocd"
+	extraConfig       = "extraconfig"
+	secrets           = []string{gitCred, dockerCred, githubWebhook, argoCred, extraConfig}
 	pipelineNamespace = "tekton-pipelines"
 	tektonChildTasks  = []string{"tekton-cluster-tasks"}
 	addPipeline       = "add"
 	deletePipeline    = "delete"
 	mainAppName       = "tekton-apps"
+	cosignEntityName  = "cosign"
+	cosignVaultId     = "signer"
+	cosignSecName     = "cosign-keys"
 )
 
 type Config struct {
-	PluginConfigFile string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
-	DomainName       string `envconfig:"DOMAIN_NAME" default:"capten"`
+	PluginConfigFile     string `envconfig:"TEKTON_PLUGIN_CONFIG_FILE" default:"/tekton_plugin_config.json"`
+	CrossplaneConfigFile string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
+	DomainName           string `envconfig:"DOMAIN_NAME" default:"capten"`
 }
 
 type TektonApp struct {
-	helper       *appconfig.AppGitConfigHelper
-	pluginConfig *tektonPluginConfig
-	cfg          Config
+	helper          *appconfig.AppGitConfigHelper
+	pluginConfig    *tektonPluginConfig
+	crossplanConfig *crossplane.CrossplanePluginConfig
+	cfg             Config
 }
 
 func NewTektonApp() (*TektonApp, error) {
@@ -56,7 +68,12 @@ func NewTektonApp() (*TektonApp, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &TektonApp{pluginConfig: pluginConfig, helper: helper, cfg: cfg}, err
+
+	crossplaneConfig, err := crossplane.ReadCrossPlanePluginConfig(cfg.CrossplaneConfigFile)
+	if err != nil {
+		return nil, err
+	}
+	return &TektonApp{pluginConfig: pluginConfig, helper: helper, cfg: cfg, crossplanConfig: crossplaneConfig}, err
 }
 
 func readTektonPluginConfig(pluginFile string) (*tektonPluginConfig, error) {
@@ -75,13 +92,13 @@ func readTektonPluginConfig(pluginFile string) (*tektonPluginConfig, error) {
 
 func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.TektonPipelineUseCase) (status string, err error) {
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
-	templateRepo, err := cp.helper.CloneTemplateRepo(ctx, cp.pluginConfig.TemplateGitRepo, req.GitCredId)
+	templateRepo, err := cp.helper.CloneTemplateRepo(ctx, cp.pluginConfig.TemplateGitRepo, req.CredentialIdentifiers[agentmodel.Git].Id)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
 	defer os.RemoveAll(templateRepo)
 
-	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.GitCredId)
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.CredentialIdentifiers[agentmodel.Git].Id)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
@@ -138,7 +155,7 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 
 func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.TektonPipelineUseCase) (status string, err error) {
 	logger.Infof("cloning user repo %s", req.RepoURL)
-	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.GitCredId)
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.CredentialIdentifiers[agentmodel.Git].Id)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
@@ -269,45 +286,96 @@ func (cp *TektonApp) syncArgoCDChildApps(ctx context.Context, namespace string, 
 }
 
 func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.TektonPipelineUseCase) error {
-	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
+	log := logging.NewLogger()
+	k8sclient, err := k8s.NewK8SClient(log)
 	if err != nil {
 		return fmt.Errorf("failed to initalize k8s client, %v", err)
 	}
 
 	k8sclient.Clientset.CoreV1().Namespaces().Create(ctx, &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: pipelineNamespace}}, metav1.CreateOptions{})
 
+	// One time activity
+	key, pub, err := cp.helper.GetCosingKeys(ctx, cosignEntityName, cosignVaultId)
+	if err != nil {
+		return fmt.Errorf("failed to get cosign keys from vault, %v", err)
+	}
+
+	if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, cosignSecName,
+		v1.SecretTypeOpaque, map[string][]byte{"COSIGN_KEY": []byte(key), "COSIGN_PUB": []byte(pub)},
+		map[string]string{}); err != nil {
+		return fmt.Errorf("failed to create/update cosign-keys k8s secret, %v", err)
+	}
+
 	for _, secret := range secrets {
 		strdata := make(map[string][]byte)
-		if secret == "docker-credentials" {
-			// multiple reg needs to be verifed
-			for id, url := range req.ContainerRegUrlIdMap {
-				username, password, err := cp.helper.GetContainerRegCreds(ctx, req.ContainerRegCredIdentifier, id)
-				if err != nil {
-					return fmt.Errorf("failed to get docker cfg secret, %v", err)
-				}
-
-				data, err := handleDockerCfgJSONContent(username, password, url)
-				if err != nil {
-					return fmt.Errorf("failed to get docker cfg secret, %v", err)
-				}
-				strdata[".dockerconfigjson"] = data
-				strdata["config.json"] = data
-				if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName,
-					v1.SecretTypeDockerConfigJson, strdata, map[string]string{}); err != nil {
-					return fmt.Errorf("failed to create/update k8s secret, %v", err)
-				}
+		secName := secret + "-" + req.PipelineName
+		switch secret {
+		case dockerCred:
+			username, password, err := cp.helper.GetContainerRegCreds(ctx,
+				req.CredentialIdentifiers[agentmodel.Container].Identifier, req.CredentialIdentifiers[agentmodel.Container].Id)
+			if err != nil {
+				return fmt.Errorf("failed to get docker cfg secret, %v", err)
 			}
-		} else {
-			username, token, err := cp.helper.GetGitCreds(ctx, req.GitCredId)
+
+			data, err := handleDockerCfgJSONContent(username, password, req.CredentialIdentifiers[agentmodel.Container].Url)
+			if err != nil {
+				return fmt.Errorf("failed to get docker cfg secret, %v", err)
+			}
+			strdata[".dockerconfigjson"] = data
+			strdata["config.json"] = data
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
+				v1.SecretTypeDockerConfigJson, strdata, map[string]string{}); err != nil {
+				return fmt.Errorf("failed to create/update k8s secret, %v", err)
+			}
+
+		case gitCred, githubWebhook:
+			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.Git].Id)
 			if err != nil {
 				return fmt.Errorf("failed to get git secret, %v", err)
 			}
 			strdata["username"] = []byte(username)
 			strdata["password"] = []byte(token)
-			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName,
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
 				v1.SecretTypeBasicAuth, strdata, nil); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
+		case argoCred:
+			cfg, err := argocd.GetConfig(log)
+			if err != nil {
+				return fmt.Errorf("failed to get argo-cd secret, %v", err)
+			}
+			strdata["SERVER_URL"] = []byte(cfg.ServiceURL)
+			strdata["USERNAME"] = []byte(cfg.Username)
+			strdata["PASSWORD"] = []byte(cfg.Password)
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
+				v1.SecretTypeOpaque, strdata, map[string]string{}); err != nil {
+				return fmt.Errorf("failed to create/update k8s secret, %v", err)
+			}
+		case extraConfig:
+			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.ExtraGitProject].Id)
+			if err != nil {
+				return fmt.Errorf("failed to get git secret, %v", err)
+			}
+
+			kubeConfig, kubeCa, kubeEndpoint, err := cp.helper.GetClusterCreds(ctx, req.CredentialIdentifiers[agentmodel.ManagedCluster].Identifier, req.CredentialIdentifiers[agentmodel.ManagedCluster].Id)
+			if err != nil {
+				return fmt.Errorf("failed to get GetClusterCreds, %v", err)
+			}
+			strdata["GIT_USER_NAME"] = []byte(username)
+			strdata["GIT_TOKEN"] = []byte(token)
+			strdata["GIT_PROJECT_URL"] = []byte(req.CredentialIdentifiers[agentmodel.ExtraGitProject].Url)
+			strdata["APP_CONFIG_PATH"] = []byte(filepath.Join(cp.crossplanConfig.ClusterEndpointUpdates.DefaultAppValuesPath, req.CredentialIdentifiers[agentmodel.ManagedCluster].Url))
+			strdata["CLUSTER_CA"] = []byte(kubeCa)
+			strdata["CLUSTER_ENDPOINT"] = []byte(kubeEndpoint)
+			strdata["CLUSTER_CONFIG"] = []byte(kubeConfig)
+
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
+				v1.SecretTypeOpaque, strdata, nil); err != nil {
+				return fmt.Errorf("failed to create/update k8s secret, %v", err)
+			}
+
+		default:
+			return fmt.Errorf("secret step: %s type not found", secret)
 		}
 	}
 

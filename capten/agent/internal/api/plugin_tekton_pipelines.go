@@ -18,7 +18,8 @@ var (
 
 func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenpluginspb.CreateTektonPipelineRequest) (
 	*captenpluginspb.CreateTektonPipelineResponse, error) {
-	if err := validateArgs(request.PipelineName, request.GitOrgId, request.ContainerRegistryIds); err != nil {
+	if err := validateArgs(request.PipelineName, request.GitOrgId, request.ContainerRegistryIds,
+		request.ManagedClusterId, request.CrossPlaneGitProjectId); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
@@ -44,10 +45,37 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 
 	tektonAvailable, err := a.as.GetTektonProjectForID(request.GitOrgId)
 	if err != nil {
-		a.log.Infof("faile to get git project %s, %v", request.GitOrgId, err)
+		a.log.Infof("failed to get git project %s, %v", request.GitOrgId, err)
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
+		}, nil
+	}
+
+	_, err = a.as.GetContainerRegistryForID(request.ContainerRegistryIds[0])
+	if err != nil {
+		a.log.Infof("failed to get container registry %s, %v", request.ContainerRegistryIds[0], err)
+		return &captenpluginspb.CreateTektonPipelineResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "failed to get container registry",
+		}, nil
+	}
+
+	_, err = a.as.GetCrossplaneProjectForID(request.CrossPlaneGitProjectId)
+	if err != nil {
+		a.log.Infof("failed to get crossplane git project %s, %v", request.CrossPlaneGitProjectId, err)
+		return &captenpluginspb.CreateTektonPipelineResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "failed to get crossplane git project",
+		}, nil
+	}
+
+	_, err = a.as.GetManagedClusterForID(request.ManagedClusterId)
+	if err != nil {
+		a.log.Infof("failed to get managedCluster id %s, %v", request.ManagedClusterId, err)
+		return &captenpluginspb.CreateTektonPipelineResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "failed to get managedCluster id",
 		}, nil
 	}
 
@@ -56,11 +84,14 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 	id := uuid.New()
 
 	TektonPipeline := model.TektonPipeline{
-		Id:             id.String(),
-		PipelineName:   request.PipelineName,
-		GitProjectId:   tektonAvailable.GitProjectId,
-		ContainerRegId: request.ContainerRegistryIds,
+		Id:                     id.String(),
+		PipelineName:           request.PipelineName,
+		GitProjectId:           tektonAvailable.GitProjectId,
+		ContainerRegId:         request.ContainerRegistryIds,
+		ManagedClusterId:       request.ManagedClusterId,
+		CrossplaneGitProjectId: request.CrossPlaneGitProjectId,
 	}
+
 	if err := a.as.UpsertTektonPipelines(&TektonPipeline); err != nil {
 		a.log.Errorf("failed to store create pipeline req %s to DB, %v", request.PipelineName, err)
 		return &captenpluginspb.CreateTektonPipelineResponse{
@@ -93,13 +124,42 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 
 func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenpluginspb.UpdateTektonPipelineRequest) (
 	*captenpluginspb.UpdateTektonPipelineResponse, error) {
-	if err := validateArgs(request.GitOrgId, request.Id, request.ContainerRegistryIds); err != nil {
+	if err := validateArgs(request.GitOrgId, request.Id, request.ContainerRegistryIds,
+		request.ManagedClusterId, request.CrossPlaneGitProjectId); err != nil {
 		a.log.Infof("request validation failed", err)
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
 	}
+
+	_, err := a.as.GetContainerRegistryForID(request.ContainerRegistryIds[0])
+	if err != nil {
+		a.log.Infof("failed to get container registry %s, %v", request.ContainerRegistryIds[0], err)
+		return &captenpluginspb.UpdateTektonPipelineResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "failed to get container registry",
+		}, nil
+	}
+
+	_, err = a.as.GetCrossplaneProjectForID(request.CrossPlaneGitProjectId)
+	if err != nil {
+		a.log.Infof("failed to get crossplane git project %s, %v", request.CrossPlaneGitProjectId, err)
+		return &captenpluginspb.UpdateTektonPipelineResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "failed to get crossplane git project",
+		}, nil
+	}
+
+	_, err = a.as.GetManagedClusterForID(request.ManagedClusterId)
+	if err != nil {
+		a.log.Infof("failed to get managedCluster id %s, %v", request.ManagedClusterId, err)
+		return &captenpluginspb.UpdateTektonPipelineResponse{
+			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "failed to get managedCluster id",
+		}, nil
+	}
+
 	a.log.Infof("Update tekton pipelines project, %s request recieved", request.Id)
 
 	id, err := uuid.Parse(request.Id)
@@ -165,6 +225,7 @@ func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb
 		r.WebhookURL = "https://" + model.TektonHostName + "." + a.cfg.DomainName + "/" + r.PipelineName
 		p := &captenpluginspb.TektonPipelines{Id: r.Id, PipelineName: r.PipelineName,
 			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
+			ManagedClusterId: r.ManagedClusterId, CrossPlaneGitProjectId: r.CrossplaneGitProjectId,
 			ContainerRegistryIds: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime}
 		pipeline[index] = p
 	}
@@ -248,13 +309,31 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, actio
 		a.log.Errorf("failed to send event to workflow to configure, %v", err)
 		return "", fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitProjectId, err)
 	}
+
+	extraGitProject, err := a.as.GetCrossplaneProjectForID(req.CrossplaneGitProjectId)
+	if err != nil {
+		a.log.Infof("failed to get crossplane git project %s, %v", req.CrossplaneGitProjectId, err)
+		return "", fmt.Errorf("failed to get crossplane git project %s, %v", req.CrossplaneGitProjectId, err)
+	}
+
+	managedCluster, err := a.as.GetManagedClusterForID(req.ManagedClusterId)
+	if err != nil {
+		a.log.Infof("failed to get managed clsuter %s, %v", req.ManagedClusterId, err)
+		return "", fmt.Errorf("failed to get managed clsuter  %s, %v", req.ManagedClusterId, err)
+	}
+
 	containerRegURLIdMap := make(map[string]string)
 	containerRegURLIdMap[containerReg.Id] = containerReg.RegistryUrl
 
 	ci := captenmodel.TektonPipelineUseCase{Type: model.TektonPipelineConfigUseCase,
 		PipelineName: req.PipelineName, RepoURL: proj.ProjectUrl,
-		GitCredId: req.GitProjectId, ContainerRegUrlIdMap: containerRegURLIdMap,
-		ContainerRegCredIdentifier: containerRegEntityName, GitCredIdentifier: gitProjectEntityName}
+		CredentialIdentifiers: map[captenmodel.Identifiers]captenmodel.CredentialIdentifier{
+			captenmodel.Git: {Identifier: gitProjectEntityName, Id: req.GitProjectId},
+			captenmodel.Container: {Identifier: containerRegEntityName,
+				Id: req.ContainerRegId[0], Url: containerReg.RegistryUrl},
+			captenmodel.ManagedCluster:  {Identifier: ManagedClusterEntityName, Id: req.ManagedClusterId, Url: managedCluster.ClusterName},
+			captenmodel.ExtraGitProject: {Identifier: gitProjectEntityName, Id: req.CrossplaneGitProjectId, Url: extraGitProject.GitProjectUrl},
+		}}
 	wd := workers.NewConfig(a.tc, a.log)
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(),
