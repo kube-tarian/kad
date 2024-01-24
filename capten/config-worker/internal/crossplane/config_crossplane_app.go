@@ -123,6 +123,11 @@ func (cp *CrossPlaneApp) synchProviders(req *model.CrossplaneUseCase, templateDi
 	if err != nil {
 		return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
 	}
+
+	if err := cp.deleteProviderConfigs(reqRepo, req); err != nil {
+		return fmt.Errorf("failed to delete provider configs, %v", err)
+	}
+
 	return nil
 }
 
@@ -208,6 +213,15 @@ func (cp *CrossPlaneApp) createProviderConfigs(dir string, req *model.Crossplane
 			return fmt.Errorf("failed to write provider %s config to %s, %v", providerName, providerFile, err)
 		}
 		logger.Infof("crossplane provider %s config written to %s", providerName, providerFile)
+	}
+	return nil
+}
+
+func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.CrossplaneUseCase) error {
+	logger.Infof("processing %d crossplane providers to sync & delete provider configs", len(req.CrossplaneProviders))
+	fmt.Println("reqRepoDir =>", reqRepoDir)
+	for _, provider := range req.CrossplaneProviders {
+		fmt.Println("Provider name =>", provider.ProviderName)
 	}
 	return nil
 }
