@@ -256,15 +256,15 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 		}
 	}
 
-	if removedProviders > 0 {
-		if err := cp.helper.AddFilesToRepo([]string{"."}); err != nil {
-			return err
-		}
+	// if removedProviders > 0 {
+	// 	if err := cp.helper.AddFilesToRepo([]string{"."}); err != nil {
+	// 		return err
+	// 	}
 
-		if err = cp.helper.CommitRepoChanges(); err != nil {
-			return err
-		}
-	}
+	// 	if err = cp.helper.CommitRepoChanges(); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
