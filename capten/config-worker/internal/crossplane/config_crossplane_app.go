@@ -109,6 +109,7 @@ func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model
 }
 
 func (cp *CrossPlaneApp) synchProviders(req *model.CrossplaneUseCase, templateDir, reqRepo string) error {
+
 	if err := cp.deleteProviderConfigs(reqRepo, req); err != nil {
 		return fmt.Errorf("failed to delete provider configs, %v", err)
 	}
@@ -219,41 +220,51 @@ func (cp *CrossPlaneApp) createProviderConfigs(dir string, req *model.Crossplane
 
 func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.CrossplaneUseCase) error {
 	logger.Infof("processing %d crossplane providers to sync & delete provider configs", len(req.CrossplaneProviders))
-	fmt.Println("reqRepoDir =>", reqRepoDir)
-	fi, err := os.ReadDir(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath))
-	if err != nil {
-		return err
-	}
 
 	providerMap := map[string]agentmodel.CrossplaneProvider{}
 	for _, provider := range req.CrossplaneProviders {
 		providerMap[strings.ToLower(provider.ProviderName)] = provider
 	}
 
-	for _, v := range fi {
-		fmt.Println("file name => ", v.Name())
-		tsf := strings.TrimSuffix(v.Name(), "-provider.yaml")
-		fmt.Println("TrimSuffix => ", tsf)
+	removedProviders := 0
 
-		vv, ok := providerMap[tsf]
-		if ok {
-			println("provider available => ", vv.ProviderName)
-		} else {
-			println("provider not available => ", vv.ProviderName)
+	fi, err := os.ReadDir(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath))
+	if err != nil {
+		return err
+	}
+
+	for _, file := range fi {
+		provider := strings.TrimSuffix(file.Name(), "-provider.yaml")
+
+		_, ok := providerMap[provider]
+		if !ok {
+			providerRepoFilePath := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", provider))
+
+			logger.Infof("removing the provider '%s' from git repo path %s", providerRepoFilePath, provider)
+
+			if err = cp.helper.RemoveFilesFromRepo([]string{providerRepoFilePath}); err != nil {
+				logger.Errorf("failed to remove from git repo", err)
+				continue
+			}
+
+			if err := os.Remove(providerRepoFilePath); err != nil {
+				logger.Errorf("failed to remove from the file", err)
+				continue
+			}
+
+			removedProviders++
 		}
 	}
 
-	// for _, provider := range req.CrossplaneProviders {
-	// 	providerName := strings.ToLower(provider.ProviderName)
-	// 	fmt.Println("Provider name =>", provider.ProviderName)
-	// 	file := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", providerName))
-	// 	fmt.Println("File name => ", file)
+	if removedProviders > 0 {
+		if err := cp.helper.AddFilesToRepo([]string{"."}); err != nil {
+			return err
+		}
 
-	// 	for _, v := range fi {
-	// 		fmt.Println("file name => ", v.Name())
-	// 		fmt.Println("Conteians => ", strings.Contains(v.Name(), providerName))
-	// 	}
-	// }
+		if err = cp.helper.CommitRepoChanges(); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
