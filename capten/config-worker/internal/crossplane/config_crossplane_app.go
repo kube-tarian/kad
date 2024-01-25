@@ -237,11 +237,9 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 
 		vv, ok := providerMap[tsf]
 		if ok {
-			println("provider available")
-			fmt.Println(vv.ProviderName)
+			println("provider available => ", vv.ProviderName)
 		} else {
-			println("provider not available")
-			fmt.Println(vv.ProviderName)
+			println("provider not available => ", vv.ProviderName)
 		}
 	}
 
