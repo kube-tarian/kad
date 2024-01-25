@@ -240,7 +240,7 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 		if !ok {
 			providerRepoFilePath := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", provider))
 
-			logger.Infof("removing the provider '%s' from git repo path %s", providerRepoFilePath, provider)
+			logger.Infof("removing the provider '%s' from git repo path %s", provider, providerRepoFilePath)
 
 			if err = cp.helper.RemoveFilesFromRepo([]string{providerRepoFilePath}); err != nil {
 				logger.Errorf("failed to remove from git repo", err)

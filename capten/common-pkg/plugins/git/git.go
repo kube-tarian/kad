@@ -1,6 +1,7 @@
 package git
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -126,6 +127,10 @@ func (g *GitClient) IsEmptyChanges() (bool, error) {
 	if err != nil {
 		return false, err
 	}
+
+	x, _ := json.Marshal(status)
+	fmt.Println("Git tree")
+	fmt.Println(string(x))
 
 	if status.IsClean() || len(status) == 0 {
 		return true, errors.New("no commit changes found")
