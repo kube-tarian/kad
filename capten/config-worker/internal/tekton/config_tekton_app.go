@@ -374,6 +374,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			strdata["CLUSTER_CA"] = []byte(kubeCa)
 			strdata["CLUSTER_ENDPOINT"] = []byte(kubeEndpoint)
 			strdata["CLUSTER_CONFIG"] = []byte(kubeConfig)
+			strdata["CLUSTER_NAME"] = []byte(req.CredentialIdentifiers[agentmodel.ManagedCluster].Url)
 
 			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
 				v1.SecretTypeOpaque, strdata, nil); err != nil {
