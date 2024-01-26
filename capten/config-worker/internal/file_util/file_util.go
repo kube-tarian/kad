@@ -2,8 +2,6 @@ package fileutil
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
 	"html/template"
 	"io"
 	"os"
@@ -76,17 +74,14 @@ func UpdateFilesInFolderWithTempaltes(folderPath string, templateValues map[stri
 		return err
 	}
 
-	fmt.Println("files ")
-	fmt.Println(files)
 	for _, file := range files {
 
 		if file.IsDir() {
 			continue
 		}
+
 		filePath := filepath.Join(folderPath, file.Name())
 
-		fmt.Println("before calling UpdateFileWithTempaltes")
-		fmt.Println(file.Name())
 		err := UpdateFileWithTempaltes(filePath, templateValues)
 		if err != nil {
 			return err
@@ -101,18 +96,10 @@ func UpdateFileWithTempaltes(filePath string, templateValues map[string]string) 
 		return err
 	}
 
-	fmt.Println("File path => ", filePath)
-	fmt.Println("template valaues")
-	x, _ := json.Marshal(templateValues)
-	fmt.Println(string(x))
-
 	newContent, err := applyTemplate(string(content), templateValues)
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("newContent")
-	fmt.Println(newContent)
 
 	if err := os.WriteFile(filePath, []byte(newContent), os.ModePerm); err != nil {
 		return err
