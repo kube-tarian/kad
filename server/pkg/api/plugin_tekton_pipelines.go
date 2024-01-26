@@ -42,7 +42,7 @@ func (s *Server) GetTektonPipelines(ctx context.Context, request *captenpluginsp
 	return &captenpluginspb.GetTektonPipelinesResponse{
 		Pipelines:     pieplines.Pipelines,
 		Status:        captenpluginspb.StatusCode_OK,
-		StatusMessage: "get  tekton pipelines successful",
+		StatusMessage: "get tekton pipelines successful",
 	}, nil
 }
 
