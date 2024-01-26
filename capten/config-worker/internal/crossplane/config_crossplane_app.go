@@ -226,8 +226,6 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 		providerMap[strings.ToLower(provider.ProviderName)] = provider
 	}
 
-	removedProviders := 0
-
 	fi, err := os.ReadDir(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath))
 	if err != nil {
 		return err
@@ -251,20 +249,8 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 				logger.Errorf("failed to remove from git repo", err)
 				continue
 			}
-
-			removedProviders++
 		}
 	}
-
-	// if removedProviders > 0 {
-	// 	if err := cp.helper.AddFilesToRepo([]string{"."}); err != nil {
-	// 		return err
-	// 	}
-
-	// 	if err = cp.helper.CommitRepoChanges(); err != nil {
-	// 		return err
-	// 	}
-	// }
 
 	return nil
 }
