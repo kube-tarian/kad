@@ -11,9 +11,11 @@ import (
 	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/git"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v2"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
 )
@@ -26,8 +28,9 @@ const (
 	kubeConfig                     = "kubeconfig"
 	k8sEndpoint                    = "endpoint"
 	k8sClusterCA                   = "clusterCA"
-	cosignKey                      = "cosign.key"
-	cosignPub                      = "cosign.pub"
+	CosignKey                      = "cosign.key"
+	CosignPub                      = "cosign.pub"
+	DomainName                     = "DomainName"
 )
 
 type Config struct {
@@ -90,6 +93,26 @@ func (ca *AppGitConfigHelper) GetClusterCreds(ctx context.Context, entityName, p
 	}
 
 	return cred[kubeConfig], cred[k8sClusterCA], cred[k8sEndpoint], nil
+}
+
+func (ca *AppGitConfigHelper) GetClusterGlobalValues(ctx context.Context, val map[string]string) (map[string]string, error) {
+	cred, err := credential.GetClusterGlobalValues(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var gvMap map[string]interface{}
+
+	decoder := yaml.NewDecoder(strings.NewReader(cred))
+	if err := decoder.Decode(&gvMap); err != nil {
+		return nil, err
+	}
+
+	for key, value := range gvMap {
+		val[key] = value.(string)
+	}
+
+	return val, nil
 }
 
 func (ca *AppGitConfigHelper) GetCosingKeys(ctx context.Context, entityName, projectId string) (string, string, error) {
