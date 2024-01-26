@@ -123,8 +123,14 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updateArgoCDTemplate")
 	}
 
+	gloablVal, err := cp.helper.GetClusterGlobalValues(ctx, map[string]string{
+		appconfig.DomainName: cp.cfg.DomainName})
+	if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get clusetr gloablValues")
+	}
+
 	err = updatePipelineTemplate(filepath.Join(customerRepo,
-		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName, cp.cfg.DomainName)
+		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName, gloablVal["DomainName"])
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updatePipelineTemplate")
 	}
@@ -364,7 +370,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			strdata["GIT_USER_NAME"] = []byte(username)
 			strdata["GIT_TOKEN"] = []byte(token)
 			strdata["GIT_PROJECT_URL"] = []byte(req.CredentialIdentifiers[agentmodel.ExtraGitProject].Url)
-			strdata["APP_CONFIG_PATH"] = []byte(filepath.Join(cp.crossplanConfig.ClusterEndpointUpdates.DefaultAppValuesPath, req.CredentialIdentifiers[agentmodel.ManagedCluster].Url))
+			strdata["APP_CONFIG_PATH"] = []byte(filepath.Join(cp.crossplanConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.CredentialIdentifiers[agentmodel.ManagedCluster].Url, "apps"))
 			strdata["CLUSTER_CA"] = []byte(kubeCa)
 			strdata["CLUSTER_ENDPOINT"] = []byte(kubeEndpoint)
 			strdata["CLUSTER_CONFIG"] = []byte(kubeConfig)
@@ -512,10 +518,8 @@ func updatePipelineTemplate(valuesFileName, pipelineName, domainName string) err
 		return err
 	}
 
-	// GET dashboard and ingress domain suffix.
-	tektonPipelineConfig.IngressDomainName = model.TektonHostName + "." + domainName
+	tektonPipelineConfig.IngressDomainName = domainName
 	tektonPipelineConfig.PipelineName = pipelineName
-	tektonPipelineConfig.TektonDashboard = "http://" + tektonPipelineConfig.IngressDomainName
 	secretName := []SecretNames{}
 
 	for _, secret := range secrets {
