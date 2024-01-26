@@ -14,13 +14,18 @@ type clusterUpdateConfig struct {
 	ClusterDefaultAppValuesPath string `json:"clusterDefaultAppValuesPath"`
 }
 
+type providerUpdateConfig struct {
+	SyncAppPath string `json:"syncAppPath"`
+}
+
 type CrossplanePluginConfig struct {
-	TemplateGitRepo          string              `json:"templateGitRepo"`
-	CrossplaneConfigSyncPath string              `json:"crossplaneConfigSyncPath"`
-	ProviderConfigSyncPath   string              `json:"providerConfigSyncPath"`
-	ProviderPackages         map[string]string   `json:"providerPackages"`
-	ArgoCDApps               []appConfig         `json:"argoCDApps"`
-	ClusterEndpointUpdates   clusterUpdateConfig `json:"clusterUpdateConfig"`
+	TemplateGitRepo          string               `json:"templateGitRepo"`
+	CrossplaneConfigSyncPath string               `json:"crossplaneConfigSyncPath"`
+	ProviderConfigSyncPath   string               `json:"providerConfigSyncPath"`
+	ProviderPackages         map[string]string    `json:"providerPackages"`
+	ArgoCDApps               []appConfig          `json:"argoCDApps"`
+	ClusterEndpointUpdates   clusterUpdateConfig  `json:"clusterUpdateConfig"`
+	ProviderEndpointUpdates  providerUpdateConfig `json:"providerUpdate"`
 }
 
 const (
@@ -155,4 +160,23 @@ spec:
       key: %s
       property: nats
   `
+	cosignVaultExternalSecret = `
+  apiVersion: external-secrets.io/v1beta1
+  kind: ExternalSecret
+  metadata:
+    name: vault-cosign-external
+    namespace: %s
+  spec:
+    refreshInterval: "10s"
+    secretStoreRef:
+      name: vault-store
+      kind: SecretStore
+    target:
+      name: vault-cosign-secret
+    data:
+    - secretKey: cosign.pub
+      remoteRef:
+        key: %s
+        property: cosign.pub
+    `
 )

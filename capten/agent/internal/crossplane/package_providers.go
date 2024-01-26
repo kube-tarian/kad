@@ -208,8 +208,8 @@ func (h *ProvidersSyncHandler) triggerProviderUpdate(clusterName string, provide
 	if err != nil {
 		return err
 	}
-	ci := model.CrossplaneClusterUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId,
-		ManagedClusterName: clusterName, ManagedClusterId: provider.Id}
+	ci := model.CrossplaneProviderUpdate{RepoURL: proj.GitProjectUrl, GitProjectId: proj.GitProjectId, ProviderId: provider.Id,
+		ProviderName: provider.ProviderName, CloudType: provider.CloudType}
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(), &model.ConfigureParameters{Resource: model.CrossPlaneResource, Action: model.CrossPlaneProviderUpdate}, ci)
 	if err != nil {

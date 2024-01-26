@@ -54,6 +54,14 @@ type CredentialIdentifier struct {
 	Url        string `json:"Url,omitempty"`
 }
 
+type CrossplaneProviderUpdate struct {
+	ProviderId   string `json:"providerId,omitempty"`
+	ProviderName string `json:"providerName,omitempty"`
+	CloudType    string `json:"cloudType,omitempty"`
+	GitProjectId string `json:"gitProjectId,omitempty"`
+	RepoURL      string `json:"repoURL,omitempty"`
+}
+
 type TektonPipelineUseCase struct {
 	Type                  string                               `json:"Type,omitempty"`
 	RepoURL               string                               `json:"RepoURL,omitempty"`

@@ -1,27 +1,30 @@
 {
-    "templateGitRepo": "https://github.com/intelops/capten-templates",
-    "crossplaneConfigSyncPath": "infra",
-    "providerConfigSyncPath": "infra/crossplane/providers",
-    "providerPackages": {
-        "aws": "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0",
-        "gcp": "xpkg.upbound.io/crossplane-contrib/provider-gcp:v0.22.0"
+  "templateGitRepo": "https://github.com/intelops/capten-templates",
+  "crossplaneConfigSyncPath": "infra",
+  "providerConfigSyncPath": "infra/crossplane/providers",
+  "providerPackages": {
+    "aws": "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0",
+    "gcp": "xpkg.upbound.io/crossplane-contrib/provider-gcp:v0.22.0"
+  },
+  "clusterUpdateConfig": {
+    "mainAppGitPath": "infra/crossplane/crossplane-main-app.yaml",
+    "clusterValuesFile": "infra/clusters/argocd-apps/values.yaml",
+    "defaultAppListFile": "default-apps-templates/app_list.yaml",
+    "defaultAppValuesPath": "default-apps-templates/values",
+    "clusterDefaultAppValuesPath": "infra/clusters/app-configs"
+  },
+  "argoCDApps": [
+    {
+      "mainAppGitPath": "infra/crossplane/crossplane-main-app.yaml",
+      "childAppNames": ["crossplane-providers"],
+      "synchApp": true
     },
-    "clusterUpdateConfig":{
-        "mainAppGitPath": "infra/crossplane/crossplane-main-app.yaml",
-        "clusterValuesFile": "infra/clusters/argocd-apps/values.yaml",
-        "defaultAppListFile": "default-apps-templates/app_list.yaml",
-        "defaultAppValuesPath": "default-apps-templates/values",
-        "clusterDefaultAppValuesPath": "infra/clusters/app-configs"
-    },
-    "argoCDApps": [
-        {
-            "mainAppGitPath": "infra/crossplane/crossplane-main-app.yaml",
-            "childAppNames": ["crossplane-providers"],
-            "synchApp": true
-        },
-        {
-            "mainAppGitPath": "infra/clusters/clusters-main-app.yaml",
-            "synchApp": false
-        }
-    ]
+    {
+      "mainAppGitPath": "infra/clusters/clusters-main-app.yaml",
+      "synchApp": false
+    }
+  ],
+  "providerUpdate": {
+    "syncAppPath": "infra/crossplane/argocd-apps/templates/package-k8s"
+  }
 }

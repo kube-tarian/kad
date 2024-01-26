@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	clusterCredVaultPaths = map[string]string{"NATS": "generic/nats/auth-token"}
+	clusterCredVaultPaths = map[string]string{"NATS": "generic/nats/auth-token", "COSIGN": "generic/cosign/signer"}
 	natsNameSpace         = "observability"
+	cosignNameSpace       = "kyverno"
 	vaultAppRoleToken     = "vault-capten-token"
 	vaultAddress          = "http://vault.%s"
 	cluserAppRoleName     = "approle-%s"
@@ -37,6 +38,11 @@ func (cp *CrossPlaneApp) configureExternalSecretsOnCluster(ctx context.Context, 
 		return fmt.Errorf("failed to create cluter vault token secret, %v", err)
 	}
 
+	err = k8sclient.CreateOrUpdateSecret(ctx, cosignNameSpace, vaultAppRoleToken, v1.SecretTypeOpaque, cred, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create cluter vault token secret, %v", err)
+	}
+
 	vaultAddressStr := fmt.Sprintf(vaultAddress, cp.cfg.DomainName)
 	vaultStoreCRData := fmt.Sprintf(vaultStore, natsNameSpace, vaultAddressStr, vaultAppRoleToken)
 	ns, resource, err := k8sclient.DynamicClient.CreateResource(ctx, []byte(vaultStoreCRData))
@@ -47,6 +53,20 @@ func (cp *CrossPlaneApp) configureExternalSecretsOnCluster(ctx context.Context, 
 
 	natsVaultExternalSecretData := fmt.Sprintf(natsVaultExternalSecret, natsNameSpace, clusterCredVaultPaths["NATS"])
 	ns, resource, err = k8sclient.DynamicClient.CreateResource(ctx, []byte(natsVaultExternalSecretData))
+	if err != nil {
+		return fmt.Errorf("failed to create vault external secret, %v", err)
+	}
+	logger.Infof("create %s/%s on cluster cluster %s/%s", ns, resource, clusterName)
+
+	vaultStoreCRData = fmt.Sprintf(vaultStore, cosignNameSpace, vaultAddressStr, vaultAppRoleToken)
+	ns, resource, err = k8sclient.DynamicClient.CreateResource(ctx, []byte(vaultStoreCRData))
+	if err != nil {
+		return fmt.Errorf("failed to create cluter vault token secret, %v", err)
+	}
+	logger.Infof("create %s/%s on cluster cluster %s/%s", ns, resource, clusterName)
+
+	cosignVaultExternalSecretData := fmt.Sprintf(cosignVaultExternalSecret, cosignNameSpace, clusterCredVaultPaths["COSIGN"])
+	ns, resource, err = k8sclient.DynamicClient.CreateResource(ctx, []byte(cosignVaultExternalSecretData))
 	if err != nil {
 		return fmt.Errorf("failed to create vault external secret, %v", err)
 	}
