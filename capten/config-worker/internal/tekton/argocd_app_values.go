@@ -45,7 +45,6 @@ type TektonConfigValues struct {
 type TektonPieplineConfigValues struct {
 	PipelineName      string         `json:"pipelineName,omitempty"`
 	IngressDomainName string         `json:"ingressDomainName,omitempty"`
-	TektonDashboard   string         `json:"tektonDashboard,omitempty"`
 	Namespace         string         `json:"namespace,omitempty"`
 	SecretName        *[]SecretNames `json:"secretName,omitempty"`
 }

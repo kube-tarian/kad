@@ -252,24 +252,30 @@ enum SecretAccess {
   WRITE = 1;  
 }
 
-message ConfigureVaultSecretRequest {
-  string secretPath = 1;
-  string namespace = 2;
-  string secretName = 3;
-  string managedClusterId = 4;
+message SecretPathRef {
+  string SecretPath = 1;
+  string SecretKey = 2;
 }
 
-message secretPolicy { 
+message ConfigureVaultSecretRequest {  
+  string secretName = 1;
+  string namespace = 2;
+  repeated SecretPathRef SecretPathData = 3;
+}
+
+message SecretPolicy { 
   string secretPath = 1;
   SecretAccess access = 2;
 }
 
 message ConfigureVaultSecretResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
 }
 
 message CreateVaultRoleRequest { 
   string roleName = 1;
-  repeated secretPolicy secretPolicy = 2;
+  repeated SecretPolicy secretPolicy = 2;
   string managedClusterId = 3;
 }
 
@@ -280,7 +286,7 @@ message CreateVaultRoleResponse {
 
 message UpdateVaultRoleRequest { 
   string roleName = 1;
-  repeated secretPolicy secretPolicy = 2;
+  repeated SecretPolicy secretPolicy = 2;
   string managedClusterId = 3;
 }
 

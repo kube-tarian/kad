@@ -206,12 +206,13 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 			managedCluster.ClusterDeployStatus = clusterNotReadyStatus
 		}
 
-		err = managedcluster.StoreClusterAccessData(context.Background(), clusterCliam.Metadata.Namespace, managedCluster.ClusterName, managedCluster.Id)
+		k8sEndpoint, err := managedcluster.StoreClusterAccessData(context.Background(), clusterCliam.Metadata.Namespace, managedCluster.ClusterName, managedCluster.Id)
 		if err != nil {
 			h.log.Errorf("failed to store cluster access data for %s, %v", managedCluster.Id, err)
 			continue
 		}
 
+		managedCluster.ClusterEndpoint = k8sEndpoint
 		err = h.dbStore.UpsertManagedCluster(managedCluster)
 		if err != nil {
 			h.log.Info("failed to update information to db, %v", err)
