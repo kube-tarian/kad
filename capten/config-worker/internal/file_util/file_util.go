@@ -79,6 +79,10 @@ func UpdateFilesInFolderWithTempaltes(folderPath string, templateValues map[stri
 	fmt.Println("files ")
 	fmt.Println(files)
 	for _, file := range files {
+
+		if file.IsDir() {
+			continue
+		}
 		filePath := filepath.Join(folderPath, file.Name())
 
 		fmt.Println("before calling UpdateFileWithTempaltes")
