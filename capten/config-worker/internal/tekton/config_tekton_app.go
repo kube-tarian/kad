@@ -372,9 +372,9 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			strdata["GIT_TOKEN"] = []byte("token")
 			strdata["GIT_PROJECT_URL"] = []byte(req.CredentialIdentifiers[agentmodel.ExtraGitProject].Url)
 			strdata["APP_CONFIG_PATH"] = []byte(filepath.Join(cp.crossplanConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.CredentialIdentifiers[agentmodel.ManagedCluster].Url, "apps"))
-			strdata["CLUSTER_CA"] = []byte(kubeCa)
-			strdata["CLUSTER_ENDPOINT"] = []byte(kubeEndpoint)
-			strdata["CLUSTER_CONFIG"] = []byte(kubeConfig)
+			strdata["CLUSTER_CA"] = []byte("kubeCa")
+			strdata["CLUSTER_ENDPOINT"] = []byte("kubeEndpoint")
+			strdata["CLUSTER_CONFIG"] = []byte("kubeConfig")
 			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
 				v1.SecretTypeOpaque, strdata, nil); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)

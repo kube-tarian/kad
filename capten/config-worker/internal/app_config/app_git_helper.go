@@ -130,7 +130,7 @@ func (ca *AppGitConfigHelper) GetCosingKeys(ctx context.Context, entityName, pro
 		return "", "", err
 	}
 
-	return cred[cosignKey], cred[cosignPub], nil
+	return cred["cosignKey"], cred["cosignPub"], nil
 }
 
 func (ca *AppGitConfigHelper) GetContainerRegCreds(ctx context.Context, entityName, projectId string) (string, string, error) {
