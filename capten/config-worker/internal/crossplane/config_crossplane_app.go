@@ -239,17 +239,16 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 		_, ok := providerMap[provider]
 		if !ok {
 			providerRepoFilePath := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", provider))
-
 			logger.Infof("removing the provider '%s' from git repo path %s", provider, providerRepoFilePath)
+
+			if err := os.Remove(providerRepoFilePath); err != nil {
+				logger.Errorf("failed to remove from the file", err)
+				continue
+			}
 
 			fileToDeleteInRepoPath := filepath.Join(".", cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", provider))
 			if err = cp.helper.RemoveFilesFromRepo([]string{fileToDeleteInRepoPath}); err != nil {
 				logger.Errorf("failed to remove from git repo", err)
-				continue
-			}
-
-			if err := os.Remove(providerRepoFilePath); err != nil {
-				logger.Errorf("failed to remove from the file", err)
 				continue
 			}
 
