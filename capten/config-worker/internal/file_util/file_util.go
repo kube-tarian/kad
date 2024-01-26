@@ -76,9 +76,13 @@ func UpdateFilesInFolderWithTempaltes(folderPath string, templateValues map[stri
 		return err
 	}
 
+	fmt.Println("files ")
+	fmt.Println(files)
 	for _, file := range files {
 		filePath := filepath.Join(folderPath, file.Name())
 
+		fmt.Println("before calling UpdateFileWithTempaltes")
+		fmt.Println(file.Name())
 		err := UpdateFileWithTempaltes(filePath, templateValues)
 		if err != nil {
 			return err
