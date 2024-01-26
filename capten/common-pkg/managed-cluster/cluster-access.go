@@ -20,16 +20,16 @@ const (
 
 var logger = logging.NewLogger()
 
-func StoreClusterAccessData(ctx context.Context, namespace, clusterName, clusterID string) error {
+func StoreClusterAccessData(ctx context.Context, namespace, clusterName, clusterID string) (string, error) {
 	k8sclient, err := k8s.NewK8SClient(logger)
 	if err != nil {
-		return fmt.Errorf("failed to get k8s client, %v", err)
+		return "", fmt.Errorf("failed to get k8s client, %v", err)
 	}
 
 	secretName := fmt.Sprintf(clusterSecretName, clusterName)
 	resp, err := k8sclient.GetSecretData(namespace, secretName)
 	if err != nil {
-		return fmt.Errorf("failed to get secret %s/%s, %v", namespace, secretName, err)
+		return "", fmt.Errorf("failed to get secret %s/%s, %v", namespace, secretName, err)
 	}
 
 	cred := map[string]string{}
@@ -39,10 +39,10 @@ func StoreClusterAccessData(ctx context.Context, namespace, clusterName, cluster
 
 	err = credential.PutGenericCredential(context.TODO(), managedClusterEntityName, clusterID, cred)
 	if err != nil {
-		return fmt.Errorf("failed to store cluster access data for cluster %s, %v", clusterID, err)
+		return "", fmt.Errorf("failed to store cluster access data for cluster %s, %v", clusterID, err)
 	}
 	logger.Infof("stored cluster access data for cluster %s", clusterID)
-	return nil
+	return resp.Data[k8sEndpoint], nil
 }
 
 func DeleteClusterAccessData(ctx context.Context, clusterID string) error {
