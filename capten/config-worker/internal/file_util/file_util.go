@@ -103,6 +103,9 @@ func UpdateFileWithTempaltes(filePath string, templateValues map[string]string) 
 		return err
 	}
 
+	fmt.Println("newContent")
+	fmt.Println(newContent)
+
 	if err := os.WriteFile(filePath, []byte(newContent), os.ModePerm); err != nil {
 		return err
 	}
