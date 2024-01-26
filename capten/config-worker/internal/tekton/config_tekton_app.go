@@ -130,7 +130,7 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 	}
 
 	err = updatePipelineTemplate(filepath.Join(customerRepo,
-		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName, gloablVal["DomainName"])
+		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName, gloablVal[appconfig.DomainName])
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updatePipelineTemplate")
 	}
@@ -307,7 +307,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 	}
 
 	if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, cosignSecName,
-		v1.SecretTypeOpaque, map[string][]byte{"COSIGN_KEY": []byte(key), "COSIGN_PUB": []byte(pub)},
+		v1.SecretTypeOpaque, map[string][]byte{appconfig.CosignKey: []byte(key), appconfig.CosignPub: []byte(pub)},
 		map[string]string{}); err != nil {
 		return fmt.Errorf("failed to create/update cosign-keys k8s secret, %v", err)
 	}
