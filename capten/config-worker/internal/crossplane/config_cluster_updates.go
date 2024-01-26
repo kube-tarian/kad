@@ -74,7 +74,7 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 
 	defaultAppValPath := filepath.Join(templateRepo, cp.pluginConfig.ClusterEndpointUpdates.DefaultAppValuesPath)
 	clusterDefaultAppValPath := filepath.Join(customerRepo,
-		cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName)
+		cp.pluginConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.ManagedClusterName, "default-app-values")
 	err = cp.syncDefaultAppVaules(req.ManagedClusterName, defaultAppValPath, clusterDefaultAppValPath)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync default app value files")
