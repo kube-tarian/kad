@@ -241,10 +241,10 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 
 			logger.Infof("removing the provider '%s' from git repo path %s", provider, providerRepoFilePath)
 
-			if err = cp.helper.RemoveFilesFromRepo([]string{providerRepoFilePath}); err != nil {
-				logger.Errorf("failed to remove from git repo", err)
-				continue
-			}
+			// if err = cp.helper.RemoveFilesFromRepo([]string{providerRepoFilePath}); err != nil {
+			// 	logger.Errorf("failed to remove from git repo", err)
+			// 	continue
+			// }
 
 			if err := os.Remove(providerRepoFilePath); err != nil {
 				logger.Errorf("failed to remove from the file", err)

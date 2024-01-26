@@ -75,6 +75,13 @@ func (g *GitClient) Commit(msg, name, email string) error {
 		return err
 	}
 
+	s, err := w.Status()
+	if err != nil {
+		fmt.Println("Errro while getting status => " + err.Error())
+	}
+	fmt.Println("Status")
+	fmt.Println(s.String())
+
 	_, err = w.Commit(msg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  name,
