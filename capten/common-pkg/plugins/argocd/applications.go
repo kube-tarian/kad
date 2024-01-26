@@ -30,7 +30,7 @@ func (a *ArgoCDClient) Create(req *model.CreteRequestPayload) (json.RawMessage, 
 						Namespace: req.Namespace,
 						Server:    "https://kubernetes.default.svc",
 					},
-					Source: v1alpha1.ApplicationSource{
+					Source: &v1alpha1.ApplicationSource{
 						RepoURL:        req.RepoURL,
 						Path:           req.ChartName,
 						TargetRevision: "HEAD",

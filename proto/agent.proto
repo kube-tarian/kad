@@ -274,9 +274,11 @@ message ConfigureVaultSecretResponse {
 }
 
 message CreateVaultRoleRequest { 
-  string roleName = 1;
-  repeated SecretPolicy secretPolicy = 2;
-  string managedClusterId = 3;
+  string managedClusterName = 1;
+  string roleName = 2;
+  repeated SecretPolicy secretPolicy = 3;
+  repeated string namespaces = 4;
+  repeated string serviceAccounts = 5;  
 }
 
 message CreateVaultRoleResponse { 
@@ -285,9 +287,11 @@ message CreateVaultRoleResponse {
 }
 
 message UpdateVaultRoleRequest { 
-  string roleName = 1;
-  repeated SecretPolicy secretPolicy = 2;
-  string managedClusterId = 3;
+  string managedClusterName = 1;
+  string roleName = 2;
+  repeated SecretPolicy secretPolicy = 3;
+  repeated string namespaces = 4;
+  repeated string serviceAccounts = 5;
 }
 
 message UpdateVaultRoleResponse { 

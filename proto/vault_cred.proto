@@ -15,7 +15,8 @@ service VaultCred {
   rpc CreateAppRoleToken(CreateAppRoleTokenRequest) returns (CreateAppRoleTokenResponse) {};
   rpc DeleteAppRole(DeleteAppRoleRequest) returns (DeleteAppRoleResponse) {};
   rpc GetCredentialWithAppRoleToken(GetCredentialWithAppRoleTokenRequest) returns (GetCredentialWithAppRoleTokenResponse) {};
-  rpc ConfigureClusterK8SAuth(ConfigureClusterK8SAuthRequest) returns (ConfigureClusterK8SAuthResponse) {};
+  rpc AddClusterK8SAuth(AddClusterK8SAuthRequest) returns (AddClusterK8SAuthResponse) {};
+  rpc DeleteClusterK8SAuth(DeleteClusterK8SAuthRequest) returns (DeleteClusterK8SAuthResponse) {};  
   rpc CreateK8SAuthRole(CreateK8SAuthRoleRequest) returns (CreateK8SAuthRoleResponse) {};
   rpc UpdateK8SAuthRole(UpdateK8SAuthRoleRequest) returns (UpdateK8SAuthRoleResponse) {};
   rpc DeleteK8SAuthRole(DeleteK8SAuthRoleRequest) returns (DeleteK8SAuthRoleResponse) {};
@@ -103,6 +104,8 @@ message CreateK8SAuthRoleRequest {
    string roleName = 1;
    repeated secretPolicy secretPolicy = 2;
    string clusterName = 3;
+   repeated string namespaces = 4;
+   repeated string serviceAccounts = 5;
 }
  
 message CreateK8SAuthRoleResponse { 
@@ -131,13 +134,23 @@ message DeleteK8SAuthRoleResponse {
    string statusMessage = 2;
 }
 
-message ConfigureClusterK8SAuthRequest {
-   string host = 1;
-	string caCert = 2;
-   bool enable = 3;
+message AddClusterK8SAuthRequest {
+   string clusterName = 1;
+   string host = 2;
+   string caCert = 3;
+   string jwtToken = 4;
 }
 
-message ConfigureClusterK8SAuthResponse {
+message AddClusterK8SAuthResponse {
+   StatusCode status = 1;
+   string statusMessage = 2;
+}
+
+message DeleteClusterK8SAuthRequest {
+   string clusterName = 1;
+}
+
+message DeleteClusterK8SAuthResponse {
    StatusCode status = 1;
    string statusMessage = 2;
 }

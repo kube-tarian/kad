@@ -17,6 +17,7 @@ import (
 
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	managedcluster "github.com/kube-tarian/kad/capten/common-pkg/managed-cluster"
+	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
 	"github.com/kube-tarian/kad/capten/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
@@ -218,6 +219,12 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 			h.log.Info("failed to update information to db, %v", err)
 			continue
 		}
+
+		err = vaultcred.RegisterClusterVaultAuth(managedCluster.Id, managedCluster.ClusterName)
+		if err != nil {
+			h.log.Info("failed to add cluster to vault auth, %v", err)
+		}
+
 		h.log.Infof("updated the cluster claim %s with status %s", managedCluster.ClusterName, managedCluster.ClusterDeployStatus)
 
 		if managedCluster.ClusterDeployStatus == clusterReadyStatus {
