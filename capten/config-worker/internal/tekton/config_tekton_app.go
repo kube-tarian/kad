@@ -130,7 +130,7 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 	}
 
 	err = updatePipelineTemplate(filepath.Join(customerRepo,
-		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName, gloablVal["DomainName"])
+		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName, gloablVal[appconfig.DomainName])
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updatePipelineTemplate")
 	}
