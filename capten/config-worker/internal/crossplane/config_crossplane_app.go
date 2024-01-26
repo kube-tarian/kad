@@ -13,7 +13,6 @@ import (
 	appconfig "github.com/kube-tarian/kad/capten/config-worker/internal/app_config"
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
-	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
 )
 
@@ -114,20 +113,20 @@ func (cp *CrossPlaneApp) synchProviders(req *model.CrossplaneUseCase, templateDi
 		return fmt.Errorf("failed to delete provider configs, %v", err)
 	}
 
-	err := cp.createProviderConfigs(filepath.Join(templateDir, cp.pluginConfig.ProviderConfigSyncPath), req)
-	if err != nil {
-		return fmt.Errorf("failed to create provider config, %v", err)
-	}
+	// err := cp.createProviderConfigs(filepath.Join(templateDir, cp.pluginConfig.ProviderConfigSyncPath), req)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to create provider config, %v", err)
+	// }
 
-	err = copy.Copy(filepath.Join(templateDir, cp.pluginConfig.CrossplaneConfigSyncPath),
-		filepath.Join(reqRepo, cp.pluginConfig.CrossplaneConfigSyncPath),
-		copy.Options{
-			OnDirExists: func(src, dest string) copy.DirExistsAction {
-				return copy.Replace
-			}})
-	if err != nil {
-		return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
-	}
+	// err = copy.Copy(filepath.Join(templateDir, cp.pluginConfig.CrossplaneConfigSyncPath),
+	// 	filepath.Join(reqRepo, cp.pluginConfig.CrossplaneConfigSyncPath),
+	// 	copy.Options{
+	// 		OnDirExists: func(src, dest string) copy.DirExistsAction {
+	// 			return copy.Replace
+	// 		}})
+	// if err != nil {
+	// 	return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
+	// }
 
 	return nil
 }
