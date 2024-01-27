@@ -108,7 +108,7 @@ func (a *Agent) ConfigureVaultSecret(ctx context.Context, request *agentpb.Confi
 
 	externalSecretName := "ext-secret-" + request.SecretName
 	err = k8sclient.CreateOrUpdateExternalSecret(ctx, externalSecretName, request.Namespace, secretStoreName,
-		request.SecretName, secretPathsData)
+		request.SecretName, "", secretPathsData)
 	if err != nil {
 		a.log.Errorf("failed to create vault external secret, %v", err)
 		return &agentpb.ConfigureVaultSecretResponse{Status: agentpb.StatusCode_INTERNRAL_ERROR}, err

@@ -17,8 +17,13 @@ type SecretStoreRef struct {
 	Kind string `yaml:"kind,omitempty"`
 }
 
+type ExternalSecretTargetTemplate struct {
+	Type string `yaml:"type,omitempty"`
+}
+
 type ExternalSecretTarget struct {
-	Name string `yaml:"name,omitempty"`
+	Name     string                       `yaml:"name,omitempty"`
+	Template ExternalSecretTargetTemplate `yaml:"template,omitempty"`
 }
 
 type ExternalSecretData struct {
@@ -119,7 +124,7 @@ func (k *K8SClient) CreateOrUpdateSecretStore(ctx context.Context, secretStoreNa
 }
 
 func (k *K8SClient) CreateOrUpdateExternalSecret(ctx context.Context, externalSecretName, namespace,
-	secretStoreRefName, secretName string, vaultKeyPathdata map[string]string) (err error) {
+	secretStoreRefName, secretName, secretType string, vaultKeyPathdata map[string]string) (err error) {
 	secretKeysData := []ExternalSecretData{}
 	for key, path := range vaultKeyPathdata {
 		secretKeyData := ExternalSecretData{
@@ -141,7 +146,8 @@ func (k *K8SClient) CreateOrUpdateExternalSecret(ctx context.Context, externalSe
 		Spec: ExternalSecretSpec{
 			RefreshInterval: "10s",
 			Target: ExternalSecretTarget{
-				Name: secretName},
+				Name:     secretName,
+				Template: ExternalSecretTargetTemplate{Type: secretType}},
 			SecretStoreRef: SecretStoreRef{
 				Name: secretStoreRefName,
 				Kind: "SecretStore",
