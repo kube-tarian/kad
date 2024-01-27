@@ -21,7 +21,7 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		return &captenpluginspb.RegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 
 	res, err := a.as.GetTektonPipeliness()
@@ -30,7 +30,7 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		return &captenpluginspb.RegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch TektonPipelines",
-		}, nil
+		}, err
 	}
 
 	pipelines := make([]*captenpluginspb.TektonPipelines, len(res))
@@ -61,7 +61,7 @@ func (a *Agent) UnRegisterTektonProject(ctx context.Context, request *captenplug
 		return &captenpluginspb.UnRegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 	a.log.Infof("UnRegister Tekton Git project %s request recieved", request.Id)
 

@@ -18,7 +18,7 @@ func (a *Agent) AddContainerRegistry(ctx context.Context, request *captenplugins
 		return &captenpluginspb.AddContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Add Container registry %s request received", request.RegistryUrl)
@@ -29,7 +29,7 @@ func (a *Agent) AddContainerRegistry(ctx context.Context, request *captenplugins
 		return &captenpluginspb.AddContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add Container registry credential in vault",
-		}, nil
+		}, err
 	}
 
 	ContainerRegistry := captenpluginspb.ContainerRegistry{
@@ -43,7 +43,7 @@ func (a *Agent) AddContainerRegistry(ctx context.Context, request *captenplugins
 		return &captenpluginspb.AddContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add Container registry in db",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Container registry %s added with id %s", request.RegistryUrl, id.String())
@@ -61,7 +61,7 @@ func (a *Agent) UpdateContainerRegistry(ctx context.Context, request *captenplug
 		return &captenpluginspb.UpdateContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 	a.log.Infof("Update container registry project %s, %s request recieved", request.RegistryUrl, request.Id)
 
@@ -71,14 +71,14 @@ func (a *Agent) UpdateContainerRegistry(ctx context.Context, request *captenplug
 		return &captenpluginspb.UpdateContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: fmt.Sprintf("invalid uuid: %s", request.Id),
-		}, nil
+		}, err
 	}
 
 	if err := a.storeContainerRegCredential(ctx, request.Id, request.RegistryAttributes); err != nil {
 		return &captenpluginspb.UpdateContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add ContainerRegistry credential in vault",
-		}, nil
+		}, err
 	}
 
 	ContainerRegistry := captenpluginspb.ContainerRegistry{
@@ -93,7 +93,7 @@ func (a *Agent) UpdateContainerRegistry(ctx context.Context, request *captenplug
 		return &captenpluginspb.UpdateContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to update ContainerRegistry in db",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("ContainerRegistry %s, %s updated", request.RegistryUrl, request.Id)
@@ -110,7 +110,7 @@ func (a *Agent) DeleteContainerRegistry(ctx context.Context, request *captenplug
 		return &captenpluginspb.DeleteContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 	a.log.Infof("Delete ContainerRegistry %s request recieved", request.Id)
 
@@ -118,7 +118,7 @@ func (a *Agent) DeleteContainerRegistry(ctx context.Context, request *captenplug
 		return &captenpluginspb.DeleteContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to delete ContainerRegistry credential in vault",
-		}, nil
+		}, err
 	}
 
 	if err := a.as.DeleteContainerRegistryById(request.Id); err != nil {
@@ -126,7 +126,7 @@ func (a *Agent) DeleteContainerRegistry(ctx context.Context, request *captenplug
 		return &captenpluginspb.DeleteContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to delete ContainerRegistry from db",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("ContainerRegistry %s deleted", request.Id)
@@ -145,7 +145,7 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 		return &captenpluginspb.GetContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch git projects",
-		}, nil
+		}, err
 	}
 
 	for _, r := range res {
@@ -155,7 +155,7 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 			return &captenpluginspb.GetContainerRegistryResponse{
 				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 				StatusMessage: "failed to fetch container registry",
-			}, nil
+			}, err
 		}
 
 		r.RegistryAttributes = cred

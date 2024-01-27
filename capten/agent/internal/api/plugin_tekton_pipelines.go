@@ -10,6 +10,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/model"
 	captenmodel "github.com/kube-tarian/kad/capten/model"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -24,7 +25,7 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 
 	if len(request.ContainerRegistryIds) != 1 {
@@ -32,7 +33,7 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "currently single container registry supported",
-		}, nil
+		}, errors.New("kindly provide only one item in container registry")
 	}
 
 	if !strings.HasSuffix(request.PipelineName, pipelineSuffix) {
@@ -40,7 +41,7 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "the pipeline should have the suffix -pipeline in the name",
-		}, nil
+		}, errors.New("the pipeline should have the suffix -pipeline in the name")
 	}
 
 	tektonAvailable, err := a.as.GetTektonProjectForID(request.GitOrgId)
@@ -49,7 +50,7 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 
 	_, err = a.as.GetContainerRegistryForID(request.ContainerRegistryIds[0])
@@ -58,10 +59,10 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "failed to get container registry",
-		}, nil
+		}, err
 	}
 
-	_, err = a.as.GetCrossplaneProjectForID(request.CrossPlaneGitProjectId)
+	crossplane, err := a.as.GetCrossplaneProjectForID(request.CrossPlaneGitProjectId)
 	if err != nil {
 		a.log.Infof("failed to get crossplane git project %s, %v", request.CrossPlaneGitProjectId, err)
 		return &captenpluginspb.CreateTektonPipelineResponse{
@@ -76,7 +77,7 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "failed to get managedCluster id",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Add Create Tekton Pipeline registry %s request received", request.PipelineName)
@@ -89,7 +90,7 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		GitProjectId:           tektonAvailable.GitProjectId,
 		ContainerRegId:         request.ContainerRegistryIds,
 		ManagedClusterId:       request.ManagedClusterId,
-		CrossplaneGitProjectId: request.CrossPlaneGitProjectId,
+		CrossplaneGitProjectId: crossplane.GitProjectId,
 	}
 
 	if err := a.as.UpsertTektonPipelines(&TektonPipeline); err != nil {
@@ -97,11 +98,11 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to create pipeline  reqin db",
-		}, nil
+		}, err
 	}
 
-	_, err = a.configureTektonPipelinesGitRepo(&TektonPipeline, model.TektonPipelineCreate, true)
-	if err != nil {
+	_, oErr := a.configureTektonPipelinesGitRepo(&TektonPipeline, model.TektonPipelineCreate, true)
+	if oErr != nil {
 		TektonPipeline.Status = string(model.TektonPipelineConfigurationFailed)
 		TektonPipeline.WorkflowId = "NA"
 		if err := a.as.UpsertTektonPipelines(&TektonPipeline); err != nil {
@@ -111,7 +112,7 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.CreateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to configure tekton pipelines",
-		}, nil
+		}, oErr
 	}
 
 	a.log.Infof("create pipelines %s added with id %s", request.PipelineName, id.String())
@@ -130,7 +131,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 
 	_, err := a.as.GetContainerRegistryForID(request.ContainerRegistryIds[0])
@@ -139,7 +140,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "failed to get container registry",
-		}, nil
+		}, err
 	}
 
 	_, err = a.as.GetCrossplaneProjectForID(request.CrossPlaneGitProjectId)
@@ -148,7 +149,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "failed to get crossplane git project",
-		}, nil
+		}, err
 	}
 
 	_, err = a.as.GetManagedClusterForID(request.ManagedClusterId)
@@ -157,7 +158,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "failed to get managedCluster id",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Update tekton pipelines project, %s request recieved", request.Id)
@@ -168,7 +169,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: fmt.Sprintf("invalid uuid: %s", request.Id),
-		}, nil
+		}, err
 	}
 
 	pipeline, err := a.as.GetTektonPipelinesForID(id.String())
@@ -177,7 +178,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: fmt.Sprintf("failed to get the tekton pipeline: %s", request.Id),
-		}, nil
+		}, err
 	}
 
 	pipeline.ContainerRegId = request.ContainerRegistryIds
@@ -188,7 +189,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to update TektonPipeline in db",
-		}, nil
+		}, err
 	}
 
 	if _, err := a.configureTektonPipelinesGitRepo(pipeline, model.TektonPipelineSync, true); err != nil {
@@ -196,7 +197,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to configure update for TektonPipeline",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("TektonPipeline, %s updated", request.Id)
@@ -216,7 +217,7 @@ func (a *Agent) GetTektonPipelines(ctx context.Context, request *captenpluginspb
 		return &captenpluginspb.GetTektonPipelinesResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch TektonPipelines",
-		}, nil
+		}, err
 	}
 
 	pipeline := make([]*captenpluginspb.TektonPipelines, len(res))
@@ -247,7 +248,7 @@ func (a *Agent) DeleteTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.DeleteTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 
 	pipeline, err := a.as.GetTektonPipelinesForID(request.Id)
@@ -256,7 +257,7 @@ func (a *Agent) DeleteTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.DeleteTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch TektonPipelines",
-		}, nil
+		}, err
 	}
 
 	wkfID, err := a.configureTektonPipelinesGitRepo(pipeline, model.TektonPipelineDelete, false)
@@ -265,7 +266,7 @@ func (a *Agent) DeleteTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.DeleteTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to  initiate cleanup of  TektonPipeline from git repo",
-		}, nil
+		}, err
 	}
 	a.monitorTektonPipelineWorkflow(pipeline, wkfID)
 	if pipeline.Status != string(model.TektonPipelineConfigured) {
@@ -274,7 +275,7 @@ func (a *Agent) DeleteTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.DeleteTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed",
-		}, nil
+		}, err
 	}
 
 	err = a.as.DeleteTektonPipelinesById(request.Id)
@@ -283,7 +284,7 @@ func (a *Agent) DeleteTektonPipeline(ctx context.Context, request *captenplugins
 		return &captenpluginspb.DeleteTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to delete TektonPipelines",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Deleted tekton pipeline %s", pipeline.PipelineName)

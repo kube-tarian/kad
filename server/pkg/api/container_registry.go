@@ -150,7 +150,7 @@ func (s *Server) GetContainerRegistry(ctx context.Context, request *captenplugin
 		s.log.Errorf("failed to get Container registry, %v", err)
 		return &captenpluginspb.GetContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to update Container registry",
+			StatusMessage: "failed to get Container registry",
 		}, err
 	}
 
@@ -159,6 +159,6 @@ func (s *Server) GetContainerRegistry(ctx context.Context, request *captenplugin
 	return &captenpluginspb.GetContainerRegistryResponse{
 		Registries:    resp.Registries,
 		Status:        resp.Status,
-		StatusMessage: "update Container registry successful",
+		StatusMessage: "Get Container registry successful",
 	}, nil
 }
