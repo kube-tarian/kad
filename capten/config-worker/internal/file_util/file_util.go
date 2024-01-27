@@ -2,6 +2,8 @@ package fileutil
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"os"
@@ -95,6 +97,11 @@ func UpdateFileWithTempaltes(filePath string, templateValues map[string]string) 
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("UpdateFileWithTempaltes")
+	x, _ := json.Marshal(templateValues)
+	fmt.Println("template values")
+	fmt.Println(string(x))
 
 	newContent, err := applyTemplate(string(content), templateValues)
 	if err != nil {
