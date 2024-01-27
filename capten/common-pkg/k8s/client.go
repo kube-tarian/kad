@@ -25,6 +25,7 @@ type K8SClient struct {
 	Clientset              kubernetes.Interface
 	DynamicClientInterface dynamic.Interface
 	DynamicClient          *DynamicClientSet
+	Config                 *rest.Config
 }
 
 func NewK8SClient(log logging.Logger) (*K8SClient, error) {
@@ -49,6 +50,7 @@ func NewK8SClient(log logging.Logger) (*K8SClient, error) {
 		Clientset:              clientset,
 		DynamicClientInterface: dcClient,
 		DynamicClient:          NewDynamicClientSet(dcClient),
+		Config:                 config,
 	}, nil
 }
 
@@ -75,6 +77,7 @@ func NewK8SClientForCluster(log logging.Logger, kubeconfig, clusterCA, endpoint 
 		Clientset:              clientset,
 		DynamicClientInterface: dcClient,
 		DynamicClient:          NewDynamicClientSet(dcClient),
+		Config:                 config,
 	}, nil
 }
 
