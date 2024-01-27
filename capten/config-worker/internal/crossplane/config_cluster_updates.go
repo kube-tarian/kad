@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
+	appConf "github.com/kube-tarian/kad/capten/config-worker/internal/app_config"
 	fileutil "github.com/kube-tarian/kad/capten/config-worker/internal/file_util"
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
@@ -287,27 +286,11 @@ func removeClusterValues(valuesFileName, clusterName string) error {
 
 func (cp *CrossPlaneApp) prepareTemplateVaules(ctx context.Context, clusterName string) (map[string]string, error) {
 	val := map[string]string{
-		"DomainName":  cp.cfg.DomainName,
-		"ClusterName": clusterName,
+		appConf.DomainName: cp.cfg.DomainName,
+		"ClusterName":      clusterName,
 	}
 
-	cred, err := credential.GetClusterGlobalValues(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var gvMap map[string]interface{}
-
-	decoder := yaml.NewDecoder(strings.NewReader(cred))
-	if err := decoder.Decode(&gvMap); err != nil {
-		return nil, err
-	}
-
-	for key, value := range gvMap {
-		val[key] = value.(string)
-	}
-
-	return val, nil
+	return cp.helper.GetClusterGlobalValues(ctx, val)
 }
 
 func prepareClusterData(clusterName, endpoint string, defaultApps []DefaultApps) Cluster {

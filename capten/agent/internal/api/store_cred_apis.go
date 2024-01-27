@@ -4,10 +4,19 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
+	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 
 	"github.com/intelops/go-common/credentials"
+)
+
+var (
+	vaultAddress     = "http://vault.%s"
+	kadAppRolePrefix = "kad-approle-"
 )
 
 func (a *Agent) StoreCredential(ctx context.Context, request *agentpb.StoreCredentialRequest) (*agentpb.StoreCredentialResponse, error) {
@@ -58,11 +67,71 @@ func (a *Agent) GetClusterGlobalValues(ctx context.Context, _ *agentpb.GetCluste
 }
 
 func (a *Agent) ConfigureVaultSecret(ctx context.Context, request *agentpb.ConfigureVaultSecretRequest) (*agentpb.ConfigureVaultSecretResponse, error) {
-	return nil, fmt.Errorf("not supported")
+	a.log.Infof("Configure Vault Secret Request recieved for secret ", request.SecretName)
+
+	secretPathsData := map[string]string{}
+	secretPaths := []string{}
+	for _, secretPathData := range request.SecretPathData {
+		secretPathsData[secretPathData.SecretKey] = secretPathData.SecretPath
+		secretPaths = append(secretPaths, secretPathData.SecretPath)
+	}
+
+	appRoleName := kadAppRolePrefix + request.SecretName
+	token, err := vaultcred.GetAppRoleToken(appRoleName, secretPaths)
+	if err != nil {
+		a.log.Errorf("failed to create app role token for %s, %v", appRoleName, err)
+		return &agentpb.ConfigureVaultSecretResponse{Status: agentpb.StatusCode_INTERNRAL_ERROR}, err
+	}
+
+	k8sclient, err := k8s.NewK8SClient(a.log)
+	if err != nil {
+		a.log.Errorf("failed to initalize k8s client, %v", err)
+		return &agentpb.ConfigureVaultSecretResponse{Status: agentpb.StatusCode_INTERNRAL_ERROR}, err
+	}
+
+	cred := map[string][]byte{"token": []byte(token)}
+	vaultTokenSecretName := "vault-token-" + request.SecretName
+	err = k8sclient.CreateOrUpdateSecret(ctx, request.Namespace, vaultTokenSecretName, v1.SecretTypeOpaque, cred, nil)
+	if err != nil {
+		a.log.Errorf("failed to create cluter vault token secret, %v", err)
+		return &agentpb.ConfigureVaultSecretResponse{Status: agentpb.StatusCode_INTERNRAL_ERROR}, err
+	}
+
+	vaultAddressStr := fmt.Sprintf(vaultAddress, a.cfg.DomainName)
+	secretStoreName := "ext-store-" + request.SecretName
+	err = k8sclient.CreateOrUpdateSecretStore(ctx, secretStoreName, request.Namespace, vaultAddressStr, vaultTokenSecretName, "token")
+	if err != nil {
+		a.log.Errorf("failed to create cluter vault token secret, %v", err)
+		return &agentpb.ConfigureVaultSecretResponse{Status: agentpb.StatusCode_INTERNRAL_ERROR}, err
+	}
+	a.log.Infof("created secret store %s/%s", request.Namespace, secretStoreName)
+
+	externalSecretName := "ext-secret-" + request.SecretName
+	err = k8sclient.CreateOrUpdateExternalSecret(ctx, externalSecretName, request.Namespace, secretStoreName,
+		request.SecretName, secretPathsData)
+	if err != nil {
+		a.log.Errorf("failed to create vault external secret, %v", err)
+		return &agentpb.ConfigureVaultSecretResponse{Status: agentpb.StatusCode_INTERNRAL_ERROR}, err
+	}
+	a.log.Infof("created external secret %s/%s", request.Namespace, externalSecretName)
+	return &agentpb.ConfigureVaultSecretResponse{Status: agentpb.StatusCode_OK}, nil
 }
 
 func (a *Agent) CreateVaultRole(ctx context.Context, request *agentpb.CreateVaultRoleRequest) (*agentpb.CreateVaultRoleResponse, error) {
-	return nil, fmt.Errorf("not supported")
+	a.log.Infof("vault role %s creat request for cluster %s", request.RoleName, request.ManagedClusterName)
+	secretPolicies := map[string]int{}
+	for _, secretPolicy := range request.SecretPolicy {
+		secretPolicies[secretPolicy.SecretPath] = int(secretPolicy.Access)
+	}
+
+	err := vaultcred.CreateVaultRole(request.ManagedClusterName, request.RoleName,
+		request.Namespaces, request.ServiceAccounts, secretPolicies)
+	if err != nil {
+		a.log.Errorf("failed to create vault role, %v", err)
+		return &agentpb.CreateVaultRoleResponse{Status: agentpb.StatusCode_INTERNRAL_ERROR}, err
+	}
+	a.log.Infof("created vault role %s for cluster %s", request.RoleName, request.ManagedClusterName)
+	return &agentpb.CreateVaultRoleResponse{Status: agentpb.StatusCode_OK}, nil
 }
 
 func (a *Agent) UpdateVaultRole(ctx context.Context, request *agentpb.UpdateVaultRoleRequest) (*agentpb.UpdateVaultRoleResponse, error) {

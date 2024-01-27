@@ -38,6 +38,11 @@ func (cp *CrossPlaneApp) configureExternalSecretsOnCluster(ctx context.Context, 
 		return fmt.Errorf("failed to create cluter vault token secret, %v", err)
 	}
 
+	err = k8sclient.CreateOrUpdateSecret(ctx, cosignNameSpace, vaultAppRoleToken, v1.SecretTypeOpaque, cred, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create cluter vault token secret, %v", err)
+	}
+
 	vaultAddressStr := fmt.Sprintf(vaultAddress, cp.cfg.DomainName)
 	vaultStoreCRData := fmt.Sprintf(vaultStore, natsNameSpace, vaultAddressStr, vaultAppRoleToken)
 	ns, resource, err := k8sclient.DynamicClient.CreateResource(ctx, []byte(vaultStoreCRData))

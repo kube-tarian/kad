@@ -25,7 +25,8 @@ const (
 	VaultCred_CreateAppRoleToken_FullMethodName            = "/vaultcredpb.VaultCred/CreateAppRoleToken"
 	VaultCred_DeleteAppRole_FullMethodName                 = "/vaultcredpb.VaultCred/DeleteAppRole"
 	VaultCred_GetCredentialWithAppRoleToken_FullMethodName = "/vaultcredpb.VaultCred/GetCredentialWithAppRoleToken"
-	VaultCred_ConfigureClusterK8SAuth_FullMethodName       = "/vaultcredpb.VaultCred/ConfigureClusterK8SAuth"
+	VaultCred_AddClusterK8SAuth_FullMethodName             = "/vaultcredpb.VaultCred/AddClusterK8SAuth"
+	VaultCred_DeleteClusterK8SAuth_FullMethodName          = "/vaultcredpb.VaultCred/DeleteClusterK8SAuth"
 	VaultCred_CreateK8SAuthRole_FullMethodName             = "/vaultcredpb.VaultCred/CreateK8SAuthRole"
 	VaultCred_UpdateK8SAuthRole_FullMethodName             = "/vaultcredpb.VaultCred/UpdateK8SAuthRole"
 	VaultCred_DeleteK8SAuthRole_FullMethodName             = "/vaultcredpb.VaultCred/DeleteK8SAuthRole"
@@ -46,7 +47,8 @@ type VaultCredClient interface {
 	CreateAppRoleToken(ctx context.Context, in *CreateAppRoleTokenRequest, opts ...grpc.CallOption) (*CreateAppRoleTokenResponse, error)
 	DeleteAppRole(ctx context.Context, in *DeleteAppRoleRequest, opts ...grpc.CallOption) (*DeleteAppRoleResponse, error)
 	GetCredentialWithAppRoleToken(ctx context.Context, in *GetCredentialWithAppRoleTokenRequest, opts ...grpc.CallOption) (*GetCredentialWithAppRoleTokenResponse, error)
-	ConfigureClusterK8SAuth(ctx context.Context, in *ConfigureClusterK8SAuthRequest, opts ...grpc.CallOption) (*ConfigureClusterK8SAuthResponse, error)
+	AddClusterK8SAuth(ctx context.Context, in *AddClusterK8SAuthRequest, opts ...grpc.CallOption) (*AddClusterK8SAuthResponse, error)
+	DeleteClusterK8SAuth(ctx context.Context, in *DeleteClusterK8SAuthRequest, opts ...grpc.CallOption) (*DeleteClusterK8SAuthResponse, error)
 	CreateK8SAuthRole(ctx context.Context, in *CreateK8SAuthRoleRequest, opts ...grpc.CallOption) (*CreateK8SAuthRoleResponse, error)
 	UpdateK8SAuthRole(ctx context.Context, in *UpdateK8SAuthRoleRequest, opts ...grpc.CallOption) (*UpdateK8SAuthRoleResponse, error)
 	DeleteK8SAuthRole(ctx context.Context, in *DeleteK8SAuthRoleRequest, opts ...grpc.CallOption) (*DeleteK8SAuthRoleResponse, error)
@@ -114,9 +116,18 @@ func (c *vaultCredClient) GetCredentialWithAppRoleToken(ctx context.Context, in 
 	return out, nil
 }
 
-func (c *vaultCredClient) ConfigureClusterK8SAuth(ctx context.Context, in *ConfigureClusterK8SAuthRequest, opts ...grpc.CallOption) (*ConfigureClusterK8SAuthResponse, error) {
-	out := new(ConfigureClusterK8SAuthResponse)
-	err := c.cc.Invoke(ctx, VaultCred_ConfigureClusterK8SAuth_FullMethodName, in, out, opts...)
+func (c *vaultCredClient) AddClusterK8SAuth(ctx context.Context, in *AddClusterK8SAuthRequest, opts ...grpc.CallOption) (*AddClusterK8SAuthResponse, error) {
+	out := new(AddClusterK8SAuthResponse)
+	err := c.cc.Invoke(ctx, VaultCred_AddClusterK8SAuth_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *vaultCredClient) DeleteClusterK8SAuth(ctx context.Context, in *DeleteClusterK8SAuthRequest, opts ...grpc.CallOption) (*DeleteClusterK8SAuthResponse, error) {
+	out := new(DeleteClusterK8SAuthResponse)
+	err := c.cc.Invoke(ctx, VaultCred_DeleteClusterK8SAuth_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +176,8 @@ type VaultCredServer interface {
 	CreateAppRoleToken(context.Context, *CreateAppRoleTokenRequest) (*CreateAppRoleTokenResponse, error)
 	DeleteAppRole(context.Context, *DeleteAppRoleRequest) (*DeleteAppRoleResponse, error)
 	GetCredentialWithAppRoleToken(context.Context, *GetCredentialWithAppRoleTokenRequest) (*GetCredentialWithAppRoleTokenResponse, error)
-	ConfigureClusterK8SAuth(context.Context, *ConfigureClusterK8SAuthRequest) (*ConfigureClusterK8SAuthResponse, error)
+	AddClusterK8SAuth(context.Context, *AddClusterK8SAuthRequest) (*AddClusterK8SAuthResponse, error)
+	DeleteClusterK8SAuth(context.Context, *DeleteClusterK8SAuthRequest) (*DeleteClusterK8SAuthResponse, error)
 	CreateK8SAuthRole(context.Context, *CreateK8SAuthRoleRequest) (*CreateK8SAuthRoleResponse, error)
 	UpdateK8SAuthRole(context.Context, *UpdateK8SAuthRoleRequest) (*UpdateK8SAuthRoleResponse, error)
 	DeleteK8SAuthRole(context.Context, *DeleteK8SAuthRoleRequest) (*DeleteK8SAuthRoleResponse, error)
@@ -194,8 +206,11 @@ func (UnimplementedVaultCredServer) DeleteAppRole(context.Context, *DeleteAppRol
 func (UnimplementedVaultCredServer) GetCredentialWithAppRoleToken(context.Context, *GetCredentialWithAppRoleTokenRequest) (*GetCredentialWithAppRoleTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCredentialWithAppRoleToken not implemented")
 }
-func (UnimplementedVaultCredServer) ConfigureClusterK8SAuth(context.Context, *ConfigureClusterK8SAuthRequest) (*ConfigureClusterK8SAuthResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConfigureClusterK8SAuth not implemented")
+func (UnimplementedVaultCredServer) AddClusterK8SAuth(context.Context, *AddClusterK8SAuthRequest) (*AddClusterK8SAuthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddClusterK8SAuth not implemented")
+}
+func (UnimplementedVaultCredServer) DeleteClusterK8SAuth(context.Context, *DeleteClusterK8SAuthRequest) (*DeleteClusterK8SAuthResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteClusterK8SAuth not implemented")
 }
 func (UnimplementedVaultCredServer) CreateK8SAuthRole(context.Context, *CreateK8SAuthRoleRequest) (*CreateK8SAuthRoleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateK8SAuthRole not implemented")
@@ -327,20 +342,38 @@ func _VaultCred_GetCredentialWithAppRoleToken_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
-func _VaultCred_ConfigureClusterK8SAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfigureClusterK8SAuthRequest)
+func _VaultCred_AddClusterK8SAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddClusterK8SAuthRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(VaultCredServer).ConfigureClusterK8SAuth(ctx, in)
+		return srv.(VaultCredServer).AddClusterK8SAuth(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: VaultCred_ConfigureClusterK8SAuth_FullMethodName,
+		FullMethod: VaultCred_AddClusterK8SAuth_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(VaultCredServer).ConfigureClusterK8SAuth(ctx, req.(*ConfigureClusterK8SAuthRequest))
+		return srv.(VaultCredServer).AddClusterK8SAuth(ctx, req.(*AddClusterK8SAuthRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VaultCred_DeleteClusterK8SAuth_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClusterK8SAuthRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VaultCredServer).DeleteClusterK8SAuth(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VaultCred_DeleteClusterK8SAuth_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VaultCredServer).DeleteClusterK8SAuth(ctx, req.(*DeleteClusterK8SAuthRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -431,8 +464,12 @@ var VaultCred_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _VaultCred_GetCredentialWithAppRoleToken_Handler,
 		},
 		{
-			MethodName: "ConfigureClusterK8SAuth",
-			Handler:    _VaultCred_ConfigureClusterK8SAuth_Handler,
+			MethodName: "AddClusterK8SAuth",
+			Handler:    _VaultCred_AddClusterK8SAuth_Handler,
+		},
+		{
+			MethodName: "DeleteClusterK8SAuth",
+			Handler:    _VaultCred_DeleteClusterK8SAuth_Handler,
 		},
 		{
 			MethodName: "CreateK8SAuthRole",
