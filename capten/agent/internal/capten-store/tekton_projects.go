@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gocql/gocql"
+	"github.com/google/uuid"
 	"github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
 )
@@ -51,17 +52,21 @@ func (a *Store) GetTektonProjectForID(id string) (*model.TektonProject, error) {
 	return projects[0], nil
 }
 
-func (a *Store) GetTektonProjects() ([]*model.TektonProject, error) {
-	return a.updateTektonProjects()
+func (a *Store) GetTektonProject() (*model.TektonProject, error) {
+	return a.updateTektonProject()
 }
 
-// tektonProjects, err := a.GetGitProjectsByLabels([]string{"tekton"})
-func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
+func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 	allTektonProjects, err := a.GetGitProjectsByLabels([]string{"tekton"})
 	if err != nil {
 		a.log.Errorf("failed to fetch all tekton projects, :%v", err)
 		return nil, err
 	}
+
+	if len(allTektonProjects) == 0 {
+		return nil, fmt.Errorf("no git project found with tekton tag")
+	}
+	tektonGitProject := allTektonProjects[0]
 
 	query := fmt.Sprintf(getTektonProjectsQuery, a.keyspace)
 	regTektonProjects, err := a.executeTektonProjectsSelectQuery(query)
@@ -89,24 +94,23 @@ func (a *Store) updateTektonProjects() ([]*model.TektonProject, error) {
 		}
 	}
 
-	ret := make([]*model.TektonProject, 0)
-	for _, gitProject := range allTektonProjects {
-		if tp, ok := regTektonProjectId[gitProject.Id]; ok {
-			ret = append(ret, tp)
-		} else {
-			project := &model.TektonProject{Id: gitProject.Id, GitProjectId: gitProject.Id,
-				GitProjectUrl: gitProject.ProjectUrl}
-			project.Status = "available"
-			project.WorkflowId = "NA"
-			project.Status = "NA"
-			if err := a.UpsertTektonProject(project); err != nil {
-				return nil, err
-			}
-			ret = append(ret, project)
+	if len(regTektonProjectId) == 0 {
+		// no project was registered, register the git project
+		project := &model.TektonProject{
+			Id:             uuid.New().String(),
+			GitProjectId:   tektonGitProject.Id,
+			GitProjectUrl:  tektonGitProject.ProjectUrl,
+			Status:         "available",
+			WorkflowId:     "NA",
+			WorkflowStatus: "NA",
+			LastUpdateTime: time.Now().Format(time.RFC3339),
 		}
+		if err := a.UpsertTektonProject(project); err != nil {
+			return nil, err
+		}
+		return project, nil
 	}
-
-	return ret, nil
+	return regTektonProjects[0], nil
 }
 
 func (a *Store) executeTektonProjectsSelectQuery(query string) ([]*model.TektonProject, error) {

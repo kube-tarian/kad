@@ -24,20 +24,19 @@ import (
 )
 
 var (
-	gitCred           = "gitcred"
-	dockerCred        = "docker-credentials"
-	githubWebhook     = "github-webhook-secret"
-	argoCred          = "argocd"
-	extraConfig       = "extraconfig"
-	secrets           = []string{gitCred, dockerCred, githubWebhook, argoCred, extraConfig}
-	pipelineNamespace = "tekton-pipelines"
-	tektonChildTasks  = []string{"tekton-cluster-tasks"}
-	addPipeline       = "add"
-	deletePipeline    = "delete"
-	mainAppName       = "tekton-apps"
-	cosignEntityName  = "cosign"
-	cosignVaultId     = "signer"
-	cosignSecName     = "cosign-keys"
+	gitCred                 = "gitcred"
+	dockerCred              = "docker-credentials"
+	githubWebhook           = "github-webhook-secret"
+	argoCred                = "argocd"
+	crossplaneProjectConfig = "extraconfig"
+	secrets                 = []string{gitCred, dockerCred, githubWebhook, argoCred, crossplaneProjectConfig}
+	pipelineNamespace       = "tekton-pipelines"
+	tektonChildTasks        = []string{"tekton-cluster-tasks"}
+	addPipeline             = "add"
+	deletePipeline          = "delete"
+	cosignEntityName        = "cosign"
+	cosignVaultId           = "signer"
+	cosignSecName           = "cosign-keys"
 )
 
 type Config struct {
@@ -92,18 +91,17 @@ func readTektonPluginConfig(pluginFile string) (*tektonPluginConfig, error) {
 
 func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.TektonPipelineUseCase) (status string, err error) {
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
-	templateRepo, err := cp.helper.CloneTemplateRepo(ctx, cp.pluginConfig.TemplateGitRepo, req.CredentialIdentifiers[agentmodel.Git].Id)
+	templateRepo, err := cp.helper.CloneTemplateRepo(ctx, cp.pluginConfig.TemplateGitRepo, req.CredentialIdentifiers[agentmodel.TektonGitProject].Id)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
 	defer os.RemoveAll(templateRepo)
 
-	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.CredentialIdentifiers[agentmodel.Git].Id)
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.CredentialIdentifiers[agentmodel.TektonGitProject].Id)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
 	logger.Infof("cloned default templates to project %s", req.RepoURL)
-
 	defer os.RemoveAll(customerRepo)
 
 	err = cp.synchPipelineConfig(req, templateRepo, customerRepo)
@@ -161,7 +159,7 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 
 func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.TektonPipelineUseCase) (status string, err error) {
 	logger.Infof("cloning user repo %s", req.RepoURL)
-	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.CredentialIdentifiers[agentmodel.Git].Id)
+	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.CredentialIdentifiers[agentmodel.TektonGitProject].Id)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
@@ -174,8 +172,6 @@ func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.Tekton
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove pipeline from repo")
 	}
 	logger.Infof("removed pipeline resources from project %s", req.RepoURL)
-
-	logger.Infof("update main resource values.yaml in cloned project %s", req.RepoURL)
 
 	err = updateArgoCDTemplate(filepath.Join(customerRepo, cp.pluginConfig.PipelineSyncUpdate.MainAppValues), req.PipelineName, deletePipeline)
 	if err != nil {
@@ -335,7 +331,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			}
 
 		case gitCred, githubWebhook:
-			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.Git].Id)
+			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.GitOrg].Id)
 			if err != nil {
 				return fmt.Errorf("failed to get git secret, %v", err)
 			}
@@ -357,8 +353,8 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 				v1.SecretTypeOpaque, strdata, map[string]string{}); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
-		case extraConfig:
-			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.ExtraGitProject].Id)
+		case crossplaneProjectConfig:
+			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.CrossplaneGitProject].Id)
 			if err != nil {
 				return fmt.Errorf("failed to get git secret, %v", err)
 			}
@@ -369,7 +365,7 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			}
 			strdata["GIT_USER_NAME"] = []byte(username)
 			strdata["GIT_TOKEN"] = []byte(token)
-			strdata["GIT_PROJECT_URL"] = []byte(req.CredentialIdentifiers[agentmodel.ExtraGitProject].Url)
+			strdata["GIT_PROJECT_URL"] = []byte(req.CredentialIdentifiers[agentmodel.CrossplaneGitProject].Url)
 			strdata["APP_CONFIG_PATH"] = []byte(filepath.Join(cp.crossplanConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.CredentialIdentifiers[agentmodel.ManagedCluster].Url, "apps"))
 			strdata["CLUSTER_CA"] = []byte(kubeCa)
 			strdata["CLUSTER_ENDPOINT"] = []byte(kubeEndpoint)

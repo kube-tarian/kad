@@ -3,13 +3,14 @@ package model
 type Identifiers string
 
 const (
-	Container       Identifiers = "container"
-	Git             Identifiers = "git"
-	ManagedCluster  Identifiers = "managedCluster"
-	ExtraGitProject Identifiers = "extraGitProject"
+	Container            Identifiers = "container"
+	GitOrg               Identifiers = "gitOrg"
+	ManagedCluster       Identifiers = "managedCluster"
+	CrossplaneGitProject Identifiers = "crossplaneGitProject"
+	TektonGitProject     Identifiers = "tektonGitProject"
 )
 
-var IdentifiersList = []Identifiers{Container, Git, ManagedCluster, ExtraGitProject}
+var IdentifiersList = []Identifiers{Container, GitOrg, ManagedCluster, CrossplaneGitProject, TektonGitProject}
 
 const (
 	WorkFlowStatusStarted    WorkFlowStatus = "started"
