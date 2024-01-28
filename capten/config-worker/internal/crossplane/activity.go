@@ -31,7 +31,7 @@ func (c *CrossPlaneActivities) ConfigurationActivity(ctx context.Context, params
 func processConfigurationActivity(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (string, error) {
 	cp, err := NewCrossPlaneApp()
 	if err != nil {
-		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to initialize crossplane plugin")
+		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to initialize crossplane plugin, %v", err)
 	}
 
 	switch params.Action {

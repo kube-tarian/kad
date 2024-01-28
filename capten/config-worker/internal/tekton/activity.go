@@ -31,7 +31,7 @@ func (c *TektonpipelineActivty) ConfigurationActivity(ctx context.Context, param
 func processConfigurationActivity(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (string, error) {
 	cp, err := NewTektonApp()
 	if err != nil {
-		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to initialize crossplane plugin")
+		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to initialize crossplane plugin, %v", err)
 	}
 
 	reqLocal := &model.TektonPipelineUseCase{}
