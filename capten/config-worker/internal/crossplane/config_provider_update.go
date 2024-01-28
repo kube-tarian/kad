@@ -42,7 +42,7 @@ func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req 
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync argocd app")
 	}
-	logger.Infof("synched provider config main-app %s", resName)
+	logger.Infof("synched provider config main-app %s, namespace %s", resName, ns)
 
 	err = cp.helper.WaitForArgoCDToSync(ctx, ns, resName)
 	if err != nil {
