@@ -22,7 +22,7 @@ func (a *Store) UpsertTektonPipelines(config *model.TektonPipeline) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(insertTektonPipelines, a.keyspace), config.Id,
-		config.PipelineName, config.GitProjectId, config.ContainerRegId, config.ManagedClusterId, config.CrossplaneGitProjectId, config.Status,
+		config.PipelineName, config.GitOrgId, config.ContainerRegId, config.ManagedClusterId, config.CrossplaneGitProjectId, config.Status,
 		config.LastUpdateTime, config.WorkflowId, config.WorkflowStatus)
 	err := a.client.Session().ExecuteBatch(batch)
 	if err != nil {
@@ -76,14 +76,14 @@ func (a *Store) executeTektonPipelinessSelectQuery(query string) ([]*model.Tekto
 	ret := make([]*model.TektonPipeline, 0)
 	for iter.Scan(
 		&project.Id, &project.PipelineName,
-		&project.GitProjectId, &project.ContainerRegId, &project.ManagedClusterId, &project.CrossplaneGitProjectId,
+		&project.GitOrgId, &project.ContainerRegId, &project.ManagedClusterId, &project.CrossplaneGitProjectId,
 		&project.Status, &project.LastUpdateTime,
 	) {
 		TektonPipelines := &model.TektonPipeline{
 			Id:                     project.Id,
 			PipelineName:           project.PipelineName,
 			LastUpdateTime:         project.LastUpdateTime,
-			GitProjectId:           project.GitProjectId,
+			GitOrgId:               project.GitOrgId,
 			ContainerRegId:         project.ContainerRegId,
 			ManagedClusterId:       project.ManagedClusterId,
 			CrossplaneGitProjectId: project.CrossplaneGitProjectId,
@@ -102,9 +102,9 @@ func (a *Store) executeTektonPipelinessSelectQuery(query string) ([]*model.Tekto
 func formUpdateKvPairsForTektonPipelines(config *model.TektonPipeline) (updatePlaceholders string, values []interface{}) {
 	params := []string{}
 
-	if config.GitProjectId != "" {
+	if config.GitOrgId != "" {
 		params = append(params, "git_org_id = ?")
-		values = append(values, config.GitProjectId)
+		values = append(values, config.GitOrgId)
 	}
 
 	if config.LastUpdateTime != "" {

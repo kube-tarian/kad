@@ -52,8 +52,8 @@ type TektonPipeline struct {
 	Id                     string   `json:"id,omitempty"`
 	PipelineName           string   `json:"pipeline_name,omitempty"`
 	WebhookURL             string   `json:"webhook_url,omitempty"`
-	GitProjectId           string   `json:"git_project_id,omitempty"`
-	GitProjectUrl          string   `json:"git_project_url,omitempty"`
+	GitOrgId               string   `json:"git_org_id,omitempty"`
+	GitOrgUrl              string   `json:"git_org_url,omitempty"`
 	ContainerRegId         []string `json:"container_reg_id,omitempty"`
 	ManagedClusterId       string   `json:"managed_cluster_id,omitempty"`
 	CrossplaneGitProjectId string   `json:"crossplane_git_project_id,omitempty"`
