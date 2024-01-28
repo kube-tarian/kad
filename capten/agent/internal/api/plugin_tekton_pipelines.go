@@ -62,7 +62,7 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		}, err
 	}
 
-	crossplane, err := a.as.GetCrossplaneProjectForID(request.CrossPlaneGitProjectId)
+	_, err = a.as.GetCrossplaneProjectForID(request.CrossPlaneGitProjectId)
 	if err != nil {
 		a.log.Infof("failed to get crossplane git project %s, %v", request.CrossPlaneGitProjectId, err)
 		return &captenpluginspb.CreateTektonPipelineResponse{
@@ -90,7 +90,7 @@ func (a *Agent) CreateTektonPipeline(ctx context.Context, request *captenplugins
 		GitProjectId:           tektonAvailable.GitProjectId,
 		ContainerRegId:         request.ContainerRegistryIds,
 		ManagedClusterId:       request.ManagedClusterId,
-		CrossplaneGitProjectId: crossplane.GitProjectId,
+		CrossplaneGitProjectId: request.CrossPlaneGitProjectId,
 	}
 
 	if err := a.as.UpsertTektonPipelines(&TektonPipeline); err != nil {
@@ -333,7 +333,7 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline, actio
 			captenmodel.Container: {Identifier: containerRegEntityName,
 				Id: req.ContainerRegId[0], Url: containerReg.RegistryUrl},
 			captenmodel.ManagedCluster:  {Identifier: ManagedClusterEntityName, Id: req.ManagedClusterId, Url: managedCluster.ClusterName},
-			captenmodel.ExtraGitProject: {Identifier: gitProjectEntityName, Id: req.CrossplaneGitProjectId, Url: extraGitProject.GitProjectUrl},
+			captenmodel.ExtraGitProject: {Identifier: gitProjectEntityName, Id: extraGitProject.GitProjectId, Url: extraGitProject.GitProjectUrl},
 		}}
 	wd := workers.NewConfig(a.tc, a.log)
 
