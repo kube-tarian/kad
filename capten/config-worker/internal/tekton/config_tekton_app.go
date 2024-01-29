@@ -29,7 +29,8 @@ var (
 	githubWebhook           = "github-webhook-secret"
 	argoCred                = "argocd"
 	crossplaneProjectConfig = "extraconfig"
-	secrets                 = []string{gitCred, dockerCred, githubWebhook, argoCred, crossplaneProjectConfig}
+	cosignDockerSecret      = "cosign-docker-secret"
+	secrets                 = []string{gitCred, dockerCred, githubWebhook, argoCred, crossplaneProjectConfig, cosignDockerSecret}
 	pipelineNamespace       = "tekton-pipelines"
 	tektonChildTasks        = []string{"tekton-cluster-tasks"}
 	addPipeline             = "add"
@@ -327,6 +328,20 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			strdata["config.json"] = data
 			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
 				v1.SecretTypeDockerConfigJson, strdata, map[string]string{}); err != nil {
+				return fmt.Errorf("failed to create/update k8s secret, %v", err)
+			}
+
+		case cosignDockerSecret:
+			username, password, err := cp.helper.GetContainerRegCreds(ctx,
+				req.CredentialIdentifiers[agentmodel.Container].Identifier, req.CredentialIdentifiers[agentmodel.Container].Id)
+			if err != nil {
+				return fmt.Errorf("failed to get docker cfg secret, %v", err)
+			}
+			strdata["username"] = []byte(username)
+			strdata["password"] = []byte(password)
+			strdata["registry"] = []byte(req.CredentialIdentifiers[agentmodel.Container].Url)
+			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
+				v1.SecretTypeOpaque, strdata, map[string]string{}); err != nil {
 				return fmt.Errorf("failed to create/update k8s secret, %v", err)
 			}
 
