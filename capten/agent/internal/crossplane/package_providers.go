@@ -165,9 +165,9 @@ func (h *ProvidersSyncHandler) updateCrossplaneProvider(k8sProviders []model.Pro
 				continue
 			}
 
-			_, ok = h.activeProviders[k8sProvider.Name]
-			if !ok {
-				h.log.Debugf("Provider name %s is already configured, skipping the update", k8sProvider.Name)
+			synched := h.activeProviders[k8sProvider.Name]
+			if synched {
+				h.log.Debugf("Provider name %s is already synched, skipping the update", k8sProvider.Name)
 				continue
 			}
 

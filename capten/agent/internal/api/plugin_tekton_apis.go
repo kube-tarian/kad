@@ -37,7 +37,7 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 	for index, r := range res {
 		pipelines[index] = &captenpluginspb.TektonPipelines{
 			Id: r.Id, PipelineName: r.PipelineName,
-			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitProjectId,
+			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitOrgId,
 			ContainerRegistryIds: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime,
 		}
 		if _, err := a.configureTektonPipelinesGitRepo(r, model.TektonPipelineSync, true); err != nil {
@@ -94,7 +94,7 @@ func (a *Agent) GetTektonProject(ctx context.Context, request *captenpluginspb.G
 	*captenpluginspb.GetTektonProjectResponse, error) {
 	a.log.Infof("Get Tekton Git projects request recieved")
 
-	projects, err := a.as.GetTektonProjects()
+	project, err := a.as.GetTektonProject()
 	if err != nil {
 		a.log.Errorf("failed to get tekton Project, %v", err)
 		return &captenpluginspb.GetTektonProjectResponse{
@@ -103,21 +103,16 @@ func (a *Agent) GetTektonProject(ctx context.Context, request *captenpluginspb.G
 		}, err
 	}
 
-	tekTonProject := &captenpluginspb.TektonProject{}
-	for _, project := range projects {
-		tekTonProject = &captenpluginspb.TektonProject{
-			Id:             project.Id,
-			GitProjectUrl:  project.GitProjectUrl,
-			Status:         project.Status,
-			LastUpdateTime: project.LastUpdateTime,
-		}
-	}
-
 	a.log.Infof("Fetched Tekton Git projects")
 	return &captenpluginspb.GetTektonProjectResponse{
 		Status:        captenpluginspb.StatusCode_OK,
 		StatusMessage: "successfully fetched the tekton projects",
-		Project:       tekTonProject,
+		Project: &captenpluginspb.TektonProject{
+			Id:             project.Id,
+			GitProjectUrl:  project.GitProjectUrl,
+			Status:         project.Status,
+			LastUpdateTime: project.LastUpdateTime,
+		},
 	}, nil
 }
 
