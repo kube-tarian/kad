@@ -52,7 +52,7 @@ func (cp *CrossPlaneApp) configureExternalSecretsOnCluster(ctx context.Context,
 		if err != nil {
 			return fmt.Errorf("failed to create cluter vault token secret, %v", err)
 		}
-		logger.Infof("create %s/%s on cluster cluster %s/%s", namespace, secretStoreName, clusterName)
+		logger.Infof("created %s/%s on cluster cluster %s", namespace, secretStoreName, clusterName)
 	}
 
 	for _, extSecret := range extSecrets {
@@ -67,7 +67,7 @@ func (cp *CrossPlaneApp) configureExternalSecretsOnCluster(ctx context.Context,
 			logger.Infof("failed to create vault external secret, %v", err)
 			continue
 		}
-		logger.Infof("create %s/%s on cluster cluster %s/%s", extSecret.Namespace, externalSecretName, clusterName)
+		logger.Infof("created %s/%s on cluster cluster %s", extSecret.Namespace, externalSecretName, clusterName)
 	}
 	return nil
 }

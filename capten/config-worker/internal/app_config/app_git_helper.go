@@ -46,9 +46,10 @@ type Config struct {
 var logger = logging.NewLogger()
 
 type AppGitConfigHelper struct {
-	cfg         Config
-	gitClient   *git.GitClient
-	accessToken string
+	cfg          Config
+	gitClient    *git.GitClient
+	argocdClient *argocd.ArgoCDClient
+	accessToken  string
 }
 
 func NewAppGitConfigHelper() (*AppGitConfigHelper, error) {
@@ -56,7 +57,11 @@ func NewAppGitConfigHelper() (*AppGitConfigHelper, error) {
 	if err := envconfig.Process("", &cfg); err != nil {
 		return nil, err
 	}
-	return &AppGitConfigHelper{cfg: cfg, gitClient: git.NewClient()}, nil
+	argocdClient, err := argocd.NewClient(logger)
+	if err != nil {
+		return nil, err
+	}
+	return &AppGitConfigHelper{cfg: cfg, gitClient: git.NewClient(), argocdClient: argocdClient}, nil
 }
 
 func (ca *AppGitConfigHelper) GetGitCreds(ctx context.Context, projectId string) (string, string, error) {
@@ -205,12 +210,7 @@ func (ca *AppGitConfigHelper) DeployMainApp(ctx context.Context, fileName string
 }
 
 func (ca *AppGitConfigHelper) SyncArgoCDApp(ctx context.Context, ns, resName string) error {
-	client, err := argocd.NewClient(logger)
-	if err != nil {
-		return err
-	}
-
-	_, err = client.TriggerAppSync(ctx, ns, resName)
+	_, err := ca.argocdClient.TriggerAppSync(ctx, ns, resName)
 	if err != nil {
 		return err
 	}
@@ -219,17 +219,12 @@ func (ca *AppGitConfigHelper) SyncArgoCDApp(ctx context.Context, ns, resName str
 }
 
 func (ca *AppGitConfigHelper) DeleteArgoCDApp(ctx context.Context, ns, resName, mainApp string) error {
-	client, err := argocd.NewClient(logger)
-	if err != nil {
-		return err
-	}
-
 	// _, err = client.Delete(&model.DeleteRequestPayload{Namespace: ns, ReleaseName: resName})
 	// if err != nil {
 	// 	return err
 	// }
 
-	_, err = client.TriggerAppSync(ctx, ns, mainApp)
+	_, err := ca.argocdClient.TriggerAppSync(ctx, ns, mainApp)
 	if err != nil {
 		return err
 	}
@@ -252,12 +247,7 @@ func (ca *AppGitConfigHelper) CreateCluster(ctx context.Context, id, clusterName
 		return "", err
 	}
 
-	client, err := argocd.NewClient(logger)
-	if err != nil {
-		return "", err
-	}
-
-	err = client.CreateOrUpdateCluster(ctx, clusterName, cred[kubeConfig])
+	err = ca.argocdClient.CreateOrUpdateCluster(ctx, clusterName, cred[kubeConfig])
 	if err != nil {
 		return "", err
 	}
@@ -266,14 +256,9 @@ func (ca *AppGitConfigHelper) CreateCluster(ctx context.Context, id, clusterName
 }
 
 func (ca *AppGitConfigHelper) WaitForArgoCDToSync(ctx context.Context, ns, resName string) error {
-	client, err := argocd.NewClient(logger)
-	if err != nil {
-		return err
-	}
-
 	synched := false
 	for i := 0; i < 3; i++ {
-		app, err := client.GetAppSyncStatus(ctx, ns, resName)
+		app, err := ca.argocdClient.GetAppSyncStatus(ctx, ns, resName)
 		if err != nil {
 			return fmt.Errorf("app %s synch staus fetch failed", resName)
 		}
