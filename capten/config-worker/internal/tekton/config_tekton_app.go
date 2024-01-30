@@ -204,16 +204,14 @@ func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.Tekton
 }
 
 func (cp *TektonApp) synchPipelineConfig(req *model.TektonPipelineUseCase, templateDir, reqRepo string) error {
-	if _, err := os.Stat(filepath.Join(reqRepo, cp.pluginConfig.TektonProject)); err != nil {
-		for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.TektonPipelinePath, cp.pluginConfig.PipelineClusterConfigSyncPath)} {
-			err := copy.Copy(filepath.Join(templateDir, config), filepath.Join(reqRepo, config),
-				copy.Options{
-					OnDirExists: func(src, dest string) copy.DirExistsAction {
-						return copy.Replace
-					}})
-			if err != nil {
-				return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
-			}
+	for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.TektonPipelinePath, cp.pluginConfig.PipelineClusterConfigSyncPath)} {
+		err := copy.Copy(filepath.Join(templateDir, config), filepath.Join(reqRepo, config),
+			copy.Options{
+				OnDirExists: func(src, dest string) copy.DirExistsAction {
+					return copy.Replace
+				}})
+		if err != nil {
+			return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
 		}
 	}
 
@@ -378,9 +376,16 @@ func (cp *TektonApp) createOrUpdateSecrets(ctx context.Context, req *model.Tekto
 			if err != nil {
 				return fmt.Errorf("failed to get GetClusterCreds, %v", err)
 			}
+
+			projectURL := req.CredentialIdentifiers[agentmodel.CrossplaneGitProject].Url
+			projectURLParts := strings.Split(projectURL, "https://")
+			if len(projectURLParts) != 2 {
+				return fmt.Errorf("project url not in correct format, %s", projectURL)
+			}
+
 			strdata["GIT_USER_NAME"] = []byte(username)
 			strdata["GIT_TOKEN"] = []byte(token)
-			strdata["GIT_PROJECT_URL"] = []byte(req.CredentialIdentifiers[agentmodel.CrossplaneGitProject].Url)
+			strdata["GIT_PROJECT_URL"] = []byte(projectURLParts[1])
 			strdata["APP_CONFIG_PATH"] = []byte(filepath.Join(cp.crossplanConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.CredentialIdentifiers[agentmodel.ManagedCluster].Url, "apps"))
 			strdata["CLUSTER_CA"] = []byte(kubeCa)
 			strdata["CLUSTER_ENDPOINT"] = []byte(kubeEndpoint)

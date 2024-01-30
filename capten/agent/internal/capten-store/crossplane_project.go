@@ -122,7 +122,7 @@ func (a *Store) executeCrossplaneProjectsSelectQuery(query string) ([]*model.Cro
 
 		gitProject, err := a.GetGitProjectForID(project.GitProjectId)
 		if err != nil {
-			a.log.Errorf("Crossplane project %s not exist in git projects", project.Id)
+			a.log.Debugf("Crossplane project %s not exist in git projects, %v", project.Id, err)
 			continue
 		}
 

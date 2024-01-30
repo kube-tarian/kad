@@ -77,7 +77,7 @@ func getConnection(cfg *Config, oryClient oryclient.OryClient) (*grpc.ClientConn
 	}
 
 	dialOptions := []grpc.DialOption{
-		grpc.WithUnaryInterceptor(timeout.UnaryClientInterceptor(5 * time.Second)),
+		grpc.WithUnaryInterceptor(timeout.UnaryClientInterceptor(60 * time.Second)),
 	}
 
 	if cfg.AuthEnabled {

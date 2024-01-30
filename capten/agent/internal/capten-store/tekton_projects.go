@@ -123,7 +123,7 @@ func (a *Store) executeTektonProjectsSelectQuery(query string) ([]*model.TektonP
 		&project.Id, &project.GitProjectId, &project.Status, &project.LastUpdateTime, &project.WorkflowId, &project.WorkflowStatus) {
 		gitProject, err := a.GetGitProjectForID(project.Id)
 		if err != nil {
-			a.log.Errorf("tekton project %s not exist in git projects", project.Id)
+			a.log.Debugf("tekton project %s not exist in git projects, %v", project.Id, err)
 			continue
 		}
 
