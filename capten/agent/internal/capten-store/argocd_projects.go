@@ -68,7 +68,7 @@ func (a *Store) executeArgoCDProjectsSelectQuery(query string) ([]*model.ArgoCDP
 		&project.Id, &project.GitProjectId, &project.Status, &project.LastUpdateTime) {
 		gitProject, err := a.GetGitProjectForID(project.GitProjectId)
 		if err != nil {
-			a.log.Errorf("argocd project %s not exist in git projects", project.GitProjectId)
+			a.log.Debugf("argocd project %s not exist in git projects, %v", project.GitProjectId, err)
 			continue
 		}
 
