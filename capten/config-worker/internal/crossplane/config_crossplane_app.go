@@ -21,6 +21,7 @@ type Config struct {
 	PluginConfigFile        string `envconfig:"CROSSPLANE_PLUGIN_CONFIG_FILE" default:"/crossplane_plugin_config.json"`
 	CloudProviderEntityName string `envconfig:"CLOUD_PROVIDER_ENTITY_NAME" default:"cloud-provider"`
 	DomainName              string `envconfig:"DOMAIN_NAME" default:"capten"`
+	DisableCrossplane       bool   `envconfig:"DISABLE_CROSSPLANE" default:"true"`
 }
 
 type CrossPlaneApp struct {

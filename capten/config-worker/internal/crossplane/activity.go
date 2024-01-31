@@ -34,6 +34,11 @@ func processConfigurationActivity(ctx context.Context, params model.ConfigurePar
 		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to initialize crossplane plugin, %v", err)
 	}
 
+	if cp.cfg.DisableCrossplane {
+		logger.Infof("disabled crossplane workflows")
+		return string(model.WorkFlowStatusCompleted), nil
+	}
+
 	switch params.Action {
 	case model.CrossPlaneClusterUpdate:
 		reqLocal := &model.CrossplaneClusterUpdate{}
