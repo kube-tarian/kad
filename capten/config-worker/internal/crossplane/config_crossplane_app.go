@@ -109,6 +109,11 @@ func (cp *CrossPlaneApp) configureProjectAndApps(ctx context.Context, req *model
 }
 
 func (cp *CrossPlaneApp) synchProviders(req *model.CrossplaneUseCase, templateDir, reqRepo string) error {
+
+	if err := cp.deleteProviderConfigs(reqRepo, req); err != nil {
+		return fmt.Errorf("failed to delete provider configs, %v", err)
+	}
+
 	err := cp.createProviderConfigs(filepath.Join(templateDir, cp.pluginConfig.ProviderConfigSyncPath), req)
 	if err != nil {
 		return fmt.Errorf("failed to create provider config, %v", err)
@@ -123,6 +128,7 @@ func (cp *CrossPlaneApp) synchProviders(req *model.CrossplaneUseCase, templateDi
 	if err != nil {
 		return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
 	}
+
 	return nil
 }
 
@@ -209,6 +215,43 @@ func (cp *CrossPlaneApp) createProviderConfigs(dir string, req *model.Crossplane
 		}
 		logger.Infof("crossplane provider %s config written to %s", providerName, providerFile)
 	}
+	return nil
+}
+
+func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.CrossplaneUseCase) error {
+	logger.Infof("processing %d crossplane providers to sync & delete provider configs", len(req.CrossplaneProviders))
+
+	providerMap := map[string]agentmodel.CrossplaneProvider{}
+	for _, provider := range req.CrossplaneProviders {
+		providerMap[strings.ToLower(provider.ProviderName)] = provider
+	}
+
+	fi, err := os.ReadDir(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath))
+	if err != nil {
+		return err
+	}
+
+	for _, file := range fi {
+		provider := strings.TrimSuffix(file.Name(), "-provider.yaml")
+
+		_, ok := providerMap[provider]
+		if !ok {
+			providerRepoFilePath := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", provider))
+			logger.Infof("removing the provider '%s' from git repo path %s", provider, providerRepoFilePath)
+
+			if err := os.Remove(providerRepoFilePath); err != nil {
+				logger.Errorf("failed to remove from the file", err)
+				continue
+			}
+
+			fileToDeleteInRepoPath := filepath.Join(".", cp.pluginConfig.ProviderConfigSyncPath, fmt.Sprintf("%s-provider.yaml", provider))
+			if err = cp.helper.RemoveFilesFromRepo([]string{fileToDeleteInRepoPath}); err != nil {
+				logger.Errorf("failed to remove from git repo", err)
+				continue
+			}
+		}
+	}
+
 	return nil
 }
 

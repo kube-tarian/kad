@@ -24,11 +24,13 @@ func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req 
 	defer os.RemoveAll(customerRepo)
 
 	cloudType := strings.ToLower(req.CloudType)
-	var syncPath string
-	if cp.pluginConfig.ProviderEndpointUpdates.SyncAppPath == "" {
-		syncPath = fmt.Sprintf("infra/crossplane/argocd-apps/templates/package-k8s/%s-packages/%s-k8s-package.yaml", cloudType, cloudType)
-	} else {
-		syncPath = fmt.Sprintf("%s/%s-packages/%s-k8s-package.yaml", cp.pluginConfig.ProviderEndpointUpdates.SyncAppPath, cloudType, cloudType)
+	syncPath := fmt.Sprintf("%s/%s-packages/%s-k8s-package.yaml", cp.pluginConfig.ProviderEndpointUpdates.SyncAppPath, cloudType, cloudType)
+
+	if _, err := os.Stat(fmt.Sprintf("%s/%s-packages", cp.pluginConfig.ProviderEndpointUpdates.SyncAppPath, cloudType)); err != nil && os.IsNotExist(err) {
+		logger.Errorf("provider package directory is not available, path - %s, provider - %s", syncPath, cloudType)
+		return string(agentmodel.WorkFlowStatusCompleted), nil
+	} else if err != nil {
+		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get provider config directory")
 	}
 
 	ns, resName, err := getAppNameNamespace(ctx, filepath.Join(customerRepo, syncPath))
@@ -40,7 +42,7 @@ func (cp *CrossPlaneApp) configureConfigProviderUpdate(ctx context.Context, req 
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to sync argocd app")
 	}
-	logger.Infof("synched provider config main-app %s", resName)
+	logger.Infof("synched provider config main-app %s, namespace %s", resName, ns)
 
 	err = cp.helper.WaitForArgoCDToSync(ctx, ns, resName)
 	if err != nil {
