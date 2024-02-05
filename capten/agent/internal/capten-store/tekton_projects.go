@@ -89,6 +89,28 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 			if err := a.DeleteTektonProject(tekPro.Id); err != nil {
 				return nil, err
 			}
+
+			for _, gitProject := range allTektonProjects {
+				var deleteRecord = true
+				if tekPro.GitProjectId == gitProject.Id {
+					deleteRecord = false
+					break
+				}
+
+				if deleteRecord {
+					tags := []string{}
+					for _, v := range gitProject.Tags {
+						if v != "tekton" {
+							tags = append(tags, v)
+						}
+					}
+
+					gitProject.Tags = tags
+					if err := a.UpsertGitProject(gitProject); err != nil {
+						return nil, err
+					}
+				}
+			}
 		} else {
 			regTektonProjectId[tekPro.Id] = tekPro
 		}
@@ -108,6 +130,12 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 		if err := a.UpsertTektonProject(project); err != nil {
 			return nil, err
 		}
+
+		tektonGitProject.Tags = append(tektonGitProject.Tags, "tekton")
+		if err := a.UpsertGitProject(tektonGitProject); err != nil {
+			return nil, err
+		}
+
 		return project, nil
 	}
 	return regTektonProjects[0], nil

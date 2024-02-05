@@ -132,6 +132,23 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 	}
 	a.log.Infof("Delete Git project %s request recieved", request.Id)
 
+	gitProject, err := a.as.GetGitProjectForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get gitProject from db, %v", err)
+		return &captenpluginspb.DeleteGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get gitProject from db",
+		}, nil
+	}
+
+	if len(gitProject.Tags) > 0 {
+		a.log.Errorf("failed to delete gitProject from db, repo is being used in %+v, %v", gitProject.Tags, err)
+		return &captenpluginspb.DeleteGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete gitProject from db, as repo is being used in plugins",
+		}, nil
+	}
+
 	if err := a.deleteGitProjectCredential(ctx, request.Id); err != nil {
 		return &captenpluginspb.DeleteGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,

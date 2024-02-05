@@ -152,6 +152,7 @@ message GitProject {
     string lastUpdateTime = 4;
     string accessToken = 5;
     string userID = 6;
+    repeated string tags = 7;
 }
 
 message GetGitProjectsResponse {

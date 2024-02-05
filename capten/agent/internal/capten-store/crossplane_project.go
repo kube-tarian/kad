@@ -87,6 +87,28 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 			if err := a.DeleteCrossplaneProject(crossplaneProject.Id); err != nil {
 				return nil, err
 			}
+
+			for _, gitProject := range allCrossplaneGitProjects {
+				var deleteRecord = true
+				if crossplaneProject.GitProjectId == gitProject.Id {
+					deleteRecord = false
+					break
+				}
+
+				if deleteRecord {
+					tags := []string{}
+					for _, v := range gitProject.Tags {
+						if v != "crossplane" {
+							tags = append(tags, v)
+						}
+					}
+
+					gitProject.Tags = tags
+					if err := a.UpsertGitProject(gitProject); err != nil {
+						return nil, err
+					}
+				}
+			}
 		}
 	}
 
@@ -103,6 +125,12 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 		if err := a.UpsertCrossplaneProject(project); err != nil {
 			return nil, err
 		}
+
+		crosplaneGitProject.Tags = append(crosplaneGitProject.Tags, "crossplane")
+		if err := a.UpsertGitProject(crosplaneGitProject); err != nil {
+			return nil, err
+		}
+
 		return project, nil
 	}
 
