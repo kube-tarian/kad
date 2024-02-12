@@ -102,10 +102,11 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 							tags = append(tags, v)
 						}
 					}
-
-					gitProject.Tags = tags
-					if err := a.UpsertGitProject(gitProject); err != nil {
-						return nil, err
+					if len(tags) > 0 {
+						gitProject.Tags = tags
+						if err := a.UpsertGitProject(gitProject); err != nil {
+							return nil, err
+						}
 					}
 				}
 			}

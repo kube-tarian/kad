@@ -105,9 +105,11 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 						}
 					}
 
-					gitProject.Tags = tags
-					if err := a.UpsertGitProject(gitProject); err != nil {
-						return nil, err
+					if len(tags) > 0 {
+						gitProject.Tags = tags
+						if err := a.UpsertGitProject(gitProject); err != nil {
+							return nil, err
+						}
 					}
 				}
 			}
