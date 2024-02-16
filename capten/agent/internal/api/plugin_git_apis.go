@@ -141,8 +141,10 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 		}, nil
 	}
 
-	if len(gitProject.Tags) > 0 {
-		a.log.Errorf("failed to delete gitProject from db, repo is being used in %+v, %v", gitProject.Tags, err)
+	if len(gitProject.UsedPlugins) > 0 && request.ForceDelete {
+		a.log.Infof("deleting the gitProject from db with force update, repo is being used in %+v, %v", gitProject.UsedPlugins, err)
+	} else if len(gitProject.UsedPlugins) > 0 {
+		a.log.Errorf("failed to delete gitProject from db, repo is being used in %+v, %v", gitProject.UsedPlugins, err)
 		return &captenpluginspb.DeleteGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to delete gitProject from db, as repo is being used in plugins",
@@ -194,6 +196,8 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 		}
 		r.AccessToken = accessToken
 		r.UserID = userID
+		r.SecretePath = fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProjectEntityName, r.Id)
+		r.SecreteKeys = []string{"accessToken", "userID"}
 	}
 
 	a.log.Infof("Found %d git projects", len(res))
@@ -236,6 +240,8 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 		}
 		r.AccessToken = accessToken
 		r.UserID = userID
+		r.SecretePath = fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProjectEntityName, r.Id)
+		r.SecreteKeys = []string{"accessToken", "userID"}
 	}
 
 	a.log.Infof("Found %d git projects for lables %v", len(res), request.Labels)

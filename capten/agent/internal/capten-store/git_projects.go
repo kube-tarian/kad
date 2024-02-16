@@ -15,9 +15,9 @@ const (
 	insertGitProjectId           = "INSERT INTO %s.GitProjects(id) VALUES (?)"
 	updateGitProjectById         = "UPDATE %s.GitProjects SET %s WHERE id=?"
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"
-	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time, tags FROM %s.GitProjects"
-	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time, tags FROM %s.GitProjects WHERE %s"
-	selectGetGitProjectById      = "SELECT id, project_url, labels, last_update_time, tags FROM %s.GitProjects WHERE id=%s;"
+	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time, used_plugins FROM %s.GitProjects"
+	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time, used_plugins FROM %s.GitProjects WHERE %s"
+	selectGetGitProjectById      = "SELECT id, project_url, labels, last_update_time, used_plugins FROM %s.GitProjects WHERE id=%s;"
 )
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
@@ -92,7 +92,7 @@ func (a *Store) executeGitProjectsSelectQuery(query string) ([]*captenpluginspb.
 	ret := make([]*captenpluginspb.GitProject, 0)
 	for iter.Scan(
 		&project.Id, &project.ProjectUrl,
-		&labels, &project.LastUpdateTime, &project.Tags,
+		&labels, &project.LastUpdateTime, &project.UsedPlugins,
 	) {
 		labelsTmp := make([]string, len(labels))
 		copy(labelsTmp, labels)
@@ -101,7 +101,7 @@ func (a *Store) executeGitProjectsSelectQuery(query string) ([]*captenpluginspb.
 			ProjectUrl:     project.ProjectUrl,
 			Labels:         labelsTmp,
 			LastUpdateTime: project.LastUpdateTime,
-			Tags:           project.Tags,
+			UsedPlugins:    project.UsedPlugins,
 		}
 		ret = append(ret, gitProject)
 	}
@@ -131,13 +131,13 @@ func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (updateP
 		values = append(values, param)
 	}
 
-	if len(config.Tags) > 0 {
-		tags := []string{}
-		for _, tag := range config.Tags {
-			tags = append(tags, fmt.Sprintf("'%s'", tag))
+	if len(config.UsedPlugins) > 0 {
+		usedPlugins := []string{}
+		for _, usedPlugin := range config.UsedPlugins {
+			usedPlugins = append(usedPlugins, fmt.Sprintf("'%s'", usedPlugin))
 		}
-		param := "{" + strings.Join(tags, ", ") + "}"
-		params = append(params, "tags = ?")
+		param := "{" + strings.Join(usedPlugins, ", ") + "}"
+		params = append(params, "used_plugins = ?")
 		values = append(values, param)
 	}
 

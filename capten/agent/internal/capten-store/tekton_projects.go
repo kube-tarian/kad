@@ -98,15 +98,15 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 				}
 
 				if deleteRecord {
-					tags := []string{}
-					for _, v := range gitProject.Tags {
+					usedPlugins := []string{}
+					for _, v := range gitProject.UsedPlugins {
 						if v != "tekton" {
-							tags = append(tags, v)
+							usedPlugins = append(usedPlugins, v)
 						}
 					}
 
-					if len(tags) > 0 {
-						gitProject.Tags = tags
+					if len(usedPlugins) > 0 {
+						gitProject.UsedPlugins = usedPlugins
 						if err := a.UpsertGitProject(gitProject); err != nil {
 							return nil, err
 						}
@@ -133,7 +133,7 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 			return nil, err
 		}
 
-		tektonGitProject.Tags = append(tektonGitProject.Tags, "tekton")
+		tektonGitProject.UsedPlugins = append(tektonGitProject.UsedPlugins, "tekton")
 		if err := a.UpsertGitProject(tektonGitProject); err != nil {
 			return nil, err
 		}

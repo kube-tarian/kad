@@ -96,14 +96,14 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 				}
 
 				if deleteRecord {
-					tags := []string{}
-					for _, v := range gitProject.Tags {
+					usedPlugins := []string{}
+					for _, v := range gitProject.UsedPlugins {
 						if v != "crossplane" {
-							tags = append(tags, v)
+							usedPlugins = append(usedPlugins, v)
 						}
 					}
-					if len(tags) > 0 {
-						gitProject.Tags = tags
+					if len(usedPlugins) > 0 {
+						gitProject.UsedPlugins = usedPlugins
 						if err := a.UpsertGitProject(gitProject); err != nil {
 							return nil, err
 						}
@@ -127,7 +127,7 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 			return nil, err
 		}
 
-		crosplaneGitProject.Tags = append(crosplaneGitProject.Tags, "crossplane")
+		crosplaneGitProject.UsedPlugins = append(crosplaneGitProject.UsedPlugins, "crossplane")
 		if err := a.UpsertGitProject(crosplaneGitProject); err != nil {
 			return nil, err
 		}

@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
 )
 
@@ -101,4 +103,115 @@ func (a *Agent) GetContainerRegistryById(ctx context.Context, request *captensdk
 		StatusMessage: "successfully fetched container registry for " + request.Id,
 	}, nil
 
+}
+
+func (a *Agent) AddPluginUsage(ctx context.Context, request *captensdkpb.AddPluginUsageRequest) (
+	*captensdkpb.AddPluginUsageResponse, error) {
+
+	if request.UsedPlugin == "" {
+		a.log.Error("Used Plugin name is not provided")
+		return &captensdkpb.AddPluginUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Used plugin name is is not provided",
+		}, nil
+	}
+
+	if request.Id == "" {
+		a.log.Error("Git repo Id is not provided")
+		return &captensdkpb.AddPluginUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Git repo Id is not provided",
+		}, nil
+	}
+
+	a.log.Infof("Adding Used plugin %s for git repo Id: %s", request.UsedPlugin, request.Id)
+
+	res, err := a.as.GetGitProjectForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get git project from db, %v", err)
+		return &captensdkpb.AddPluginUsageResponse{
+			Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to fetch git repo for " + request.Id,
+		}, nil
+	}
+
+	gitProject := captenpluginspb.GitProject{
+		Id:          res.Id,
+		ProjectUrl:  res.ProjectUrl,
+		Labels:      res.Labels,
+		UsedPlugins: append(res.UsedPlugins, request.UsedPlugin),
+	}
+	if err := a.as.UpsertGitProject(&gitProject); err != nil {
+		a.log.Errorf("failed to Upsert Git repo from db, %v", err)
+		return &captensdkpb.AddPluginUsageResponse{
+			Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to Upsert Git repo for " + request.Id,
+		}, nil
+	}
+
+	a.log.Infof("Successfully adding Used plugin %s for git repo Id: %s", request.UsedPlugin, request.Id)
+
+	return &captensdkpb.AddPluginUsageResponse{
+		Status:        captensdkpb.StatusCode_OK,
+		StatusMessage: fmt.Sprintf("Successfully adding Used plugin %s for git repo Id: %s", request.UsedPlugin, request.Id),
+	}, nil
+}
+
+func (a *Agent) RemovePluginUsage(ctx context.Context, request *captensdkpb.RemovePluginUsageRequest) (
+	*captensdkpb.RemovePluginUsageResponse, error) {
+
+	if request.UsedPlugin == "" {
+		a.log.Error("Used Plugin name is not provided")
+		return &captensdkpb.RemovePluginUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Used plugin name is is not provided",
+		}, nil
+	}
+
+	if request.Id == "" {
+		a.log.Error("Git repo Id is not provided")
+		return &captensdkpb.RemovePluginUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Git repo Id is not provided",
+		}, nil
+	}
+
+	a.log.Infof("Removing Used plugin %s for git repo Id: %s", request.UsedPlugin, request.Id)
+
+	res, err := a.as.GetGitProjectForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get Git project from db, %v", err)
+		return &captensdkpb.RemovePluginUsageResponse{
+			Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to fetch Git repo for " + request.Id,
+		}, nil
+	}
+
+	usedPlugins := []string{}
+	for _, plugin := range res.UsedPlugins {
+		if plugin != request.UsedPlugin {
+			usedPlugins = append(usedPlugins, plugin)
+		}
+	}
+
+	gitProject := captenpluginspb.GitProject{
+		Id:          res.Id,
+		ProjectUrl:  res.ProjectUrl,
+		Labels:      res.Labels,
+		UsedPlugins: usedPlugins,
+	}
+	if err := a.as.UpsertGitProject(&gitProject); err != nil {
+		a.log.Errorf("failed to Upsert Git repo from db, %v", err)
+		return &captensdkpb.RemovePluginUsageResponse{
+			Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to Upsert Git repo for " + request.Id,
+		}, nil
+	}
+
+	a.log.Infof("Successfully removed Used plugin %s for git repo Id: %s", request.UsedPlugin, request.Id)
+
+	return &captensdkpb.RemovePluginUsageResponse{
+		Status:        captensdkpb.StatusCode_OK,
+		StatusMessage: fmt.Sprintf("Successfully removed Used plugin %s for git repo Id: %s", request.UsedPlugin, request.Id),
+	}, nil
 }
