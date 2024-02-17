@@ -209,6 +209,7 @@ message AppConfig {
   string lastUpdateTime = 18;
   string pluginName = 19;
   string pluginDescription = 20;
+  string apiEndpoint = 21;
 }
 
 message AppValues {

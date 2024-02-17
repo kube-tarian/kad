@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	createAppConfigQuery         string = "INSERT INTO %s.store_app_config (name, chart_name, repo_name,release_name, repo_url, namespace, version, create_namespace, privileged_namespace, launch_ui_url, launch_ui_redirect_url, category, icon, description, launch_ui_values, override_values, template_values, created_time, id, plugin_name, plugin_description) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %t, %t, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%v', '%s', '%v', '%s' );"
-	updateAppConfigQuery         string = "UPDATE %s.store_app_config SET chart_name = '%s', repo_name = '%s', repo_url = '%s', namespace = '%s', create_namespace = %t, privileged_namespace = %t, launch_ui_url = '%s', launch_ui_redirect_url = '%s', category = '%s', icon = '%s', description = '%s', launch_ui_values = '%s', override_values = '%s', template_values = '%s', last_updated_time='%v', plugin_name = '%s', plugin_description = '%s' WHERE name = '%s' AND version = '%s';"
+	createAppConfigQuery         string = "INSERT INTO %s.store_app_config (name, chart_name, repo_name,release_name, repo_url, namespace, version, create_namespace, privileged_namespace, launch_ui_url, launch_ui_redirect_url, category, icon, description, launch_ui_values, override_values, template_values, created_time, id, plugin_name, plugin_description, api_endpoint) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', '%s', %t, %t, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%v', '%s', '%v', '%s', '%s' );"
+	updateAppConfigQuery         string = "UPDATE %s.store_app_config SET chart_name = '%s', repo_name = '%s', repo_url = '%s', namespace = '%s', create_namespace = %t, privileged_namespace = %t, launch_ui_url = '%s', launch_ui_redirect_url = '%s', category = '%s', icon = '%s', description = '%s', launch_ui_values = '%s', override_values = '%s', template_values = '%s', last_updated_time='%v', plugin_name = '%s', plugin_description = '%s', api_endpoint = '%s' WHERE name = '%s' AND version = '%s';"
 	deleteAppConfigQuery         string = "DELETE FROM %s.store_app_config WHERE name='%s' AND version='%s';"
-	getAppConfigQuery            string = "SELECT name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, template_values, release_name, plugin_name, plugin_description FROM %s.store_app_config WHERE name='%s' AND version='%s';"
-	getAllAppConfigsQuery        string = "SELECT name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, template_values, release_name, plugin_name, plugin_description FROM %s.store_app_config;"
+	getAppConfigQuery            string = "SELECT name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, template_values, release_name, plugin_name, plugin_description, api_endpoint FROM %s.store_app_config WHERE name='%s' AND version='%s';"
+	getAllAppConfigsQuery        string = "SELECT name,chart_name,repo_name,repo_url,namespace,version,create_namespace,privileged_namespace,launch_ui_url,launch_ui_redirect_url,category,icon,description,launch_ui_values,override_values, template_values, release_name, plugin_name, plugin_description, api_endpoint FROM %s.store_app_config;"
 	appConfigExistanceCheckQuery string = "SELECT name, version FROM %s.store_app_config WHERE name='%s' AND version ='%s';"
 )
 
@@ -46,7 +46,7 @@ func (a *AstraServerStore) AddOrUpdateStoreApp(config *types.StoreAppConfig) err
 				a.keyspace, config.ChartName, config.RepoName, config.RepoURL, config.Namespace, config.CreateNamespace,
 				config.PrivilegedNamespace, config.LaunchURL, config.LaunchUIDescription, config.Category, config.Icon,
 				config.Description, launchUIValues, overrideValues, templateValues,
-				time.Now().Format(time.RFC3339), config.PluginName, config.PluginDescription, config.AppName, config.Version),
+				time.Now().Format(time.RFC3339), config.PluginName, config.PluginDescription, config.APIEndpoint, config.AppName, config.Version),
 		}
 	} else {
 		query = &pb.Query{
@@ -55,7 +55,7 @@ func (a *AstraServerStore) AddOrUpdateStoreApp(config *types.StoreAppConfig) err
 				config.Namespace, config.Version, config.CreateNamespace, config.PrivilegedNamespace, config.LaunchURL,
 				config.LaunchUIDescription, config.Category, config.Icon, config.Description, config.LaunchUIValues,
 				overrideValues, templateValues, time.Now().Format(time.RFC3339), uuid.New().String(), config.PluginName,
-				config.PluginDescription),
+				config.PluginDescription, config.APIEndpoint),
 		}
 	}
 
@@ -107,7 +107,7 @@ func (a *AstraServerStore) GetAppFromStore(name, version string) (*types.AppConf
 	return config, nil
 }
 
-func (a *AstraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
+func (a *AstraServerStore) GetAppsFromStore() ([]types.AppConfig, error) {
 	selectQuery := &pb.Query{
 		Cql: fmt.Sprintf(getAllAppConfigsQuery,
 			a.keyspace),
@@ -121,7 +121,7 @@ func (a *AstraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
 	result := response.GetResultSet()
 
 	if len(result.Rows) == 0 {
-		return nil, fmt.Errorf("app config's not found")
+		return []types.AppConfig{}, nil
 	}
 
 	var appConfigs []types.AppConfig
@@ -133,7 +133,7 @@ func (a *AstraServerStore) GetAppsFromStore() (*[]types.AppConfig, error) {
 		appConfigs = append(appConfigs, *config)
 	}
 
-	return &appConfigs, nil
+	return appConfigs, nil
 }
 
 func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
@@ -215,6 +215,11 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 		return nil, fmt.Errorf("failed to get plugin description values: %w", err)
 	}
 
+	cqlAPIEndpoint, err := client.ToString(row.Values[19])
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ap endpoint values: %w", err)
+	}
+
 	var cqlLaunchUiValuesByte []byte
 	if len(cqlLaunchUiValues) > 0 {
 		cqlLaunchUiValuesByte, _ = base64.StdEncoding.DecodeString(cqlLaunchUiValues)
@@ -250,6 +255,7 @@ func toAppConfig(row *pb.Row) (*types.AppConfig, error) {
 		ReleaseName:         cqlReleaseNameValues,
 		PluginName:          cqlPluginName,
 		PluginDescription:   cqlPluginDescription,
+		APIEndpoint:         cqlAPIEndpoint,
 	}
 	return config, nil
 }

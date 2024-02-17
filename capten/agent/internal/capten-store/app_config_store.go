@@ -43,6 +43,7 @@ const (
 	updateTime                           = "update_time"
 	usecase, projectUrl, status, details = "usecase", "project_url", "status", "details"
 	pluginName, pluginDescription        = "plugin_name", "plugin_description"
+	apiEndpoint                          = "api_endpoint"
 )
 
 var (
@@ -56,6 +57,7 @@ var (
 		templateValues, defaultApp,
 		icon, installStatus,
 		updateTime, pluginName, pluginDescription,
+		apiEndpoint,
 	}
 )
 
@@ -101,7 +103,7 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 		&templateValues, &config.DefualtApp,
 		&config.Icon, &config.InstallStatus,
 		&config.LastUpdateTime, &config.PluginName,
-		&config.PluginDescription,
+		&config.PluginDescription, &config.ApiEndpoint,
 	); err != nil {
 		return nil, err
 	}
@@ -138,7 +140,7 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&templateValues, &config.DefualtApp,
 		&config.Icon, &config.InstallStatus,
 		&config.LastUpdateTime, &config.PluginName,
-		&config.PluginDescription,
+		&config.PluginDescription, &config.ApiEndpoint,
 	) {
 		configCopy := config
 		overrideValuesCopy, _ := base64.StdEncoding.DecodeString(overrideValues)
@@ -256,6 +258,11 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 	if config.Config.PluginDescription != "" {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", pluginDescription, config.Config.PluginDescription))
+	}
+
+	if config.Config.ApiEndpoint != "" {
+		params = append(params,
+			fmt.Sprintf("%s = '%s'", apiEndpoint, config.Config.ApiEndpoint))
 	}
 
 	params = append(params,
