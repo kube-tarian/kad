@@ -47,7 +47,7 @@ func (s *Server) GetStoreApps(ctx context.Context, request *serverpb.GetStoreApp
 	}
 
 	appsData := []*serverpb.StoreAppsData{}
-	for _, config := range *configs {
+	for _, config := range configs {
 		overrideValues, err := s.deriveTemplateOverrideValues(config.OverrideValues, clusterGlobalValues)
 		if err != nil {
 			s.log.Errorf("failed to update overrided store app values for app %s, %v", config.ReleaseName, err)

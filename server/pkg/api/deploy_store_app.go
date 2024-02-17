@@ -73,6 +73,7 @@ func (s *Server) DeployStoreApp(ctx context.Context, request *serverpb.DeploySto
 			DefualtApp:          false,
 			PluginName:          config.PluginName,
 			PluginDescription:   config.PluginDescription,
+			ApiEndpoint:         config.APIEndpoint,
 		},
 		AppValues: &agentpb.AppValues{
 			OverrideValues: dervivedOverrideValues,

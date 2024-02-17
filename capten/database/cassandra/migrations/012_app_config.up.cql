@@ -1,0 +1,1 @@
+ALTER TABLE ClusterAppConfig ADD api_endpoint TEXT;

@@ -38,6 +38,9 @@ func (s *Server) AddStoreApp(ctx context.Context, request *serverpb.AddStoreAppR
 		OverrideValues:      request.AppValues.OverrideValues,
 		LaunchUIValues:      request.AppValues.LaunchUIValues,
 		TemplateValues:      request.AppValues.TemplateValues,
+		PluginName:          request.AppConfig.PluginName,
+		PluginDescription:   request.AppConfig.PluginDescription,
+		APIEndpoint:         request.AppConfig.ApiEndpoint,
 	}
 
 	if err := s.serverStore.AddOrUpdateStoreApp(config); err != nil {
