@@ -303,9 +303,10 @@ message CaptenPlugin {
     string pluginName = 1;
     string pluginDescription = 2;
     string launchURL = 3;
-    bytes launchIcon = 4;
-    string installStatus = 5;
-    string runtimeStatus = 6;
+    string apiEndpoint = 4;
+    bytes launchIcon = 5;
+    string installStatus = 6;
+    string runtimeStatus = 7;
 }
 
 message GetCaptenPluginsRequest {
