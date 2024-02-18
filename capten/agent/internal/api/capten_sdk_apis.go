@@ -159,9 +159,9 @@ func (a *Agent) RegisterResourceUsage(ctx context.Context, request *captensdkpb.
 				StatusMessage: "failed to fetch git repo for " + request.ResourceId,
 			}, nil
 		}
+		res.UsedPlugins = append(res.UsedPlugins, request.PluginName)
 		x, _ := json.Marshal(res)
 		fmt.Println(string(x))
-		res.UsedPlugins = append(res.UsedPlugins, request.PluginName)
 		if err := a.as.UpsertGitProject(res); err != nil {
 			a.log.Errorf("failed to Upsert Git repo from db, %v", err)
 			return &captensdkpb.RegisterResourceUsageResponse{
