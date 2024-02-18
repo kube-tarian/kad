@@ -1,6 +1,7 @@
 package captenstore
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -23,8 +24,12 @@ const (
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
+	fmt.Println("upsert")
+	x, _ := json.Marshal(config)
+	fmt.Println(string(x))
 	batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime)
 	err := a.client.Session().ExecuteBatch(batch)
+	fmt.Println(err)
 	if err != nil {
 		updatePlaceholders, values := formUpdateKvPairsForGitProject(config)
 		if updatePlaceholders == "" {
