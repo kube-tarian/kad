@@ -1,7 +1,6 @@
 package captenstore
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -22,27 +21,28 @@ const (
 )
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
+
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	fmt.Println("upsert")
-	x, _ := json.Marshal(config)
-	fmt.Println(string(x))
-	batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime, config.UsedPlugins)
-	err := a.client.Session().ExecuteBatch(batch)
-	fmt.Println(err)
-	if err != nil {
+
+	if _, err := a.GetGitProjectForID(config.Id); err != nil {
+		batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime, config.UsedPlugins)
+	} else {
 		updatePlaceholders, values := formUpdateKvPairsForGitProject(config)
 		if updatePlaceholders == "" {
 			return err
 		}
 		query := fmt.Sprintf(updateGitProjectById, a.keyspace, updatePlaceholders)
-		fmt.Println(query)
 		args := append(values, config.Id)
 		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
-		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return err
+
+	if err := a.client.Session().ExecuteBatch(batch); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Store) DeleteGitProjectById(id string) error {
