@@ -9,10 +9,6 @@ import (
 	captenmodel "github.com/kube-tarian/kad/capten/model"
 )
 
-const (
-	tektonConfigUseCase string = "tekton"
-)
-
 func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenpluginspb.RegisterTektonProjectRequest) (
 	*captenpluginspb.RegisterTektonProjectResponse, error) {
 	a.log.Infof("registering the tekton project")
@@ -24,28 +20,16 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		}, err
 	}
 
-	res, err := a.as.GetTektonPipeliness()
+	project, err := a.as.GetTektonProject()
 	if err != nil {
-		a.log.Errorf("failed to get TektonPipeline from db, %v", err)
+		a.log.Errorf("failed to get tekton Project, %v", err)
 		return &captenpluginspb.RegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "failed to fetch TektonPipelines",
+			StatusMessage: "failed to get tekton Project",
 		}, err
 	}
 
-	pipelines := make([]*captenpluginspb.TektonPipelines, len(res))
-	for index, r := range res {
-		pipelines[index] = &captenpluginspb.TektonPipelines{
-			Id: r.Id, PipelineName: r.PipelineName,
-			WebhookURL: r.WebhookURL, Status: r.Status, GitOrgId: r.GitOrgId,
-			ContainerRegistryIds: r.ContainerRegId, LastUpdateTime: r.LastUpdateTime,
-		}
-		if _, err := a.configureTektonPipelinesGitRepo(r, model.TektonPipelineSync, true); err != nil {
-			a.log.Errorf("failed to trigger the tekton pipeline sync for %s, %v", r.PipelineName, err)
-			pipelines[index].Status = "failed to trigger the sync"
-			continue
-		}
-	}
+	a.configureTektonGitRepo(project)
 
 	a.log.Infof("Successfully registered the project")
 	return &captenpluginspb.RegisterTektonProjectResponse{
@@ -117,11 +101,12 @@ func (a *Agent) GetTektonProject(ctx context.Context, request *captenpluginspb.G
 }
 
 func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
-	ci := captenmodel.UseCase{Type: tektonConfigUseCase, RepoURL: req.GitProjectUrl,
-		VaultCredIdentifier: req.Id, PushToDefaultBranch: !a.createPr}
+	ci := captenmodel.TektonProjectSyncUsecase{RepoURL: req.GitProjectUrl,
+		VaultCredIdentifier: req.GitProjectId, PushToDefaultBranch: !a.createPr}
 	wd := workers.NewConfig(a.tc, a.log)
 
-	wkfId, err := wd.SendAsyncEvent(context.TODO(), &captenmodel.ConfigureParameters{Resource: tektonConfigUseCase}, ci)
+	wkfId, err := wd.SendAsyncEvent(context.TODO(),
+		&captenmodel.ConfigureParameters{Resource: model.TektonPipelineConfigUseCase, Action: model.TektonProjectSync}, ci)
 	if err != nil {
 		req.Status = string(model.TektonProjectConfigurationFailed)
 		req.WorkflowId = "NA"
