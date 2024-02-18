@@ -29,6 +29,15 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 		}, nil
 	}
 
+	apiEndpoint, err := executeStringTemplateValues(request.AppConfig.ApiEndpoint, request.AppValues.OverrideValues)
+	if err != nil {
+		a.log.Errorf("failed to derive template launch URL for app %s, %v", request.AppConfig.ReleaseName, err)
+		return &agentpb.InstallAppResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to prepare app values",
+		}, nil
+	}
+
 	syncConfig := &agentpb.SyncAppData{
 		Config: &agentpb.AppConfig{
 			ReleaseName:         request.AppConfig.ReleaseName,
@@ -49,6 +58,7 @@ func (a *Agent) InstallApp(ctx context.Context, request *agentpb.InstallAppReque
 			DefualtApp:          request.AppConfig.DefualtApp,
 			PluginName:          request.AppConfig.PluginName,
 			PluginDescription:   request.AppConfig.PluginDescription,
+			ApiEndpoint:         apiEndpoint,
 		},
 		Values: &agentpb.AppValues{
 			OverrideValues: request.AppValues.OverrideValues,

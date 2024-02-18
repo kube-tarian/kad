@@ -20,7 +20,7 @@ type ServerStore interface {
 	AddOrUpdateStoreApp(config *types.StoreAppConfig) error
 	DeleteAppInStore(name, version string) error
 	GetAppFromStore(name, version string) (*types.AppConfig, error)
-	GetAppsFromStore() (*[]types.AppConfig, error)
+	GetAppsFromStore() ([]types.AppConfig, error)
 	GetStoreAppValues(name, version string) (*types.AppConfig, error)
 }
 

@@ -43,6 +43,7 @@ type StoreAppConfig struct {
 	TemplateValues      []byte `json:"templateValues,omitempty"`
 	PluginName          string `yaml:"PluginName"`
 	PluginDescription   string `yaml:"PluginDescription"`
+	APIEndpoint         string `yaml:"APIEndpoint"`
 }
 
 type AppConfig struct {
@@ -66,6 +67,7 @@ type AppConfig struct {
 	Icon                string `yaml:"Icon"`
 	PluginName          string `yaml:"PluginName"`
 	PluginDescription   string `yaml:"PluginDescription"`
+	APIEndpoint         string `yaml:"APIEndpoint"`
 }
 
 type AppInstallRequest struct {

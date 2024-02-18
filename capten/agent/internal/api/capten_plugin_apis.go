@@ -31,6 +31,7 @@ func (a *Agent) GetCaptenPlugins(ctx context.Context, request *captenpluginspb.G
 			PluginDescription: r.GetConfig().GetPluginDescription(),
 			LaunchIcon:        r.GetConfig().GetIcon(),
 			LaunchURL:         r.GetConfig().GetLaunchURL(),
+			ApiEndpoint:       r.GetConfig().GetApiEndpoint(),
 			InstallStatus:     r.GetConfig().GetInstallStatus(),
 			RuntimeStatus:     r.GetConfig().GetRuntimeStatus(),
 		})
