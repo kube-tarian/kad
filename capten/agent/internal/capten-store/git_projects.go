@@ -89,11 +89,12 @@ func (a *Store) executeGitProjectsSelectQuery(query string) ([]*captenpluginspb.
 
 	project := captenpluginspb.GitProject{}
 	var labels []string
+	var usedPlugins []string
 
 	ret := make([]*captenpluginspb.GitProject, 0)
 	for iter.Scan(
 		&project.Id, &project.ProjectUrl,
-		&labels, &project.LastUpdateTime, &project.UsedPlugins,
+		&labels, &project.LastUpdateTime, &usedPlugins,
 	) {
 		labelsTmp := make([]string, len(labels))
 		copy(labelsTmp, labels)
@@ -102,7 +103,7 @@ func (a *Store) executeGitProjectsSelectQuery(query string) ([]*captenpluginspb.
 			ProjectUrl:     project.ProjectUrl,
 			Labels:         labelsTmp,
 			LastUpdateTime: project.LastUpdateTime,
-			UsedPlugins:    project.UsedPlugins,
+			UsedPlugins:    usedPlugins,
 		}
 		ret = append(ret, gitProject)
 	}
