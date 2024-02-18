@@ -31,6 +31,7 @@ func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 			return err
 		}
 		query := fmt.Sprintf(updateGitProjectById, a.keyspace, updatePlaceholders)
+		fmt.Println(query)
 		args := append(values, config.Id)
 		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
