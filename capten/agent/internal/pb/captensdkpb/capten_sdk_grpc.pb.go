@@ -24,8 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type CaptenSdkClient interface {
 	GetGitProjectById(ctx context.Context, in *GetGitProjectByIdRequest, opts ...grpc.CallOption) (*GetGitProjectByIdResponse, error)
 	GetContainerRegistryById(ctx context.Context, in *GetContainerRegistryByIdRequest, opts ...grpc.CallOption) (*GetContainerRegistryByIdResponse, error)
-	AddPluginUsage(ctx context.Context, in *AddPluginUsageRequest, opts ...grpc.CallOption) (*AddPluginUsageResponse, error)
-	RemovePluginUsage(ctx context.Context, in *RemovePluginUsageRequest, opts ...grpc.CallOption) (*RemovePluginUsageResponse, error)
+	RegisterResourceUsage(ctx context.Context, in *RegisterResourceUsageRequest, opts ...grpc.CallOption) (*RegisterResourceUsageResponse, error)
+	DeRegisterResourceUsage(ctx context.Context, in *DeRegisterResourceUsageRequest, opts ...grpc.CallOption) (*DeRegisterResourceUsageResponse, error)
 }
 
 type captenSdkClient struct {
@@ -54,18 +54,18 @@ func (c *captenSdkClient) GetContainerRegistryById(ctx context.Context, in *GetC
 	return out, nil
 }
 
-func (c *captenSdkClient) AddPluginUsage(ctx context.Context, in *AddPluginUsageRequest, opts ...grpc.CallOption) (*AddPluginUsageResponse, error) {
-	out := new(AddPluginUsageResponse)
-	err := c.cc.Invoke(ctx, "/captensdkpb.capten_sdk/AddPluginUsage", in, out, opts...)
+func (c *captenSdkClient) RegisterResourceUsage(ctx context.Context, in *RegisterResourceUsageRequest, opts ...grpc.CallOption) (*RegisterResourceUsageResponse, error) {
+	out := new(RegisterResourceUsageResponse)
+	err := c.cc.Invoke(ctx, "/captensdkpb.capten_sdk/RegisterResourceUsage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *captenSdkClient) RemovePluginUsage(ctx context.Context, in *RemovePluginUsageRequest, opts ...grpc.CallOption) (*RemovePluginUsageResponse, error) {
-	out := new(RemovePluginUsageResponse)
-	err := c.cc.Invoke(ctx, "/captensdkpb.capten_sdk/RemovePluginUsage", in, out, opts...)
+func (c *captenSdkClient) DeRegisterResourceUsage(ctx context.Context, in *DeRegisterResourceUsageRequest, opts ...grpc.CallOption) (*DeRegisterResourceUsageResponse, error) {
+	out := new(DeRegisterResourceUsageResponse)
+	err := c.cc.Invoke(ctx, "/captensdkpb.capten_sdk/DeRegisterResourceUsage", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,8 +78,8 @@ func (c *captenSdkClient) RemovePluginUsage(ctx context.Context, in *RemovePlugi
 type CaptenSdkServer interface {
 	GetGitProjectById(context.Context, *GetGitProjectByIdRequest) (*GetGitProjectByIdResponse, error)
 	GetContainerRegistryById(context.Context, *GetContainerRegistryByIdRequest) (*GetContainerRegistryByIdResponse, error)
-	AddPluginUsage(context.Context, *AddPluginUsageRequest) (*AddPluginUsageResponse, error)
-	RemovePluginUsage(context.Context, *RemovePluginUsageRequest) (*RemovePluginUsageResponse, error)
+	RegisterResourceUsage(context.Context, *RegisterResourceUsageRequest) (*RegisterResourceUsageResponse, error)
+	DeRegisterResourceUsage(context.Context, *DeRegisterResourceUsageRequest) (*DeRegisterResourceUsageResponse, error)
 	mustEmbedUnimplementedCaptenSdkServer()
 }
 
@@ -93,11 +93,11 @@ func (UnimplementedCaptenSdkServer) GetGitProjectById(context.Context, *GetGitPr
 func (UnimplementedCaptenSdkServer) GetContainerRegistryById(context.Context, *GetContainerRegistryByIdRequest) (*GetContainerRegistryByIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetContainerRegistryById not implemented")
 }
-func (UnimplementedCaptenSdkServer) AddPluginUsage(context.Context, *AddPluginUsageRequest) (*AddPluginUsageResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddPluginUsage not implemented")
+func (UnimplementedCaptenSdkServer) RegisterResourceUsage(context.Context, *RegisterResourceUsageRequest) (*RegisterResourceUsageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterResourceUsage not implemented")
 }
-func (UnimplementedCaptenSdkServer) RemovePluginUsage(context.Context, *RemovePluginUsageRequest) (*RemovePluginUsageResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemovePluginUsage not implemented")
+func (UnimplementedCaptenSdkServer) DeRegisterResourceUsage(context.Context, *DeRegisterResourceUsageRequest) (*DeRegisterResourceUsageResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeRegisterResourceUsage not implemented")
 }
 func (UnimplementedCaptenSdkServer) mustEmbedUnimplementedCaptenSdkServer() {}
 
@@ -148,38 +148,38 @@ func _CaptenSdk_GetContainerRegistryById_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CaptenSdk_AddPluginUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddPluginUsageRequest)
+func _CaptenSdk_RegisterResourceUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterResourceUsageRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CaptenSdkServer).AddPluginUsage(ctx, in)
+		return srv.(CaptenSdkServer).RegisterResourceUsage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/captensdkpb.capten_sdk/AddPluginUsage",
+		FullMethod: "/captensdkpb.capten_sdk/RegisterResourceUsage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenSdkServer).AddPluginUsage(ctx, req.(*AddPluginUsageRequest))
+		return srv.(CaptenSdkServer).RegisterResourceUsage(ctx, req.(*RegisterResourceUsageRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _CaptenSdk_RemovePluginUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemovePluginUsageRequest)
+func _CaptenSdk_DeRegisterResourceUsage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeRegisterResourceUsageRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CaptenSdkServer).RemovePluginUsage(ctx, in)
+		return srv.(CaptenSdkServer).DeRegisterResourceUsage(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/captensdkpb.capten_sdk/RemovePluginUsage",
+		FullMethod: "/captensdkpb.capten_sdk/DeRegisterResourceUsage",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenSdkServer).RemovePluginUsage(ctx, req.(*RemovePluginUsageRequest))
+		return srv.(CaptenSdkServer).DeRegisterResourceUsage(ctx, req.(*DeRegisterResourceUsageRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -200,12 +200,12 @@ var CaptenSdk_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _CaptenSdk_GetContainerRegistryById_Handler,
 		},
 		{
-			MethodName: "AddPluginUsage",
-			Handler:    _CaptenSdk_AddPluginUsage_Handler,
+			MethodName: "RegisterResourceUsage",
+			Handler:    _CaptenSdk_RegisterResourceUsage_Handler,
 		},
 		{
-			MethodName: "RemovePluginUsage",
-			Handler:    _CaptenSdk_RemovePluginUsage_Handler,
+			MethodName: "DeRegisterResourceUsage",
+			Handler:    _CaptenSdk_DeRegisterResourceUsage_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

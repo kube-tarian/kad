@@ -15,9 +15,9 @@ const (
 	insertCloudProviderId           = "INSERT INTO %s.CloudProviders(id) VALUES (?)"
 	updateCloudProviderById         = "UPDATE %s.CloudProviders SET %s WHERE id=?"
 	deleteCloudProviderById         = "DELETE FROM %s.CloudProviders WHERE id= ?"
-	selectAllCloudProviders         = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders"
-	selectAllCloudProvidersByLabels = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE %s"
-	selectGetCloudProviderById      = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE id=%s;"
+	selectAllCloudProviders         = "SELECT id, cloud_type, labels, last_update_time, used_plugins FROM %s.CloudProviders"
+	selectAllCloudProvidersByLabels = "SELECT id, cloud_type, labels, last_update_time, used_plugins FROM %s.CloudProviders WHERE %s"
+	selectGetCloudProviderById      = "SELECT id, cloud_type, labels, last_update_time, used_plugins FROM %s.CloudProviders WHERE id=%s;"
 )
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
@@ -91,17 +91,39 @@ func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, clo
 
 }
 
+func (a *Store) GetCloudProvidersByLabels(searchLabels []string) ([]*captenpluginspb.CloudProvider, error) {
+
+	whereLabelsClause := ""
+
+	if len(searchLabels) != 0 {
+		if whereLabelsClause != "" {
+			whereLabelsClause += " AND "
+		}
+		labelContains := []string{}
+		for _, label := range searchLabels {
+			labelContains = append(labelContains, fmt.Sprintf("labels CONTAINS '%s'", label))
+		}
+		whereLabelsClause += "(" + strings.Join(labelContains, " OR ") + ")"
+		whereLabelsClause += " ALLOW FILTERING"
+	}
+
+	query := fmt.Sprintf(selectAllCloudProvidersByLabels, a.keyspace, whereLabelsClause)
+	return a.executeCloudProvidersSelectQuery(query)
+
+}
+
 func (a *Store) executeCloudProvidersSelectQuery(query string) ([]*captenpluginspb.CloudProvider, error) {
 	selectQuery := a.client.Session().Query(query)
 	iter := selectQuery.Iter()
 
 	provider := captenpluginspb.CloudProvider{}
 	var labels []string
+	var UsedPlugins []string
 
 	ret := make([]*captenpluginspb.CloudProvider, 0)
 	for iter.Scan(
 		&provider.Id, &provider.CloudType,
-		&labels, &provider.LastUpdateTime,
+		&labels, &provider.LastUpdateTime, &UsedPlugins,
 	) {
 		labelsTmp := make([]string, len(labels))
 		copy(labelsTmp, labels)
@@ -110,6 +132,7 @@ func (a *Store) executeCloudProvidersSelectQuery(query string) ([]*captenplugins
 			CloudType:      provider.CloudType,
 			Labels:         labelsTmp,
 			LastUpdateTime: provider.LastUpdateTime,
+			UsedPlugins:    UsedPlugins,
 		}
 		ret = append(ret, CloudProvider)
 	}
@@ -137,6 +160,16 @@ func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (u
 		params = append(params, "labels = ?")
 		labelsStr := "{" + strings.Join(labels, ", ") + "}"
 		values = append(values, labelsStr)
+	}
+
+	if len(config.UsedPlugins) > 0 {
+		usedPlugins := []string{}
+		for _, label := range config.UsedPlugins {
+			usedPlugins = append(usedPlugins, fmt.Sprintf("'%s'", label))
+		}
+		params = append(params, "used_plugins = ?")
+		usedPluginsStr := "{" + strings.Join(usedPlugins, ", ") + "}"
+		values = append(values, usedPluginsStr)
 	}
 
 	if config.LastUpdateTime != "" {

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/google/uuid"
+	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
 )
@@ -88,28 +89,50 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 				return nil, err
 			}
 
+			// remove crossplane Used Plugin from Git project
+			var removeUsedPlugin = true
+			gp := &captenpluginspb.GitProject{}
 			for _, gitProject := range allCrossplaneGitProjects {
-				var deleteRecord = true
 				if crossplaneProject.GitProjectId == gitProject.Id {
-					deleteRecord = false
+					removeUsedPlugin = false
+					gp = gitProject
 					break
 				}
-
-				if deleteRecord {
-					usedPlugins := []string{}
-					for _, v := range gitProject.UsedPlugins {
-						if v != "crossplane" {
-							usedPlugins = append(usedPlugins, v)
-						}
-					}
-					if len(usedPlugins) > 0 {
-						gitProject.UsedPlugins = usedPlugins
-						if err := a.UpsertGitProject(gitProject); err != nil {
-							return nil, err
-						}
-					}
+			}
+			if removeUsedPlugin {
+				usedPlugins := removePlugin("crossplane", gp.UsedPlugins)
+				gp.UsedPlugins = usedPlugins
+				if err := a.UpsertGitProject(gp); err != nil {
+					return nil, err
 				}
 			}
+
+			// remove crossplane Used Plugin from Cloud provider
+			cloudProviders, err := a.GetCloudProvidersByLabels([]string{"crossplane"})
+			if err != nil {
+				return nil, err
+			}
+			for _, cp := range cloudProviders {
+				usedPlugins := removePlugin("crossplane", cp.UsedPlugins)
+				cp.UsedPlugins = usedPlugins
+				if err := a.UpsertCloudProvider(cp); err != nil {
+					return nil, err
+				}
+			}
+
+			// remove crossplane Used Plugin from Container registry
+			containerRegisties, err := a.GetContainerRegistriesByLabels([]string{"crossplane"})
+			if err != nil {
+				return nil, err
+			}
+			for _, cr := range containerRegisties {
+				usedPlugins := removePlugin("crossplane", cr.UsedPlugins)
+				cr.UsedPlugins = usedPlugins
+				if err := a.UpsertContainerRegistry(cr); err != nil {
+					return nil, err
+				}
+			}
+
 		}
 	}
 
@@ -127,9 +150,34 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 			return nil, err
 		}
 
+		// add crossplane used plugin to git Project
 		crosplaneGitProject.UsedPlugins = append(crosplaneGitProject.UsedPlugins, "crossplane")
 		if err := a.UpsertGitProject(crosplaneGitProject); err != nil {
 			return nil, err
+		}
+
+		// add crossplane used plugin to cloud provider
+		cloudProviders, err := a.GetCloudProvidersByLabels([]string{"crossplane"})
+		if err != nil {
+			return nil, err
+		}
+		for _, cp := range cloudProviders {
+			cp.UsedPlugins = append(cp.UsedPlugins, "crossplane")
+			if err := a.UpsertCloudProvider(cp); err != nil {
+				return nil, err
+			}
+		}
+
+		// add crossplane used plugin to container registry
+		containerRegisties, err := a.GetContainerRegistriesByLabels([]string{"crossplane"})
+		if err != nil {
+			return nil, err
+		}
+		for _, cr := range containerRegisties {
+			cr.UsedPlugins = append(cr.UsedPlugins, "crossplane")
+			if err := a.UpsertContainerRegistry(cr); err != nil {
+				return nil, err
+			}
 		}
 
 		return project, nil

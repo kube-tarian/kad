@@ -200,6 +200,7 @@ message UpdateCloudProviderResponse {
 
 message DeleteCloudProviderRequest {
     string id = 1;
+    bool forceDelete = 2;
 }
 
 message DeleteCloudProviderResponse {
@@ -216,6 +217,9 @@ message CloudProvider {
     repeated string labels = 3;
     string lastUpdateTime = 4;
     map<string, string> cloudAttributes = 5;
+    repeated string usedPlugins = 6;
+    string secretePath = 7;
+    repeated string secreteKeys  = 8;
 }
 
 message GetCloudProvidersResponse {
@@ -414,6 +418,7 @@ message UpdateContainerRegistryResponse {
 
 message DeleteContainerRegistryRequest {
     string id = 1;
+    bool forceDelete = 2;
 }
 
 message DeleteContainerRegistryResponse {
@@ -431,6 +436,9 @@ message ContainerRegistry {
     string lastUpdateTime = 4;
     map<string, string> registryAttributes = 5;
     string registryType = 6;
+    repeated string usedPlugins = 7;
+    string secretePath = 8;
+    repeated string secreteKeys  = 9;
 }
 
 message GetContainerRegistryResponse {

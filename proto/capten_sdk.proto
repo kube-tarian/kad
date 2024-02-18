@@ -7,8 +7,8 @@ package captensdkpb;
 service capten_sdk {
     rpc GetGitProjectById(GetGitProjectByIdRequest) returns (GetGitProjectByIdResponse) {}
     rpc GetContainerRegistryById(GetContainerRegistryByIdRequest) returns (GetContainerRegistryByIdResponse) {}
-    rpc AddPluginUsage(AddPluginUsageRequest) returns (AddPluginUsageResponse) {}
-    rpc RemovePluginUsage(RemovePluginUsageRequest) returns (RemovePluginUsageResponse) {}
+    rpc RegisterResourceUsage(RegisterResourceUsageRequest) returns (RegisterResourceUsageResponse) {}
+    rpc DeRegisterResourceUsage(DeRegisterResourceUsageRequest) returns (DeRegisterResourceUsageResponse) {}
 }
 
 enum StatusCode {
@@ -55,23 +55,25 @@ message GetContainerRegistryByIdResponse {
     string statusMessage = 3;
 }
 
-message AddPluginUsageRequest {
-    string id  = 1;
-    string usedPlugin  = 2;
+message RegisterResourceUsageRequest {
+    string resourceId  = 1;
+    string resourceType  = 2;
+    string pluginName  = 3;
 }
 
-message AddPluginUsageResponse {
+message RegisterResourceUsageResponse {
     GitProject project = 1;
     StatusCode status = 2;
     string statusMessage = 3;
 }
 
-message RemovePluginUsageRequest {
-    string id  = 1;
-    string usedPlugin  = 2;
+message DeRegisterResourceUsageRequest {
+    string resourceId  = 1;
+    string resourceType  = 2;
+    string pluginName  = 3;
 }
 
-message RemovePluginUsageResponse {
+message DeRegisterResourceUsageResponse {
     GitProject project = 1;
     StatusCode status = 2;
     string statusMessage = 3;
