@@ -31,35 +31,44 @@ func (c *TektonpipelineActivty) ConfigurationActivity(ctx context.Context, param
 func processConfigurationActivity(ctx context.Context, params model.ConfigureParameters, payload json.RawMessage) (string, error) {
 	cp, err := NewTektonApp()
 	if err != nil {
-		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to initialize crossplane plugin, %v", err)
-	}
-
-	reqLocal := &model.TektonPipelineUseCase{}
-	if err := json.Unmarshal(payload, reqLocal); err != nil {
-		logger.Errorf("failed to unmarshall the tekton pipeline req for %s, %v", model.TektonPipelineCreate, err)
-		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to unmarshall the crossplane req for %s", model.TektonPipelineCreate)
+		return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to initialize tekton plugin, %v", err)
 	}
 
 	switch params.Action {
-	case model.TektonPipelineCreate:
+	case model.TektonProjectSync:
+		reqLocal := &model.TektonProjectSyncUsecase{}
+		if err := json.Unmarshal(payload, reqLocal); err != nil {
+			logger.Errorf("failed to unmarshall the tekton pipeline req for %s, %v", model.TektonPipelineCreate, err)
+			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to unmarshall the tekton req for %s", model.TektonPipelineCreate)
+		}
 		status, err := cp.configureProjectAndApps(ctx, reqLocal)
 		if err != nil {
-			logger.Errorf("failed to configure tekton project for %s, %v", model.TektonPipelineCreate, err)
-			return status, fmt.Errorf("failed to configure tekton project for %s", model.TektonPipelineCreate)
+			logger.Errorf("failed to configure tekton project, %v", err)
+			return status, fmt.Errorf("failed to configure tekton project")
 		}
 		return status, nil
-	case model.TektonPipelineSync:
-		err := cp.createOrUpdateSecrets(ctx, reqLocal)
+	case model.TektonPipelineCreate:
+		reqLocal := &model.TektonPipelineUseCase{}
+		if err := json.Unmarshal(payload, reqLocal); err != nil {
+			logger.Errorf("failed to unmarshall the tekton pipeline req for %s, %v", model.TektonPipelineCreate, err)
+			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to unmarshall the tekton req for %s", model.TektonPipelineCreate)
+		}
+		err := cp.createOrUpdatePipeline(ctx, reqLocal)
 		if err != nil {
-			logger.Errorf("failed to update tekton project for %s, %v", model.TektonPipelineSync, err)
-			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to update tekton project for %s", model.TektonPipelineSync)
+			logger.Errorf("failed to create/update tekton pipeline %s, %v", reqLocal.PipelineName, err)
+			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to update tekton project %s", reqLocal.PipelineName)
 		}
 		return string(model.WorkFlowStatusCompleted), nil
 	case model.TektonPipelineDelete:
+		reqLocal := &model.TektonPipelineUseCase{}
+		if err := json.Unmarshal(payload, reqLocal); err != nil {
+			logger.Errorf("failed to unmarshall the tekton pipeline req for %s, %v", model.TektonPipelineCreate, err)
+			return string(model.WorkFlowStatusFailed), fmt.Errorf("failed to unmarshall the tekton req for %s", model.TektonPipelineCreate)
+		}
 		status, err := cp.deleteProjectAndApps(ctx, reqLocal)
 		if err != nil {
-			logger.Errorf("failed to delete tekton project for %s, %v", model.TektonPipelineSync, err)
-			return status, fmt.Errorf("failed to delete tekton project for %s", model.TektonPipelineSync)
+			logger.Errorf("failed to delete tekton pipeline %s, %v", reqLocal.PipelineName, err)
+			return status, fmt.Errorf("failed to delete tekton pipeline %s", reqLocal.PipelineName)
 		}
 		return status, nil
 	default:

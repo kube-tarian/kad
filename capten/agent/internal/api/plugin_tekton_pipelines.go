@@ -166,7 +166,7 @@ func (a *Agent) UpdateTektonPipeline(ctx context.Context, request *captenplugins
 		}, err
 	}
 
-	if _, err := a.configureTektonPipelinesGitRepo(pipeline, model.TektonPipelineSync, true); err != nil {
+	if _, err := a.configureTektonPipelinesGitRepo(pipeline, model.CrossPlaneClusterUpdate, true); err != nil {
 		a.log.Errorf("failed to configure updates for TektonPipeline %s, %v", pipeline.PipelineName, err)
 		return &captenpluginspb.UpdateTektonPipelineResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,

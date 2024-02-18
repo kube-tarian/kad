@@ -35,11 +35,13 @@ type SecretNames struct {
 }
 
 type TektonConfigValues struct {
-	Project         string            `json:"project,omitempty"`
-	Src             Source            `json:"source,omitempty"`
-	Destination     Dest              `json:"destination,omitempty"`
-	TektonPath      string            `json:"tektonPath,omitempty"`
-	TektonPipelines *[]TektonPipeline `json:"tektonPipelines,omitempty"`
+	Project          string            `json:"project,omitempty"`
+	Src              Source            `json:"source,omitempty"`
+	Destination      Dest              `json:"destination,omitempty"`
+	TektonPath       string            `json:"tektonPath,omitempty"`
+	TektonPipelines  *[]TektonPipeline `json:"tektonPipelines,omitempty"`
+	PiplelinePath    string            `json:"piplelinePath,omitempty"`
+	ClusterTasksPath string            `json:"clusterTasksPath,omitempty"`
 }
 
 type TektonPieplineConfigValues struct {
