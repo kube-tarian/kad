@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
@@ -149,6 +150,7 @@ func (a *Agent) RegisterResourceUsage(ctx context.Context, request *captensdkpb.
 
 	switch request.ResourceType {
 	case ResourceTypeGit:
+		fmt.Println("git resouce type")
 		res, err := a.as.GetGitProjectForID(request.ResourceId)
 		if err != nil {
 			a.log.Errorf("failed to get git project from db, %v", err)
@@ -157,6 +159,8 @@ func (a *Agent) RegisterResourceUsage(ctx context.Context, request *captensdkpb.
 				StatusMessage: "failed to fetch git repo for " + request.ResourceId,
 			}, nil
 		}
+		x, _ := json.Marshal(res)
+		fmt.Println(string(x))
 		res.UsedPlugins = append(res.UsedPlugins, request.PluginName)
 		if err := a.as.UpsertGitProject(res); err != nil {
 			a.log.Errorf("failed to Upsert Git repo from db, %v", err)
@@ -165,6 +169,7 @@ func (a *Agent) RegisterResourceUsage(ctx context.Context, request *captensdkpb.
 				StatusMessage: "failed to Upsert Git repo for " + request.ResourceId,
 			}, nil
 		}
+		fmt.Println("done")
 	case ResourceTypeCloudProvider:
 		res, err := a.as.GetCloudProviderForID(request.ResourceId)
 		if err != nil {
