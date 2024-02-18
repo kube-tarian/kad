@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
@@ -160,8 +159,6 @@ func (a *Agent) RegisterResourceUsage(ctx context.Context, request *captensdkpb.
 			}, nil
 		}
 		res.UsedPlugins = append(res.UsedPlugins, request.PluginName)
-		x, _ := json.Marshal(res)
-		fmt.Println(string(x))
 		if err := a.as.UpsertGitProject(res); err != nil {
 			a.log.Errorf("failed to Upsert Git repo from db, %v", err)
 			return &captensdkpb.RegisterResourceUsageResponse{
@@ -169,7 +166,6 @@ func (a *Agent) RegisterResourceUsage(ctx context.Context, request *captensdkpb.
 				StatusMessage: "failed to Upsert Git repo for " + request.ResourceId,
 			}, nil
 		}
-		fmt.Println("done")
 	case ResourceTypeCloudProvider:
 		res, err := a.as.GetCloudProviderForID(request.ResourceId)
 		if err != nil {
