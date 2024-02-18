@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	insertGitProject             = "INSERT INTO %s.GitProjects(id, project_url, labels, last_update_time) VALUES (?,?,?,?)"
+	insertGitProject             = "INSERT INTO %s.GitProjects(id, project_url, labels, last_update_time, used_plugins) VALUES (?,?,?,?,?)"
 	insertGitProjectId           = "INSERT INTO %s.GitProjects(id) VALUES (?)"
 	updateGitProjectById         = "UPDATE %s.GitProjects SET %s WHERE id=?"
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"
@@ -27,7 +27,7 @@ func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 	fmt.Println("upsert")
 	x, _ := json.Marshal(config)
 	fmt.Println(string(x))
-	batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime)
+	batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime, config.UsedPlugins)
 	err := a.client.Session().ExecuteBatch(batch)
 	fmt.Println(err)
 	if err != nil {
