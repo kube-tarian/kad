@@ -153,6 +153,9 @@ func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (updateP
 		param := "{" + strings.Join(usedPlugins, ", ") + "}"
 		params = append(params, "used_plugins = ?")
 		values = append(values, param)
+	} else {
+		params = append(params, "used_plugins = ?")
+		values = append(values, nil)
 	}
 
 	if config.LastUpdateTime != "" {
