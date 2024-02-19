@@ -149,7 +149,6 @@ func (a *Agent) RegisterResourceUsage(ctx context.Context, request *captensdkpb.
 
 	switch request.ResourceType {
 	case ResourceTypeGit:
-		fmt.Println("git resouce type")
 		res, err := a.as.GetGitProjectForID(request.ResourceId)
 		if err != nil {
 			a.log.Errorf("failed to get git project from db, %v", err)
