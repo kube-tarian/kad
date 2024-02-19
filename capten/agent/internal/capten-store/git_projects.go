@@ -30,15 +30,16 @@ func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 	} else {
 		updatePlaceholders, values := formUpdateKvPairsForGitProject(config)
 		if updatePlaceholders == "" {
-			return err
+			return fmt.Errorf("placeholders not found")
 		}
 		query := fmt.Sprintf(updateGitProjectById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
-		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
 	}
 
 	if err := a.client.Session().ExecuteBatch(batch); err != nil {
+		fmt.Println("Error in executing batch")
+		fmt.Println(err.Error())
 		return err
 	}
 
