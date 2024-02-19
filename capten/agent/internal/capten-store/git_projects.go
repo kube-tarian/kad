@@ -136,23 +136,23 @@ func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (updateP
 	}
 
 	if len(config.Labels) > 0 {
-		labels := []string{}
-		for _, label := range config.Labels {
-			labels = append(labels, fmt.Sprintf("'%s'", label))
-		}
-		param := "{" + strings.Join(labels, ", ") + "}"
+		// labels := []string{}
+		// for _, label := range config.Labels {
+		// 	labels = append(labels, fmt.Sprintf("'%s'", label))
+		// }
+		// param := "{" + strings.Join(labels, ", ") + "}"
 		params = append(params, "labels = ?")
-		values = append(values, param)
+		values = append(values, config.Labels)
 	}
 
 	if len(config.UsedPlugins) > 0 {
-		usedPlugins := []string{}
-		for _, usedPlugin := range config.UsedPlugins {
-			usedPlugins = append(usedPlugins, fmt.Sprintf("'%s'", usedPlugin))
-		}
-		param := "{" + strings.Join(usedPlugins, ", ") + "}"
+		// usedPlugins := []string{}
+		// for _, usedPlugin := range config.UsedPlugins {
+		// 	usedPlugins = append(usedPlugins, fmt.Sprintf("'%s'", usedPlugin))
+		// }
+		// param := "{" + strings.Join(usedPlugins, ", ") + "}"
 		params = append(params, "used_plugins = ?")
-		values = append(values, param)
+		values = append(values, config.UsedPlugins)
 	} else {
 		params = append(params, "used_plugins = ?")
 		values = append(values, nil)
