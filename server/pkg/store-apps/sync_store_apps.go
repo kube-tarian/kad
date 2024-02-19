@@ -21,8 +21,7 @@ type Config struct {
 }
 
 type AppStoreConfig struct {
-	EnabledApps  []string `yaml:"enabledApps"`
-	DisabledApps []string `yaml:"disabledApps"`
+	EnabledApps []string `yaml:"enabledApps"`
 }
 
 type AppConfig struct {
@@ -46,6 +45,7 @@ type AppConfig struct {
 	Icon                string                 `yaml:"Icon"`
 	PluginName          string                 `yaml:"PluginName"`
 	PluginDescription   string                 `yaml:"PluginDescription"`
+	APIEndpoint         string                 `yaml:"APIEndpoint"`
 }
 
 func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
@@ -69,6 +69,7 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 		return errors.WithMessage(err, "failed to unmarshall store config file")
 	}
 
+	enabledApps := []AppConfig{}
 	for _, appName := range config.EnabledApps {
 		appData, err := os.ReadFile(cfg.AppStoreAppConfigPath + "/" + appName + ".yaml")
 		if err != nil {
@@ -100,6 +101,7 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 			LaunchUIDescription: appConfig.LaunchUIDescription,
 			PluginName:          appConfig.PluginName,
 			PluginDescription:   appConfig.PluginDescription,
+			APIEndpoint:         appConfig.APIEndpoint,
 		}
 
 		if len(appConfig.LaunchUIIcon) != 0 {
@@ -130,8 +132,31 @@ func SyncStoreApps(log logging.Logger, appStore store.ServerStore) error {
 		if err := appStore.AddOrUpdateStoreApp(storeAppConfig); err != nil {
 			return errors.WithMessagef(err, "failed to store app config for %s", appName)
 		}
+		enabledApps = append(enabledApps, appConfig)
 	}
+
+	deleteDisabledApps(log, appStore, enabledApps)
 	return nil
+}
+
+func deleteDisabledApps(log logging.Logger, appStore store.ServerStore, enabledApps []AppConfig) {
+	storedApps, err := appStore.GetAppsFromStore()
+	if err != nil {
+		log.Errorf("failed to get stored apps, %w", err)
+		return
+	}
+
+	for _, app := range storedApps {
+		if isAppEnabled(enabledApps, app.Name, app.Version) {
+			continue
+		}
+
+		err := appStore.DeleteAppInStore(app.Name, app.Version)
+		if err != nil {
+			log.Errorf("failed to delete app %s:%s, %w", app.Name, app.Version, err)
+		}
+		log.Infof("Deleted store app %, version %s", app.Name, app.Version)
+	}
 }
 
 func getAppTemplateValues(log logging.Logger, cfg *Config, appName string) []byte {
@@ -140,4 +165,13 @@ func getAppTemplateValues(log logging.Logger, cfg *Config, appName string) []byt
 		log.Infof("No template file for app %s", appName)
 	}
 	return templateValues
+}
+
+func isAppEnabled(apps []AppConfig, releaseName, version string) bool {
+	for _, app := range apps {
+		if app.ReleaseName == releaseName && app.Version == version {
+			return true
+		}
+	}
+	return false
 }

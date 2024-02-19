@@ -14,10 +14,10 @@ const (
 )
 
 const (
-	TektonPipelineConfigUseCase = "tekton-pipelines"
+	TektonPipelineConfigUseCase = "tekton"
 	TektonHostName              = "tekton"
 	TektonPipelineCreate        = "tekton-pipeline-create"
-	TektonPipelineSync          = "tekton-pipeline-sync"
+	TektonProjectSync           = "tekton-project-sync"
 	TektonPipelineDelete        = "tekton-pipeline-delete"
 )
 
