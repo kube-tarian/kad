@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	insertCloudProvider             = "INSERT INTO %s.CloudProviders(id, cloud_type, labels, last_update_time) VALUES (?,?,?,?)"
+	insertCloudProvider             = "INSERT INTO %s.CloudProviders(id, cloud_type, labels, last_update_time, used_plugins) VALUES (?,?,?,?)"
 	insertCloudProviderId           = "INSERT INTO %s.CloudProviders(id) VALUES (?)"
 	updateCloudProviderById         = "UPDATE %s.CloudProviders SET %s WHERE id=?"
 	deleteCloudProviderById         = "DELETE FROM %s.CloudProviders WHERE id= ?"
@@ -26,15 +26,14 @@ func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 
 	if _, err := a.GetCloudProviderForID(config.Id); err != nil {
-		batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime)
+		batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime, config.UsedPlugins)
 	} else {
 		updatePlaceholders, values := formUpdateKvPairsForCloudProvider(config)
 		if updatePlaceholders == "" {
-			return err
+			return fmt.Errorf("placeholders not found")
 		}
 		query := fmt.Sprintf(updateCloudProviderById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
-		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
 	}
 
@@ -159,23 +158,16 @@ func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (u
 	}
 
 	if len(config.Labels) > 0 {
-		labels := []string{}
-		for _, label := range config.Labels {
-			labels = append(labels, fmt.Sprintf("'%s'", label))
-		}
 		params = append(params, "labels = ?")
-		labelsStr := "{" + strings.Join(labels, ", ") + "}"
-		values = append(values, labelsStr)
+		values = append(values, config.Labels)
 	}
 
 	if len(config.UsedPlugins) > 0 {
-		usedPlugins := []string{}
-		for _, label := range config.UsedPlugins {
-			usedPlugins = append(usedPlugins, fmt.Sprintf("'%s'", label))
-		}
 		params = append(params, "used_plugins = ?")
-		usedPluginsStr := "{" + strings.Join(usedPlugins, ", ") + "}"
-		values = append(values, usedPluginsStr)
+		values = append(values, config.UsedPlugins)
+	} else {
+		params = append(params, "used_plugins = ?")
+		values = append(values, nil)
 	}
 
 	if config.LastUpdateTime != "" {

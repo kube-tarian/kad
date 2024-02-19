@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	insertContainerRegistry            = "INSERT INTO %s.ContainerRegistry(id, registry_url, labels, last_update_time, registry_type) VALUES (?,?,?,?,?)"
+	insertContainerRegistry            = "INSERT INTO %s.ContainerRegistry(id, registry_url, labels, last_update_time, registry_type, used_plugins) VALUES (?,?,?,?,?,?)"
 	updateContainerRegistryById        = "UPDATE %s.ContainerRegistry SET %s WHERE id=?"
 	deleteContainerRegistryById        = "DELETE FROM %s.ContainerRegistry WHERE id= ?"
 	selectAllContainerRegistrys        = "SELECT id, registry_url, labels, last_update_time, registry_type, used_plugins FROM %s.ContainerRegistry"
@@ -20,23 +20,29 @@ const (
 )
 
 func (a *Store) UpsertContainerRegistry(config *captenpluginspb.ContainerRegistry) error {
-	config.LastUpdateTime = time.Now().Format(time.RFC3339)
+
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertContainerRegistry, a.keyspace), config.Id,
-		config.RegistryUrl, config.Labels, config.LastUpdateTime, config.RegistryType)
-	err := a.client.Session().ExecuteBatch(batch)
-	if err != nil {
+	config.LastUpdateTime = time.Now().Format(time.RFC3339)
+
+	if _, err := a.GetContainerRegistryForID(config.Id); err != nil {
+		batch.Query(fmt.Sprintf(insertContainerRegistry, a.keyspace), config.Id,
+			config.RegistryUrl, config.Labels, config.LastUpdateTime, config.RegistryType, config.UsedPlugins)
+	} else {
 		updatePlaceholders, values := formUpdateKvPairsForContainerRegistry(config)
 		if updatePlaceholders == "" {
-			return err
+			return fmt.Errorf("placeholders not found")
 		}
+
 		query := fmt.Sprintf(updateContainerRegistryById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
-		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
-		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return err
+
+	if err := a.client.Session().ExecuteBatch(batch); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Store) DeleteContainerRegistryById(id string) error {

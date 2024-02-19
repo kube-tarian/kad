@@ -1,7 +1,6 @@
 package captenstore
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -33,19 +32,12 @@ func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 		if updatePlaceholders == "" {
 			return fmt.Errorf("placeholders not found")
 		}
-		fmt.Println("re")
-		x, _ := json.Marshal(config)
-		fmt.Println(string(x))
-		fmt.Println("re end")
-		fmt.Println(updatePlaceholders)
 		query := fmt.Sprintf(updateGitProjectById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
 		batch.Query(query, args...)
 	}
 
 	if err := a.client.Session().ExecuteBatch(batch); err != nil {
-		fmt.Println("Error in executing batch")
-		fmt.Println(err.Error())
 		return err
 	}
 
@@ -136,21 +128,11 @@ func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (updateP
 	}
 
 	if len(config.Labels) > 0 {
-		// labels := []string{}
-		// for _, label := range config.Labels {
-		// 	labels = append(labels, fmt.Sprintf("'%s'", label))
-		// }
-		// param := "{" + strings.Join(labels, ", ") + "}"
 		params = append(params, "labels = ?")
 		values = append(values, config.Labels)
 	}
 
 	if len(config.UsedPlugins) > 0 {
-		// usedPlugins := []string{}
-		// for _, usedPlugin := range config.UsedPlugins {
-		// 	usedPlugins = append(usedPlugins, fmt.Sprintf("'%s'", usedPlugin))
-		// }
-		// param := "{" + strings.Join(usedPlugins, ", ") + "}"
 		params = append(params, "used_plugins = ?")
 		values = append(values, config.UsedPlugins)
 	} else {
