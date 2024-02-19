@@ -21,11 +21,13 @@ const (
 )
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
-	config.LastUpdateTime = time.Now().Format(time.RFC3339)
+
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime)
-	err := a.client.Session().ExecuteBatch(batch)
-	if err != nil {
+	config.LastUpdateTime = time.Now().Format(time.RFC3339)
+
+	if _, err := a.GetCloudProviderForID(config.Id); err != nil {
+		batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime)
+	} else {
 		updatePlaceholders, values := formUpdateKvPairsForCloudProvider(config)
 		if updatePlaceholders == "" {
 			return err
@@ -34,9 +36,13 @@ func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error
 		args := append(values, config.Id)
 		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
-		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return err
+
+	if err := a.client.Session().ExecuteBatch(batch); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Store) DeleteCloudProviderById(id string) error {
