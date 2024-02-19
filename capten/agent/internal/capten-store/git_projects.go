@@ -1,6 +1,7 @@
 package captenstore
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -32,6 +33,11 @@ func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 		if updatePlaceholders == "" {
 			return fmt.Errorf("placeholders not found")
 		}
+		fmt.Println("re")
+		x, _ := json.Marshal(config)
+		fmt.Println(string(x))
+		fmt.Println("re end")
+		fmt.Println(updatePlaceholders)
 		query := fmt.Sprintf(updateGitProjectById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
 		batch.Query(query, args...)
