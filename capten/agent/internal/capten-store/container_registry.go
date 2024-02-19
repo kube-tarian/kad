@@ -139,6 +139,9 @@ func formUpdateKvPairsForContainerRegistry(config *captenpluginspb.ContainerRegi
 	if len(config.UsedPlugins) > 0 {
 		params = append(params, "used_plugins = ?")
 		values = append(values, config.UsedPlugins)
+	} else {
+		params = append(params, "used_plugins = ?")
+		values = append(values, nil)
 	}
 
 	if config.LastUpdateTime != "" {
