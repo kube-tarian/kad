@@ -1,5 +1,5 @@
 enabledApps:
   - argo-cd-v1.0.1
-  - crossplane-v1.0.1
+  - crossplane-v1.0.2
   - testkube-v1.0.1
   - tekton-v0.1.7
