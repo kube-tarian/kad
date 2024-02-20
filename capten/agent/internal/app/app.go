@@ -18,7 +18,6 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
-	"github.com/kube-tarian/kad/capten/agent/internal/tekton"
 	"github.com/kube-tarian/kad/capten/agent/internal/util"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
@@ -147,10 +146,6 @@ func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*j
 
 func registerK8SWatcher(dbStore *captenstore.Store) error {
 	if err := crossplane.RegisterK8SWatcher(log, dbStore); err != nil {
-		return err
-	}
-
-	if err := tekton.RegisterK8SWatcher(log, dbStore); err != nil {
 		return err
 	}
 
