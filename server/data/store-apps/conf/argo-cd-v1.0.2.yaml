@@ -7,7 +7,7 @@ RepoURL: "https://kube-tarian.github.io/helmrepo-supporting-tools"
 Namespace: "argo-cd"
 ReleaseName: "argo-cd"
 Icon: "argo-cd.svg"
-Version: "1.0.1"
+Version: "1.0.2"
 CreateNamespace: true
 PluginName: ArgoCD
 PluginDescription: "Configure ArgoCD projects and resources"
