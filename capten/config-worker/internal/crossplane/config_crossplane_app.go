@@ -226,6 +226,14 @@ func (cp *CrossPlaneApp) deleteProviderConfigs(reqRepoDir string, req *model.Cro
 		providerMap[strings.ToLower(provider.ProviderName)] = provider
 	}
 
+	providerPath := filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath)
+
+	_, err := os.Stat(providerPath)
+	if os.IsNotExist(err) {
+		logger.Infof("no provider folder exist")
+		return nil
+	}
+
 	fi, err := os.ReadDir(filepath.Join(reqRepoDir, cp.pluginConfig.ProviderConfigSyncPath))
 	if err != nil {
 		return err
