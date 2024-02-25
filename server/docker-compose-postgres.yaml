@@ -1,0 +1,32 @@
+version: "3.5"
+services:
+  # web:
+  #   build: .
+  #   ports:
+  #     - "80:8000"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   command: ["python", "app.py"]
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: example
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    volumes:
+    - pgdata:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+volumes:
+  pgdata:
