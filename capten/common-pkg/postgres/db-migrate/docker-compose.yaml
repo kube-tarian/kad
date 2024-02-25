@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  cassandra:
+    image: cassandra:3.11.9
+    ports:
+      - '7001:7000' # for some reason port 7000 doesn't work
+      - '9042:9042'
+    volumes:
+      - ./tests/config/cassandra.yaml:/etc/cassandra/cassandra.yaml
+    healthcheck:
+      test: [ "CMD", "/opt/bitnami/cassandra/bin/cqlsh", "-u cassandra", "-p cassandra" ,"-e \"describe keyspaces\"" ]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    # environment:
+      # - CASSANDRA_BROADCAST_ADDRESS=cassandra
