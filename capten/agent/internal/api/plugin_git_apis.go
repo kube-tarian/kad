@@ -131,7 +131,6 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 		}, nil
 	}
 	a.log.Infof("Delete Git project %s request recieved", request.Id)
-	fmt.Println("testing the delete project flow")
 
 	gitProject, err := a.as.GetGitProjectForID(request.Id)
 	if err != nil {
@@ -151,8 +150,6 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 			StatusMessage: "failed to delete gitProject from db, as repo is being used in plugins",
 		}, nil
 	}
-
-	fmt.Println("Retrun the delete project flow")
 
 	if err := a.deleteGitProjectCredential(ctx, request.Id); err != nil {
 		return &captenpluginspb.DeleteGitProjectResponse{
@@ -187,7 +184,6 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 			StatusMessage: "failed to fetch git projects",
 		}, nil
 	}
-	fmt.Println("testing the delete project flow")
 
 	for _, r := range res {
 		accessToken, userID, err := a.getGitProjectCredential(ctx, r.Id)
