@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -78,6 +79,11 @@ func getConnection(cfg *Config, oryClient oryclient.OryClient) (*grpc.ClientConn
 
 	dialOptions := []grpc.DialOption{
 		grpc.WithUnaryInterceptor(timeout.UnaryClientInterceptor(60 * time.Second)),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:                30, // seconds
+			Timeout:             10, // seconds
+			PermitWithoutStream: true,
+		}),
 	}
 
 	if cfg.AuthEnabled {

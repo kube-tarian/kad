@@ -8,6 +8,7 @@ require (
 	github.com/gogo/status v1.1.1
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.1
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/intelops/go-common v1.0.22
 	github.com/kelseyhightower/envconfig v1.4.0
