@@ -51,6 +51,10 @@ gen-protoc:
     		--go-grpc_out=../capten/common-pkg/vault-cred/vaultcredpb --go-grpc_opt=paths=source_relative \
     		./vault_cred.proto
 
+	cd proto && protoc --go_out=../capten/common-pkg/vault-cred/vaultcredpb --go_opt=paths=source_relative \
+    		--go-grpc_out=../capten/common-pkg/vault-cred/vaultcredpb --go-grpc_opt=paths=source_relative \
+    		./vault_cred.proto
+
 docker-build-server:
 	# The prefix for server to changed either as server or intelops-kad-server
 	docker build --platform=linux/amd64 -f dockerfiles/server/Dockerfile -t ${PREFIX}-${SERVER_APP_NAME}:${BUILD} .
