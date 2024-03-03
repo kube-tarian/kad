@@ -62,7 +62,6 @@ func (p *PostgresAdmin) CreateDbUser(serviceUsername string, servicePassword str
 
 func (p *PostgresAdmin) GrantPermission(serviceUsername string, dbAddr, dbAdminUsername, dbAdminPassword, dbName string) error {
 	dbDSN := fmt.Sprintf(dsnDBTemplate, dbAdminUsername, dbAdminPassword, dbAddr, dbName)
-	fmt.Println(dbDSN)
 	session, err := gorm.Open(postgres.Open(dbDSN), &gorm.Config{})
 	if err != nil {
 		return errors.WithMessage(err, "failed to grant permission to service user")
