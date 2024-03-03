@@ -6,7 +6,6 @@ import (
 	"net/url"
 
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
-	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/postgres/db-migrate/migration"
@@ -22,16 +21,16 @@ type DBConfig struct {
 	SourceURI  string `envconfig:"PG_SOURCE_URI" default:"go-bindata"`
 }
 
-func RunMigrations(log logging.Logger, mode migration.Mode) error {
+func RunMigrations(mode migration.Mode) error {
 	conf := &DBConfig{}
 	if err := envconfig.Process("", conf); err != nil {
 		return err
 	}
 
-	return RunMigrationsWithConfig(log, conf, mode)
+	return RunMigrationsWithConfig(conf, mode)
 }
 
-func RunMigrationsWithConfig(log logging.Logger, conf *DBConfig, mode migration.Mode) error {
+func RunMigrationsWithConfig(conf *DBConfig, mode migration.Mode) error {
 	dbConnectionString, err := getDbConnectionURLFromDbType(conf, "")
 	if err != nil {
 		return errors.WithMessage(err, "DB connection Url create failed")
@@ -41,12 +40,10 @@ func RunMigrationsWithConfig(log logging.Logger, conf *DBConfig, mode migration.
 	if err := migration.RunMigrations(conf.SourceURI, dbConnectionString, conf.DBName, mode); err != nil {
 		return err
 	}
-
-	log.Info("Migrations applied successfully")
 	return nil
 }
 
-func RunMigrationsBinDataWithConfig(log logging.Logger, conf *DBConfig, s *bindata.AssetSource, mode migration.Mode) error {
+func RunMigrationsBinDataWithConfig(conf *DBConfig, s *bindata.AssetSource, mode migration.Mode) error {
 	// TODO: password to be passed empty for production
 	dbConnectionString, err := getDbConnectionURLFromDbType(conf, conf.Password)
 	if err != nil {
@@ -56,8 +53,6 @@ func RunMigrationsBinDataWithConfig(log logging.Logger, conf *DBConfig, s *binda
 	if err := migration.RunMigrationsFromBinData(s, conf.SourceURI, dbConnectionString, conf.DBName, mode); err != nil {
 		return err
 	}
-
-	log.Info("Migrations applied with bindata successfully")
 	return nil
 }
 

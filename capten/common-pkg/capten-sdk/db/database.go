@@ -4,19 +4,20 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"postgressetup/pkg/common-pkg/sdk-capten/grpcconn"
-	"postgressetup/pkg/db-migrate/source"
-	"postgressetup/server/pkg/pb/serverpb"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/grpcconn"
+	"github.com/kube-tarian/kad/capten/common-pkg/postgres/db-migrate/migration"
+	"github.com/kube-tarian/kad/capten/common-pkg/postgres/db-migrate/postgres"
+	"github.com/kube-tarian/kad/capten/common-pkg/postgres/db-migrate/source"
 )
 
-type SdkDbClient interface {
-}
-
 type DBClient struct {
-	conf *DBConfig
+	conf                *DBConfig
+	dbAddress           string
+	serviceUserPassword string
 }
 
 type DBConfig struct {
@@ -65,7 +66,7 @@ func (d *DBClient) SetupDatabase() error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	response, err := client.Client.SetupDatabase(ctx, &serverpb.DBSetupRequest{
+	response, err := client.Client.SetupDatabase(ctx, &captensdkpb.DBSetupRequest{
 		DbOemName:       d.conf.DbOemName.String(),
 		DbName:          d.conf.Parameters.DbName,
 		ServiceUserName: d.conf.Parameters.DbServiceUserName,
@@ -73,48 +74,27 @@ func (d *DBClient) SetupDatabase() error {
 	if err != nil {
 		return fmt.Errorf("%s database setup in %s OEM failed: %v", d.conf.DbOemName, d.conf.DbOemName, err)
 	}
-	fmt.Printf("DB setup success: %v", response)
+	fmt.Printf("DB setup status: %v, message: %v, DB URL: %v\n", response.Status, response.StatusMessage, response.DbURL)
 
 	return nil
 }
 
-func (d *DBClient) RunMigrations(migrationsPath string) error {
-	client, err := grpcconn.NewGRPCClient()
+func (d *DBClient) RunMigrations(data map[string][]byte) error {
+	binData := source.NewBinData(data)
+
+	err := postgres.RunMigrationsBinDataWithConfig(
+		&postgres.DBConfig{
+			DBAddr:    d.dbAddress,
+			DBName:    d.conf.Parameters.DbName,
+			Username:  d.conf.Parameters.DbServiceUserName,
+			Password:  d.serviceUserPassword,
+			SourceURI: "go-bindata",
+		},
+		postgres.GetResource(binData.FileNames, binData.Asset),
+		migration.UP,
+	)
 	if err != nil {
-		return fmt.Errorf("grpc connection failed while applying migrations, %v", err)
+		return fmt.Errorf("Run migrations failed, reason: %v", err)
 	}
-	defer client.Close()
-
-	var migrations = map[string][]byte{}
-	files, err := os.ReadDir(migrationsPath)
-	if err != nil {
-		return fmt.Errorf("reading migration scripts from path %s failed: %v", migrationsPath, err)
-	}
-
-	for _, file := range files {
-		migrations[file.Name()], err = getFileContent(migrationsPath, file.Name())
-		if err != nil {
-			return fmt.Errorf("reading the migrations file %s content failed, %v", file.Name(), err)
-		}
-	}
-
-	binData := source.NewBinData(migrations)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
-	response, err := client.Client.RunMigrations(ctx, &serverpb.DBMigrationRequest{
-		DbOemName:       d.conf.DbOemName.String(),
-		DbName:          d.conf.Parameters.DbName,
-		ServiceUserName: d.conf.Parameters.DbServiceUserName,
-		Migrations:      binData.FilesMap,
-	})
-	if err != nil {
-		return fmt.Errorf("%s migrations applying in %s OEM failed: %v", d.conf.DbOemName, d.conf.DbOemName, err)
-	}
-	fmt.Printf("migrations applied successfully: %v", response)
 	return nil
-}
-
-func getFileContent(migrationsPath, fileName string) ([]byte, error) {
-	return os.ReadFile(migrationsPath + fileName)
 }

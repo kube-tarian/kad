@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -12,7 +13,7 @@ import (
 type GRPCClient struct {
 	conn   *grpc.ClientConn
 	conf   *GRPCConfig
-	Client serverpb.ServerClient
+	Client captensdkpb.CaptenSdkClient
 }
 
 type GRPCConfig struct {
@@ -45,7 +46,7 @@ func NewGRPCClientWithConfig(conf *GRPCConfig) (*GRPCClient, error) {
 	serverpb.NewServerClient(conn)
 	client := &GRPCClient{
 		conn:   conn,
-		Client: serverpb.NewServerClient(conn),
+		Client: captensdkpb.NewCaptenSdkClient(conn),
 		conf:   conf,
 	}
 	return client, nil
