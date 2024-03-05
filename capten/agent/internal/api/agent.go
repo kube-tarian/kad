@@ -10,6 +10,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
+	"github.com/kube-tarian/kad/capten/agent/internal/postgres"
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
 )
 
@@ -21,12 +22,13 @@ type Agent struct {
 	captensdkpb.UnimplementedCaptenSdkServer
 	tc       *temporalclient.Client
 	as       *captenstore.Store
+	postgres *postgres.Postgres
 	log      logging.Logger
 	cfg      *config.SericeConfig
 	createPr bool
 }
 
-func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store) (*Agent, error) {
+func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store, postgres *postgres.Postgres) (*Agent, error) {
 	var tc *temporalclient.Client
 	var err error
 
@@ -36,10 +38,11 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Stor
 	}
 
 	agent := &Agent{
-		tc:  tc,
-		as:  as,
-		cfg: cfg,
-		log: log,
+		tc:       tc,
+		as:       as,
+		cfg:      cfg,
+		log:      log,
+		postgres: postgres,
 	}
 	return agent, nil
 }

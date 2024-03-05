@@ -18,9 +18,11 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
+	"github.com/kube-tarian/kad/capten/agent/internal/postgres"
 	"github.com/kube-tarian/kad/capten/agent/internal/util"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
+	"github.com/kube-tarian/kad/capten/common-pkg/psql"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/reflection"
 )
@@ -42,6 +44,10 @@ func Start() {
 		log.Fatalf("%v", err)
 	}
 
+	if err := configurePSQLDB(); err != nil {
+		log.Fatalf("%v", err)
+	}
+
 	as, err := captenstore.NewStore(log)
 	if err != nil {
 		// ignoring store failure until DB user creation working
@@ -49,7 +55,9 @@ func Start() {
 		log.Errorf("failed to initialize store, %v", err)
 	}
 
-	rpcapi, err := agentapi.NewAgent(log, cfg, as)
+	postgres := postgres.NewPostgres(log)
+
+	rpcapi, err := agentapi.NewAgent(log, cfg, as, postgres)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 	}
@@ -146,6 +154,22 @@ func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*j
 
 func registerK8SWatcher(dbStore *captenstore.Store) error {
 	if err := crossplane.RegisterK8SWatcher(log, dbStore); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func configurePSQLDB() error {
+	if err := util.SyncPSQLAdminSecret(log); err != nil {
+		return errors.WithMessage(err, "error in update psql secret to vault")
+	}
+
+	if err := psql.GetPostgresConnectionStatus(); err != nil {
+		return errors.WithMessage(err, "error in update psql secret to vault")
+	}
+
+	if err := postgres.NewPostgres(log).RunMigrations(); err != nil {
 		return err
 	}
 
