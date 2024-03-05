@@ -3,12 +3,15 @@ package vaultcred
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
 	"github.com/kelseyhightower/envconfig"
 	managedcluster "github.com/kube-tarian/kad/capten/common-pkg/managed-cluster"
 	"github.com/kube-tarian/kad/capten/common-pkg/vault-cred/vaultcredpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/keepalive"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -22,7 +25,13 @@ func GetAppRoleToken(appRoleName string, credentialPaths []string) (string, erro
 		return "", fmt.Errorf("vault cred config read failed, %v", err)
 	}
 
-	vc, err := grpc.Dial(conf.VaultCredAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	vc, err := grpc.Dial(conf.VaultCredAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(timeout.UnaryClientInterceptor(60*time.Second)),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:    30, // seconds
+			Timeout: 10, // seconds
+		}))
 	if err != nil {
 		return "", fmt.Errorf("failed to connect vauld-cred server, %v", err)
 	}
