@@ -38,7 +38,7 @@ func getGORMConfig() *gorm.Config {
 
 func getPostgresConnString() string {
 	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-		"Postgres.User", "Postgres.Password", "Postgres.Host", "Postgres.Port", "Postgres.DatabaseName")
+		"Postgres.User", "Postgres.Password", "Postgres.Host", "Postgres.Port", "capten")
 }
 
 // GetGormClient - Returns db Client
