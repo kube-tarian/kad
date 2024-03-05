@@ -11,32 +11,37 @@ import (
 )
 
 const (
-	insertGitProject             = "INSERT INTO %s.GitProjects(id, project_url, labels, last_update_time) VALUES (?,?,?,?)"
+	insertGitProject             = "INSERT INTO %s.GitProjects(id, project_url, labels, last_update_time, used_plugins) VALUES (?,?,?,?,?)"
 	insertGitProjectId           = "INSERT INTO %s.GitProjects(id) VALUES (?)"
 	updateGitProjectById         = "UPDATE %s.GitProjects SET %s WHERE id=?"
 	deleteGitProjectById         = "DELETE FROM %s.GitProjects WHERE id= ?"
-	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects"
-	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE %s"
-	selectGetGitProjectById      = "SELECT id, project_url, labels, last_update_time FROM %s.GitProjects WHERE id=%s;"
+	selectAllGitProjects         = "SELECT id, project_url, labels, last_update_time, used_plugins FROM %s.GitProjects"
+	selectAllGitProjectsByLabels = "SELECT id, project_url, labels, last_update_time, used_plugins FROM %s.GitProjects WHERE %s"
+	selectGetGitProjectById      = "SELECT id, project_url, labels, last_update_time, used_plugins FROM %s.GitProjects WHERE id=%s;"
 )
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
+
 	config.LastUpdateTime = time.Now().Format(time.RFC3339)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime)
-	err := a.client.Session().ExecuteBatch(batch)
-	if err != nil {
+
+	if _, err := a.GetGitProjectForID(config.Id); err != nil {
+		batch.Query(fmt.Sprintf(insertGitProject, a.keyspace), config.Id, config.ProjectUrl, config.Labels, config.LastUpdateTime, config.UsedPlugins)
+	} else {
 		updatePlaceholders, values := formUpdateKvPairsForGitProject(config)
 		if updatePlaceholders == "" {
-			return err
+			return fmt.Errorf("placeholders not found")
 		}
 		query := fmt.Sprintf(updateGitProjectById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
-		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
-		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return err
+
+	if err := a.client.Session().ExecuteBatch(batch); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Store) DeleteGitProjectById(id string) error {
@@ -88,11 +93,12 @@ func (a *Store) executeGitProjectsSelectQuery(query string) ([]*captenpluginspb.
 
 	project := captenpluginspb.GitProject{}
 	var labels []string
+	var usedPlugins []string
 
 	ret := make([]*captenpluginspb.GitProject, 0)
 	for iter.Scan(
 		&project.Id, &project.ProjectUrl,
-		&labels, &project.LastUpdateTime,
+		&labels, &project.LastUpdateTime, &usedPlugins,
 	) {
 		labelsTmp := make([]string, len(labels))
 		copy(labelsTmp, labels)
@@ -101,6 +107,7 @@ func (a *Store) executeGitProjectsSelectQuery(query string) ([]*captenpluginspb.
 			ProjectUrl:     project.ProjectUrl,
 			Labels:         labelsTmp,
 			LastUpdateTime: project.LastUpdateTime,
+			UsedPlugins:    usedPlugins,
 		}
 		ret = append(ret, gitProject)
 	}
@@ -121,13 +128,16 @@ func formUpdateKvPairsForGitProject(config *captenpluginspb.GitProject) (updateP
 	}
 
 	if len(config.Labels) > 0 {
-		labels := []string{}
-		for _, label := range config.Labels {
-			labels = append(labels, fmt.Sprintf("'%s'", label))
-		}
-		param := "{" + strings.Join(labels, ", ") + "}"
 		params = append(params, "labels = ?")
-		values = append(values, param)
+		values = append(values, config.Labels)
+	}
+
+	if len(config.UsedPlugins) > 0 {
+		params = append(params, "used_plugins = ?")
+		values = append(values, config.UsedPlugins)
+	} else {
+		params = append(params, "used_plugins = ?")
+		values = append(values, nil)
 	}
 
 	if config.LastUpdateTime != "" {

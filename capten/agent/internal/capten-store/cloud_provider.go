@@ -11,32 +11,37 @@ import (
 )
 
 const (
-	insertCloudProvider             = "INSERT INTO %s.CloudProviders(id, cloud_type, labels, last_update_time) VALUES (?,?,?,?)"
+	insertCloudProvider             = "INSERT INTO %s.CloudProviders(id, cloud_type, labels, last_update_time, used_plugins) VALUES (?,?,?,?)"
 	insertCloudProviderId           = "INSERT INTO %s.CloudProviders(id) VALUES (?)"
 	updateCloudProviderById         = "UPDATE %s.CloudProviders SET %s WHERE id=?"
 	deleteCloudProviderById         = "DELETE FROM %s.CloudProviders WHERE id= ?"
-	selectAllCloudProviders         = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders"
-	selectAllCloudProvidersByLabels = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE %s"
-	selectGetCloudProviderById      = "SELECT id, cloud_type, labels, last_update_time FROM %s.CloudProviders WHERE id=%s;"
+	selectAllCloudProviders         = "SELECT id, cloud_type, labels, last_update_time, used_plugins FROM %s.CloudProviders"
+	selectAllCloudProvidersByLabels = "SELECT id, cloud_type, labels, last_update_time, used_plugins FROM %s.CloudProviders WHERE %s"
+	selectGetCloudProviderById      = "SELECT id, cloud_type, labels, last_update_time, used_plugins FROM %s.CloudProviders WHERE id=%s;"
 )
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
-	config.LastUpdateTime = time.Now().Format(time.RFC3339)
+
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime)
-	err := a.client.Session().ExecuteBatch(batch)
-	if err != nil {
+	config.LastUpdateTime = time.Now().Format(time.RFC3339)
+
+	if _, err := a.GetCloudProviderForID(config.Id); err != nil {
+		batch.Query(fmt.Sprintf(insertCloudProvider, a.keyspace), config.Id, config.CloudType, config.Labels, config.LastUpdateTime, config.UsedPlugins)
+	} else {
 		updatePlaceholders, values := formUpdateKvPairsForCloudProvider(config)
 		if updatePlaceholders == "" {
-			return err
+			return fmt.Errorf("placeholders not found")
 		}
 		query := fmt.Sprintf(updateCloudProviderById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
-		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
-		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return err
+
+	if err := a.client.Session().ExecuteBatch(batch); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Store) DeleteCloudProviderById(id string) error {
@@ -91,17 +96,39 @@ func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, clo
 
 }
 
+func (a *Store) GetCloudProvidersByLabels(searchLabels []string) ([]*captenpluginspb.CloudProvider, error) {
+
+	whereLabelsClause := ""
+
+	if len(searchLabels) != 0 {
+		if whereLabelsClause != "" {
+			whereLabelsClause += " AND "
+		}
+		labelContains := []string{}
+		for _, label := range searchLabels {
+			labelContains = append(labelContains, fmt.Sprintf("labels CONTAINS '%s'", label))
+		}
+		whereLabelsClause += "(" + strings.Join(labelContains, " OR ") + ")"
+		whereLabelsClause += " ALLOW FILTERING"
+	}
+
+	query := fmt.Sprintf(selectAllCloudProvidersByLabels, a.keyspace, whereLabelsClause)
+	return a.executeCloudProvidersSelectQuery(query)
+
+}
+
 func (a *Store) executeCloudProvidersSelectQuery(query string) ([]*captenpluginspb.CloudProvider, error) {
 	selectQuery := a.client.Session().Query(query)
 	iter := selectQuery.Iter()
 
 	provider := captenpluginspb.CloudProvider{}
 	var labels []string
+	var UsedPlugins []string
 
 	ret := make([]*captenpluginspb.CloudProvider, 0)
 	for iter.Scan(
 		&provider.Id, &provider.CloudType,
-		&labels, &provider.LastUpdateTime,
+		&labels, &provider.LastUpdateTime, &UsedPlugins,
 	) {
 		labelsTmp := make([]string, len(labels))
 		copy(labelsTmp, labels)
@@ -110,6 +137,7 @@ func (a *Store) executeCloudProvidersSelectQuery(query string) ([]*captenplugins
 			CloudType:      provider.CloudType,
 			Labels:         labelsTmp,
 			LastUpdateTime: provider.LastUpdateTime,
+			UsedPlugins:    UsedPlugins,
 		}
 		ret = append(ret, CloudProvider)
 	}
@@ -130,13 +158,16 @@ func formUpdateKvPairsForCloudProvider(config *captenpluginspb.CloudProvider) (u
 	}
 
 	if len(config.Labels) > 0 {
-		labels := []string{}
-		for _, label := range config.Labels {
-			labels = append(labels, fmt.Sprintf("'%s'", label))
-		}
 		params = append(params, "labels = ?")
-		labelsStr := "{" + strings.Join(labels, ", ") + "}"
-		values = append(values, labelsStr)
+		values = append(values, config.Labels)
+	}
+
+	if len(config.UsedPlugins) > 0 {
+		params = append(params, "used_plugins = ?")
+		values = append(values, config.UsedPlugins)
+	} else {
+		params = append(params, "used_plugins = ?")
+		values = append(values, nil)
 	}
 
 	if config.LastUpdateTime != "" {

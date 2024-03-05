@@ -35,3 +35,13 @@ func IsObjectNotFound(err error) bool {
 	}
 	return false
 }
+
+func removePlugin(targetPlugin string, usedPlugins []string) []string {
+	result := []string{}
+	for _, v := range usedPlugins {
+		if v != targetPlugin {
+			result = append(result, v)
+		}
+	}
+	return result
+}

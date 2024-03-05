@@ -110,6 +110,25 @@ func (a *Agent) DeleteCloudProvider(ctx context.Context, request *captenpluginsp
 	}
 	a.log.Infof("Delete Cloud Provider %s request recieved", request.Id)
 
+	cloudprovider, err := a.as.GetCloudProviderForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get cloud provider from db, %v", err)
+		return &captenpluginspb.DeleteCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get cloud provider from db",
+		}, nil
+	}
+
+	if len(cloudprovider.UsedPlugins) > 0 && request.ForceDelete {
+		a.log.Infof("deleting the cloud provider from db with force update, provider is being used in %+v, %v", cloudprovider.UsedPlugins, err)
+	} else if len(cloudprovider.UsedPlugins) > 0 {
+		a.log.Errorf("failed to delete cloud provider from db, provider is being used in %+v, %v", cloudprovider.UsedPlugins, err)
+		return &captenpluginspb.DeleteCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete cloud provider from db, as provider is being used in plugins",
+		}, nil
+	}
+
 	if err := a.deleteCloudProviderCredential(ctx, request.Id); err != nil {
 		return &captenpluginspb.DeleteCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -154,6 +173,13 @@ func (a *Agent) GetCloudProviders(ctx context.Context, request *captenpluginspb.
 			}, nil
 		}
 		r.CloudAttributes = cloudAttributes
+		r.SecretePath = fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, cloudProviderEntityName, r.Id)
+
+		keys := make([]string, 0, len(cloudAttributes))
+		for k := range cloudAttributes {
+			keys = append(keys, k)
+		}
+		r.SecreteKeys = keys
 	}
 
 	a.log.Infof("Found %d cloud providers", len(res))
@@ -195,6 +221,13 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 			}, nil
 		}
 		r.CloudAttributes = cloudAttributes
+		r.SecretePath = fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, cloudProviderEntityName, r.Id)
+
+		keys := make([]string, 0, len(cloudAttributes))
+		for k := range cloudAttributes {
+			keys = append(keys, k)
+		}
+		r.SecreteKeys = keys
 	}
 
 	a.log.Infof("Found %d cloud providers for lables %v and cloud type %v", len(res), request.Labels, request.CloudType)

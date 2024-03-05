@@ -89,6 +89,49 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 			if err := a.DeleteTektonProject(tekPro.Id); err != nil {
 				return nil, err
 			}
+
+			for _, gitProject := range allTektonProjects {
+				var deleteRecord = true
+				if tekPro.GitProjectId == gitProject.Id {
+					deleteRecord = false
+					break
+				}
+
+				if deleteRecord {
+
+					// remove tekton Used Plugin from Git project
+					gitProject.UsedPlugins = removePlugin("tekton", gitProject.UsedPlugins)
+					if err := a.UpsertGitProject(gitProject); err != nil {
+						return nil, err
+					}
+
+					// remove tekton Used Plugin from Cloud provider
+					cloudProviders, err := a.GetCloudProvidersByLabels([]string{"tekton"})
+					if err != nil {
+						return nil, err
+					}
+					for _, cp := range cloudProviders {
+						usedPlugins := removePlugin("tekton", cp.UsedPlugins)
+						cp.UsedPlugins = usedPlugins
+						if err := a.UpsertCloudProvider(cp); err != nil {
+							return nil, err
+						}
+					}
+
+					// remove tekton Used Plugin from Container registry
+					containerRegisties, err := a.GetContainerRegistriesByLabels([]string{"tekton"})
+					if err != nil {
+						return nil, err
+					}
+					for _, cr := range containerRegisties {
+						usedPlugins := removePlugin("tekton", cr.UsedPlugins)
+						cr.UsedPlugins = usedPlugins
+						if err := a.UpsertContainerRegistry(cr); err != nil {
+							return nil, err
+						}
+					}
+				}
+			}
 		} else {
 			regTektonProjectId[tekPro.Id] = tekPro
 		}
@@ -108,6 +151,37 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 		if err := a.UpsertTektonProject(project); err != nil {
 			return nil, err
 		}
+
+		// add tekton used plugin to git repo
+		tektonGitProject.UsedPlugins = append(tektonGitProject.UsedPlugins, "tekton")
+		if err := a.UpsertGitProject(tektonGitProject); err != nil {
+			return nil, err
+		}
+
+		// add tekton used plugin to cloud provider
+		cloudProviders, err := a.GetCloudProvidersByLabels([]string{"tekton"})
+		if err != nil {
+			return nil, err
+		}
+		for _, cp := range cloudProviders {
+			cp.UsedPlugins = append(cp.UsedPlugins, "tekton")
+			if err := a.UpsertCloudProvider(cp); err != nil {
+				return nil, err
+			}
+		}
+
+		// add tekton used plugin to container registry
+		containerRegisties, err := a.GetContainerRegistriesByLabels([]string{"tekton"})
+		if err != nil {
+			return nil, err
+		}
+		for _, cr := range containerRegisties {
+			cr.UsedPlugins = append(cr.UsedPlugins, "tekton")
+			if err := a.UpsertContainerRegistry(cr); err != nil {
+				return nil, err
+			}
+		}
+
 		return project, nil
 	}
 	return regTektonProjects[0], nil

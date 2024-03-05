@@ -11,31 +11,38 @@ import (
 )
 
 const (
-	insertContainerRegistry        = "INSERT INTO %s.ContainerRegistry(id, registry_url, labels, last_update_time, registry_type) VALUES (?,?,?,?,?)"
-	updateContainerRegistryById    = "UPDATE %s.ContainerRegistry SET %s WHERE id=?"
-	deleteContainerRegistryById    = "DELETE FROM %s.ContainerRegistry WHERE id= ?"
-	selectAllContainerRegistrys    = "SELECT id, registry_url, labels, last_update_time, registry_type FROM %s.ContainerRegistry"
-	selectGetContainerRegistryById = "SELECT id, registry_url, labels, last_update_time, registry_type FROM %s.ContainerRegistry WHERE id=%s;"
+	insertContainerRegistry            = "INSERT INTO %s.ContainerRegistry(id, registry_url, labels, last_update_time, registry_type, used_plugins) VALUES (?,?,?,?,?,?)"
+	updateContainerRegistryById        = "UPDATE %s.ContainerRegistry SET %s WHERE id=?"
+	deleteContainerRegistryById        = "DELETE FROM %s.ContainerRegistry WHERE id= ?"
+	selectAllContainerRegistrys        = "SELECT id, registry_url, labels, last_update_time, registry_type, used_plugins FROM %s.ContainerRegistry"
+	selectGetContainerRegistryById     = "SELECT id, registry_url, labels, last_update_time, registry_type, used_plugins FROM %s.ContainerRegistry WHERE id=%s;"
+	selectAllContainerRegistryByLabels = "SELECT id, registry_url, labels, last_update_time, registry_type, used_plugins FROM %s.ContainerRegistry WHERE %s"
 )
 
 func (a *Store) UpsertContainerRegistry(config *captenpluginspb.ContainerRegistry) error {
-	config.LastUpdateTime = time.Now().Format(time.RFC3339)
+
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
-	batch.Query(fmt.Sprintf(insertContainerRegistry, a.keyspace), config.Id,
-		config.RegistryUrl, config.Labels, config.LastUpdateTime, config.RegistryType)
-	err := a.client.Session().ExecuteBatch(batch)
-	if err != nil {
+	config.LastUpdateTime = time.Now().Format(time.RFC3339)
+
+	if _, err := a.GetContainerRegistryForID(config.Id); err != nil {
+		batch.Query(fmt.Sprintf(insertContainerRegistry, a.keyspace), config.Id,
+			config.RegistryUrl, config.Labels, config.LastUpdateTime, config.RegistryType, config.UsedPlugins)
+	} else {
 		updatePlaceholders, values := formUpdateKvPairsForContainerRegistry(config)
 		if updatePlaceholders == "" {
-			return err
+			return fmt.Errorf("placeholders not found")
 		}
+
 		query := fmt.Sprintf(updateContainerRegistryById, a.keyspace, updatePlaceholders)
 		args := append(values, config.Id)
-		batch = a.client.Session().NewBatch(gocql.LoggedBatch)
 		batch.Query(query, args...)
-		err = a.client.Session().ExecuteBatch(batch)
 	}
-	return err
+
+	if err := a.client.Session().ExecuteBatch(batch); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (a *Store) DeleteContainerRegistryById(id string) error {
@@ -66,6 +73,27 @@ func (a *Store) GetContainerRegistries() ([]*captenpluginspb.ContainerRegistry, 
 	return a.executeContainerRegistrysSelectQuery(query)
 }
 
+func (a *Store) GetContainerRegistriesByLabels(searchLabels []string) ([]*captenpluginspb.ContainerRegistry, error) {
+
+	whereLabelsClause := ""
+
+	if len(searchLabels) != 0 {
+		if whereLabelsClause != "" {
+			whereLabelsClause += " AND "
+		}
+		labelContains := []string{}
+		for _, label := range searchLabels {
+			labelContains = append(labelContains, fmt.Sprintf("labels CONTAINS '%s'", label))
+		}
+		whereLabelsClause += "(" + strings.Join(labelContains, " OR ") + ")"
+		whereLabelsClause += " ALLOW FILTERING"
+	}
+
+	query := fmt.Sprintf(selectAllContainerRegistryByLabels, a.keyspace, whereLabelsClause)
+	return a.executeContainerRegistrysSelectQuery(query)
+
+}
+
 func (a *Store) executeContainerRegistrysSelectQuery(query string) ([]*captenpluginspb.ContainerRegistry, error) {
 	selectQuery := a.client.Session().Query(query)
 	iter := selectQuery.Iter()
@@ -75,7 +103,7 @@ func (a *Store) executeContainerRegistrysSelectQuery(query string) ([]*captenplu
 	ret := make([]*captenpluginspb.ContainerRegistry, 0)
 	for iter.Scan(
 		&project.Id, &project.RegistryUrl,
-		&project.Labels, &project.LastUpdateTime, &project.RegistryType,
+		&project.Labels, &project.LastUpdateTime, &project.RegistryType, &project.UsedPlugins,
 	) {
 		ContainerRegistry := &captenpluginspb.ContainerRegistry{
 			Id:             project.Id,
@@ -83,6 +111,7 @@ func (a *Store) executeContainerRegistrysSelectQuery(query string) ([]*captenplu
 			Labels:         project.Labels,
 			LastUpdateTime: project.LastUpdateTime,
 			RegistryType:   project.RegistryType,
+			UsedPlugins:    project.UsedPlugins,
 		}
 		ret = append(ret, ContainerRegistry)
 	}
@@ -105,6 +134,14 @@ func formUpdateKvPairsForContainerRegistry(config *captenpluginspb.ContainerRegi
 	if len(config.Labels) != 0 {
 		params = append(params, "labels = ?")
 		values = append(values, config.Labels)
+	}
+
+	if len(config.UsedPlugins) > 0 {
+		params = append(params, "used_plugins = ?")
+		values = append(values, config.UsedPlugins)
+	} else {
+		params = append(params, "used_plugins = ?")
+		values = append(values, nil)
 	}
 
 	if config.LastUpdateTime != "" {
