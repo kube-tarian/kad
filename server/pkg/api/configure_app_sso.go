@@ -37,7 +37,8 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterI
 		})
 
 		if err != nil || ssoResp == nil || ssoResp.Status != agentpb.StatusCode_OK {
-			return fmt.Errorf("failed to configure sso for app  %s on cluster %s, err: %v", app.ReleaseName, clusterID, ssoResp.StatusMessage)
+			s.log.Errorf("failed to configure sso for app  %s on cluster %s, err: %v", app.ReleaseName, clusterID, err)
+			continue
 		}
 		s.log.Infof("Configure SSO for app %s triggerred, clusterId: %s, [org: %s]",
 			app.ReleaseName, appClientName, clusterID, orgId)

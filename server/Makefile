@@ -19,3 +19,6 @@ oapi-gen-server:
 
 build:
 	CGO_ENABLED=0 go build -o ./build/server cmd/server/main.go
+
+clean:
+	rm -rf ./build

@@ -9,7 +9,6 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/model"
-	captenmodel "github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
 )
 
@@ -295,27 +294,27 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline,
 	containerRegURLIdMap := make(map[string]string)
 	containerRegURLIdMap[containerRegistry.Id] = containerRegistry.RegistryUrl
 
-	ci := captenmodel.TektonPipelineUseCase{
+	ci := model.TektonPipelineUseCase{
 		Type:         model.TektonPipelineConfigUseCase,
 		PipelineName: req.PipelineName,
 		RepoURL:      tektonProject.GitProjectUrl,
-		CredentialIdentifiers: map[captenmodel.Identifiers]captenmodel.CredentialIdentifier{
-			captenmodel.GitOrg: {
+		CredentialIdentifiers: map[model.Identifiers]model.CredentialIdentifier{
+			model.GitOrg: {
 				Identifier: gitProjectEntityName,
 				Id:         req.GitOrgId},
-			captenmodel.Container: {
+			model.Container: {
 				Identifier: containerRegEntityName,
 				Id:         req.ContainerRegId[0],
 				Url:        containerRegistry.RegistryUrl},
-			captenmodel.ManagedCluster: {
+			model.ManagedCluster: {
 				Identifier: ManagedClusterEntityName,
 				Id:         req.ManagedClusterId,
 				Url:        managedCluster.ClusterName},
-			captenmodel.CrossplaneGitProject: {
+			model.CrossplaneGitProject: {
 				Identifier: gitProjectEntityName,
 				Id:         crossplaneProject.GitProjectId,
 				Url:        crossplaneProject.GitProjectUrl},
-			captenmodel.TektonGitProject: {
+			model.TektonGitProject: {
 				Identifier: gitProjectEntityName,
 				Id:         tektonProject.GitProjectId,
 				Url:        tektonProject.GitProjectUrl},
@@ -323,7 +322,7 @@ func (a *Agent) configureTektonPipelinesGitRepo(req *model.TektonPipeline,
 
 	wd := workers.NewConfig(a.tc, a.log)
 	wkfId, err := wd.SendAsyncEvent(context.TODO(),
-		&captenmodel.ConfigureParameters{Resource: model.TektonPipelineConfigUseCase, Action: action}, ci)
+		&model.ConfigureParameters{Resource: model.TektonPipelineConfigUseCase, Action: action}, ci)
 	if err != nil {
 		a.log.Errorf("failed to send event to workflow to configure, %v", err)
 		return "", fmt.Errorf("failed to send event to workflow to configure %s, %v", req.GitOrgUrl, err)

@@ -7,7 +7,6 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/model"
-	captenmodel "github.com/kube-tarian/kad/capten/model"
 )
 
 const (
@@ -161,12 +160,12 @@ func (a *Agent) UnRegisterCrossplaneProject(ctx context.Context, request *capten
 }
 
 func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, providers []model.CrossplaneProvider) error {
-	ci := captenmodel.CrossplaneUseCase{Type: crossplaneConfigUseCase, RepoURL: req.GitProjectUrl,
+	ci := model.CrossplaneUseCase{Type: crossplaneConfigUseCase, RepoURL: req.GitProjectUrl,
 		VaultCredIdentifier: req.GitProjectId, CrossplaneProviders: providers}
 	wd := workers.NewConfig(a.tc, a.log)
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(),
-		&captenmodel.ConfigureParameters{Resource: crossplaneConfigUseCase, Action: model.CrossPlaneProjectSync}, ci)
+		&model.ConfigureParameters{Resource: crossplaneConfigUseCase, Action: model.CrossPlaneProjectSync}, ci)
 	if err != nil {
 		req.Status = string(model.CrossplaneProjectConfigurationFailed)
 		req.WorkflowId = "NA"
