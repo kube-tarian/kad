@@ -165,9 +165,11 @@ func configurePSQLDB() error {
 		return errors.WithMessage(err, "error in update psql secret to vault")
 	}
 
+	fmt.Println("CreatedDatabase start")
 	if err := postgres.NewPostgres(log).CreatedDatabase(); err != nil {
 		return err
 	}
+	fmt.Println("CreatedDatabase end")
 
 	if err := psql.GetPostgresConnectionStatus(); err != nil {
 		return errors.WithMessage(err, "error in update psql secret to vault")
