@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/intelops/go-common/logging"
@@ -13,7 +14,7 @@ import (
 type SyncPSQLSecretConfig struct {
 	DBAdminCredIdentifier string `envconfig:"DB_ADMIN_CRED_IDENTIFIER" default:"psql-admin"`
 	EntityName            string `envconfig:"DB_ENTITY_NAME" required:"true"`
-	SecretName            string `envconfig:"PSQL_SECRET_NAME" required:"true"`
+	SecretName            string `envconfig:"PSQL_SECRET_NAME" required:"true" default:"postgresql"`
 	Namespace             string `envconfig:"POD_NAMESPACE" required:"true"`
 }
 
@@ -28,10 +29,16 @@ func SyncPSQLAdminSecret(log logging.Logger) error {
 		return err
 	}
 
+	fmt.Println("conf.Namespace => ", conf.Namespace)
+	fmt.Println("conf.SecretName =>", conf.SecretName)
+
 	res, err := k8sClient.GetSecretData(conf.Namespace, conf.SecretName)
 	if err != nil {
 		return err
 	}
+
+	x, _ := json.Marshal(*res)
+	fmt.Println(string(x))
 
 	userName := res.Data["username"]
 	password := res.Data["password"]
