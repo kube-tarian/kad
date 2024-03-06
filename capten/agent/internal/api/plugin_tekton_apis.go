@@ -6,7 +6,6 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/model"
-	captenmodel "github.com/kube-tarian/kad/capten/model"
 )
 
 func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenpluginspb.RegisterTektonProjectRequest) (
@@ -145,12 +144,12 @@ func (a *Agent) GetTektonProject(ctx context.Context, request *captenpluginspb.G
 }
 
 func (a *Agent) configureTektonGitRepo(req *model.TektonProject) {
-	ci := captenmodel.TektonProjectSyncUsecase{RepoURL: req.GitProjectUrl,
+	ci := model.TektonProjectSyncUsecase{RepoURL: req.GitProjectUrl,
 		VaultCredIdentifier: req.GitProjectId, PushToDefaultBranch: !a.createPr}
 	wd := workers.NewConfig(a.tc, a.log)
 
 	wkfId, err := wd.SendAsyncEvent(context.TODO(),
-		&captenmodel.ConfigureParameters{Resource: model.TektonPipelineConfigUseCase, Action: model.TektonProjectSync}, ci)
+		&model.ConfigureParameters{Resource: model.TektonPipelineConfigUseCase, Action: model.TektonProjectSync}, ci)
 	if err != nil {
 		req.Status = string(model.TektonProjectConfigurationFailed)
 		req.WorkflowId = "NA"
