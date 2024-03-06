@@ -89,8 +89,8 @@ func GetExponentialBackoff() *backoff.ExponentialBackOff {
 
 func GetPostgresConnectionStatus() error {
 	err := backoff.Retry(func() error {
-		var client gorm.DB
 
+		client := GetGormClient()
 		db, err := client.DB()
 		if err != nil {
 			return err

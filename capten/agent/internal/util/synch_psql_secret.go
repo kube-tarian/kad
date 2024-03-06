@@ -2,7 +2,6 @@ package util
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/intelops/go-common/logging"
@@ -21,7 +20,7 @@ type SyncPSQLSecretConfig struct {
 func SyncPSQLAdminSecret(log logging.Logger) error {
 	conf := &SyncPSQLSecretConfig{}
 	if err := envconfig.Process("", conf); err != nil {
-		return fmt.Errorf("cassandra config read failed, %v", err)
+		return fmt.Errorf("psql config read failed, %v", err)
 	}
 
 	k8sClient, err := k8s.NewK8SClient(log)
@@ -29,16 +28,10 @@ func SyncPSQLAdminSecret(log logging.Logger) error {
 		return err
 	}
 
-	fmt.Println("conf.Namespace => ", conf.Namespace)
-	fmt.Println("conf.SecretName =>", conf.SecretName)
-
 	res, err := k8sClient.GetSecretData(conf.Namespace, conf.SecretName)
 	if err != nil {
 		return err
 	}
-
-	x, _ := json.Marshal(*res)
-	fmt.Println(string(x))
 
 	userName := res.Data["username"]
 	password := res.Data["password"]
