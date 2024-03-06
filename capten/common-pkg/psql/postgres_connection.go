@@ -36,15 +36,15 @@ func getGORMConfig() *gorm.Config {
 	}
 }
 
-func getPostgresConnString() string {
+func getPostgresConnString(db string) string {
 	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-		"postgres", "jlFlhO8ing", "postgresql.capten.svc.cluster.local", 5432, "capten")
+		"postgres", "jlFlhO8ing", "postgresql.capten.svc.cluster.local", 5432, db)
 }
 
 // GetGormClient - Returns db Client
-func GetGormClient() *gorm.DB {
+func GetGormClient(connectionStr string) *gorm.DB {
 	once.Do(func() {
-		db, err := gorm.Open(postgres.Open(getPostgresConnString()), getGORMConfig())
+		db, err := gorm.Open(postgres.Open(connectionStr), getGORMConfig())
 		if err != nil {
 			panic("Failed to open postgres connection\n" + err.Error())
 		}
@@ -67,7 +67,7 @@ func GetGormClient() *gorm.DB {
 }
 
 func GetGormWrapper() *gorm.DB {
-	return GetGormClient()
+	return GetGormClient(getPostgresConnString("capten"))
 }
 
 func GetExponentialBackoff() *backoff.ExponentialBackOff {
@@ -89,7 +89,23 @@ func GetExponentialBackoff() *backoff.ExponentialBackOff {
 func GetPostgresConnectionStatus() error {
 	err := backoff.Retry(func() error {
 
-		client := GetGormClient()
+		client := GetGormClient(getPostgresConnString("capten"))
+		db, err := client.DB()
+		if err != nil {
+			return err
+		}
+		return db.Ping()
+	}, GetExponentialBackoff())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetPostgresRootConnectionStatus() error {
+	err := backoff.Retry(func() error {
+
+		client := GetGormClient(getPostgresConnString("postgres"))
 		db, err := client.DB()
 		if err != nil {
 			return err

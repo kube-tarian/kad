@@ -27,6 +27,10 @@ func (handler *Postgres) RunMigrations() error {
 
 func (handler *Postgres) CreatedDatabase() error {
 
+	if err := psql.GetPostgresRootConnectionStatus(); err != nil {
+		return err
+	}
+
 	err := handler.db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s;", "capten")).Error
 
 	return err
