@@ -38,13 +38,12 @@ func getGORMConfig() *gorm.Config {
 
 func getPostgresConnString() string {
 	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s",
-		"Postgres.User", "Postgres.Password", "Postgres.Host", "Postgres.Port", "capten")
+		"postgres", "jlFlhO8ing", "postgresql.capten.svc.cluster.local", 5432, "capten")
 }
 
 // GetGormClient - Returns db Client
-func GetGormClient(dataBaseType ...string) *gorm.DB {
+func GetGormClient() *gorm.DB {
 	once.Do(func() {
-		var err error
 		db, err := gorm.Open(postgres.Open(getPostgresConnString()), getGORMConfig())
 		if err != nil {
 			panic("Failed to open postgres connection\n" + err.Error())
