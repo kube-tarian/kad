@@ -67,7 +67,8 @@ func GetGormClient(connectionStr string) *gorm.DB {
 }
 
 func GetGormWrapper() *gorm.DB {
-	return GetGormClient(getPostgresConnString("capten"))
+	// return GetGormClient(getPostgresConnString("capten"))
+	return GetGormClient(getPostgresConnString("postgres"))
 }
 
 func GetExponentialBackoff() *backoff.ExponentialBackOff {
@@ -89,7 +90,8 @@ func GetExponentialBackoff() *backoff.ExponentialBackOff {
 func GetPostgresConnectionStatus() error {
 	err := backoff.Retry(func() error {
 
-		client := GetGormClient(getPostgresConnString("capten"))
+		// client := GetGormClient(getPostgresConnString("capten"))
+		client := GetGormClient(getPostgresConnString("postgres"))
 		db, err := client.DB()
 		if err != nil {
 			return err
