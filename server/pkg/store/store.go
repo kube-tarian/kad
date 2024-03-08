@@ -22,6 +22,7 @@ type ServerStore interface {
 	GetAppFromStore(name, version string) (*types.AppConfig, error)
 	GetAppsFromStore() ([]types.AppConfig, error)
 	GetStoreAppValues(name, version string) (*types.AppConfig, error)
+	AddOrUpdatePlugin(config *types.Plugin) error
 }
 
 func NewStore(db string) (ServerStore, error) {

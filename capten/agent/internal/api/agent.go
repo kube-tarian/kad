@@ -11,6 +11,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
+	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 )
 
 var _ agentpb.AgentServer = &Agent{}
@@ -19,6 +20,7 @@ type Agent struct {
 	agentpb.UnimplementedAgentServer
 	captenpluginspb.UnimplementedCaptenPluginsServer
 	captensdkpb.UnimplementedCaptenSdkServer
+	clusterpluginspb.UnimplementedClusterPluginsServer
 	tc       *temporalclient.Client
 	as       *captenstore.Store
 	log      logging.Logger

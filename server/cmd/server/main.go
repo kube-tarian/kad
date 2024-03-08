@@ -18,6 +18,7 @@ import (
 	storeapps "github.com/kube-tarian/kad/server/pkg/store-apps"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"github.com/kube-tarian/kad/server/pkg/store"
 )
@@ -100,6 +101,7 @@ func main() {
 
 	serverpb.RegisterServerServer(grpcServer, rpcServer)
 	captenpluginspb.RegisterCaptenPluginsServer(grpcServer, rpcServer)
+	pluginstorepb.RegisterPluginStoreServer(grpcServer, rpcServer)
 	log.Info("Server listening at ", listener.Addr())
 	reflection.Register(grpcServer)
 
