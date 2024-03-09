@@ -26,7 +26,7 @@ type Config struct {
 	DBName                string `envconfig:"PG_DB_NAME" required:"true"`
 	DBServiceUsername     string `envconfig:"PG_DB_SERVICE_USERNAME" required:"true"`
 	Password              string `envconfig:"PG_DB_SERVICE_USER_PASSWORD" required:"false"`
-	AdminPassword         string `envconfig:"PG_DB_SERVICE_ADMIN_PASSWORD" required:"false"`
+	AdminPassword         string `envconfig:"PG_DB_ADMIN_PASSWORD" required:"false"`
 }
 
 func CreatedDatabase(log logging.Logger) (err error) {
