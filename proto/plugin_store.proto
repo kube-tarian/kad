@@ -1,0 +1,99 @@
+
+syntax = "proto3";
+
+option go_package = "/pluginstorepb";
+
+package pluginstorepb;
+
+service PluginStore {
+  rpc ConfigPluginStore(ConfigPluginStoreRequest) returns (ConfigPluginStoreResponse) {}
+  rpc SyncPluginStore(SyncPluginStoreRequest) returns (SyncPluginStoreResponse) {}
+  rpc GetPlugins(GetPluginsRequest) returns (GetPluginsResponse) {}
+  rpc GetPluginValues(GetPluginValuesRequest) returns (GetPluginValuesResponse) {}
+
+  rpc DeployPlugin(DeployPluginRequest) returns (DeployPluginResponse) {}
+  rpc UnDeployPlugin(UnDeployPluginRequest) returns (UnDeployPluginResponse) {}
+}
+
+enum StatusCode {
+  OK = 0;
+  INTERNRAL_ERROR = 1;
+  INVALID_ARGUMENT = 2;
+  NOT_FOUND = 3;
+}
+
+enum StoreType {
+  CENTRAL_CAPTEN_STORE = 0;
+  LOCAL_CAPTEN_STORE = 1;  
+}
+
+message ConfigPluginStoreRequest {
+  StoreType storeType = 1;
+  string gitProjectId = 2;
+}
+
+message ConfigPluginStoreResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message Plugin {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string description = 3;
+  string category = 4;
+  repeated string versions = 5;
+  bytes icon = 6;
+}
+
+message SyncPluginStoreRequest {
+}
+
+message SyncPluginStoreResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message GetPluginsRequest {
+  StoreType storeType = 1;
+}
+
+message GetPluginsResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  repeated Plugin plugins = 3;
+}
+
+message GetPluginValuesRequest {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string version = 3;
+}
+
+message GetPluginValuesResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  bytes values = 3;
+}
+
+message DeployPluginRequest {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string version = 3;
+  bytes values = 4;
+}
+
+message DeployPluginResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UnDeployPluginRequest {
+  StoreType storeType = 1;
+  string pluginName = 2;
+}
+
+message UnDeployPluginResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+}

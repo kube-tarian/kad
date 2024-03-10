@@ -1,0 +1,79 @@
+
+syntax = "proto3";
+
+option go_package = "/clusterpluginspb";
+
+package clusterpluginspb;
+
+// The greeting service definition.
+service ClusterPlugins {
+  rpc DeployClusterPlugin (DeployClusterPluginRequest) returns (DeployClusterPluginResponse) {}
+  rpc UnDeployClusterPlugin (UnDeployClusterPluginRequest) returns (UnDeployClusterPluginResponse) {}
+  rpc GetClusterPlugins (GetClusterPluginsRequest) returns (GetClusterPluginsResponse) {}
+}
+
+enum StatusCode {
+  OK = 0;
+  INTERNRAL_ERROR = 1;
+  INVALID_ARGUMENT = 2;
+  NOT_FOUND = 3;
+}
+
+enum StoreType {
+  CENTRAL_CAPTEN_STORE = 0;
+  LOCAL_CAPTEN_STORE = 1;  
+}
+
+message Plugin {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string description = 3;
+  string category = 4;
+  string version = 5;
+  bytes icon = 6;
+  string chartName = 7;
+  string chartRepo = 8;
+	string defaultNamespace = 9;
+	bool privilegedNamespace = 10;
+  string pluginEndpoint = 11;
+	repeated string capabilities = 12;
+  bytes values = 13;
+}
+
+message DeployClusterPluginRequest {
+  Plugin plugin = 1;
+}
+
+message DeployClusterPluginResponse {  
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UnDeployClusterPluginRequest {
+  StoreType storeType = 1;
+  string pluginName = 2;
+}
+
+message UnDeployClusterPluginResponse {  
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message ClusterPlugin {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string description = 3;
+  string category = 4;
+  string version = 5;
+  bytes icon = 6;
+}
+
+message GetClusterPluginsRequest {
+}
+
+message GetClusterPluginsResponse {  
+  StatusCode status = 1;
+  string statusMessage = 2;
+  repeated ClusterPlugin plugins = 3;
+}
+

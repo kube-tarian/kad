@@ -1,0 +1,17 @@
+name: "argo-cd"
+description: ""
+category: "CI/CD"
+icon: "argocd.svg"
+deploymentConfig:
+  chartName: "argo-cd"
+  chartRepo: "https://kube-tarian.github.io/helmrepo-supporting-tools"
+  versions:
+    - "v1.0.2"
+  defaultNamespace: "argo-cd"
+  privilegedNamespace: false
+pluginConfig:
+  pluginAccessEndpoint: https://argo.{{.domainName}}
+  capabilities:
+    - name: capten-sdk
+    - name: postgress-store
+    - name: vault-store
