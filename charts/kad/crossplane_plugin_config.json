@@ -4,7 +4,8 @@
   "providerConfigSyncPath": "infra/crossplane/providers",
   "providerPackages": {
     "aws": "xpkg.upbound.io/crossplane-contrib/provider-aws:v0.33.0",
-    "gcp": "xpkg.upbound.io/crossplane-contrib/provider-gcp:v0.22.0"
+    "gcp": "xpkg.upbound.io/crossplane-contrib/provider-gcp:v0.22.0",
+    "azure": "xpkg.upbound.io/upbound/provider-azure-network:v0.39.0"
   },
   "clusterUpdateConfig": {
     "mainAppGitPath": "infra/crossplane/crossplane-main-app.yaml",
