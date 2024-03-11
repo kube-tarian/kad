@@ -13,6 +13,7 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	pluginstore "github.com/kube-tarian/kad/server/pkg/plugin-store"
 	"github.com/kube-tarian/kad/server/pkg/store"
 	"google.golang.org/grpc/metadata"
 )
@@ -34,11 +35,16 @@ type Server struct {
 	oryClient     oryclient.OryClient
 	iam           iamclient.IAMRegister
 	cfg           config.ServiceConfig
+	pluginStore   *pluginstore.PluginStore
 	mutex         *sync.Mutex
 }
 
 func NewServer(log logging.Logger, cfg config.ServiceConfig, serverStore store.ServerStore,
 	oryClient oryclient.OryClient, iam iamclient.IAMRegister) (*Server, error) {
+	pluginStore, err := pluginstore.NewPluginStore(log, serverStore)
+	if err != nil {
+		return nil, err
+	}
 	return &Server{
 		serverStore:   serverStore,
 		agentHandeler: agent.NewAgentHandler(log, cfg, serverStore, oryClient),
@@ -46,6 +52,7 @@ func NewServer(log logging.Logger, cfg config.ServiceConfig, serverStore store.S
 		oryClient:     oryClient,
 		iam:           iam,
 		cfg:           cfg,
+		pluginStore:   pluginStore,
 		mutex:         &sync.Mutex{},
 	}, nil
 }

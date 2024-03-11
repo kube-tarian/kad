@@ -28,9 +28,14 @@ enum StoreType {
   LOCAL_STORE = 1;  
 }
 
-message ConfigurePluginStoreRequest {
+message PluginStoreConfig {
   StoreType storeType = 1;
   string gitProjectId = 2;
+  string gitProjectURL = 3;
+}
+
+message ConfigurePluginStoreRequest {
+  PluginStoreConfig config = 1;  
 }
 
 message ConfigurePluginStoreResponse {
@@ -45,7 +50,7 @@ message GetPluginStoreConfigRequest {
 message GetPluginStoreConfigResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  string gitProjectId = 3;
+  PluginStoreConfig config = 3;
 }
 
 message Plugin {
@@ -58,6 +63,7 @@ message Plugin {
 }
 
 message SyncPluginStoreRequest {
+  StoreType storeType = 1;
 }
 
 message SyncPluginStoreResponse {
