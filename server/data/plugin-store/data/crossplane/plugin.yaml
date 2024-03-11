@@ -1,5 +1,5 @@
 name: "crossplane"
-description: ""
+description: "Framework for building cloud native control planes"
 category: "iaas"
 deploymentConfig:
   chartName: "crossplane"

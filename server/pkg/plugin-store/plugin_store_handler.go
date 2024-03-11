@@ -8,7 +8,6 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
 	"github.com/kube-tarian/kad/server/pkg/store"
-	"github.com/kube-tarian/kad/server/pkg/types"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
@@ -33,34 +32,74 @@ func NewPluginStore(log logging.Logger, dbStore store.ServerStore) (*PluginStore
 }
 
 func (p *PluginStore) ConfigureStore(clusterId string, config *pluginstorepb.PluginStoreConfig) error {
-	return nil
+	return p.dbStore.WritePluginStoreConfig(clusterId, config)
 }
 
 func (p *PluginStore) GetStoreConfig(clusterId string, storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error) {
-	return nil, nil
+	if storeType == pluginstorepb.StoreType_LOCAL_STORE {
+		return p.dbStore.ReadPluginStoreConfig(clusterId)
+	} else if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
+		return &pluginstorepb.PluginStoreConfig{
+			StoreType:     pluginstorepb.StoreType_CENTRAL_STORE,
+			GitProjectId:  p.cfg.PluginStoreProjectURL,
+			GitProjectURL: p.cfg.PluginStoreProjectID,
+		}, nil
+	} else {
+		return nil, fmt.Errorf("not supported store type")
+	}
 }
 
 func (p *PluginStore) SyncPlugins(clusterId string, storeType pluginstorepb.StoreType) error {
-	appListData, err := os.ReadFile(p.cfg.PluginsStorePath + "/" + p.cfg.PluginsFileName)
+	config, err := p.GetStoreConfig(clusterId, storeType)
+	if err != nil {
+		return err
+	}
+
+	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectId, config.GitProjectURL)
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(pluginStoreDir)
+
+	p.log.Infof("Loading plugin data from project %s clone dir %s", config.GitProjectURL, pluginStoreDir)
+	pluginListData, err := os.ReadFile(p.cfg.PluginsStorePath + "/" + p.cfg.PluginsFileName)
 	if err != nil {
 		return errors.WithMessage(err, "failed to read store config file")
 	}
 
-	var config PluginStoreConfig
-	if err := yaml.Unmarshal(appListData, &config); err != nil {
+	var plugins PluginListData
+	if err := yaml.Unmarshal(pluginListData, &plugins); err != nil {
 		return errors.WithMessage(err, "failed to unmarshall store config file")
 	}
 
-	for _, pluginName := range config.Plugins {
-		err := p.addPluginApp(pluginName)
+	for _, pluginName := range plugins.Plugins {
+		err := p.addPluginApp(config.GitProjectId, pluginName)
 		if err != nil {
 			p.log.Errorf("%v", err)
+			continue
 		}
+		p.log.Infof("stored plugin data for plugin %s for cluster %s", pluginName, clusterId)
 	}
 	return nil
 }
 
-func (p *PluginStore) addPluginApp(pluginName string) error {
+func (p *PluginStore) clonePluginStoreProject(projectURL, _ string) (pluginStoreDir string, err error) {
+	pluginStoreDir, err = os.MkdirTemp(p.cfg.PluginsStoreProjectMount, tmpGitProjectCloneStr)
+	if err != nil {
+		err = fmt.Errorf("failed to create template tmp dir, err: %v", err)
+		return
+	}
+
+	gitClient := NewGitClient()
+	if err = gitClient.Clone(pluginStoreDir, projectURL, ""); err != nil {
+		os.RemoveAll(pluginStoreDir)
+		err = fmt.Errorf("failed to Clone template repo, err: %v", err)
+		return
+	}
+	return
+}
+
+func (p *PluginStore) addPluginApp(gitProjectId, pluginName string) error {
 	appData, err := os.ReadFile(p.cfg.PluginsStorePath + "/" + pluginName + "/plugin.yaml")
 	if err != nil {
 		return errors.WithMessagef(err, "failed to read store plugin %s", pluginName)
@@ -75,7 +114,7 @@ func (p *PluginStore) addPluginApp(pluginName string) error {
 		return fmt.Errorf("app name/version is missing for %s", pluginName)
 	}
 
-	plugin := &types.Plugin{
+	plugin := &pluginstorepb.PluginData{
 		PluginName:          appConfig.PluginName,
 		Description:         appConfig.Description,
 		Category:            appConfig.Category,
@@ -88,14 +127,28 @@ func (p *PluginStore) addPluginApp(pluginName string) error {
 		Capabilities:        appConfig.PluginConfig.Capabilities,
 	}
 
-	if err := p.dbStore.AddOrUpdatePlugin(plugin); err != nil {
+	if err := p.dbStore.WritePluginData(gitProjectId, plugin); err != nil {
 		return errors.WithMessagef(err, "failed to store plugin %s", pluginName)
 	}
 	return nil
 }
 
 func (p *PluginStore) GetPlugins(clusterId string, storeType pluginstorepb.StoreType) ([]*pluginstorepb.Plugin, error) {
-	return nil, nil
+	config, err := p.GetStoreConfig(clusterId, storeType)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.dbStore.ReadPlugins(config.GitProjectId)
+}
+
+func (p *PluginStore) GetPluginData(clusterId string, storeType pluginstorepb.StoreType, pluginName string) (*pluginstorepb.PluginData, error) {
+	config, err := p.GetStoreConfig(clusterId, storeType)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.dbStore.ReadPluginData(config.GitProjectId, pluginName)
 }
 
 func (p *PluginStore) GetPluginValues(clusterId string, storeType pluginstorepb.StoreType,

@@ -1,5 +1,5 @@
 name: "argo-cd"
-description: ""
+description: "GitOps continuous delivery tool for Kubernetes"
 category: "CI/CD"
 icon: "argocd.svg"
 deploymentConfig:
@@ -12,6 +12,4 @@ deploymentConfig:
 pluginConfig:
   pluginAccessEndpoint: https://argo.{{.domainName}}
   capabilities:
-    - name: capten-sdk
-    - name: postgress-store
     - name: vault-store

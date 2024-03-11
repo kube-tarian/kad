@@ -1,11 +1,18 @@
 package pluginstore
 
+const (
+	tmpGitProjectCloneStr = "clone*"
+)
+
 type Config struct {
-	PluginsStorePath string `envconfig:"PLUGIN_APP_CONFIG_PATH" default:"/data/app-store/data"`
-	PluginsFileName  string `envconfig:"APP_STORE_CONFIG_FILE" default:"plugins.yaml"`
+	PluginsStoreProjectMount string `envconfig:"PLUGIN_STORE_PROJECT_MOUNT" default:"/plugin-store-clone"`
+	PluginsStorePath         string `envconfig:"PLUGIN_STORE_PATH" default:"/plugin-store"`
+	PluginsFileName          string `envconfig:"PLUGIN_LIST_FILE" default:"plugin-list.yaml"`
+	PluginStoreProjectURL    string `envconfig:"PLUGIN_STORE_PROJECT_URL" default:"https://github.dev/vramk23/capten-plugins"`
+	PluginStoreProjectID     string `envconfig:"PLUGIN_STORE_PROJECT_ID" default:"1"`
 }
 
-type PluginStoreConfig struct {
+type PluginListData struct {
 	Plugins []string `yaml:"plugins"`
 }
 

@@ -1,5 +1,5 @@
 name: "tekton"
-description: ""
+description: "Open-source framework for creating CI/CD systems"
 category: "CI/CD"
 icon: "tekton.svg"
 deploymentConfig:
@@ -14,5 +14,3 @@ pluginConfig:
     - name: capten-sdk
     - name: postgress-store
     - name: vault-store
-      attributes:
-        storePath: tektonplg

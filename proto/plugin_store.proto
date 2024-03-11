@@ -11,6 +11,7 @@ service PluginStore {
   rpc SyncPluginStore(SyncPluginStoreRequest) returns (SyncPluginStoreResponse) {}
   rpc GetPlugins(GetPluginsRequest) returns (GetPluginsResponse) {}
   rpc GetPluginValues(GetPluginValuesRequest) returns (GetPluginValuesResponse) {}
+  rpc GetPluginData(GetPluginDataRequest) returns (GetPluginDataResponse) {}
 
   rpc DeployPlugin(DeployPluginRequest) returns (DeployPluginResponse) {}
   rpc UnDeployPlugin(UnDeployPluginRequest) returns (UnDeployPluginResponse) {}
@@ -34,6 +35,30 @@ message PluginStoreConfig {
   string gitProjectURL = 3;
 }
 
+message Plugin {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string description = 3;
+  string category = 4;
+  repeated string versions = 5;
+  bytes icon = 6;
+}
+
+message PluginData {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string description = 3;
+  string category = 4;
+  repeated string versions = 5;
+  bytes icon = 6;
+  string chartName = 7;
+  string chartRepo = 8;
+	string defaultNamespace = 9;
+	bool privilegedNamespace = 10;
+  string pluginEndpoint = 11;
+	repeated string capabilities = 12;
+}
+
 message ConfigurePluginStoreRequest {
   PluginStoreConfig config = 1;  
 }
@@ -53,14 +78,6 @@ message GetPluginStoreConfigResponse {
   PluginStoreConfig config = 3;
 }
 
-message Plugin {
-  StoreType storeType = 1;
-  string pluginName = 2;
-  string description = 3;
-  string category = 4;
-  repeated string versions = 5;
-  bytes icon = 6;
-}
 
 message SyncPluginStoreRequest {
   StoreType storeType = 1;
@@ -91,6 +108,17 @@ message GetPluginValuesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   bytes values = 3;
+}
+
+message GetPluginDataRequest{
+  StoreType storeType = 1;
+  string pluginName = 2;
+}
+
+message GetPluginDataResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+  PluginData pluginData = 3;
 }
 
 message DeployPluginRequest {

@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 type Plugin struct {
 	PluginName          string   `json:"pluginName,omitempty"`
 	Description         string   `json:"description,omitempty"`
@@ -12,4 +14,11 @@ type Plugin struct {
 	PrivilegedNamespace bool     `json:"privilegedNamespace"`
 	PluginEndpoint      string   `json:"pluginAccessEndpoint"`
 	Capabilities        []string `json:"capabilities,omitempty"`
+}
+
+type PluginStoreConfig struct {
+	StoreType       int
+	GitProjectID    string
+	GitProjectURL   string
+	LastUpdatedTime time.Time
 }
