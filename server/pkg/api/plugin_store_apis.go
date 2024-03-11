@@ -7,9 +7,16 @@ import (
 	pluginstore "github.com/kube-tarian/kad/server/pkg/plugin-store"
 )
 
-func (s *Server) ConfigPluginStore(ctx context.Context, request *pluginstorepb.ConfigPluginStoreRequest) (
-	*pluginstorepb.ConfigPluginStoreResponse, error) {
-	return &pluginstorepb.ConfigPluginStoreResponse{
+func (s *Server) ConfigurePluginStore(ctx context.Context, request *pluginstorepb.ConfigurePluginStoreRequest) (
+	*pluginstorepb.ConfigurePluginStoreResponse, error) {
+	return &pluginstorepb.ConfigurePluginStoreResponse{
+		Status: pluginstorepb.StatusCode_OK,
+	}, nil
+}
+
+func (s *Server) GetPluginStoreConfig(ctx context.Context, request *pluginstorepb.GetPluginStoreConfigRequest) (
+	*pluginstorepb.GetPluginStoreConfigResponse, error) {
+	return &pluginstorepb.GetPluginStoreConfigResponse{
 		Status: pluginstorepb.StatusCode_OK,
 	}, nil
 }
