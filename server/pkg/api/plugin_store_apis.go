@@ -131,7 +131,7 @@ func (s *Server) GetPluginValues(ctx context.Context, request *pluginstorepb.Get
 
 	values, err := s.pluginStore.GetPluginValues(clusterId, request.StoreType, request.PluginName, request.Version)
 	if err != nil {
-		s.log.Errorf("Get plugins request failed for plugin %s-%s, cluster %s, [org: %s], %w",
+		s.log.Errorf("Get plugin values request failed for plugin %s-%s, cluster %s, [org: %s], %w",
 			request.PluginName, request.Version, clusterId, orgId, err)
 		return &pluginstorepb.GetPluginValuesResponse{
 			Status:        pluginstorepb.StatusCode_INTERNRAL_ERROR,
@@ -144,6 +144,37 @@ func (s *Server) GetPluginValues(ctx context.Context, request *pluginstorepb.Get
 	return &pluginstorepb.GetPluginValuesResponse{
 		Status: pluginstorepb.StatusCode_OK,
 		Values: values,
+	}, nil
+}
+
+func (s *Server) GetPluginData(ctx context.Context, request *pluginstorepb.GetPluginDataRequest) (
+	*pluginstorepb.GetPluginDataResponse, error) {
+	orgId, clusterId, err := validateOrgClusterWithArgs(ctx, request.PluginName)
+	if err != nil {
+		s.log.Infof("request validation failed", err)
+		return &pluginstorepb.GetPluginDataResponse{
+			Status:        pluginstorepb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "request validation failed",
+		}, err
+	}
+	s.log.Infof("Get plugin data request recieved for plugin %s, cluster %s, [org: %s]",
+		request.PluginName, clusterId, orgId)
+
+	pluginData, err := s.pluginStore.GetPluginData(clusterId, request.StoreType, request.PluginName)
+	if err != nil {
+		s.log.Errorf("Get plugin data request failed for plugin %s, cluster %s, [org: %s], %w",
+			request.PluginName, clusterId, orgId, err)
+		return &pluginstorepb.GetPluginDataResponse{
+			Status:        pluginstorepb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: "failed to get plugins",
+		}, err
+	}
+
+	s.log.Infof("Get plugin data request processed for plugin %s, cluster %s, [org: %s]",
+		request.PluginName, clusterId, orgId)
+	return &pluginstorepb.GetPluginDataResponse{
+		Status:     pluginstorepb.StatusCode_OK,
+		PluginData: pluginData,
 	}, nil
 }
 
