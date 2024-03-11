@@ -19,19 +19,21 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PluginStore_ConfigPluginStore_FullMethodName = "/pluginstorepb.PluginStore/ConfigPluginStore"
-	PluginStore_SyncPluginStore_FullMethodName   = "/pluginstorepb.PluginStore/SyncPluginStore"
-	PluginStore_GetPlugins_FullMethodName        = "/pluginstorepb.PluginStore/GetPlugins"
-	PluginStore_GetPluginValues_FullMethodName   = "/pluginstorepb.PluginStore/GetPluginValues"
-	PluginStore_DeployPlugin_FullMethodName      = "/pluginstorepb.PluginStore/DeployPlugin"
-	PluginStore_UnDeployPlugin_FullMethodName    = "/pluginstorepb.PluginStore/UnDeployPlugin"
+	PluginStore_ConfigurePluginStore_FullMethodName = "/pluginstorepb.PluginStore/ConfigurePluginStore"
+	PluginStore_GetPluginStoreConfig_FullMethodName = "/pluginstorepb.PluginStore/GetPluginStoreConfig"
+	PluginStore_SyncPluginStore_FullMethodName      = "/pluginstorepb.PluginStore/SyncPluginStore"
+	PluginStore_GetPlugins_FullMethodName           = "/pluginstorepb.PluginStore/GetPlugins"
+	PluginStore_GetPluginValues_FullMethodName      = "/pluginstorepb.PluginStore/GetPluginValues"
+	PluginStore_DeployPlugin_FullMethodName         = "/pluginstorepb.PluginStore/DeployPlugin"
+	PluginStore_UnDeployPlugin_FullMethodName       = "/pluginstorepb.PluginStore/UnDeployPlugin"
 )
 
 // PluginStoreClient is the client API for PluginStore service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PluginStoreClient interface {
-	ConfigPluginStore(ctx context.Context, in *ConfigPluginStoreRequest, opts ...grpc.CallOption) (*ConfigPluginStoreResponse, error)
+	ConfigurePluginStore(ctx context.Context, in *ConfigurePluginStoreRequest, opts ...grpc.CallOption) (*ConfigurePluginStoreResponse, error)
+	GetPluginStoreConfig(ctx context.Context, in *GetPluginStoreConfigRequest, opts ...grpc.CallOption) (*GetPluginStoreConfigResponse, error)
 	SyncPluginStore(ctx context.Context, in *SyncPluginStoreRequest, opts ...grpc.CallOption) (*SyncPluginStoreResponse, error)
 	GetPlugins(ctx context.Context, in *GetPluginsRequest, opts ...grpc.CallOption) (*GetPluginsResponse, error)
 	GetPluginValues(ctx context.Context, in *GetPluginValuesRequest, opts ...grpc.CallOption) (*GetPluginValuesResponse, error)
@@ -47,9 +49,18 @@ func NewPluginStoreClient(cc grpc.ClientConnInterface) PluginStoreClient {
 	return &pluginStoreClient{cc}
 }
 
-func (c *pluginStoreClient) ConfigPluginStore(ctx context.Context, in *ConfigPluginStoreRequest, opts ...grpc.CallOption) (*ConfigPluginStoreResponse, error) {
-	out := new(ConfigPluginStoreResponse)
-	err := c.cc.Invoke(ctx, PluginStore_ConfigPluginStore_FullMethodName, in, out, opts...)
+func (c *pluginStoreClient) ConfigurePluginStore(ctx context.Context, in *ConfigurePluginStoreRequest, opts ...grpc.CallOption) (*ConfigurePluginStoreResponse, error) {
+	out := new(ConfigurePluginStoreResponse)
+	err := c.cc.Invoke(ctx, PluginStore_ConfigurePluginStore_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pluginStoreClient) GetPluginStoreConfig(ctx context.Context, in *GetPluginStoreConfigRequest, opts ...grpc.CallOption) (*GetPluginStoreConfigResponse, error) {
+	out := new(GetPluginStoreConfigResponse)
+	err := c.cc.Invoke(ctx, PluginStore_GetPluginStoreConfig_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +116,8 @@ func (c *pluginStoreClient) UnDeployPlugin(ctx context.Context, in *UnDeployPlug
 // All implementations must embed UnimplementedPluginStoreServer
 // for forward compatibility
 type PluginStoreServer interface {
-	ConfigPluginStore(context.Context, *ConfigPluginStoreRequest) (*ConfigPluginStoreResponse, error)
+	ConfigurePluginStore(context.Context, *ConfigurePluginStoreRequest) (*ConfigurePluginStoreResponse, error)
+	GetPluginStoreConfig(context.Context, *GetPluginStoreConfigRequest) (*GetPluginStoreConfigResponse, error)
 	SyncPluginStore(context.Context, *SyncPluginStoreRequest) (*SyncPluginStoreResponse, error)
 	GetPlugins(context.Context, *GetPluginsRequest) (*GetPluginsResponse, error)
 	GetPluginValues(context.Context, *GetPluginValuesRequest) (*GetPluginValuesResponse, error)
@@ -118,8 +130,11 @@ type PluginStoreServer interface {
 type UnimplementedPluginStoreServer struct {
 }
 
-func (UnimplementedPluginStoreServer) ConfigPluginStore(context.Context, *ConfigPluginStoreRequest) (*ConfigPluginStoreResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ConfigPluginStore not implemented")
+func (UnimplementedPluginStoreServer) ConfigurePluginStore(context.Context, *ConfigurePluginStoreRequest) (*ConfigurePluginStoreResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfigurePluginStore not implemented")
+}
+func (UnimplementedPluginStoreServer) GetPluginStoreConfig(context.Context, *GetPluginStoreConfigRequest) (*GetPluginStoreConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetPluginStoreConfig not implemented")
 }
 func (UnimplementedPluginStoreServer) SyncPluginStore(context.Context, *SyncPluginStoreRequest) (*SyncPluginStoreResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SyncPluginStore not implemented")
@@ -149,20 +164,38 @@ func RegisterPluginStoreServer(s grpc.ServiceRegistrar, srv PluginStoreServer) {
 	s.RegisterService(&PluginStore_ServiceDesc, srv)
 }
 
-func _PluginStore_ConfigPluginStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConfigPluginStoreRequest)
+func _PluginStore_ConfigurePluginStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigurePluginStoreRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PluginStoreServer).ConfigPluginStore(ctx, in)
+		return srv.(PluginStoreServer).ConfigurePluginStore(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PluginStore_ConfigPluginStore_FullMethodName,
+		FullMethod: PluginStore_ConfigurePluginStore_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PluginStoreServer).ConfigPluginStore(ctx, req.(*ConfigPluginStoreRequest))
+		return srv.(PluginStoreServer).ConfigurePluginStore(ctx, req.(*ConfigurePluginStoreRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PluginStore_GetPluginStoreConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetPluginStoreConfigRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PluginStoreServer).GetPluginStoreConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PluginStore_GetPluginStoreConfig_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PluginStoreServer).GetPluginStoreConfig(ctx, req.(*GetPluginStoreConfigRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -265,8 +298,12 @@ var PluginStore_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*PluginStoreServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ConfigPluginStore",
-			Handler:    _PluginStore_ConfigPluginStore_Handler,
+			MethodName: "ConfigurePluginStore",
+			Handler:    _PluginStore_ConfigurePluginStore_Handler,
+		},
+		{
+			MethodName: "GetPluginStoreConfig",
+			Handler:    _PluginStore_GetPluginStoreConfig_Handler,
 		},
 		{
 			MethodName: "SyncPluginStore",

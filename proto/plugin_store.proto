@@ -6,7 +6,8 @@ option go_package = "/pluginstorepb";
 package pluginstorepb;
 
 service PluginStore {
-  rpc ConfigPluginStore(ConfigPluginStoreRequest) returns (ConfigPluginStoreResponse) {}
+  rpc ConfigurePluginStore(ConfigurePluginStoreRequest) returns (ConfigurePluginStoreResponse) {}
+  rpc GetPluginStoreConfig(GetPluginStoreConfigRequest) returns (GetPluginStoreConfigResponse) {}
   rpc SyncPluginStore(SyncPluginStoreRequest) returns (SyncPluginStoreResponse) {}
   rpc GetPlugins(GetPluginsRequest) returns (GetPluginsResponse) {}
   rpc GetPluginValues(GetPluginValuesRequest) returns (GetPluginValuesResponse) {}
@@ -23,18 +24,28 @@ enum StatusCode {
 }
 
 enum StoreType {
-  CENTRAL_CAPTEN_STORE = 0;
-  LOCAL_CAPTEN_STORE = 1;  
+  CENTRAL_STORE = 0;
+  LOCAL_STORE = 1;  
 }
 
-message ConfigPluginStoreRequest {
+message ConfigurePluginStoreRequest {
   StoreType storeType = 1;
   string gitProjectId = 2;
 }
 
-message ConfigPluginStoreResponse {
+message ConfigurePluginStoreResponse {
   StatusCode status = 1;
   string statusMessage = 2;
+}
+
+message GetPluginStoreConfigRequest {
+  StoreType storeType = 1;
+}
+
+message GetPluginStoreConfigResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  string gitProjectId = 3;
 }
 
 message Plugin {
