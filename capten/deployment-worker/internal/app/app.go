@@ -17,11 +17,16 @@ func Start() {
 
 	worker, err := workerframework.NewWorkerV2(WorkflowTaskQueueName, logger)
 	if err != nil {
-		logger.Fatalf("Worker initialization failed, Reason: %v\n", err)
+		logger.Fatalf("Worker initialization failed, Reason: %v", err)
 	}
 
-	worker.RegisterWorkflows([]interface{}{workflows.Workflow})
-	worker.RegisterActivities([]interface{}{&activities.Activities{}})
+	worker.RegisterWorkflows([]interface{}{workflows.Workflow, workflows.PluginWorkflow}...)
+
+	pluginAcitivies, err := activities.NewPluginActivities()
+	if err != nil {
+		logger.Fatalf("Plugin acitivities initialization failed: %v", err)
+	}
+	worker.RegisterActivities([]interface{}{&activities.Activities{}, pluginAcitivies}...)
 
 	logger.Infof("Running deployment worker..\n")
 	if err := worker.Run(); err != nil {
