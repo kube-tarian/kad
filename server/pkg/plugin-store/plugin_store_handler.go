@@ -41,8 +41,8 @@ func (p *PluginStore) GetStoreConfig(clusterId string, storeType pluginstorepb.S
 	} else if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
 		return &pluginstorepb.PluginStoreConfig{
 			StoreType:     pluginstorepb.StoreType_CENTRAL_STORE,
-			GitProjectId:  p.cfg.PluginStoreProjectURL,
-			GitProjectURL: p.cfg.PluginStoreProjectID,
+			GitProjectId:  p.cfg.PluginStoreProjectID,
+			GitProjectURL: p.cfg.PluginStoreProjectURL,
 		}, nil
 	} else {
 		return nil, fmt.Errorf("not supported store type")
@@ -55,14 +55,15 @@ func (p *PluginStore) SyncPlugins(clusterId string, storeType pluginstorepb.Stor
 		return err
 	}
 
-	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectId, config.GitProjectURL)
+	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectURL, config.GitProjectId)
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(pluginStoreDir)
 
-	p.log.Infof("Loading plugin data from project %s clone dir %s", config.GitProjectURL, pluginStoreDir)
-	pluginListData, err := os.ReadFile(p.cfg.PluginsStorePath + "/" + p.cfg.PluginsFileName)
+	pluginListFilePath := pluginStoreDir + "/" + p.cfg.PluginsStorePath + "/" + p.cfg.PluginsFileName
+	p.log.Infof("Loading plugin data from %s", pluginListFilePath)
+	pluginListData, err := os.ReadFile(pluginListFilePath)
 	if err != nil {
 		return errors.WithMessage(err, "failed to read store config file")
 	}
@@ -73,7 +74,7 @@ func (p *PluginStore) SyncPlugins(clusterId string, storeType pluginstorepb.Stor
 	}
 
 	for _, pluginName := range plugins.Plugins {
-		err := p.addPluginApp(config.GitProjectId, pluginName)
+		err := p.addPluginApp(config.GitProjectId, pluginStoreDir, pluginName)
 		if err != nil {
 			p.log.Errorf("%v", err)
 			continue
@@ -86,45 +87,46 @@ func (p *PluginStore) SyncPlugins(clusterId string, storeType pluginstorepb.Stor
 func (p *PluginStore) clonePluginStoreProject(projectURL, _ string) (pluginStoreDir string, err error) {
 	pluginStoreDir, err = os.MkdirTemp(p.cfg.PluginsStoreProjectMount, tmpGitProjectCloneStr)
 	if err != nil {
-		err = fmt.Errorf("failed to create template tmp dir, err: %v", err)
+		err = fmt.Errorf("failed to create plugin store tmp dir, err: %v", err)
 		return
 	}
 
+	p.log.Infof("cloning plugin store project %s to %s", projectURL, pluginStoreDir)
 	gitClient := NewGitClient()
 	if err = gitClient.Clone(pluginStoreDir, projectURL, ""); err != nil {
 		os.RemoveAll(pluginStoreDir)
-		err = fmt.Errorf("failed to Clone template repo, err: %v", err)
+		err = fmt.Errorf("failed to Clone plugin store project, err: %v", err)
 		return
 	}
 	return
 }
 
-func (p *PluginStore) addPluginApp(gitProjectId, pluginName string) error {
-	appData, err := os.ReadFile(p.cfg.PluginsStorePath + "/" + pluginName + "/plugin.yaml")
+func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName string) error {
+	appData, err := os.ReadFile(pluginStoreDir + "/" + p.cfg.PluginsStorePath + "/" + pluginName + "/plugin.yaml")
 	if err != nil {
 		return errors.WithMessagef(err, "failed to read store plugin %s", pluginName)
 	}
 
-	var appConfig Plugin
-	if err := yaml.Unmarshal(appData, &appConfig); err != nil {
+	var pluginData Plugin
+	if err := yaml.Unmarshal(appData, &pluginData); err != nil {
 		return errors.WithMessagef(err, "failed to unmarshall store plugin %s", pluginName)
 	}
 
-	if appConfig.PluginName == "" || len(appConfig.DeploymentConfig.Versions) == 0 {
+	if pluginData.PluginName == "" || len(pluginData.DeploymentConfig.Versions) == 0 {
 		return fmt.Errorf("app name/version is missing for %s", pluginName)
 	}
 
 	plugin := &pluginstorepb.PluginData{
-		PluginName:          appConfig.PluginName,
-		Description:         appConfig.Description,
-		Category:            appConfig.Category,
-		ChartName:           appConfig.DeploymentConfig.ChartName,
-		ChartRepo:           appConfig.DeploymentConfig.ChartRepo,
-		Versions:            appConfig.DeploymentConfig.Versions,
-		DefaultNamespace:    appConfig.DeploymentConfig.DefaultNamespace,
-		PrivilegedNamespace: appConfig.DeploymentConfig.PrivilegedNamespace,
-		PluginEndpoint:      appConfig.PluginConfig.Endpoint,
-		Capabilities:        appConfig.PluginConfig.Capabilities,
+		PluginName:          pluginData.PluginName,
+		Description:         pluginData.Description,
+		Category:            pluginData.Category,
+		ChartName:           pluginData.DeploymentConfig.ChartName,
+		ChartRepo:           pluginData.DeploymentConfig.ChartRepo,
+		Versions:            pluginData.DeploymentConfig.Versions,
+		DefaultNamespace:    pluginData.DeploymentConfig.DefaultNamespace,
+		PrivilegedNamespace: pluginData.DeploymentConfig.PrivilegedNamespace,
+		PluginEndpoint:      pluginData.PluginConfig.Endpoint,
+		Capabilities:        pluginData.PluginConfig.Capabilities,
 	}
 
 	if err := p.dbStore.WritePluginData(gitProjectId, plugin); err != nil {

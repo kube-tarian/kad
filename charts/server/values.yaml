@@ -29,6 +29,7 @@ ory:
 env:
   logLevel: info
   database: astra
+  pluginsStoreProjectMount: /plugin-store
 
 extraEnv:
   - name: AUTH_ENABLED
