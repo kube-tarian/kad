@@ -6,14 +6,14 @@ import (
 	"time"
 
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/capten/common-pkg/plugin_store/pluginstorepb"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/activities"
 	"github.com/kube-tarian/kad/capten/model"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
-// Workflow is a deployment workflow definition.
-func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (model.ResponsePayload, error) {
+func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage) (model.ResponsePayload, error) {
 	var result model.ResponsePayload
 	logger := logging.NewLogger()
 
@@ -27,16 +27,17 @@ func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (mod
 	execution := workflow.GetInfo(ctx).WorkflowExecution
 	logger.Infof("execution: %+v\n", execution)
 
-	var a *activities.Activities
+	// var a *activities.Activities
+	a := &activities.Activities{}
 	var err error
 	switch action {
-	case "install", "update", "upgrade":
-		req := &model.ApplicationDeployRequest{}
+	case string(model.AppInstallAction), string(model.AppUpdateAction), string(model.AppUpgradeAction):
+		req := &pluginstorepb.DeployPluginRequest{}
 		err = json.Unmarshal(payload, req)
 		if err == nil {
 			err = workflow.ExecuteActivity(ctx, a.DeploymentInstallActivity, payload).Get(ctx, &result)
 		}
-	case "delete":
+	case string(model.AppUnInstallAction):
 		req := &model.DeployerDeleteRequest{}
 		err = json.Unmarshal(payload, req)
 		if err == nil {
@@ -46,7 +47,7 @@ func Workflow(ctx workflow.Context, action string, payload json.RawMessage) (mod
 		err = fmt.Errorf("unknown action %v", action)
 	}
 	if err != nil {
-		logger.Errorf("Activity failed: %v, Error: %v", string(payload), err)
+		logger.Errorf("Deployment workflow failed: %v, Error: %v", string(payload), err)
 		return result, err
 	}
 

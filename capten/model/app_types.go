@@ -21,6 +21,7 @@ const (
 	AppInstallAction   AppDeployAction = "install"
 	AppUnInstallAction AppDeployAction = "delete"
 	AppUpgradeAction   AppDeployAction = "upgrade"
+	AppUpdateAction    AppDeployAction = "update"
 )
 
 type AppConfig struct {
