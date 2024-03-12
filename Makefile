@@ -15,7 +15,6 @@ gen-protoc:
 	mkdir -p capten/agent/internal/pb/captensdkpb
 	mkdir -p capten/common-pkg/vault-cred/vaultcredpb
 	mkdir -p capten/common-pkg/capten-sdk/captensdkpb
-	mkdir -p capten/common-pkg/plugin_store/pluginstorepb
 	mkdir -p capten/common-pkg/cluster-plugins/clusterpluginspb
 
 	cd proto && protoc --go_out=../server/pkg/pb/serverpb/ --go_opt=paths=source_relative \
@@ -49,10 +48,6 @@ gen-protoc:
 	cd proto && protoc --go_out=../capten/common-pkg/vault-cred/vaultcredpb --go_opt=paths=source_relative \
     		--go-grpc_out=../capten/common-pkg/vault-cred/vaultcredpb --go-grpc_opt=paths=source_relative \
     		./vault_cred.proto
-
-	cd proto && protoc --go_out=../capten/common-pkg/plugin_store/pluginstorepb --go_opt=paths=source_relative \
-    		--go-grpc_out=../capten/common-pkg/plugin_store/pluginstorepb --go-grpc_opt=paths=source_relative \
-    		./plugin_store.proto
 
 	cd proto && protoc --go_out=../server/pkg/pb/pluginstorepb --go_opt=paths=source_relative \
     		--go-grpc_out=../server/pkg/pb/pluginstorepb --go-grpc_opt=paths=source_relative \
