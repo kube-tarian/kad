@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/common-pkg/plugin_store/pluginstorepb"
+	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/activities"
 	"github.com/kube-tarian/kad/capten/model"
 	"go.temporal.io/sdk/temporal"
@@ -28,20 +28,20 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 	logger.Infof("execution: %+v\n", execution)
 
 	// var a *activities.Activities
-	a := &activities.Activities{}
+	var a *activities.PluginActivities
 	var err error
 	switch action {
 	case string(model.AppInstallAction), string(model.AppUpdateAction), string(model.AppUpgradeAction):
-		req := &pluginstorepb.DeployPluginRequest{}
+		req := &clusterpluginspb.DeployClusterPluginRequest{}
 		err = json.Unmarshal(payload, req)
 		if err == nil {
-			err = workflow.ExecuteActivity(ctx, a.DeploymentInstallActivity, payload).Get(ctx, &result)
+			err = workflow.ExecuteActivity(ctx, a.PluginDeployActivity, payload).Get(ctx, &result)
 		}
 	case string(model.AppUnInstallAction):
 		req := &model.DeployerDeleteRequest{}
 		err = json.Unmarshal(payload, req)
 		if err == nil {
-			err = workflow.ExecuteActivity(ctx, a.DeploymentDeleteActivity, payload).Get(ctx, &result)
+			err = workflow.ExecuteActivity(ctx, a.PluginUndeployActivity, payload).Get(ctx, &result)
 		}
 	default:
 		err = fmt.Errorf("unknown action %v", action)
