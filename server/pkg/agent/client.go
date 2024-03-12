@@ -12,6 +12,7 @@ import (
 	"github.com/kube-tarian/kad/agent/pkg/logging"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/server/pkg/pb/clusterpluginspb"
 	"github.com/pkg/errors"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
@@ -34,11 +35,9 @@ type Config struct {
 }
 
 type Agent struct {
-	cfg                 *Config
-	connection          *grpc.ClientConn
-	agentClient         agentpb.AgentClient
-	captenPluginsClient captenpluginspb.CaptenPluginsClient
-	log                 logging.Logger
+	cfg        *Config
+	connection *grpc.ClientConn
+	log        logging.Logger
 }
 
 func NewAgent(log logging.Logger, cfg *Config, oryClient oryclient.OryClient) (*Agent, error) {
@@ -48,26 +47,18 @@ func NewAgent(log logging.Logger, cfg *Config, oryClient oryclient.OryClient) (*
 		return nil, errors.WithMessage(err, "failed to connect to agent")
 	}
 
-	agentClient := agentpb.NewAgentClient(conn)
-	pingResp, err := agentClient.Ping(context.TODO(), &agentpb.PingRequest{})
+	/*pingResp, err := agentpb.NewAgentClient(conn).Ping(context.TODO(), &agentpb.PingRequest{})
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to ping agent")
 	}
 	if pingResp.Status != agentpb.StatusCode_OK {
 		return nil, errors.WithMessage(err, "ping failed")
-	}
-
-	captenPluginsClient := captenpluginspb.NewCaptenPluginsClient(conn)
-	if captenPluginsClient == nil {
-		return nil, errors.WithMessage(err, "failed to get agent capten plugins client")
-	}
+	}*/
 
 	return &Agent{
-		log:                 log,
-		cfg:                 cfg,
-		connection:          conn,
-		agentClient:         agentClient,
-		captenPluginsClient: captenPluginsClient,
+		log:        log,
+		cfg:        cfg,
+		connection: conn,
 	}, nil
 }
 
@@ -104,11 +95,15 @@ func getConnection(cfg *Config, oryClient oryclient.OryClient) (*grpc.ClientConn
 }
 
 func (a *Agent) GetClient() agentpb.AgentClient {
-	return a.agentClient
+	return agentpb.NewAgentClient(a.connection)
 }
 
 func (a *Agent) GetCaptenPluginsClient() captenpluginspb.CaptenPluginsClient {
-	return a.captenPluginsClient
+	return captenpluginspb.NewCaptenPluginsClient(a.connection)
+}
+
+func (a *Agent) GetClusterPluginsClient() clusterpluginspb.ClusterPluginsClient {
+	return clusterpluginspb.NewClusterPluginsClient(a.connection)
 }
 
 func (a *Agent) Close() {

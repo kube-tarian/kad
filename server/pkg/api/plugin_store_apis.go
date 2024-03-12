@@ -191,9 +191,9 @@ func (s *Server) DeployPlugin(ctx context.Context, request *pluginstorepb.Deploy
 	s.log.Infof("Deploy plugin request recieved for plugin %s-%s, cluster %s, [org: %s]",
 		request.PluginName, request.Version, clusterId, orgId)
 
-	err = s.pluginStore.DeployPlugin(clusterId, request.StoreType, request.PluginName, request.Version, request.Values)
+	err = s.pluginStore.DeployPlugin(orgId, clusterId, request.StoreType, request.PluginName, request.Version, request.Values)
 	if err != nil {
-		s.log.Errorf("Deploy plugin request failed for plugin %s-%s, cluster %s, [org: %s], %w",
+		s.log.Errorf("Deploy plugin request failed for plugin %s-%s, cluster %s, [org: %s], %v",
 			request.PluginName, request.Version, clusterId, orgId, err)
 		return &pluginstorepb.DeployPluginResponse{
 			Status:        pluginstorepb.StatusCode_INTERNRAL_ERROR,
@@ -221,9 +221,9 @@ func (s *Server) UnDeployPlugin(ctx context.Context, request *pluginstorepb.UnDe
 	s.log.Infof("UnDeploy plugin request recieved for plugin %s, cluster %s, [org: %s]",
 		request.PluginName, clusterId, orgId)
 
-	err = s.pluginStore.UnDeployPlugin(clusterId, request.StoreType, request.PluginName)
+	err = s.pluginStore.UnDeployPlugin(orgId, clusterId, request.StoreType, request.PluginName)
 	if err != nil {
-		s.log.Errorf("UnDeploy plugin request failed for plugin %s, cluster %s, [org: %s], %w",
+		s.log.Errorf("UnDeploy plugin request failed for plugin %s, cluster %s, [org: %s], %v",
 			request.PluginName, clusterId, orgId, err)
 		return &pluginstorepb.UnDeployPluginResponse{
 			Status:        pluginstorepb.StatusCode_INTERNRAL_ERROR,

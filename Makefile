@@ -17,6 +17,7 @@ gen-protoc:
 	mkdir -p capten/common-pkg/capten-sdk/captensdkpb
 	mkdir -p capten/common-pkg/vault-cred/vaultcredpb
 	mkdir -p capten/common-pkg/cluster-plugins/clusterpluginspb
+	mkdir -p server/pkg/pb/clusterpluginspb
 
 	cd proto && protoc --go_out=../server/pkg/pb/serverpb/ --go_opt=paths=source_relative \
     		--go-grpc_out=../server/pkg/pb/serverpb  --go-grpc_opt=paths=source_relative \
@@ -64,6 +65,9 @@ gen-protoc:
 
 	cd proto && protoc --go_out=../capten/common-pkg/cluster-plugins/clusterpluginspb --go_opt=paths=source_relative \
     		--go-grpc_out=../capten/common-pkg/cluster-plugins/clusterpluginspb --go-grpc_opt=paths=source_relative \
+    		./cluster_plugins.proto
+	cd proto && protoc --go_out=../server/pkg/pb/clusterpluginspb --go_opt=paths=source_relative \
+    		--go-grpc_out=../server/pkg/pb/clusterpluginspb --go-grpc_opt=paths=source_relative \
     		./cluster_plugins.proto
 
 docker-build-server:

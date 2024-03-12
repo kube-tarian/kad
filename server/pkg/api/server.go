@@ -41,13 +41,14 @@ type Server struct {
 
 func NewServer(log logging.Logger, cfg config.ServiceConfig, serverStore store.ServerStore,
 	oryClient oryclient.OryClient, iam iamclient.IAMRegister) (*Server, error) {
-	pluginStore, err := pluginstore.NewPluginStore(log, serverStore)
+	agentHandeler := agent.NewAgentHandler(log, cfg, serverStore, oryClient)
+	pluginStore, err := pluginstore.NewPluginStore(log, serverStore, agentHandeler)
 	if err != nil {
 		return nil, err
 	}
 	return &Server{
 		serverStore:   serverStore,
-		agentHandeler: agent.NewAgentHandler(log, cfg, serverStore, oryClient),
+		agentHandeler: agentHandeler,
 		log:           log,
 		oryClient:     oryClient,
 		iam:           iam,
