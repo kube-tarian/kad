@@ -27,6 +27,9 @@ spec:
       serviceAccountName: {{ include "server.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: plugin-store-clone-dir
+          emptyDir: {}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -69,8 +72,13 @@ spec:
               value: {{.Values.iam.address}}
             - name: CAPTEN_OAUTH_URL
               value: {{.Values.ory.captenOAuthURL}}
+            - name: PLUGIN_STORE_PROJECT_MOUNT
+              value: {{ .Values.env.pluginsStoreProjectMount }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: plugin-store-clone-dir
+            mountPath: {{ .Values.env.pluginsStoreProjectMount }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

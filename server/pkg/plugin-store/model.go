@@ -8,8 +8,8 @@ type Config struct {
 	PluginsStoreProjectMount string `envconfig:"PLUGIN_STORE_PROJECT_MOUNT" default:"/plugin-store-clone"`
 	PluginsStorePath         string `envconfig:"PLUGIN_STORE_PATH" default:"/plugin-store"`
 	PluginsFileName          string `envconfig:"PLUGIN_LIST_FILE" default:"plugin-list.yaml"`
-	PluginStoreProjectURL    string `envconfig:"PLUGIN_STORE_PROJECT_URL" default:"https://github.dev/vramk23/capten-plugins"`
-	PluginStoreProjectID     string `envconfig:"PLUGIN_STORE_PROJECT_ID" default:"1"`
+	PluginStoreProjectURL    string `envconfig:"PLUGIN_STORE_PROJECT_URL" default:"https://github.com/vramk23/capten-plugins"`
+	PluginStoreProjectID     string `envconfig:"PLUGIN_STORE_PROJECT_ID" default:"1cf5201d-5f35-4d5b-afe0-4b9d0e0d4cd2"`
 }
 
 type PluginListData struct {
