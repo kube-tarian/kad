@@ -3,6 +3,7 @@ package pluginstore
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
@@ -37,7 +38,16 @@ func (p *PluginStore) ConfigureStore(clusterId string, config *pluginstorepb.Plu
 
 func (p *PluginStore) GetStoreConfig(clusterId string, storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error) {
 	if storeType == pluginstorepb.StoreType_LOCAL_STORE {
-		return p.dbStore.ReadPluginStoreConfig(clusterId)
+		config, err := p.dbStore.ReadPluginStoreConfig(clusterId)
+		if err != nil {
+			if strings.Contains(err.Error(), "not found") {
+				return &pluginstorepb.PluginStoreConfig{
+					StoreType: pluginstorepb.StoreType_LOCAL_STORE,
+				}, nil
+			}
+			return nil, err
+		}
+		return config, nil
 	} else if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
 		return &pluginstorepb.PluginStoreConfig{
 			StoreType:     pluginstorepb.StoreType_CENTRAL_STORE,
@@ -141,7 +151,14 @@ func (p *PluginStore) GetPlugins(clusterId string, storeType pluginstorepb.Store
 		return nil, err
 	}
 
-	return p.dbStore.ReadPlugins(config.GitProjectId)
+	plugins, err := p.dbStore.ReadPlugins(config.GitProjectId)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			return []*pluginstorepb.Plugin{}, nil
+		}
+		return nil, err
+	}
+	return plugins, nil
 }
 
 func (p *PluginStore) GetPluginData(clusterId string, storeType pluginstorepb.StoreType, pluginName string) (*pluginstorepb.PluginData, error) {
@@ -155,7 +172,24 @@ func (p *PluginStore) GetPluginData(clusterId string, storeType pluginstorepb.St
 
 func (p *PluginStore) GetPluginValues(clusterId string, storeType pluginstorepb.StoreType,
 	pluginName, version string) ([]byte, error) {
-	return nil, nil
+	config, err := p.GetStoreConfig(clusterId, storeType)
+	if err != nil {
+		return nil, err
+	}
+
+	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectURL, config.GitProjectId)
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(pluginStoreDir)
+
+	pluginValuesPath := pluginStoreDir + "/" + p.cfg.PluginsStorePath + "/" + pluginName + "/" + version + "/" + "values.yaml"
+	p.log.Infof("Loading %s plugin values from %s", pluginName, pluginValuesPath)
+	pluginListData, err := os.ReadFile(pluginValuesPath)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed to read plugins values file")
+	}
+	return pluginListData, nil
 }
 
 func (p *PluginStore) DeployPlugin(clusterId string, storeType pluginstorepb.StoreType,
