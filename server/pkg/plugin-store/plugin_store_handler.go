@@ -1,12 +1,16 @@
 package pluginstore
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/server/pkg/agent"
+	"github.com/kube-tarian/kad/server/pkg/credential"
+	"github.com/kube-tarian/kad/server/pkg/pb/clusterpluginspb"
 	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
 	"github.com/kube-tarian/kad/server/pkg/store"
 	"github.com/pkg/errors"
@@ -14,21 +18,23 @@ import (
 )
 
 type PluginStore struct {
-	log     logging.Logger
-	cfg     *Config
-	dbStore store.ServerStore
+	log          logging.Logger
+	cfg          *Config
+	dbStore      store.ServerStore
+	agentHandler *agent.AgentHandler
 }
 
-func NewPluginStore(log logging.Logger, dbStore store.ServerStore) (*PluginStore, error) {
+func NewPluginStore(log logging.Logger, dbStore store.ServerStore, agentHandler *agent.AgentHandler) (*PluginStore, error) {
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return nil, err
 	}
 
 	return &PluginStore{
-		log:     log,
-		cfg:     cfg,
-		dbStore: dbStore,
+		log:          log,
+		cfg:          cfg,
+		dbStore:      dbStore,
+		agentHandler: agentHandler,
 	}, nil
 }
 
@@ -65,7 +71,7 @@ func (p *PluginStore) SyncPlugins(clusterId string, storeType pluginstorepb.Stor
 		return err
 	}
 
-	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectURL, config.GitProjectId)
+	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectURL, config.GitProjectId, storeType)
 	if err != nil {
 		return err
 	}
@@ -94,16 +100,23 @@ func (p *PluginStore) SyncPlugins(clusterId string, storeType pluginstorepb.Stor
 	return nil
 }
 
-func (p *PluginStore) clonePluginStoreProject(projectURL, _ string) (pluginStoreDir string, err error) {
+func (p *PluginStore) clonePluginStoreProject(projectURL, projectId string,
+	storeType pluginstorepb.StoreType) (pluginStoreDir string, err error) {
 	pluginStoreDir, err = os.MkdirTemp(p.cfg.PluginsStoreProjectMount, tmpGitProjectCloneStr)
 	if err != nil {
 		err = fmt.Errorf("failed to create plugin store tmp dir, err: %v", err)
 		return
 	}
 
+	accessToken, err := p.getGitProjectAccessToken(projectId, storeType)
+	if err != nil {
+		err = fmt.Errorf("failed to get git project credentias, %v", err)
+		return
+	}
+
 	p.log.Infof("cloning plugin store project %s to %s", projectURL, pluginStoreDir)
 	gitClient := NewGitClient()
-	if err = gitClient.Clone(pluginStoreDir, projectURL, ""); err != nil {
+	if err = gitClient.Clone(pluginStoreDir, projectURL, accessToken); err != nil {
 		os.RemoveAll(pluginStoreDir)
 		err = fmt.Errorf("failed to Clone plugin store project, err: %v", err)
 		return
@@ -177,7 +190,7 @@ func (p *PluginStore) GetPluginValues(clusterId string, storeType pluginstorepb.
 		return nil, err
 	}
 
-	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectURL, config.GitProjectId)
+	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectURL, config.GitProjectId, storeType)
 	if err != nil {
 		return nil, err
 	}
@@ -192,11 +205,88 @@ func (p *PluginStore) GetPluginValues(clusterId string, storeType pluginstorepb.
 	return pluginListData, nil
 }
 
-func (p *PluginStore) DeployPlugin(clusterId string, storeType pluginstorepb.StoreType,
+func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstorepb.StoreType,
 	pluginName, version string, values []byte) error {
+	config, err := p.GetStoreConfig(clusterId, storeType)
+	if err != nil {
+		return err
+	}
+
+	pluginData, err := p.dbStore.ReadPluginData(config.GitProjectId, pluginName)
+	if err != nil {
+		return err
+	}
+
+	if !stringContains(pluginData.Versions, version) {
+		return fmt.Errorf("version %s not supported", version)
+	}
+
+	plugin := &clusterpluginspb.Plugin{
+		StoreType:           clusterpluginspb.StoreType(pluginData.StoreType),
+		PluginName:          pluginData.PluginName,
+		Description:         pluginData.Description,
+		Category:            pluginData.Category,
+		Icon:                pluginData.Icon,
+		Version:             version,
+		ChartName:           pluginData.ChartName,
+		ChartRepo:           pluginData.ChartRepo,
+		DefaultNamespace:    pluginData.DefaultNamespace,
+		PrivilegedNamespace: pluginData.PrivilegedNamespace,
+		PluginEndpoint:      pluginData.PluginEndpoint,
+		Capabilities:        pluginData.Capabilities,
+		Values:              values,
+	}
+
+	agent, err := p.agentHandler.GetAgent(orgId, clusterId)
+	if err != nil {
+		return err
+	}
+
+	p.log.Infof("Sending plugin %s deploy request to cluster %s", pluginName, clusterId)
+	client := agent.GetClusterPluginsClient()
+	_, err = client.DeployClusterPlugin(context.Background(), &clusterpluginspb.DeployClusterPluginRequest{Plugin: plugin})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func (p *PluginStore) UnDeployPlugin(clusterId string, storeType pluginstorepb.StoreType, pluginName string) error {
+func (p *PluginStore) UnDeployPlugin(orgId, clusterId string, storeType pluginstorepb.StoreType, pluginName string) error {
+	agent, err := p.agentHandler.GetAgent(orgId, clusterId)
+	if err != nil {
+		return err
+	}
+
+	p.log.Infof("Sending plugin %s undeploy request to cluster %s", pluginName, clusterId)
+	client := agent.GetClusterPluginsClient()
+	_, err = client.UnDeployClusterPlugin(context.Background(),
+		&clusterpluginspb.UnDeployClusterPluginRequest{StoreType: clusterpluginspb.StoreType(storeType), PluginName: pluginName})
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+func stringContains(arr []string, target string) bool {
+	for _, str := range arr {
+		if str == target {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *PluginStore) getGitProjectAccessToken(projectId string,
+	storeType pluginstorepb.StoreType) (string, error) {
+	if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
+		return "", nil
+	}
+	cred, err := credential.GetGenericCredential(context.Background(), p.cfg.GitVaultEntityName, projectId)
+	if err != nil {
+		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
+			p.cfg.GitVaultEntityName, projectId)
+		return "", err
+	}
+
+	return cred[gitProjectAccessTokenAttribute], nil
 }
