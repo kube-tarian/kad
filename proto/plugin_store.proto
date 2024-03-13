@@ -1,0 +1,144 @@
+
+syntax = "proto3";
+
+option go_package = "/pluginstorepb";
+
+package pluginstorepb;
+
+service PluginStore {
+  rpc ConfigurePluginStore(ConfigurePluginStoreRequest) returns (ConfigurePluginStoreResponse) {}
+  rpc GetPluginStoreConfig(GetPluginStoreConfigRequest) returns (GetPluginStoreConfigResponse) {}
+  rpc SyncPluginStore(SyncPluginStoreRequest) returns (SyncPluginStoreResponse) {}
+  rpc GetPlugins(GetPluginsRequest) returns (GetPluginsResponse) {}
+  rpc GetPluginValues(GetPluginValuesRequest) returns (GetPluginValuesResponse) {}
+  rpc GetPluginData(GetPluginDataRequest) returns (GetPluginDataResponse) {}
+
+  rpc DeployPlugin(DeployPluginRequest) returns (DeployPluginResponse) {}
+  rpc UnDeployPlugin(UnDeployPluginRequest) returns (UnDeployPluginResponse) {}
+}
+
+enum StatusCode {
+  OK = 0;
+  INTERNRAL_ERROR = 1;
+  INVALID_ARGUMENT = 2;
+  NOT_FOUND = 3;
+}
+
+enum StoreType {
+  CENTRAL_STORE = 0;
+  LOCAL_STORE = 1;  
+}
+
+message PluginStoreConfig {
+  StoreType storeType = 1;
+  string gitProjectId = 2;
+  string gitProjectURL = 3;
+}
+
+message Plugin {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string description = 3;
+  string category = 4;
+  repeated string versions = 5;
+  bytes icon = 6;
+}
+
+message PluginData {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string description = 3;
+  string category = 4;
+  repeated string versions = 5;
+  bytes icon = 6;
+  string chartName = 7;
+  string chartRepo = 8;
+	string defaultNamespace = 9;
+	bool privilegedNamespace = 10;
+  string pluginEndpoint = 11;
+	repeated string capabilities = 12;
+}
+
+message ConfigurePluginStoreRequest {
+  PluginStoreConfig config = 1;  
+}
+
+message ConfigurePluginStoreResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message GetPluginStoreConfigRequest {
+  StoreType storeType = 1;
+}
+
+message GetPluginStoreConfigResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  PluginStoreConfig config = 3;
+}
+
+
+message SyncPluginStoreRequest {
+  StoreType storeType = 1;
+}
+
+message SyncPluginStoreResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message GetPluginsRequest {
+  StoreType storeType = 1;
+}
+
+message GetPluginsResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  repeated Plugin plugins = 3;
+}
+
+message GetPluginValuesRequest {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string version = 3;
+}
+
+message GetPluginValuesResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  bytes values = 3;
+}
+
+message GetPluginDataRequest{
+  StoreType storeType = 1;
+  string pluginName = 2;
+}
+
+message GetPluginDataResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+  PluginData pluginData = 3;
+}
+
+message DeployPluginRequest {
+  StoreType storeType = 1;
+  string pluginName = 2;
+  string version = 3;
+  bytes values = 4;
+}
+
+message DeployPluginResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message UnDeployPluginRequest {
+  StoreType storeType = 1;
+  string pluginName = 2;
+}
+
+message UnDeployPluginResponse{
+  StatusCode status = 1;
+  string statusMessage = 2;
+}

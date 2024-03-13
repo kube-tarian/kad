@@ -290,8 +290,7 @@ func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.Crossp
 	case "AZURE":
 		providerConfigString := fmt.Sprintf(
 			crossplaneAzureProviderTemplate,
-			cloudType, secretPath, secretPath,
-			cloudType, pkg, cloudType,
+			cloudType, pkg,
 		)
 		return providerConfigString, nil
 	default:

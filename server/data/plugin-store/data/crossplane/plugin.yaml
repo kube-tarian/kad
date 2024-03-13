@@ -1,0 +1,15 @@
+name: "crossplane"
+description: "Framework for building cloud native control planes"
+category: "iaas"
+deploymentConfig:
+  chartName: "crossplane"
+  chartRepo: "https://kube-tarian.github.io/helmrepo-supporting-tools"
+  versions: ["1.0.2"]
+  defaultNamespace: "crossplane-system"
+  privilegedNamespace: true
+pluginConfig:
+  pluginAccessEndpoint: https://crossplane.{{.domainName}}
+  capabilities:
+    - name: capten-sdk
+    - name: postgress-store
+    - name: vault-store

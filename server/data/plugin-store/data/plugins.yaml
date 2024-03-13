@@ -1,0 +1,5 @@
+plugins:
+  - argo-cd
+  - crossplane
+  - testkube
+  - tekton

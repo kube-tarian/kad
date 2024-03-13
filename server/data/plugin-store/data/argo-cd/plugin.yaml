@@ -1,0 +1,15 @@
+name: "argo-cd"
+description: "GitOps continuous delivery tool for Kubernetes"
+category: "CI/CD"
+icon: "argocd.svg"
+deploymentConfig:
+  chartName: "argo-cd"
+  chartRepo: "https://kube-tarian.github.io/helmrepo-supporting-tools"
+  versions:
+    - "v1.0.2"
+  defaultNamespace: "argo-cd"
+  privilegedNamespace: false
+pluginConfig:
+  pluginAccessEndpoint: https://argo.{{.domainName}}
+  capabilities:
+    - name: vault-store

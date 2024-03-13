@@ -1,0 +1,14 @@
+dashboard:
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod-cluster
+      kubernetes.io/force-ssl-redirect: "true"
+      kubernetes.io/ssl-redirect: "true"
+      kubernetes.io/tls-acme: "true"
+    hosts:
+      - tekton.{{.DomainName}}
+    tls:
+      - hosts:
+          - tekton.{{.DomainName}}
+        secretName: tekton-dashboard-cert

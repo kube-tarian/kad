@@ -6,7 +6,7 @@ RepoName: "tools"
 RepoURL: "https://kube-tarian.github.io/helmrepo-supporting-tools"
 Namespace: "crossplane-system"
 ReleaseName: "crossplane"
-Version: "1.0.2"
+Version: "1.0.3"
 CreateNamespace: true
 PluginName: "Crossplane"
 PluginDescription: "Configure Infra with Crossplane"

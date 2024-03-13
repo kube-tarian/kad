@@ -3,6 +3,7 @@ package store
 import (
 	"fmt"
 
+	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
 	"github.com/kube-tarian/kad/server/pkg/types"
 
 	"github.com/kube-tarian/kad/server/pkg/store/astra"
@@ -22,6 +23,11 @@ type ServerStore interface {
 	GetAppFromStore(name, version string) (*types.AppConfig, error)
 	GetAppsFromStore() ([]types.AppConfig, error)
 	GetStoreAppValues(name, version string) (*types.AppConfig, error)
+	WritePluginStoreConfig(clusterId string, config *pluginstorepb.PluginStoreConfig) error
+	ReadPluginStoreConfig(clusterId string) (*pluginstorepb.PluginStoreConfig, error)
+	WritePluginData(gitProjectId string, pluginData *pluginstorepb.PluginData) error
+	ReadPluginData(gitProjectId string, pluginName string) (*pluginstorepb.PluginData, error)
+	ReadPlugins(gitProjectId string) ([]*pluginstorepb.Plugin, error)
 }
 
 func NewStore(db string) (ServerStore, error) {

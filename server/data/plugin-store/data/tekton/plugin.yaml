@@ -1,0 +1,16 @@
+name: "tekton"
+description: "Open-source framework for creating CI/CD systems"
+category: "CI/CD"
+icon: "tekton.svg"
+deploymentConfig:
+  chartName: "tekton"
+  chartRepo: "https://kube-tarian.github.io/helmrepo-supporting-tools"
+  versions: ["0.1.9"]
+  defaultNamespace: "tekton"
+  privilegedNamespace: false
+pluginConfig:
+  pluginAccessEndpoint: https://tekton.{{.domainName}}
+  capabilities:
+    - name: capten-sdk
+    - name: postgress-store
+    - name: vault-store

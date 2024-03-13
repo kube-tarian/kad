@@ -11,7 +11,9 @@ import (
 	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
 	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	pluginstore "github.com/kube-tarian/kad/server/pkg/plugin-store"
 	"github.com/kube-tarian/kad/server/pkg/store"
 	"google.golang.org/grpc/metadata"
 )
@@ -26,24 +28,32 @@ const (
 type Server struct {
 	serverpb.UnimplementedServerServer
 	captenpluginspb.UnimplementedCaptenPluginsServer
+	pluginstorepb.UnimplementedPluginStoreServer
 	serverStore   store.ServerStore
 	agentHandeler *agent.AgentHandler
 	log           logging.Logger
 	oryClient     oryclient.OryClient
 	iam           iamclient.IAMRegister
 	cfg           config.ServiceConfig
+	pluginStore   *pluginstore.PluginStore
 	mutex         *sync.Mutex
 }
 
 func NewServer(log logging.Logger, cfg config.ServiceConfig, serverStore store.ServerStore,
 	oryClient oryclient.OryClient, iam iamclient.IAMRegister) (*Server, error) {
+	agentHandeler := agent.NewAgentHandler(log, cfg, serverStore, oryClient)
+	pluginStore, err := pluginstore.NewPluginStore(log, serverStore, agentHandeler)
+	if err != nil {
+		return nil, err
+	}
 	return &Server{
 		serverStore:   serverStore,
-		agentHandeler: agent.NewAgentHandler(log, cfg, serverStore, oryClient),
+		agentHandeler: agentHandeler,
 		log:           log,
 		oryClient:     oryClient,
 		iam:           iam,
 		cfg:           cfg,
+		pluginStore:   pluginStore,
 		mutex:         &sync.Mutex{},
 	}, nil
 }

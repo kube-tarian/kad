@@ -32,14 +32,17 @@ func (a *AstraServerStore) InitializeDatabase() error {
 	initDbQueries := []string{
 		fmt.Sprintf(createCaptenClusterTableQuery, a.keyspace),
 		fmt.Sprintf(createAppConfigTableQuery, a.keyspace),
+		fmt.Sprintf(createPluginStoreConfigTableQuery, a.keyspace),
+		fmt.Sprintf(createPluginStoreTableQuery, a.keyspace),
 	}
 	return a.executeDBQueries(initDbQueries)
 }
 
 func (a *AstraServerStore) CleanupDatabase() error {
 	initDbQueries := []string{
-		fmt.Sprintf(dropCaptenClusterTableQuery, a.keyspace),
-		fmt.Sprintf(dropAppConfigTableQuery, a.keyspace),
+		//fmt.Sprintf(dropCaptenClusterTableQuery, a.keyspace),
+		//fmt.Sprintf(dropAppConfigTableQuery, a.keyspace),
+		fmt.Sprintf(dropPluginStoreTableQuery, a.keyspace),
 	}
 	return a.executeDBQueries(initDbQueries)
 }
