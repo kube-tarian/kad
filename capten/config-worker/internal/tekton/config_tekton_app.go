@@ -93,6 +93,8 @@ func readTektonPluginConfig(pluginFile string) (*tektonPluginConfig, error) {
 func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.TektonProjectSyncUsecase) (status string, err error) {
 	logger.Infof("cloning default templates %s to project %s", cp.pluginConfig.TemplateGitRepo, req.RepoURL)
 	templateRepo, err := cp.helper.CloneTemplateRepo(ctx, cp.pluginConfig.TemplateGitRepo, req.VaultCredIdentifier)
+	logger.Infof("Template git repo", cp.pluginConfig.TemplateGitRepo)
+	logger.Infof("Vault Cred Idetifier", cp.pluginConfig.TemplateGitRepo)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
 	}
@@ -104,7 +106,8 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 	}
 	logger.Infof("cloned default templates to project %s", req.RepoURL)
 	defer os.RemoveAll(customerRepo)
-
+	logger.Info("Template repo", templateRepo)
+	logger.Info("Customer repo", templateRepo)
 	err = cp.synchTektonConfig(req, templateRepo, customerRepo)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update configs to repo")
@@ -186,7 +189,12 @@ func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.Tekton
 }
 
 func (cp *TektonApp) synchTektonConfig(req *model.TektonProjectSyncUsecase, templateDir, reqRepo string) error {
+	logger.Info("Tekton Project", cp.pluginConfig.TektonProject)
+	clustersyncpath := filepath.Join(cp.pluginConfig.PipelineClusterConfigSyncPath)
+	logger.Info("sync path", clustersyncpath)
 	for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.PipelineClusterConfigSyncPath)} {
+		logger.Info("Source template for copying", filepath.Join(templateDir, config))
+		logger.Info("Destination ", filepath.Join(reqRepo, config))
 		err := copy.Copy(filepath.Join(templateDir, config), filepath.Join(reqRepo, config),
 			copy.Options{
 				OnDirExists: func(src, dest string) copy.DirExistsAction {
@@ -197,6 +205,8 @@ func (cp *TektonApp) synchTektonConfig(req *model.TektonProjectSyncUsecase, temp
 		}
 	}
 
+	logger.Info("Copying pipeline template config", filepath.Join(templateDir, cp.pluginConfig.TektonPipelinePath))
+	logger.Info("Destination for pipeline template config", filepath.Join(reqRepo, cp.pluginConfig.TektonPipelinePath))
 	// Copy pipeline template config
 	err := copy.Copy(filepath.Join(templateDir, cp.pluginConfig.TektonPipelinePath),
 		filepath.Join(reqRepo, cp.pluginConfig.TektonPipelinePath),
@@ -205,7 +215,7 @@ func (cp *TektonApp) synchTektonConfig(req *model.TektonProjectSyncUsecase, temp
 				return copy.Replace
 			}})
 	if err != nil {
-		return fmt.Errorf("failed to copy dir from template to user repo, %v", err)
+		return fmt.Errorf("failed to copy pipeline template dir from template to user repo, %v", err)
 	}
 
 	return nil
