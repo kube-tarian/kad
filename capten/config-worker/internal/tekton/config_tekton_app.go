@@ -190,10 +190,10 @@ func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.Tekton
 
 func (cp *TektonApp) synchTektonConfig(req *model.TektonProjectSyncUsecase, templateDir, reqRepo string) error {
 	logger.Info("Tekton Project", cp.pluginConfig.TektonProject)
-	// clustersyncpath := filepath.Join(cp.pluginConfig.PipelineClusterConfigSyncPath)
-	// logger.Info("sync path", clustersyncpath)
-	// for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.PipelineClusterConfigSyncPath)} {
-	for _, config := range []string{cp.pluginConfig.TektonProject} {
+	 clustersyncpath := filepath.Join(cp.pluginConfig.PipelineClusterConfigSyncPath)
+	 logger.Info("sync path", clustersyncpath)
+	 for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.PipelineClusterConfigSyncPath)} {
+//	for _, config := range []string{cp.pluginConfig.TektonProject} {
 		logger.Info("Source template for copying", filepath.Join(templateDir, config))
 		logger.Info("Destination ", filepath.Join(reqRepo, config))
 		err := copy.Copy(filepath.Join(templateDir, config), filepath.Join(reqRepo, config),

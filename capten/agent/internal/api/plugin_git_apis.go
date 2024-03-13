@@ -312,7 +312,8 @@ func (a *Agent) validateForWhitelistedLabels(ctx context.Context, incomingLabels
 	}
 
 	if len(res) > 0 {
-		return fmt.Errorf("project present with whitelisted labels: %v", filtered)
+		return nil
+		//return fmt.Errorf("project present with whitelisted labels: %v", filtered)
 	}
 
 	return nil
