@@ -107,7 +107,7 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 	logger.Infof("cloned default templates to project %s", req.RepoURL)
 	defer os.RemoveAll(customerRepo)
 	logger.Info("Template repo", templateRepo)
-	logger.Info("Customer repo", templateRepo)
+	logger.Info("Customer repo", customerRepo)
 	err = cp.synchTektonConfig(req, templateRepo, customerRepo)
 	if err != nil {
 		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to update configs to repo")
