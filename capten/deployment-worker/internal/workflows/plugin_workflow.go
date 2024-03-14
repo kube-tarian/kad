@@ -21,11 +21,7 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 	var err error
 	switch action {
 	case string(model.AppInstallAction), string(model.AppUpdateAction), string(model.AppUpgradeAction):
-		req := &model.ApplicationDeployRequest{}
-		err = json.Unmarshal(payload, req)
-		if err == nil {
-			result, err = hanldeDeployWorkflow(ctx, payload, logger)
-		}
+		result, err = hanldeDeployWorkflow(ctx, payload, logger)
 	case string(model.AppUnInstallAction):
 		ctx = setContext(ctx, 600, logger)
 		req := &model.DeployerDeleteRequest{}
@@ -62,7 +58,17 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log log
 	var a *activities.PluginActivities
 	result := &model.ResponsePayload{}
 	ctx = setContext(ctx, 600, log)
-	err := workflow.ExecuteActivity(ctx, a.PluginDeployPreActionMTLSActivity, payload).Get(ctx, result)
+
+	req := &model.ApplicationDeployRequest{}
+	err := json.Unmarshal(payload, req)
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"wrong content: %s\"}", err.Error())),
+		}, err
+	}
+
+	err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionMTLSActivity, payload).Get(ctx, result)
 	if err != nil {
 		return result, err
 	}
