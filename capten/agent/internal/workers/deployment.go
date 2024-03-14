@@ -101,7 +101,12 @@ func (d *Deployment) SendEventV2(
 	}
 
 	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
-	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
+	var run client.WorkflowRun
+	if capabilities == nil {
+		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
+	} else {
+		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON), capabilities)
+	}
 	if err != nil {
 		return nil, err
 	}
