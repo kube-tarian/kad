@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -21,8 +20,10 @@ type DBClient struct {
 }
 
 type DBConfig struct {
-	DbOemName  OemName `envconfig:"DB_OEM_NAME" required:"true"`
-	Parameters *DBParameters
+	PluginName        string  `envconfig:"PLUGIN_NAME" required:"true"`
+	DbOemName         OemName `envconfig:"DB_OEM_NAME" required:"true"`
+	DbName            string  `envconfig:"DB_NAME" required:"true"`
+	DbServiceUserName string  `envconfig:"DB_SERVICE_USER_NAME" required:"true"`
 }
 type DBParameters struct {
 	DbName            string `envconfig:"DB_NAME" required:"true"`
@@ -30,24 +31,12 @@ type DBParameters struct {
 }
 
 func NewDBClient() (*DBClient, error) {
-	oemNameFromEnv, ok := os.LookupEnv("DB_OEM_NAME")
-	if !ok {
-		return nil, fmt.Errorf("DB_OEM_NAME is missed to provide in environment variables")
-	}
-	oemName, ok := GetEnum(oemNameFromEnv)
-	if !ok {
-		return nil, fmt.Errorf("%s: Unsupported database", oemNameFromEnv)
+	conf := &DBConfig{}
+	if err := envconfig.Process("", conf); err != nil {
+		return nil, fmt.Errorf("DB config read failed, %v", err)
 	}
 
-	params := &DBParameters{}
-	if err := envconfig.Process(oemName.String(), params); err != nil {
-		return nil, fmt.Errorf("DB config parameters read failed, %v", err)
-	}
-
-	return NewDBClientWithConfig(&DBConfig{
-		DbOemName:  oemName,
-		Parameters: params,
-	}), nil
+	return NewDBClientWithConfig(conf), nil
 }
 
 func NewDBClientWithConfig(conf *DBConfig) *DBClient {
@@ -67,14 +56,15 @@ func (d *DBClient) SetupDatabase() error {
 	defer cancel()
 
 	response, err := client.Client.SetupDatabase(ctx, &captensdkpb.DBSetupRequest{
+		PluginName:      d.conf.PluginName,
 		DbOemName:       d.conf.DbOemName.String(),
-		DbName:          d.conf.Parameters.DbName,
-		ServiceUserName: d.conf.Parameters.DbServiceUserName,
+		DbName:          d.conf.DbName,
+		ServiceUserName: d.conf.DbServiceUserName,
 	})
 	if err != nil {
 		return fmt.Errorf("%s database setup in %s OEM failed: %v", d.conf.DbOemName, d.conf.DbOemName, err)
 	}
-	fmt.Printf("DB setup status: %v, message: %v, DB URL: %v\n", response.Status, response.StatusMessage, response.DbURL)
+	fmt.Printf("DB setup status: %v, message: %v, DB URL: %v\n", response.Status, response.StatusMessage, response.VaultPath)
 
 	return nil
 }
@@ -85,8 +75,8 @@ func (d *DBClient) RunMigrations(data map[string][]byte) error {
 	err := postgres.RunMigrationsBinDataWithConfig(
 		&postgres.DBConfig{
 			DBAddr:    d.dbAddress,
-			DBName:    d.conf.Parameters.DbName,
-			Username:  d.conf.Parameters.DbServiceUserName,
+			DBName:    d.conf.DbName,
+			Username:  d.conf.DbServiceUserName,
 			Password:  d.serviceUserPassword,
 			SourceURI: "go-bindata",
 		},

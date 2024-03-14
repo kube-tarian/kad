@@ -44,10 +44,9 @@ func (a *Agent) SetupDatabase(ctx context.Context, req *captensdkpb.DBSetupReque
 	a.log.Infof("Setup of new db %s is Done", conf.DBName)
 
 	return &captensdkpb.DBSetupResponse{
-		Status:              captensdkpb.StatusCode_OK,
-		StatusMessage:       "Database setup in postgres succesful",
-		ServiceUserPassword: conf.Password,
-		DbURL:               conf.DBAddress + ":5432",
+		Status:        captensdkpb.StatusCode_OK,
+		StatusMessage: "Database setup in postgres succesful",
+		VaultPath:     "missing",
 	}, nil
 }
 
