@@ -41,6 +41,11 @@ func NewPluginActivities() (*PluginActivities, error) {
 		return nil, err
 	}
 
+	pas, err := pluginappstore.NewStore(logger)
+	if err != nil {
+		logger.Errorf("failed to initialize plugin app store, %v", err)
+	}
+
 	return &PluginActivities{
 		config:    conf,
 		pas:       pas,
