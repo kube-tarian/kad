@@ -282,7 +282,7 @@ func (a *Agent) UpgradeApp(ctx context.Context, req *agentpb.UpgradeAppRequest) 
 func (a *Agent) installAppWithWorkflow(req *model.ApplicationInstallRequest,
 	appConfig *agentpb.SyncAppData) {
 	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendEvent(context.TODO(), wd.GetWorkflowName(), string(model.AppInstallAction), req)
+	_, err := wd.SendEvent(context.TODO(), wd.GetWorkflowName(), string(model.AppInstallAction), req, nil)
 	if err != nil {
 		appConfig.Config.InstallStatus = string(model.AppIntallFailedStatus)
 		if err := a.as.UpsertAppConfig(appConfig); err != nil {
@@ -322,7 +322,7 @@ func (a *Agent) unInstallAppWithWorkflow(req *model.ApplicationDeleteRequest, ap
 func (a *Agent) upgradeAppWithWorkflow(req *model.ApplicationInstallRequest,
 	appConfig *agentpb.SyncAppData) {
 	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendEvent(context.TODO(), wd.GetWorkflowName(), string(model.AppUpgradeAction), req)
+	_, err := wd.SendEvent(context.TODO(), wd.GetWorkflowName(), string(model.AppUpgradeAction), req, nil)
 	if err != nil {
 		appConfig.Config.InstallStatus = string(model.AppUpgradeFaileddStatus)
 		if err := a.as.UpsertAppConfig(appConfig); err != nil {

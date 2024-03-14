@@ -164,7 +164,7 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update status: %s\"}", err.Error())),
 		}, err
 	}
 	return &model.ResponsePayload{
