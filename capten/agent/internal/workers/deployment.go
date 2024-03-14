@@ -40,7 +40,12 @@ func (d *Deployment) GetPluginWorkflowName() string {
 	return PluginDeploymentWorkerWorkflowName
 }
 
-func (d *Deployment) SendEvent(ctx context.Context, workflowName string, action string, deployPayload *model.ApplicationInstallRequest) (client.WorkflowRun, error) {
+func (d *Deployment) SendEvent(
+	ctx context.Context,
+	workflowName string,
+	action string,
+	deployPayload *model.ApplicationInstallRequest,
+	capabilities []string) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: DeploymentWorkerTaskQueue,
@@ -52,7 +57,12 @@ func (d *Deployment) SendEvent(ctx context.Context, workflowName string, action 
 	}
 
 	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
-	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
+	var run client.WorkflowRun
+	if capabilities == nil {
+		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
+	} else {
+		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON), capabilities)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +83,13 @@ func (d *Deployment) SendEvent(ctx context.Context, workflowName string, action 
 	return run, nil
 }
 
-func (d *Deployment) SendDeleteEvent(ctx context.Context, workflowName string, action string, deployPayload *model.ApplicationDeleteRequest) (client.WorkflowRun, error) {
+func (d *Deployment) SendDeleteEvent(
+	ctx context.Context,
+	workflowName string,
+	action string,
+	deployPayload *model.ApplicationDeleteRequest,
+	capabilities []string,
+) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: DeploymentWorkerTaskQueue,
@@ -87,7 +103,12 @@ func (d *Deployment) SendDeleteEvent(ctx context.Context, workflowName string, a
 	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
 	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, deployPayload)
 	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, workflows.Workflow, action, payloadJSON)
-	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(payloadJSON))
+	var run client.WorkflowRun
+	if capabilities == nil {
+		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(payloadJSON))
+	} else {
+		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(payloadJSON), capabilities)
+	}
 	if err != nil {
 		return nil, err
 	}

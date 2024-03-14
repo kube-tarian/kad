@@ -31,7 +31,7 @@ func RunMigrations(mode migration.Mode) error {
 }
 
 func RunMigrationsWithConfig(conf *DBConfig, mode migration.Mode) error {
-	dbConnectionString, err := getDbConnectionURLFromDbType(conf, "")
+	dbConnectionString, err := getDbConnectionURLFromDbType(conf, conf.Password)
 	if err != nil {
 		return errors.WithMessage(err, "DB connection Url create failed")
 	}
@@ -41,6 +41,15 @@ func RunMigrationsWithConfig(conf *DBConfig, mode migration.Mode) error {
 		return err
 	}
 	return nil
+}
+
+func RunMigrationsBinData(s *bindata.AssetSource, mode migration.Mode) error {
+	conf := &DBConfig{}
+	if err := envconfig.Process("", conf); err != nil {
+		return err
+	}
+
+	return RunMigrationsBinDataWithConfig(conf, s, mode)
 }
 
 func RunMigrationsBinDataWithConfig(conf *DBConfig, s *bindata.AssetSource, mode migration.Mode) error {
