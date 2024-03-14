@@ -7,6 +7,8 @@ import (
 )
 
 type BinData struct {
+	// FileNames array should be in ascending order of sequence numbers provided
+	// in FileMap keys of SQL data
 	FileNames []string
 	FilesMap  map[string][]byte
 }
