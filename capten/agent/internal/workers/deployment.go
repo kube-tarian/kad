@@ -15,8 +15,9 @@ import (
 )
 
 const (
-	DeploymentWorkerWorkflowName = "Workflow"
-	DeploymentWorkerTaskQueue    = "Deployment"
+	DeploymentWorkerWorkflowName       = "Workflow"
+	PluginDeploymentWorkerWorkflowName = "PluginWorkflow"
+	DeploymentWorkerTaskQueue          = "Deployment"
 )
 
 type Deployment struct {
@@ -35,7 +36,11 @@ func (d *Deployment) GetWorkflowName() string {
 	return DeploymentWorkerWorkflowName
 }
 
-func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload *model.ApplicationInstallRequest) (client.WorkflowRun, error) {
+func (d *Deployment) GetPluginWorkflowName() string {
+	return PluginDeploymentWorkerWorkflowName
+}
+
+func (d *Deployment) SendEvent(ctx context.Context, workflowName string, action string, deployPayload *model.ApplicationInstallRequest) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: DeploymentWorkerTaskQueue,
@@ -47,7 +52,7 @@ func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload
 	}
 
 	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
-	run, err := d.client.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, json.RawMessage(deployPayloadJSON))
+	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +73,7 @@ func (d *Deployment) SendEvent(ctx context.Context, action string, deployPayload
 	return run, nil
 }
 
-func (d *Deployment) SendDeleteEvent(ctx context.Context, action string, deployPayload *model.ApplicationDeleteRequest) (client.WorkflowRun, error) {
+func (d *Deployment) SendDeleteEvent(ctx context.Context, workflowName string, action string, deployPayload *model.ApplicationDeleteRequest) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
 		TaskQueue: DeploymentWorkerTaskQueue,
@@ -82,7 +87,7 @@ func (d *Deployment) SendDeleteEvent(ctx context.Context, action string, deployP
 	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
 	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, deployPayload)
 	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, workflows.Workflow, action, payloadJSON)
-	run, err := d.client.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, json.RawMessage(payloadJSON))
+	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(payloadJSON))
 	if err != nil {
 		return nil, err
 	}

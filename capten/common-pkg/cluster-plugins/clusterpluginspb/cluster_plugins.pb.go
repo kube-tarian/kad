@@ -138,6 +138,7 @@ type Plugin struct {
 	Capabilities        []string          `protobuf:"bytes,13,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
 	Values              []byte            `protobuf:"bytes,14,opt,name=values,proto3" json:"values,omitempty"`
 	OverrideValues      map[string]string `protobuf:"bytes,15,rep,name=overrideValues,proto3" json:"overrideValues,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	InstallStatus       string    `protobuf:"bytes,14,opt,name=installStatus,proto3" json:"installStatus,omitempty"`
 }
 
 func (x *Plugin) Reset() {
@@ -275,6 +276,13 @@ func (x *Plugin) GetOverrideValues() map[string]string {
 		return x.OverrideValues
 	}
 	return nil
+}
+
+func (x *Plugin) GetInstallStatus() string {
+	if x != nil {
+		return x.InstallStatus
+	}
+	return ""
 }
 
 type DeployClusterPluginRequest struct {
@@ -494,12 +502,13 @@ type ClusterPlugin struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StoreType   StoreType `protobuf:"varint,1,opt,name=storeType,proto3,enum=clusterpluginspb.StoreType" json:"storeType,omitempty"`
-	PluginName  string    `protobuf:"bytes,2,opt,name=pluginName,proto3" json:"pluginName,omitempty"`
-	Description string    `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Category    string    `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
-	Version     string    `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
-	Icon        []byte    `protobuf:"bytes,6,opt,name=icon,proto3" json:"icon,omitempty"`
+	StoreType     StoreType `protobuf:"varint,1,opt,name=storeType,proto3,enum=clusterpluginspb.StoreType" json:"storeType,omitempty"`
+	PluginName    string    `protobuf:"bytes,2,opt,name=pluginName,proto3" json:"pluginName,omitempty"`
+	Description   string    `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Category      string    `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
+	Version       string    `protobuf:"bytes,5,opt,name=version,proto3" json:"version,omitempty"`
+	Icon          []byte    `protobuf:"bytes,6,opt,name=icon,proto3" json:"icon,omitempty"`
+	InstallStatus string    `protobuf:"bytes,7,opt,name=installStatus,proto3" json:"installStatus,omitempty"`
 }
 
 func (x *ClusterPlugin) Reset() {
@@ -574,6 +583,13 @@ func (x *ClusterPlugin) GetIcon() []byte {
 		return x.Icon
 	}
 	return nil
+}
+
+func (x *ClusterPlugin) GetInstallStatus() string {
+	if x != nil {
+		return x.InstallStatus
+	}
+	return ""
 }
 
 type GetClusterPluginsRequest struct {

@@ -21,6 +21,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/util"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
+	pluginappstore "github.com/kube-tarian/kad/capten/common-pkg/pluginapp-store"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/reflection"
 )
@@ -49,7 +50,12 @@ func Start() {
 		log.Errorf("failed to initialize store, %v", err)
 	}
 
-	rpcapi, err := agentapi.NewAgent(log, cfg, as)
+	pas, err := pluginappstore.NewStore(log)
+	if err != nil {
+		log.Errorf("failed to initialize plugin app store, %v", err)
+	}
+
+	rpcapi, err := agentapi.NewAgent(log, cfg, as, pas)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 	}
