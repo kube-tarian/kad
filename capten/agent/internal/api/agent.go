@@ -12,6 +12,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
+	pluginappstore "github.com/kube-tarian/kad/capten/common-pkg/pluginapp-store"
 )
 
 var _ agentpb.AgentServer = &Agent{}
@@ -23,12 +24,13 @@ type Agent struct {
 	clusterpluginspb.UnimplementedClusterPluginsServer
 	tc       *temporalclient.Client
 	as       *captenstore.Store
+	pas      *pluginappstore.Store
 	log      logging.Logger
 	cfg      *config.SericeConfig
 	createPr bool
 }
 
-func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store) (*Agent, error) {
+func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store, pas *pluginappstore.Store) (*Agent, error) {
 	var tc *temporalclient.Client
 	var err error
 
@@ -40,6 +42,7 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Stor
 	agent := &Agent{
 		tc:  tc,
 		as:  as,
+		pas: pas,
 		cfg: cfg,
 		log: log,
 	}

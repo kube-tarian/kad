@@ -38,6 +38,7 @@ message Plugin {
   string pluginEndpoint = 11;
 	repeated string capabilities = 12;
   bytes values = 13;
+	string installStatus = 14;
 }
 
 message DeployClusterPluginRequest {
@@ -66,6 +67,7 @@ message ClusterPlugin {
   string category = 4;
   string version = 5;
   bytes icon = 6;
+	string installStatus = 7;
 }
 
 message GetClusterPluginsRequest {
