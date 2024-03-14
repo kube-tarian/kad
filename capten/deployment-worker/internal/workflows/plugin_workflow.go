@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/activities"
 	"github.com/kube-tarian/kad/capten/model"
 	"go.temporal.io/sdk/temporal"
@@ -22,7 +21,7 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 	var err error
 	switch action {
 	case string(model.AppInstallAction), string(model.AppUpdateAction), string(model.AppUpgradeAction):
-		req := &clusterpluginspb.DeployClusterPluginRequest{}
+		req := &model.ApplicationDeployRequest{}
 		err = json.Unmarshal(payload, req)
 		if err == nil {
 			result, err = hanldeDeployWorkflow(ctx, payload, logger)

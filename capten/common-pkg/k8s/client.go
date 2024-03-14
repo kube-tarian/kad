@@ -113,6 +113,40 @@ func (k *K8SClient) ListPods(namespace string) ([]corev1.Pod, error) {
 	return pods.Items, nil
 }
 
+func (k *K8SClient) CreateConfigmap(namespace, cmName string, data map[string]string, annotation map[string]string) error {
+	_, err := k.Clientset.CoreV1().ConfigMaps(namespace).Create(
+		context.TODO(),
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Name: cmName, Annotations: annotation},
+			Data:       data,
+		},
+		metav1.CreateOptions{})
+	return err
+}
+
+func (k *K8SClient) UpdateConfigmap(namespace, cmName string, data map[string]string) error {
+	_, err := k.Clientset.CoreV1().ConfigMaps(namespace).Update(
+		context.TODO(),
+		&v1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{Name: cmName},
+			Data:       data,
+		},
+		metav1.UpdateOptions{})
+	return err
+}
+
+func (k *K8SClient) DeleteConfigmap(namespace, cmName string) error {
+	return k.Clientset.CoreV1().ConfigMaps(namespace).Delete(context.TODO(), cmName, metav1.DeleteOptions{})
+}
+
+func (k *K8SClient) GetConfigmap(namespace, cmName string) (map[string]string, error) {
+	cm, err := k.Clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), cmName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return cm.Data, nil
+}
+
 func FetchConfiguration() (*Configuration, error) {
 	cfg := &Configuration{}
 	err := envconfig.Process("", cfg)
