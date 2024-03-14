@@ -30,9 +30,6 @@ service Server {
   rpc UpgradeStoreApp(UpgradeStoreAppRequest) returns (UpgradeStoreAppResponse) {}
 
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
-
-  rpc SetupDatabase (DBSetupRequest) returns (DBSetupResponse) {}
-  rpc RunMigrations (DBMigrationRequest) returns (DBMigrationResponse) {}
 }
 
 enum StatusCode {
@@ -317,31 +314,6 @@ message UnDeployStoreAppRequest {
 }
 
 message UnDeployStoreAppResponse{
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message DBSetupRequest {
-  string dbOemName = 1;
-  string dbName = 2;
-  string serviceUserName = 3;
-}
-
-message DBSetupResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-  string dbURL = 3;
-  string serviceUserPassword = 4;
-}
-
-message DBMigrationRequest {
-  string dbOemName = 1;
-  string dbName = 2;
-  string serviceUserName = 3;
-  map<string, bytes> migrations = 4;
-}
-
-message DBMigrationResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }

@@ -194,3 +194,33 @@ func PutGenericCredential(ctx context.Context, svcEntity, credId string, cred ma
 func getClusterCertIndentifier(orgID, clusterName string) string {
 	return fmt.Sprintf("%s:%s", orgID, clusterName)
 }
+
+func PutPluginCredential(ctx context.Context, pluginName, svcEntity string, cred map[string]string) error {
+	credAdmin, err := credentials.NewCredentialAdmin(ctx)
+	if err != nil {
+		return errors.WithMessage(err, "error in initializing credential admin")
+	}
+
+	err = credAdmin.PutCredential(context.Background(), credentials.PluginCredentialType,
+		pluginName, svcEntity, cred)
+	if err != nil {
+		return errors.WithMessagef(err, "error in put generic cred for %s/%s", pluginName, svcEntity)
+	}
+	return nil
+}
+
+func GetPluginCredential(ctx context.Context, pluginName, svcEntity string) (cred credentials.ServiceCredential, err error) {
+	credReader, err := credentials.NewCredentialReader(ctx)
+	if err != nil {
+		err = errors.WithMessage(err, "error in initializing credential reader")
+		return
+	}
+
+	data, err := credReader.GetCredential(ctx, credentials.PluginCredentialType, pluginName, svcEntity)
+	if err != nil {
+		err = errors.WithMessagef(err, "error while reading cluster global values %s/%s from the vault",
+			captenConfigEntityName, globalValuesCredIdentifier)
+		return
+	}
+	return credentials.ParseServiceCredential(data)
+}

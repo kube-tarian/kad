@@ -5,22 +5,27 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/db"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	pluginappstore "github.com/kube-tarian/kad/capten/common-pkg/pluginapp-store"
-	dbstore "github.com/kube-tarian/kad/capten/deployment-worker/internal/db-store"
 	"github.com/kube-tarian/kad/capten/model"
 )
 
+type Configuration struct {
+	AgentAddress string `envconfig:"AGENT_ADDRESSES" required:"true"`
+}
+
 type PluginActivities struct {
-	store     *dbstore.Store
+	config    *Configuration
 	pas       *pluginappstore.Store
 	k8sClient *k8s.K8SClient
 }
 
 func NewPluginActivities() (*PluginActivities, error) {
-	store, err := dbstore.NewStore(logger)
-	if err != nil {
-		return nil, err
+	conf := &Configuration{}
+	if err := envconfig.Process("", conf); err != nil {
+		return nil, fmt.Errorf("cassandra config read faile, %v", err)
 	}
 
 	pas, err := pluginappstore.NewStore(logger)
@@ -36,7 +41,7 @@ func NewPluginActivities() (*PluginActivities, error) {
 	}
 
 	return &PluginActivities{
-		store:     store,
+		config:    conf,
 		pas:       pas,
 		k8sClient: k8sclient,
 	}, nil
@@ -47,18 +52,41 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update status: %s\"}", err.Error())),
 		}, err
 	}
 
-	// TODO: Call capten-sdk DB setup
-	// Write the credentials in the vault
+	// Call capten-sdk DB setup
+	sdkDBClient := db.NewDBClientWithConfig(&db.DBConfig{
+		DbOemName:         db.POSTGRES,
+		PluginName:        req.PluginName,
+		DbName:            req.Namespace + "-" + req.PluginName,
+		DbServiceUserName: req.PluginName,
+	})
+
+	vaultPath, err := sdkDBClient.SetupDatabase()
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"setup database: %s\"}", err.Error())),
+		}, err
+	}
+
+	err = p.k8sClient.CreateConfigmap(req.Namespace, req.PluginName+"-init-config", map[string]string{
+		"vault-path": vaultPath,
+	}, nil)
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", err.Error())),
+		}, err
+	}
 
 	err = p.updateStatus(req.ReleaseName, "postgres-"+"initialized")
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update status: %s\"}", err.Error())),
 		}, err
 	}
 	return &model.ResponsePayload{
@@ -66,7 +94,10 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 	}, nil
 }
 
-func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(ctx context.Context, req *model.ApplicationDeployRequest) (*model.ResponsePayload, error) {
+func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
+	ctx context.Context,
+	req *model.ApplicationDeployRequest,
+) (*model.ResponsePayload, error) {
 	err := p.updateStatus(req.ReleaseName, "vaultstore-"+"initializing")
 	if err != nil {
 		return &model.ResponsePayload{
@@ -76,6 +107,7 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(ctx context.C
 	}
 	// TODO: Call vault policy creation and path authorizations
 	// Write the credentials in the vault
+	logger.Infof("vault store activity Not implemented yet")
 
 	err = p.updateStatus(req.ReleaseName, "vaultstore-"+"initialized")
 	if err != nil {
@@ -99,6 +131,7 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 	}
 	// TODO: Call MTLS creation
 	// Write the mtls in the vault/conigmap
+	logger.Infof("MTLS activity Not implemented yet")
 
 	err = p.updateStatus(req.ReleaseName, "mtls-"+"initialized")
 	if err != nil {

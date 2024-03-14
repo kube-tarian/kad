@@ -120,7 +120,7 @@ func (a *Agent) UnDeployClusterPlugin(ctx context.Context, request *clusterplugi
 
 func (a *Agent) installPluginWithWorkflow(req *model.ApplicationInstallRequest, pluginConfig *clusterpluginspb.Plugin) {
 	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppInstallAction), req)
+	_, err := wd.SendEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppInstallAction), req, pluginConfig.Capabilities)
 	if err != nil {
 		pluginConfig.InstallStatus = string(model.AppIntallFailedStatus)
 		if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
@@ -140,7 +140,7 @@ func (a *Agent) installPluginWithWorkflow(req *model.ApplicationInstallRequest, 
 
 func (a *Agent) unInstallPluginWithWorkflow(req *model.ApplicationDeleteRequest, appConfig *clusterpluginspb.Plugin) {
 	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppUnInstallAction), req)
+	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppUnInstallAction), req, appConfig.Capabilities)
 	if err != nil {
 		a.log.Errorf("failed to send delete event to workflow for app %s, %v", req.ReleaseName, err)
 
