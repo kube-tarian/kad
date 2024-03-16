@@ -12,7 +12,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage) (model.ResponsePayload, error) {
+func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage, capabilities []string) (model.ResponsePayload, error) {
 	result := &model.ResponsePayload{}
 	logger := logging.NewLogger()
 
@@ -21,7 +21,7 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 	var err error
 	switch action {
 	case string(model.AppInstallAction), string(model.AppUpdateAction), string(model.AppUpgradeAction):
-		result, err = hanldeDeployWorkflow(ctx, payload, logger)
+		result, err = hanldeDeployWorkflow(ctx, payload, capabilities, logger)
 	case string(model.AppUnInstallAction):
 		ctx = setContext(ctx, 600, logger)
 		req := &model.DeployerDeleteRequest{}
@@ -54,7 +54,7 @@ func setContext(ctx workflow.Context, timeInSeconds int, log logging.Logger) wor
 	return ctx
 }
 
-func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger) (*model.ResponsePayload, error) {
+func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, capabilities []string, log logging.Logger) (*model.ResponsePayload, error) {
 	var a *activities.PluginActivities
 	result := &model.ResponsePayload{}
 	ctx = setContext(ctx, 600, log)
@@ -68,24 +68,29 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log log
 		}, err
 	}
 
-	err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionMTLSActivity, payload).Get(ctx, result)
-	if err != nil {
-		return result, err
-	}
+	for _, capability := range capabilities {
+		switch capability {
+		case "capten-sdk":
+			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionMTLSActivity, payload).Get(ctx, result)
+			if err != nil {
+				return result, err
+			}
 
-	err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionVaultStoreActivity, payload).Get(ctx, result)
-	if err != nil {
-		return result, err
-	}
+		case "vault-store":
+			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionVaultStoreActivity, payload).Get(ctx, result)
+			if err != nil {
+				return result, err
+			}
 
-	err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionPostgresStoreActivity, payload).Get(ctx, result)
-	if err != nil {
-		return result, err
-	}
+		case "postgres-store":
+			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionPostgresStoreActivity, payload).Get(ctx, result)
+			if err != nil {
+				return result, err
+			}
 
-	err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionMTLSActivity, payload).Get(ctx, result)
-	if err != nil {
-		return result, err
+		default:
+			log.Infof("Unsupported capability %s", capability)
+		}
 	}
 
 	err = workflow.ExecuteActivity(ctx, a.PluginDeployActivity, payload).Get(ctx, result)
