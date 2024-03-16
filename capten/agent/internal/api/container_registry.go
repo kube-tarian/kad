@@ -45,6 +45,13 @@ func (a *Agent) AddContainerRegistry(ctx context.Context, request *captenplugins
 			StatusMessage: "failed to add Container registry in db",
 		}, err
 	}
+	if err := a.postgres.UpsertContainerRegistry(&ContainerRegistry); err != nil {
+		a.log.Errorf("failed to store Container registry to DB, %v", err)
+		return &captenpluginspb.AddContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add Container registry in db",
+		}, err
+	}
 
 	a.log.Infof("Container registry %s added with id %s", request.RegistryUrl, id.String())
 	return &captenpluginspb.AddContainerRegistryResponse{
@@ -95,6 +102,13 @@ func (a *Agent) UpdateContainerRegistry(ctx context.Context, request *captenplug
 			StatusMessage: "failed to update ContainerRegistry in db",
 		}, err
 	}
+	if err := a.postgres.UpsertContainerRegistry(&ContainerRegistry); err != nil {
+		a.log.Errorf("failed to update ContainerRegistry in db, %v", err)
+		return &captenpluginspb.UpdateContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to update ContainerRegistry in db",
+		}, err
+	}
 
 	a.log.Infof("ContainerRegistry %s, %s updated", request.RegistryUrl, request.Id)
 	return &captenpluginspb.UpdateContainerRegistryResponse{
@@ -114,6 +128,34 @@ func (a *Agent) DeleteContainerRegistry(ctx context.Context, request *captenplug
 	}
 	a.log.Infof("Delete ContainerRegistry %s request recieved", request.Id)
 
+	containerRegistry, err := a.as.GetContainerRegistryForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get container registry from db, %v", err)
+		return &captenpluginspb.DeleteContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get Container registry from db",
+		}, nil
+	}
+
+	containerRegistry, err = a.postgres.GetContainerRegistryForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get container registry from db, %v", err)
+		return &captenpluginspb.DeleteContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get Container registry from db",
+		}, nil
+	}
+
+	if len(containerRegistry.UsedPlugins) > 0 && request.ForceDelete {
+		a.log.Infof("deleting the container registry from db with force update, registry is being used in %+v, %v", containerRegistry.UsedPlugins, err)
+	} else if len(containerRegistry.UsedPlugins) > 0 {
+		a.log.Errorf("failed to delete container registry from db, registry is being used in %+v, %v", containerRegistry.UsedPlugins, err)
+		return &captenpluginspb.DeleteContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete container registry from db, as registry is being used in plugins",
+		}, nil
+	}
+
 	if err := a.deleteContainerRegCredential(ctx, request.Id); err != nil {
 		return &captenpluginspb.DeleteContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -122,6 +164,13 @@ func (a *Agent) DeleteContainerRegistry(ctx context.Context, request *captenplug
 	}
 
 	if err := a.as.DeleteContainerRegistryById(request.Id); err != nil {
+		a.log.Errorf("failed to delete ContainerRegistry from db, %v", err)
+		return &captenpluginspb.DeleteContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete ContainerRegistry from db",
+		}, err
+	}
+	if err := a.postgres.DeleteContainerRegistryById(request.Id); err != nil {
 		a.log.Errorf("failed to delete ContainerRegistry from db, %v", err)
 		return &captenpluginspb.DeleteContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -159,6 +208,13 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 		}
 
 		r.RegistryAttributes = cred
+		r.SecretePath = fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, containerRegEntityName, r.Id)
+
+		keys := make([]string, 0, len(cred))
+		for k := range cred {
+			keys = append(keys, k)
+		}
+		r.SecreteKeys = keys
 	}
 
 	a.log.Infof("Found %d container registry", len(res))

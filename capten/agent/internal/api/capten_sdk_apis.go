@@ -2,8 +2,15 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
+)
+
+const (
+	ResourceTypeGit               = "git"
+	ResourceTypeCloudProvider     = "cloud_provider"
+	ResourceTypeContainerRegistry = "container_registry"
 )
 
 func (a *Agent) GetGitProjectById(ctx context.Context, request *captensdkpb.GetGitProjectByIdRequest) (
@@ -101,4 +108,225 @@ func (a *Agent) GetContainerRegistryById(ctx context.Context, request *captensdk
 		StatusMessage: "successfully fetched container registry for " + request.Id,
 	}, nil
 
+}
+
+func (a *Agent) RegisterResourceUsage(ctx context.Context, request *captensdkpb.RegisterResourceUsageRequest) (
+	*captensdkpb.RegisterResourceUsageResponse, error) {
+
+	if request.ResourceId == "" {
+		a.log.Error("Resouce Id is not provided")
+		return &captensdkpb.RegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Resouce Id is not provided",
+		}, nil
+	}
+
+	if request.ResourceType == "" {
+		a.log.Error("Resouce type is not provided")
+		return &captensdkpb.RegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Resouce type is not provided",
+		}, nil
+	}
+
+	if request.PluginName == "" {
+		a.log.Error("Plugin name is not provided")
+		return &captensdkpb.RegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Plugin name is not provided",
+		}, nil
+	}
+
+	if !(request.PluginName == "tekton" || request.PluginName == "crossplane") {
+		a.log.Error("Invalid plugin name is provided")
+		return &captensdkpb.RegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Invalid plugin name is provided",
+		}, nil
+	}
+
+	a.log.Infof("Adding Plugin name %s of type %s for Id : %s", request.PluginName, request.ResourceType, request.ResourceId)
+
+	switch request.ResourceType {
+	case ResourceTypeGit:
+		res, err := a.postgres.GetGitProjectForID(request.ResourceId)
+		if err != nil {
+			a.log.Errorf("failed to get git project from db, %v", err)
+			return &captensdkpb.RegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch git repo for " + request.ResourceId,
+			}, nil
+		}
+		res.UsedPlugins = append(res.UsedPlugins, request.PluginName)
+		if err := a.postgres.UpsertGitProject(res); err != nil {
+			a.log.Errorf("failed to Upsert Git repo from db, %v", err)
+			return &captensdkpb.RegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to Upsert Git repo for " + request.ResourceId,
+			}, nil
+		}
+	case ResourceTypeCloudProvider:
+		res, err := a.postgres.GetCloudProviderForID(request.ResourceId)
+		if err != nil {
+			a.log.Errorf("failed to get Cloud provider from db, %v", err)
+			return &captensdkpb.RegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch Cloud provider for " + request.ResourceId,
+			}, nil
+		}
+		res.UsedPlugins = append(res.UsedPlugins, request.PluginName)
+		if err := a.postgres.UpsertCloudProvider(res); err != nil {
+			a.log.Errorf("failed to Upsert Cloud provider from db, %v", err)
+			return &captensdkpb.RegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to Upsert Cloud provider for " + request.ResourceId,
+			}, nil
+		}
+
+	case ResourceTypeContainerRegistry:
+		res, err := a.postgres.GetContainerRegistryForID(request.ResourceId)
+		if err != nil {
+			a.log.Errorf("failed to get Container registry from db, %v", err)
+			return &captensdkpb.RegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch Container registry for " + request.ResourceId,
+			}, nil
+		}
+		res.UsedPlugins = append(res.UsedPlugins, request.PluginName)
+		if err := a.postgres.UpsertContainerRegistry(res); err != nil {
+			a.log.Errorf("failed to Upsert Container registry from db, %v", err)
+			return &captensdkpb.RegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to Upsert Container registry for " + request.ResourceId,
+			}, nil
+		}
+	default:
+		return &captensdkpb.RegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "Invalid Resouce type for " + request.ResourceId,
+		}, nil
+	}
+
+	a.log.Infof("Successfully added Plugin name %s of type %s for Id : %s", request.PluginName, request.ResourceType, request.ResourceId)
+
+	return &captensdkpb.RegisterResourceUsageResponse{
+		Status:        captensdkpb.StatusCode_OK,
+		StatusMessage: fmt.Sprintf("Successfully added Plugin name %s of type %s for Id : %s", request.PluginName, request.ResourceType, request.ResourceId),
+	}, nil
+}
+
+func (a *Agent) DeRegisterResourceUsage(ctx context.Context, request *captensdkpb.DeRegisterResourceUsageRequest) (
+	*captensdkpb.DeRegisterResourceUsageResponse, error) {
+
+	if request.ResourceId == "" {
+		a.log.Error("Resouce Id is not provided")
+		return &captensdkpb.DeRegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Resouce Id is not provided",
+		}, nil
+	}
+
+	if request.ResourceType == "" {
+		a.log.Error("Resouce type is not provided")
+		return &captensdkpb.DeRegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Resouce type is not provided",
+		}, nil
+	}
+
+	if request.PluginName == "" {
+		a.log.Error("Plugin name is not provided")
+		return &captensdkpb.DeRegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Plugin name is not provided",
+		}, nil
+	}
+
+	if !(request.PluginName == "tekton" || request.PluginName == "crossplane") {
+		a.log.Error("Invalid plugin name is provided")
+		return &captensdkpb.DeRegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INVALID_ARGUMENT,
+			StatusMessage: "Invalid plugin name is provided",
+		}, nil
+	}
+
+	a.log.Infof("Removing Plugin name %s of type %s for Id : %s", request.PluginName, request.ResourceType, request.ResourceId)
+
+	switch request.ResourceType {
+	case ResourceTypeGit:
+		res, err := a.postgres.GetGitProjectForID(request.ResourceId)
+		if err != nil {
+			a.log.Errorf("failed to get Git repo from db, %v", err)
+			return &captensdkpb.DeRegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch Git repo for " + request.ResourceId,
+			}, nil
+		}
+		res.UsedPlugins = removeUsedPlugin(request.PluginName, res.UsedPlugins)
+		if err := a.postgres.UpsertGitProject(res); err != nil {
+			a.log.Errorf("failed to Upsert Git repo from db, %v", err)
+			return &captensdkpb.DeRegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to Upsert Git repo for " + request.ResourceId,
+			}, nil
+		}
+	case ResourceTypeCloudProvider:
+		res, err := a.postgres.GetCloudProviderForID(request.ResourceId)
+		if err != nil {
+			a.log.Errorf("failed to get Cloud provider from db, %v", err)
+			return &captensdkpb.DeRegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch Cloud provider for " + request.ResourceId,
+			}, nil
+		}
+		res.UsedPlugins = removeUsedPlugin(request.PluginName, res.UsedPlugins)
+		if err := a.postgres.UpsertCloudProvider(res); err != nil {
+			a.log.Errorf("failed to Upsert Cloud provider from db, %v", err)
+			return &captensdkpb.DeRegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to Upsert Cloud provider for " + request.ResourceId,
+			}, nil
+		}
+
+	case ResourceTypeContainerRegistry:
+		res, err := a.postgres.GetContainerRegistryForID(request.ResourceId)
+		if err != nil {
+			a.log.Errorf("failed to get Container registry from db, %v", err)
+			return &captensdkpb.DeRegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch Container registry for " + request.ResourceId,
+			}, nil
+		}
+		res.UsedPlugins = removeUsedPlugin(request.PluginName, res.UsedPlugins)
+		if err := a.postgres.UpsertContainerRegistry(res); err != nil {
+			a.log.Errorf("failed to Upsert Container registry from db, %v", err)
+			return &captensdkpb.DeRegisterResourceUsageResponse{
+				Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to Upsert Container registry for " + request.ResourceId,
+			}, nil
+		}
+	default:
+		return &captensdkpb.DeRegisterResourceUsageResponse{
+			Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "Invalid Resouce type for " + request.ResourceId,
+		}, nil
+	}
+
+	a.log.Infof("Successfully removed Plugin name %s of type %s for Id : %s", request.PluginName, request.ResourceType, request.ResourceId)
+
+	return &captensdkpb.DeRegisterResourceUsageResponse{
+		Status:        captensdkpb.StatusCode_OK,
+		StatusMessage: fmt.Sprintf("Successfully removed Plugin name %s of type %s for Id : %s", request.PluginName, request.ResourceType, request.ResourceId),
+	}, nil
+}
+
+func removeUsedPlugin(pluginName string, usedPlugins []string) []string {
+	plugins := []string{}
+	for _, v := range usedPlugins {
+		if v != pluginName {
+			plugins = append(plugins, v)
+		}
+	}
+
+	return plugins
 }

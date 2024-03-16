@@ -27,7 +27,7 @@ func TestAgentTestSuite(t *testing.T) {
 		t.Fatal(err)
 	}*/
 
-	agent, err := NewAgent(agentSuite.logger, &config.SericeConfig{}, nil)
+	agent, err := NewAgent(agentSuite.logger, &config.SericeConfig{}, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
