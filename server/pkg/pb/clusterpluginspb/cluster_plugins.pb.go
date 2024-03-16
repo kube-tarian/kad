@@ -243,16 +243,16 @@ func (x *Plugin) GetPrivilegedNamespace() bool {
 	return false
 }
 
-func (x *Plugin) GetPluginAccessEndpoint() string {
+func (x *Plugin) GetApiEndpoint() string {
 	if x != nil {
-		return x.PluginAccessEndpoint
+		return x.ApiEndpoint
 	}
 	return ""
 }
 
-func (x *Plugin) GetUiSingleSigonEndpoint() string {
+func (x *Plugin) GetUiEndpoint() string {
 	if x != nil {
-		return x.UiSingleSigonEndpoint
+		return x.UiEndpoint
 	}
 	return ""
 }

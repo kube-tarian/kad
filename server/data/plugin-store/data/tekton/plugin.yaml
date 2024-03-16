@@ -9,7 +9,7 @@ deploymentConfig:
   defaultNamespace: "tekton"
   privilegedNamespace: false
 pluginConfig:
-  pluginAccessEndpoint: https://tekton.{{.domainName}}
+  apiEndpoint: https://tekton.{{.domainName}}
   capabilities:
     - name: capten-sdk
     - name: postgress-store

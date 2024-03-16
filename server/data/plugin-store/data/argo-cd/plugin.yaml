@@ -10,6 +10,6 @@ deploymentConfig:
   defaultNamespace: "argo-cd"
   privilegedNamespace: false
 pluginConfig:
-  pluginAccessEndpoint: https://argo.{{.domainName}}
+  apiEndpoint: https://argo.{{.domainName}}
   capabilities:
     - name: vault-store

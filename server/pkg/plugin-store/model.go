@@ -42,9 +42,9 @@ type DeploymentConfig struct {
 }
 
 type PluginConfig struct {
-	PluginAccessEndpoint  string   `yaml:"pluginAccessEndpoint"`
-	UiSingleSigonEndpoint string   `yaml:"uiSingleSigonEndpoint"`
-	Capabilities          []string `yaml:"capabilities"`
+	ApiEndpoint  string   `yaml:"apiEndpoint"`
+	UiEndpoint   string   `yaml:"uiEndpoint"`
+	Capabilities []string `yaml:"capabilities"`
 }
 
 type Plugin struct {
