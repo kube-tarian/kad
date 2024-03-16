@@ -11,6 +11,7 @@ type GitProjects struct {
 	ProjectURL     string    `json:"project_url"`
 	Labels         []string  `json:"labels" gorm:"type:text[]"`
 	LastUpdateTime time.Time `json:"last_update_time"`
+	UsedPlugins    []string  `json:"used_plugins" gorm:"type:text[]"`
 }
 
 type CloudProviders struct {
@@ -18,6 +19,7 @@ type CloudProviders struct {
 	CloudType      string    `json:"cloud_type"`
 	Labels         []string  `json:"labels" gorm:"type:text[]"`
 	LastUpdateTime time.Time `json:"last_update_time"`
+	UsedPlugins    []string  `json:"used_plugins" gorm:"type:text[]"`
 }
 
 type ContainerRegistry struct {
@@ -26,4 +28,5 @@ type ContainerRegistry struct {
 	RegistryType   string    `json:"registry_type"`
 	Labels         []string  `json:"labels" gorm:"type:text[]"`
 	LastUpdateTime time.Time `json:"last_update_time"`
+	UsedPlugins    []string  `json:"used_plugins" gorm:"type:text[]"`
 }

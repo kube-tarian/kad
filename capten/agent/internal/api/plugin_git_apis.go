@@ -132,6 +132,33 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 	}
 	a.log.Infof("Delete Git project %s request recieved", request.Id)
 
+	gitProject, err := a.as.GetGitProjectForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get gitProject from db, %v", err)
+		return &captenpluginspb.DeleteGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get gitProject from db",
+		}, nil
+	}
+	gitProject, err = a.postgres.GetGitProjectForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get gitProject from db, %v", err)
+		return &captenpluginspb.DeleteGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get gitProject from db",
+		}, nil
+	}
+
+	if len(gitProject.UsedPlugins) > 0 && request.ForceDelete {
+		a.log.Infof("deleting the gitProject from db with force update, repo is being used in %+v, %v", gitProject.UsedPlugins, err)
+	} else if len(gitProject.UsedPlugins) > 0 {
+		a.log.Errorf("failed to delete gitProject from db, repo is being used in %+v, %v", gitProject.UsedPlugins, err)
+		return &captenpluginspb.DeleteGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete gitProject from db, as repo is being used in plugins",
+		}, nil
+	}
+
 	if err := a.deleteGitProjectCredential(ctx, request.Id); err != nil {
 		return &captenpluginspb.DeleteGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -140,6 +167,13 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 	}
 
 	if err := a.as.DeleteGitProjectById(request.Id); err != nil {
+		a.log.Errorf("failed to delete gitProject from db, %v", err)
+		return &captenpluginspb.DeleteGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete gitProject from db",
+		}, nil
+	}
+	if err := a.postgres.DeleteGitProjectById(request.Id); err != nil {
 		a.log.Errorf("failed to delete gitProject from db, %v", err)
 		return &captenpluginspb.DeleteGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,

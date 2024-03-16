@@ -110,6 +110,33 @@ func (a *Agent) DeleteCloudProvider(ctx context.Context, request *captenpluginsp
 	}
 	a.log.Infof("Delete Cloud Provider %s request recieved", request.Id)
 
+	cloudprovider, err := a.as.GetCloudProviderForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get cloud provider from db, %v", err)
+		return &captenpluginspb.DeleteCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get cloud provider from db",
+		}, nil
+	}
+	cloudprovider, err = a.postgres.GetCloudProviderForID(request.Id)
+	if err != nil {
+		a.log.Errorf("failed to get cloud provider from db, %v", err)
+		return &captenpluginspb.DeleteCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to get cloud provider from db",
+		}, nil
+	}
+
+	if len(cloudprovider.UsedPlugins) > 0 && request.ForceDelete {
+		a.log.Infof("deleting the cloud provider from db with force update, provider is being used in %+v, %v", cloudprovider.UsedPlugins, err)
+	} else if len(cloudprovider.UsedPlugins) > 0 {
+		a.log.Errorf("failed to delete cloud provider from db, provider is being used in %+v, %v", cloudprovider.UsedPlugins, err)
+		return &captenpluginspb.DeleteCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete cloud provider from db, as provider is being used in plugins",
+		}, nil
+	}
+
 	if err := a.deleteCloudProviderCredential(ctx, request.Id); err != nil {
 		return &captenpluginspb.DeleteCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
@@ -118,6 +145,14 @@ func (a *Agent) DeleteCloudProvider(ctx context.Context, request *captenpluginsp
 	}
 
 	if err := a.as.DeleteCloudProviderById(request.Id); err != nil {
+		a.log.Errorf("failed to delete CloudProvider from db, %v", err)
+		return &captenpluginspb.DeleteCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to delete CloudProvider from db",
+		}, nil
+	}
+
+	if err := a.postgres.DeleteCloudProviderById(request.Id); err != nil {
 		a.log.Errorf("failed to delete CloudProvider from db, %v", err)
 		return &captenpluginspb.DeleteCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,

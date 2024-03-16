@@ -7,6 +7,8 @@ package captensdkpb;
 service capten_sdk {
     rpc GetGitProjectById(GetGitProjectByIdRequest) returns (GetGitProjectByIdResponse) {}
     rpc GetContainerRegistryById(GetContainerRegistryByIdRequest) returns (GetContainerRegistryByIdResponse) {}
+    rpc RegisterResourceUsage(RegisterResourceUsageRequest) returns (RegisterResourceUsageResponse) {}
+    rpc DeRegisterResourceUsage(DeRegisterResourceUsageRequest) returns (DeRegisterResourceUsageResponse) {}
 
 
   rpc SetupDatabase (DBSetupRequest) returns (DBSetupResponse) {}
@@ -70,3 +72,26 @@ message DBSetupRequest {
     string serviceUserPassword = 4;
   }
   
+  message RegisterResourceUsageRequest {
+    string resourceId  = 1;
+    string resourceType  = 2;
+    string pluginName  = 3;
+}
+
+message RegisterResourceUsageResponse {
+    GitProject project = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
+
+message DeRegisterResourceUsageRequest {
+    string resourceId  = 1;
+    string resourceType  = 2;
+    string pluginName  = 3;
+}
+
+message DeRegisterResourceUsageResponse {
+    GitProject project = 1;
+    StatusCode status = 2;
+    string statusMessage = 3;
+}
