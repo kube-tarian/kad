@@ -8,7 +8,7 @@ deploymentConfig:
   defaultNamespace: "crossplane-system"
   privilegedNamespace: true
 pluginConfig:
-  pluginAccessEndpoint: https://crossplane.{{.domainName}}
+  apiEndpoint: https://crossplane.{{.domainName}}
   capabilities:
     - name: capten-sdk
     - name: postgress-store

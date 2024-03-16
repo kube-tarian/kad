@@ -147,17 +147,17 @@ func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName stri
 	}
 
 	plugin := &pluginstorepb.PluginData{
-		PluginName:            pluginData.PluginName,
-		Description:           pluginData.Description,
-		Category:              pluginData.Category,
-		ChartName:             pluginData.DeploymentConfig.ChartName,
-		ChartRepo:             pluginData.DeploymentConfig.ChartRepo,
-		Versions:              pluginData.DeploymentConfig.Versions,
-		DefaultNamespace:      pluginData.DeploymentConfig.DefaultNamespace,
-		PrivilegedNamespace:   pluginData.DeploymentConfig.PrivilegedNamespace,
-		PluginAccessEndpoint:  pluginData.PluginConfig.PluginAccessEndpoint,
-		UiSingleSigonEndpoint: pluginData.PluginConfig.UiSingleSigonEndpoint,
-		Capabilities:          pluginData.PluginConfig.Capabilities,
+		PluginName:          pluginData.PluginName,
+		Description:         pluginData.Description,
+		Category:            pluginData.Category,
+		ChartName:           pluginData.DeploymentConfig.ChartName,
+		ChartRepo:           pluginData.DeploymentConfig.ChartRepo,
+		Versions:            pluginData.DeploymentConfig.Versions,
+		DefaultNamespace:    pluginData.DeploymentConfig.DefaultNamespace,
+		PrivilegedNamespace: pluginData.DeploymentConfig.PrivilegedNamespace,
+		ApiEndpoint:         pluginData.PluginConfig.ApiEndpoint,
+		UiEndpoint:          pluginData.PluginConfig.UiEndpoint,
+		Capabilities:        pluginData.PluginConfig.Capabilities,
 	}
 
 	if err := p.dbStore.WritePluginData(gitProjectId, plugin); err != nil {
@@ -241,7 +241,7 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 
 	overrideValues := map[string]string{}
 	if isUISSOCapabilitySupported(validCapabilities) {
-		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginData.UiSingleSigonEndpoint)
+		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginData.UiEndpoint)
 		if err != nil {
 			return err
 		}
@@ -251,21 +251,21 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 	}
 
 	plugin := &clusterpluginspb.Plugin{
-		StoreType:             clusterpluginspb.StoreType(pluginData.StoreType),
-		PluginName:            pluginData.PluginName,
-		Description:           pluginData.Description,
-		Category:              pluginData.Category,
-		Icon:                  pluginData.Icon,
-		Version:               version,
-		ChartName:             pluginData.ChartName,
-		ChartRepo:             pluginData.ChartRepo,
-		DefaultNamespace:      pluginData.DefaultNamespace,
-		PrivilegedNamespace:   pluginData.PrivilegedNamespace,
-		PluginAccessEndpoint:  pluginData.PluginAccessEndpoint,
-		UiSingleSigonEndpoint: pluginData.UiSingleSigonEndpoint,
-		Capabilities:          validCapabilities,
-		Values:                updatedValues,
-		OverrideValues:        overrideValues,
+		StoreType:           clusterpluginspb.StoreType(pluginData.StoreType),
+		PluginName:          pluginData.PluginName,
+		Description:         pluginData.Description,
+		Category:            pluginData.Category,
+		Icon:                pluginData.Icon,
+		Version:             version,
+		ChartName:           pluginData.ChartName,
+		ChartRepo:           pluginData.ChartRepo,
+		DefaultNamespace:    pluginData.DefaultNamespace,
+		PrivilegedNamespace: pluginData.PrivilegedNamespace,
+		ApiEndpoint:         pluginData.ApiEndpoint,
+		UiEndpoint:          pluginData.UiEndpoint,
+		Capabilities:        validCapabilities,
+		Values:              updatedValues,
+		OverrideValues:      overrideValues,
 	}
 
 	agent, err := p.agentHandler.GetAgent(orgId, clusterId)
@@ -364,12 +364,12 @@ func (p *PluginStore) updatePluginDataTemplateValues(orgId, clusterID string,
 		return pluginData, values, fmt.Errorf("failed to get cluster global values, %v", err)
 	}
 
-	pluginAccessEndpoint, err := replaceTemplateValuesInString(pluginData.PluginAccessEndpoint, clusterGlobalValues)
+	apiEndpoint, err := replaceTemplateValuesInString(pluginData.ApiEndpoint, clusterGlobalValues)
 	if err != nil {
 		return pluginData, values, fmt.Errorf("failed to update template values in plguin data, %v", err)
 	}
 
-	uiSingleSigonEndpoint, err := replaceTemplateValuesInString(pluginData.UiSingleSigonEndpoint, clusterGlobalValues)
+	uiEndpoint, err := replaceTemplateValuesInString(pluginData.UiEndpoint, clusterGlobalValues)
 	if err != nil {
 		return pluginData, values, fmt.Errorf("failed to update template values in plguin data, %v", err)
 	}
@@ -379,8 +379,8 @@ func (p *PluginStore) updatePluginDataTemplateValues(orgId, clusterID string,
 		return pluginData, values, fmt.Errorf("failed to update template values in plguin values, %v", err)
 	}
 
-	pluginData.PluginAccessEndpoint = pluginAccessEndpoint
-	pluginData.UiSingleSigonEndpoint = uiSingleSigonEndpoint
+	pluginData.ApiEndpoint = apiEndpoint
+	pluginData.UiEndpoint = uiEndpoint
 	return pluginData, updatedValues, nil
 }
 
