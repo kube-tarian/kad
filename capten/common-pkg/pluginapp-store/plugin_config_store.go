@@ -89,7 +89,7 @@ func (a *Store) GetPluginConfig(appReleaseName string) (*clusterpluginspb.Plugin
 		&config.StoreType, &config.PluginName, &config.Description,
 		&config.Category, &config.Version, &config.Icon, &config.ChartName,
 		&config.ChartRepo, &config.DefaultNamespace, &config.PrivilegedNamespace,
-		&config.PluginEndpoint, &config.Capabilities, &values,
+		&config.PluginAccessEndpoint, &config.Capabilities, &values,
 	); err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (a *Store) GetAllPlugins() ([]*clusterpluginspb.Plugin, error) {
 		&config.StoreType, &config.PluginName, &config.Description,
 		&config.Category, &config.Version, &config.Icon, &config.ChartName,
 		&config.ChartRepo, &config.DefaultNamespace, &config.PrivilegedNamespace,
-		&config.PluginEndpoint, &config.Capabilities, &values,
+		&config.PluginAccessEndpoint, &config.Capabilities, &values,
 	) {
 		configCopy := config
 		configCopy.Values, _ = base64.StdEncoding.DecodeString(values)
@@ -183,9 +183,9 @@ func formUpdateKvPairs(config *clusterpluginspb.Plugin) (string, bool) {
 			fmt.Sprintf("%s = '%s'", installStatus, config.InstallStatus))
 	}
 
-	if config.PluginEndpoint != "" {
+	if config.PluginAccessEndpoint != "" {
 		params = append(params,
-			fmt.Sprintf("%s = '%s'", pluginEndpoint, config.PluginEndpoint))
+			fmt.Sprintf("%s = '%s'", pluginEndpoint, config.PluginAccessEndpoint))
 	}
 
 	params = append(params,
