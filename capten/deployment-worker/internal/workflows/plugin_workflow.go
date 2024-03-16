@@ -19,7 +19,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage) (model.ResponsePayload, error) {
+func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage, capabilities []string) (model.ResponsePayload, error) {
 	result := &model.ResponsePayload{}
 	logger := logging.NewLogger()
 
