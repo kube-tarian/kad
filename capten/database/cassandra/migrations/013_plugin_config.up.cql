@@ -8,7 +8,7 @@ CREATE TABLE ClusterPluginConfig(
     template_values TEXT, default_app BOOLEAN,
     icon BLOB, install_status TEXT,
     update_time TEXT, plugin_name TEXT, plugin_description TEXT,
-    PRIMARY KEY (release_name, namespace)
+    PRIMARY KEY (release_name)
 ) WITH bloom_filter_fp_chance = 0.01
     AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
     AND comment = ''
