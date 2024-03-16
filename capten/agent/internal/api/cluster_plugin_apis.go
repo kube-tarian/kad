@@ -41,7 +41,7 @@ func (a *Agent) DeployClusterPlugin(ctx context.Context, request *clusterplugins
 	a.log.Infof("Recieved App Install request for appName %s, version %+v", request.Plugin.PluginName, request.Plugin.Version)
 
 	plugin := request.Plugin
-	apiEndpoint, err := executeStringTemplateValues(plugin.PluginEndpoint, plugin.Values)
+	apiEndpoint, err := executeStringTemplateValues(plugin.PluginAccessEndpoint, plugin.Values)
 	if err != nil {
 		a.log.Errorf("failed to derive template launch URL for app %s, %v", plugin.PluginName, err)
 		return &clusterpluginspb.DeployClusterPluginResponse{
@@ -51,7 +51,7 @@ func (a *Agent) DeployClusterPlugin(ctx context.Context, request *clusterplugins
 	}
 
 	plugin.InstallStatus = string(model.AppIntallingStatus)
-	plugin.PluginEndpoint = apiEndpoint
+	plugin.PluginAccessEndpoint = apiEndpoint
 
 	if err := a.pas.UpsertPluginConfig(plugin); err != nil {
 		a.log.Errorf("failed to update app config data for app %s, %v", plugin.PluginName, err)
