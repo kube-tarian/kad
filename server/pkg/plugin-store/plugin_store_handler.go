@@ -1,15 +1,19 @@
 package pluginstore
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
 	"strings"
+	"text/template"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/credential"
+	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
+	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/clusterpluginspb"
 	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
 	"github.com/kube-tarian/kad/server/pkg/store"
@@ -22,9 +26,11 @@ type PluginStore struct {
 	cfg          *Config
 	dbStore      store.ServerStore
 	agentHandler *agent.AgentHandler
+	iam          iamclient.IAMRegister
 }
 
-func NewPluginStore(log logging.Logger, dbStore store.ServerStore, agentHandler *agent.AgentHandler) (*PluginStore, error) {
+func NewPluginStore(log logging.Logger, dbStore store.ServerStore,
+	agentHandler *agent.AgentHandler, iam iamclient.IAMRegister) (*PluginStore, error) {
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return nil, err
@@ -35,6 +41,7 @@ func NewPluginStore(log logging.Logger, dbStore store.ServerStore, agentHandler 
 		cfg:          cfg,
 		dbStore:      dbStore,
 		agentHandler: agentHandler,
+		iam:          iam,
 	}, nil
 }
 
@@ -140,16 +147,17 @@ func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName stri
 	}
 
 	plugin := &pluginstorepb.PluginData{
-		PluginName:          pluginData.PluginName,
-		Description:         pluginData.Description,
-		Category:            pluginData.Category,
-		ChartName:           pluginData.DeploymentConfig.ChartName,
-		ChartRepo:           pluginData.DeploymentConfig.ChartRepo,
-		Versions:            pluginData.DeploymentConfig.Versions,
-		DefaultNamespace:    pluginData.DeploymentConfig.DefaultNamespace,
-		PrivilegedNamespace: pluginData.DeploymentConfig.PrivilegedNamespace,
-		PluginEndpoint:      pluginData.PluginConfig.Endpoint,
-		Capabilities:        pluginData.PluginConfig.Capabilities,
+		PluginName:            pluginData.PluginName,
+		Description:           pluginData.Description,
+		Category:              pluginData.Category,
+		ChartName:             pluginData.DeploymentConfig.ChartName,
+		ChartRepo:             pluginData.DeploymentConfig.ChartRepo,
+		Versions:              pluginData.DeploymentConfig.Versions,
+		DefaultNamespace:      pluginData.DeploymentConfig.DefaultNamespace,
+		PrivilegedNamespace:   pluginData.DeploymentConfig.PrivilegedNamespace,
+		PluginAccessEndpoint:  pluginData.PluginConfig.PluginAccessEndpoint,
+		UiSingleSigonEndpoint: pluginData.PluginConfig.UiSingleSigonEndpoint,
+		Capabilities:          pluginData.PluginConfig.Capabilities,
 	}
 
 	if err := p.dbStore.WritePluginData(gitProjectId, plugin); err != nil {
@@ -221,20 +229,43 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 		return fmt.Errorf("version %s not supported", version)
 	}
 
+	validCapabilities, invalidCapabilities := filterSupporttedCapabilties(pluginData.Capabilities)
+	if len(invalidCapabilities) > 0 {
+		p.log.Infof("skipped plugin %s invalid capabilities %v", pluginName, invalidCapabilities)
+	}
+
+	pluginData, updatedValues, err := p.updatePluginDataTemplateValues(orgId, clusterId, pluginData, values)
+	if err != nil {
+		return err
+	}
+
+	overrideValues := map[string]string{}
+	if isUISSOCapabilitySupported(validCapabilities) {
+		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginData.UiSingleSigonEndpoint)
+		if err != nil {
+			return err
+		}
+		overrideValues[oAuthBaseURLName] = p.cfg.CaptenOAuthURL
+		overrideValues[oAuthClientIdName] = clientId
+		overrideValues[oAuthClientSecretName] = clientSecret
+	}
+
 	plugin := &clusterpluginspb.Plugin{
-		StoreType:           clusterpluginspb.StoreType(pluginData.StoreType),
-		PluginName:          pluginData.PluginName,
-		Description:         pluginData.Description,
-		Category:            pluginData.Category,
-		Icon:                pluginData.Icon,
-		Version:             version,
-		ChartName:           pluginData.ChartName,
-		ChartRepo:           pluginData.ChartRepo,
-		DefaultNamespace:    pluginData.DefaultNamespace,
-		PrivilegedNamespace: pluginData.PrivilegedNamespace,
-		PluginEndpoint:      pluginData.PluginEndpoint,
-		Capabilities:        pluginData.Capabilities,
-		Values:              values,
+		StoreType:             clusterpluginspb.StoreType(pluginData.StoreType),
+		PluginName:            pluginData.PluginName,
+		Description:           pluginData.Description,
+		Category:              pluginData.Category,
+		Icon:                  pluginData.Icon,
+		Version:               version,
+		ChartName:             pluginData.ChartName,
+		ChartRepo:             pluginData.ChartRepo,
+		DefaultNamespace:      pluginData.DefaultNamespace,
+		PrivilegedNamespace:   pluginData.PrivilegedNamespace,
+		PluginAccessEndpoint:  pluginData.PluginAccessEndpoint,
+		UiSingleSigonEndpoint: pluginData.UiSingleSigonEndpoint,
+		Capabilities:          validCapabilities,
+		Values:                updatedValues,
+		OverrideValues:        overrideValues,
 	}
 
 	agent, err := p.agentHandler.GetAgent(orgId, clusterId)
@@ -289,4 +320,125 @@ func (p *PluginStore) getGitProjectAccessToken(projectId string,
 	}
 
 	return cred[gitProjectAccessTokenAttribute], nil
+}
+
+func filterSupporttedCapabilties(pluginCapabilties []string) (validCapabilties, invalidCapabilities []string) {
+	validCapabilties = []string{}
+	invalidCapabilities = []string{}
+	for _, pluginCapability := range pluginCapabilties {
+		_, ok := supporttedCapabilities[pluginCapability]
+		if ok {
+			validCapabilties = append(validCapabilties, pluginCapability)
+		} else {
+			invalidCapabilities = append(invalidCapabilities, pluginCapability)
+		}
+	}
+	return
+}
+
+func isUISSOCapabilitySupported(pluginCapabilties []string) bool {
+	for _, pluginCapability := range pluginCapabilties {
+		if pluginCapability == uiSSOCapabilityName {
+			return true
+		}
+	}
+	return false
+}
+
+func (p *PluginStore) registerPluginSSO(orgId, clusterId, pluginName, uiSSOURL string) (clientID, clientSecret string, err error) {
+	pluginClientName := fmt.Sprintf("%s-%s", pluginName, clusterId)
+	p.log.Infof("Register plugin %s as app-client %s with IAM, clusterId: %s, [org: %s]",
+		pluginName, pluginClientName, clusterId, orgId)
+	clientID, clientSecret, err = p.iam.RegisterAppClientSecrets(context.Background(),
+		pluginClientName, uiSSOURL, orgId)
+	if err != nil {
+		err = errors.WithMessagef(err, "failed to register plugin %s on cluster %s with IAM", pluginName, clusterId)
+	}
+	return
+}
+
+func (p *PluginStore) updatePluginDataTemplateValues(orgId, clusterID string,
+	pluginData *pluginstorepb.PluginData, values []byte) (*pluginstorepb.PluginData, []byte, error) {
+	clusterGlobalValues, err := p.getClusterGlobalValues(orgId, clusterID)
+	if err != nil {
+		return pluginData, values, fmt.Errorf("failed to get cluster global values, %v", err)
+	}
+
+	pluginAccessEndpoint, err := replaceTemplateValuesInString(pluginData.PluginAccessEndpoint, clusterGlobalValues)
+	if err != nil {
+		return pluginData, values, fmt.Errorf("failed to update template values in plguin data, %v", err)
+	}
+
+	uiSingleSigonEndpoint, err := replaceTemplateValuesInString(pluginData.UiSingleSigonEndpoint, clusterGlobalValues)
+	if err != nil {
+		return pluginData, values, fmt.Errorf("failed to update template values in plguin data, %v", err)
+	}
+
+	updatedValues, err := replaceTemplateValuesInByteData(values, clusterGlobalValues)
+	if err != nil {
+		return pluginData, values, fmt.Errorf("failed to update template values in plguin values, %v", err)
+	}
+
+	pluginData.PluginAccessEndpoint = pluginAccessEndpoint
+	pluginData.UiSingleSigonEndpoint = uiSingleSigonEndpoint
+	return pluginData, updatedValues, nil
+}
+
+func (p *PluginStore) getClusterGlobalValues(orgId, clusterID string) (map[string]interface{}, error) {
+	agent, err := p.agentHandler.GetAgent(orgId, clusterID)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "failed to initialize agent for cluster %s", clusterID)
+	}
+	resp, err := agent.GetClient().GetClusterGlobalValues(context.TODO(), &agentpb.GetClusterGlobalValuesRequest{})
+	if err != nil {
+		return nil, err
+	}
+	if resp.Status != agentpb.StatusCode_OK {
+		return nil, fmt.Errorf("failed to get global values for cluster %s", clusterID)
+	}
+
+	var globalValues map[string]interface{}
+	err = yaml.Unmarshal(resp.GlobalValues, &globalValues)
+	if err != nil {
+		return nil, errors.WithMessagef(err, "failed to unmarshal cluster values")
+	}
+	p.log.Debugf("cluster %s globalValues: %+v", clusterID, globalValues)
+	return globalValues, nil
+}
+
+func replaceTemplateValuesInByteData(data []byte,
+	values map[string]interface{}) (transformedData []byte, err error) {
+	tmpl, err := template.New("templateVal").Parse(string(data))
+	if err != nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, values)
+	if err != nil {
+		return
+	}
+
+	transformedData = buf.Bytes()
+	return
+}
+
+func replaceTemplateValuesInString(data string, values map[string]interface{}) (transformedData string, err error) {
+	if len(data) == 0 {
+		return
+	}
+
+	tmpl, err := template.New("templateVal").Parse(data)
+	if err != nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, values)
+	if err != nil {
+		return
+	}
+
+	transformedData = string(buf.Bytes())
+	return
 }
