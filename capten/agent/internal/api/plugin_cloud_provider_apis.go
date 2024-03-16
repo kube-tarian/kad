@@ -91,6 +91,13 @@ func (a *Agent) UpdateCloudProvider(ctx context.Context, request *captenpluginsp
 			StatusMessage: "failed to update CloudProvider in db",
 		}, nil
 	}
+	if err := a.postgres.UpsertCloudProvider(&CloudProvider); err != nil {
+		a.log.Errorf("failed to update CloudProvider in db, %v", err)
+		return &captenpluginspb.UpdateCloudProviderResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to update CloudProvider in db",
+		}, nil
+	}
 
 	a.log.Infof("Cloud Provider %s, %s updated", request.CloudType, request.Id)
 	return &captenpluginspb.UpdateCloudProviderResponse{

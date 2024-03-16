@@ -57,6 +57,13 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 			StatusMessage: "failed to add gitProject in db",
 		}, nil
 	}
+	if err := a.postgres.UpsertGitProject(&gitProject); err != nil {
+		a.log.Errorf("failed to store git project to DB, %v", err)
+		return &captenpluginspb.AddGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add gitProject in db",
+		}, nil
+	}
 
 	a.log.Infof("Git project %s added with id %s", request.ProjectUrl, id.String())
 	return &captenpluginspb.AddGitProjectResponse{
@@ -107,6 +114,13 @@ func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.U
 		Labels:     request.Labels,
 	}
 	if err := a.as.UpsertGitProject(&gitProject); err != nil {
+		a.log.Errorf("failed to update gitProject in db, %v", err)
+		return &captenpluginspb.UpdateGitProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to update gitProject in db",
+		}, nil
+	}
+	if err := a.postgres.UpsertGitProject(&gitProject); err != nil {
 		a.log.Errorf("failed to update gitProject in db, %v", err)
 		return &captenpluginspb.UpdateGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,

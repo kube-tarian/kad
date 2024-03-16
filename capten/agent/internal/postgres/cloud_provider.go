@@ -38,6 +38,7 @@ func (handler *Postgres) GetCloudProviderForID(id string) (*captenpluginspb.Clou
 		CloudType:      cp.CloudType,
 		Labels:         cp.Labels,
 		LastUpdateTime: cp.LastUpdateTime.String(),
+		UsedPlugins:    cp.UsedPlugins,
 	}
 
 	return result, err
@@ -56,6 +57,7 @@ func (handler *Postgres) GetCloudProviders() ([]*captenpluginspb.CloudProvider, 
 			CloudType:      v.CloudType,
 			Labels:         v.Labels,
 			LastUpdateTime: v.LastUpdateTime.String(),
+			UsedPlugins:    v.UsedPlugins,
 		})
 	}
 
@@ -75,6 +77,28 @@ func (handler *Postgres) GetCloudProvidersByLabelsAndCloudType(searchLabels []st
 			CloudType:      v.CloudType,
 			Labels:         v.Labels,
 			LastUpdateTime: v.LastUpdateTime.String(),
+			UsedPlugins:    v.UsedPlugins,
+		})
+	}
+
+	return result, err
+
+}
+
+func (handler *Postgres) GetCloudProvidersByLabels(searchLabels []string) ([]*captenpluginspb.CloudProvider, error) {
+
+	cps := []CloudProviders{}
+
+	err := handler.db.Select("labels @> ? ", searchLabels).Scan(&cps).Error
+
+	result := make([]*captenpluginspb.CloudProvider, 0)
+	for _, v := range cps {
+		result = append(result, &captenpluginspb.CloudProvider{
+			Id:             v.ID.String(),
+			CloudType:      v.CloudType,
+			Labels:         v.Labels,
+			LastUpdateTime: v.LastUpdateTime.String(),
+			UsedPlugins:    v.UsedPlugins,
 		})
 	}
 

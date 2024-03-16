@@ -36,6 +36,7 @@ func (handler *Postgres) GetGitProjectForID(id string) (*captenpluginspb.GitProj
 		ProjectUrl:     gp.ProjectURL,
 		Labels:         gp.Labels,
 		LastUpdateTime: gp.LastUpdateTime.String(),
+		UsedPlugins:    gp.UsedPlugins,
 	}
 
 	return project, err
@@ -54,6 +55,7 @@ func (handler *Postgres) GetGitProjects() ([]*captenpluginspb.GitProject, error)
 			ProjectUrl:     v.ProjectURL,
 			Labels:         v.Labels,
 			LastUpdateTime: v.LastUpdateTime.String(),
+			UsedPlugins:    v.UsedPlugins,
 		})
 	}
 
@@ -72,6 +74,7 @@ func (handler *Postgres) GetGitProjectsByLabels(searchLabels []string) ([]*capte
 			ProjectUrl:     v.ProjectURL,
 			Labels:         v.Labels,
 			LastUpdateTime: v.LastUpdateTime.String(),
+			UsedPlugins:    v.UsedPlugins,
 		})
 	}
 

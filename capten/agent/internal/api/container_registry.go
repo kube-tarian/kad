@@ -45,6 +45,13 @@ func (a *Agent) AddContainerRegistry(ctx context.Context, request *captenplugins
 			StatusMessage: "failed to add Container registry in db",
 		}, err
 	}
+	if err := a.postgres.UpsertContainerRegistry(&ContainerRegistry); err != nil {
+		a.log.Errorf("failed to store Container registry to DB, %v", err)
+		return &captenpluginspb.AddContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add Container registry in db",
+		}, err
+	}
 
 	a.log.Infof("Container registry %s added with id %s", request.RegistryUrl, id.String())
 	return &captenpluginspb.AddContainerRegistryResponse{
@@ -89,6 +96,13 @@ func (a *Agent) UpdateContainerRegistry(ctx context.Context, request *captenplug
 	}
 
 	if err := a.as.UpsertContainerRegistry(&ContainerRegistry); err != nil {
+		a.log.Errorf("failed to update ContainerRegistry in db, %v", err)
+		return &captenpluginspb.UpdateContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to update ContainerRegistry in db",
+		}, err
+	}
+	if err := a.postgres.UpsertContainerRegistry(&ContainerRegistry); err != nil {
 		a.log.Errorf("failed to update ContainerRegistry in db, %v", err)
 		return &captenpluginspb.UpdateContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
