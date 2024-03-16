@@ -14,9 +14,9 @@ const (
 	insertStoreConfig           = `INSERT INTO %s.plugin_store_config (cluster_id, store_type, git_project_id, git_project_url, last_updated_time) VALUES (%s, %d, '%s', '%s', '%s') IF NOT EXISTS`
 	readStoreConfigForStoreType = `SELECT store_type, git_project_id, git_project_url, last_updated_time FROM %s.plugin_store_config WHERE cluster_id = %s`
 
-	insertPluginData            = `INSERT INTO %s.plugin_data (git_project_id, plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, plugin_access_endpoint,  ui_sso_endpoint, capabilities) VALUES (%s, '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s', %v, '%s', %t, '%s', '%s', %v) IF NOT EXISTS`
+	insertPluginData            = `INSERT INTO %s.plugin_data (git_project_id, plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, api_endpoint,  ui_endpoint, capabilities) VALUES (%s, '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s', %v, '%s', %t, '%s', '%s', %v) IF NOT EXISTS`
 	readPlugins                 = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, versions FROM %s.plugin_data WHERE git_project_id = %s`
-	readPluginDataForPluginName = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, plugin_access_endpoint,  ui_sso_endpoint, capabilities FROM %s.plugin_data WHERE git_project_id = %s and plugin_name = '%s'`
+	readPluginDataForPluginName = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, api_endpoint,  ui_endpoint, capabilities FROM %s.plugin_data WHERE git_project_id = %s and plugin_name = '%s'`
 )
 
 func (a *AstraServerStore) WritePluginStoreConfig(clusterId string, config *pluginstorepb.PluginStoreConfig) error {
@@ -83,8 +83,8 @@ func (a *AstraServerStore) WritePluginData(gitProjectId string, pluginData *plug
 			a.keyspace, gitProjectId, pluginData.PluginName, time.Now().Format(time.RFC3339),
 			pluginData.StoreType, pluginData.Description, pluginData.Category, pluginData.Icon,
 			pluginData.ChartName, pluginData.ChartRepo, getSQLStringArray(pluginData.Versions),
-			pluginData.DefaultNamespace, pluginData.PrivilegedNamespace, pluginData.PluginAccessEndpoint,
-			pluginData.UiSingleSigonEndpoint, getSQLStringArray(pluginData.Capabilities)),
+			pluginData.DefaultNamespace, pluginData.PrivilegedNamespace, pluginData.ApiEndpoint,
+			pluginData.UiEndpoint, getSQLStringArray(pluginData.Capabilities)),
 	}
 
 	_, err := a.c.Session().ExecuteQuery(query)
@@ -194,11 +194,11 @@ func toPluginData(row *pb.Row, columns []*pb.ColumnSpec) (*pluginstorepb.PluginD
 	if err != nil {
 		return nil, fmt.Errorf("failed to read privilegedNamespace: %w", err)
 	}
-	pluginAccessEndpoint, err := client.ToString(row.Values[11])
+	apiEndpoint, err := client.ToString(row.Values[11])
 	if err != nil {
 		return nil, fmt.Errorf("failed to read pluginEndpoint: %w", err)
 	}
-	uiSingleSigonEndpoint, err := client.ToString(row.Values[12])
+	uiEndpoint, err := client.ToString(row.Values[12])
 	if err != nil {
 		return nil, fmt.Errorf("failed to read pluginEndpoint: %w", err)
 	}
@@ -217,10 +217,10 @@ func toPluginData(row *pb.Row, columns []*pb.ColumnSpec) (*pluginstorepb.PluginD
 		Category: category, Icon: []byte(icon),
 		ChartName: chartName, ChartRepo: chartRepo,
 		Versions: pluginVersions, DefaultNamespace: defaultNamespace,
-		PrivilegedNamespace:   privilegedNamespace,
-		PluginAccessEndpoint:  pluginAccessEndpoint,
-		UiSingleSigonEndpoint: uiSingleSigonEndpoint,
-		Capabilities:          pluginCapabilities,
+		PrivilegedNamespace: privilegedNamespace,
+		ApiEndpoint:         apiEndpoint,
+		UiEndpoint:          uiEndpoint,
+		Capabilities:        pluginCapabilities,
 	}, nil
 }
 
