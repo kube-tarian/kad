@@ -3,6 +3,7 @@ package astra
 import (
 	"fmt"
 
+	"github.com/intelops/go-common/logging"
 	astraclient "github.com/kube-tarian/kad/server/pkg/astra-client"
 	pb "github.com/stargate/stargate-grpc-go-client/stargate/pkg/proto"
 )
@@ -10,10 +11,11 @@ import (
 type AstraServerStore struct {
 	c        *astraclient.Client
 	keyspace string
+	log      logging.Logger
 }
 
-func NewStore() (*AstraServerStore, error) {
-	a := &AstraServerStore{}
+func NewStore(log logging.Logger) (*AstraServerStore, error) {
+	a := &AstraServerStore{log: log}
 	err := a.initClient()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to astra db, %w", err)

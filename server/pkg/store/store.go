@@ -3,6 +3,7 @@ package store
 import (
 	"fmt"
 
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
 	"github.com/kube-tarian/kad/server/pkg/types"
 
@@ -30,10 +31,10 @@ type ServerStore interface {
 	ReadPlugins(gitProjectId string) ([]*pluginstorepb.Plugin, error)
 }
 
-func NewStore(db string) (ServerStore, error) {
+func NewStore(log logging.Logger, db string) (ServerStore, error) {
 	switch db {
 	case "astra":
-		return astra.NewStore()
+		return astra.NewStore(log)
 	}
 	return nil, fmt.Errorf("db: %s not found", db)
 }

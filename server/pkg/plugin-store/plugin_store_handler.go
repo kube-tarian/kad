@@ -11,9 +11,9 @@ import (
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/server/pkg/agent"
-	"github.com/kube-tarian/kad/server/pkg/credential"
 	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/server/pkg/pb/clusterpluginspb"
 	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
 	"github.com/kube-tarian/kad/server/pkg/store"
@@ -72,13 +72,13 @@ func (p *PluginStore) GetStoreConfig(clusterId string, storeType pluginstorepb.S
 	}
 }
 
-func (p *PluginStore) SyncPlugins(clusterId string, storeType pluginstorepb.StoreType) error {
+func (p *PluginStore) SyncPlugins(orgId, clusterId string, storeType pluginstorepb.StoreType) error {
 	config, err := p.GetStoreConfig(clusterId, storeType)
 	if err != nil {
 		return err
 	}
 
-	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectURL, config.GitProjectId, storeType)
+	pluginStoreDir, err := p.clonePluginStoreProject(orgId, clusterId, config.GitProjectURL, config.GitProjectId, storeType)
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (p *PluginStore) SyncPlugins(clusterId string, storeType pluginstorepb.Stor
 	return nil
 }
 
-func (p *PluginStore) clonePluginStoreProject(projectURL, projectId string,
+func (p *PluginStore) clonePluginStoreProject(orgId, clusterId, projectURL, projectId string,
 	storeType pluginstorepb.StoreType) (pluginStoreDir string, err error) {
 	pluginStoreDir, err = os.MkdirTemp(p.cfg.PluginsStoreProjectMount, tmpGitProjectCloneStr)
 	if err != nil {
@@ -115,7 +115,7 @@ func (p *PluginStore) clonePluginStoreProject(projectURL, projectId string,
 		return
 	}
 
-	accessToken, err := p.getGitProjectAccessToken(projectId, storeType)
+	accessToken, err := p.getGitProjectAccessToken(orgId, clusterId, projectId, storeType)
 	if err != nil {
 		err = fmt.Errorf("failed to get git project credentias, %v", err)
 		return
@@ -142,6 +142,14 @@ func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName stri
 		return errors.WithMessagef(err, "failed to unmarshall store plugin %s", pluginName)
 	}
 
+	var iconData []byte
+	if len(pluginData.Icon) != 0 {
+		iconData, err = os.ReadFile(pluginStoreDir + "/" + p.cfg.PluginsStorePath + "/" + pluginName + "/" + pluginData.Icon)
+		if err != nil {
+			return errors.WithMessagef(err, "failed to read icon %s for plugin %s", pluginData.Icon, pluginName)
+		}
+	}
+
 	if pluginData.PluginName == "" || len(pluginData.DeploymentConfig.Versions) == 0 {
 		return fmt.Errorf("app name/version is missing for %s", pluginName)
 	}
@@ -158,6 +166,7 @@ func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName stri
 		ApiEndpoint:         pluginData.PluginConfig.ApiEndpoint,
 		UiEndpoint:          pluginData.PluginConfig.UiEndpoint,
 		Capabilities:        pluginData.PluginConfig.Capabilities,
+		Icon:                iconData,
 	}
 
 	if err := p.dbStore.WritePluginData(gitProjectId, plugin); err != nil {
@@ -191,14 +200,14 @@ func (p *PluginStore) GetPluginData(clusterId string, storeType pluginstorepb.St
 	return p.dbStore.ReadPluginData(config.GitProjectId, pluginName)
 }
 
-func (p *PluginStore) GetPluginValues(clusterId string, storeType pluginstorepb.StoreType,
+func (p *PluginStore) GetPluginValues(orgId, clusterId string, storeType pluginstorepb.StoreType,
 	pluginName, version string) ([]byte, error) {
 	config, err := p.GetStoreConfig(clusterId, storeType)
 	if err != nil {
 		return nil, err
 	}
 
-	pluginStoreDir, err := p.clonePluginStoreProject(config.GitProjectURL, config.GitProjectId, storeType)
+	pluginStoreDir, err := p.clonePluginStoreProject(orgId, clusterId, config.GitProjectURL, config.GitProjectId, storeType)
 	if err != nil {
 		return nil, err
 	}
@@ -217,12 +226,12 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 	pluginName, version string, values []byte) error {
 	config, err := p.GetStoreConfig(clusterId, storeType)
 	if err != nil {
-		return err
+		return fmt.Errorf("faild to fetch store config, %v", err)
 	}
 
 	pluginData, err := p.dbStore.ReadPluginData(config.GitProjectId, pluginName)
 	if err != nil {
-		return err
+		return fmt.Errorf("faild to read plugin %s from project %s, %v", pluginName, config.GitProjectId, err)
 	}
 
 	if !stringContains(pluginData.Versions, version) {
@@ -307,19 +316,35 @@ func stringContains(arr []string, target string) bool {
 	return false
 }
 
-func (p *PluginStore) getGitProjectAccessToken(projectId string,
+func (p *PluginStore) getGitProjectAccessToken(orgId, clusterId, projectId string,
 	storeType pluginstorepb.StoreType) (string, error) {
 	if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
 		return "", nil
 	}
-	cred, err := credential.GetGenericCredential(context.Background(), p.cfg.GitVaultEntityName, projectId)
+
+	agent, err := p.agentHandler.GetAgent(orgId, clusterId)
 	if err != nil {
-		err = errors.WithMessagef(err, "error while reading credential %s/%s from the vault",
-			p.cfg.GitVaultEntityName, projectId)
 		return "", err
 	}
 
-	return cred[gitProjectAccessTokenAttribute], nil
+	projectsResp, err := agent.GetCaptenPluginsClient().GetGitProjects(context.Background(), &captenpluginspb.GetGitProjectsRequest{})
+	if err != nil {
+		return "", err
+	}
+
+	var accessToken string
+	for _, project := range projectsResp.Projects {
+		if project.Id == projectId {
+			accessToken = project.AccessToken
+			break
+		}
+	}
+
+	if len(accessToken) == 0 {
+		return "", fmt.Errorf("project not found")
+	}
+
+	return accessToken, nil
 }
 
 func filterSupporttedCapabilties(pluginCapabilties []string) (validCapabilties, invalidCapabilities []string) {

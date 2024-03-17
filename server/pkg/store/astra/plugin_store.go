@@ -12,9 +12,11 @@ import (
 
 const (
 	insertStoreConfig           = `INSERT INTO %s.plugin_store_config (cluster_id, store_type, git_project_id, git_project_url, last_updated_time) VALUES (%s, %d, '%s', '%s', '%s') IF NOT EXISTS`
+	updateStoreConfig           = `UPDATE %s.plugin_store_config SET store_type = %d, git_project_id = '%s', git_project_url = '%s', last_updated_time = '%s' WHERE cluster_id = %s`
 	readStoreConfigForStoreType = `SELECT store_type, git_project_id, git_project_url, last_updated_time FROM %s.plugin_store_config WHERE cluster_id = %s`
 
 	insertPluginData            = `INSERT INTO %s.plugin_data (git_project_id, plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, api_endpoint,  ui_endpoint, capabilities) VALUES (%s, '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s', %v, '%s', %t, '%s', '%s', %v) IF NOT EXISTS`
+	updatePluginData            = `UPDATE %s.plugin_data SET last_updated_time = '%s', store_type = %d, description = '%s', category = '%s', icon = '%s', chart_name = '%s', chart_repo = '%s', versions = %v, default_namespace = '%s', privileged_namespace = %t, api_endpoint = '%s',  ui_endpoint = '%s', capabilities = %v WHERE git_project_id = %s and plugin_name = '%s'`
 	readPlugins                 = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, versions FROM %s.plugin_data WHERE git_project_id = %s`
 	readPluginDataForPluginName = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, api_endpoint,  ui_endpoint, capabilities FROM %s.plugin_data WHERE git_project_id = %s and plugin_name = '%s'`
 )
@@ -26,10 +28,31 @@ func (a *AstraServerStore) WritePluginStoreConfig(clusterId string, config *plug
 			time.Now().Format(time.RFC3339)),
 	}
 
-	_, err := a.c.Session().ExecuteQuery(query)
+	resp, err := a.c.Session().ExecuteQuery(query)
 	if err != nil {
 		return fmt.Errorf("failed to insert/update the store config, %s, %w", query.Cql, err)
 	}
+
+	applied, err := client.ToBoolean(resp.GetResultSet().Rows[0].Values[0])
+	if err != nil {
+		return fmt.Errorf("failed to check execution status, %w", err)
+	}
+	if applied {
+		a.log.Debug("inserted store config")
+		return nil
+	}
+
+	query = &pb.Query{
+		Cql: fmt.Sprintf(updateStoreConfig,
+			a.keyspace, config.StoreType, config.GitProjectId, config.GitProjectURL,
+			time.Now().Format(time.RFC3339), clusterId),
+	}
+
+	_, err = a.c.Session().ExecuteQuery(query)
+	if err != nil {
+		return fmt.Errorf("failed to insert/update the store config, %s, %w", query.Cql, err)
+	}
+	a.log.Debug("update store config")
 	return nil
 }
 
@@ -87,10 +110,34 @@ func (a *AstraServerStore) WritePluginData(gitProjectId string, pluginData *plug
 			pluginData.UiEndpoint, getSQLStringArray(pluginData.Capabilities)),
 	}
 
-	_, err := a.c.Session().ExecuteQuery(query)
+	resp, err := a.c.Session().ExecuteQuery(query)
 	if err != nil {
-		return fmt.Errorf("failed to insert/update the plugin data, %s, %w", query.Cql, err)
+		return fmt.Errorf("failed to insert the plugin data, %s, %w", query.Cql, err)
 	}
+
+	applied, err := client.ToBoolean(resp.GetResultSet().Rows[0].Values[0])
+	if err != nil {
+		return fmt.Errorf("failed to check execution status, %w", err)
+	}
+	if applied {
+		a.log.Debugf("inserted store plugin %s", pluginData.PluginName)
+		return nil
+	}
+
+	query = &pb.Query{
+		Cql: fmt.Sprintf(updatePluginData,
+			a.keyspace, time.Now().Format(time.RFC3339),
+			pluginData.StoreType, pluginData.Description, pluginData.Category, pluginData.Icon,
+			pluginData.ChartName, pluginData.ChartRepo, getSQLStringArray(pluginData.Versions),
+			pluginData.DefaultNamespace, pluginData.PrivilegedNamespace, pluginData.ApiEndpoint,
+			pluginData.UiEndpoint, getSQLStringArray(pluginData.Capabilities), gitProjectId, pluginData.PluginName),
+	}
+	_, err = a.c.Session().ExecuteQuery(query)
+	if err != nil {
+		return fmt.Errorf("failed to update the plugin data, %s, %w", query.Cql, err)
+	}
+	a.log.Debugf("updated store plugin %s, %v", pluginData.PluginName)
+
 	return nil
 }
 
