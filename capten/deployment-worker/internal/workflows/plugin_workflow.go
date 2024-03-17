@@ -6,13 +6,14 @@ import (
 	"time"
 
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/activities"
 	"github.com/kube-tarian/kad/capten/model"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
-func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage, capabilities []string) (model.ResponsePayload, error) {
+func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage) (model.ResponsePayload, error) {
 	result := &model.ResponsePayload{}
 	logger := logging.NewLogger()
 
@@ -21,7 +22,7 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 	var err error
 	switch action {
 	case string(model.AppInstallAction), string(model.AppUpdateAction), string(model.AppUpgradeAction):
-		result, err = hanldeDeployWorkflow(ctx, payload, capabilities, logger)
+		result, err = hanldeDeployWorkflow(ctx, payload, logger)
 	case string(model.AppUnInstallAction):
 		ctx = setContext(ctx, 600, logger)
 		req := &model.DeployerDeleteRequest{}
@@ -54,12 +55,12 @@ func setContext(ctx workflow.Context, timeInSeconds int, log logging.Logger) wor
 	return ctx
 }
 
-func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, capabilities []string, log logging.Logger) (*model.ResponsePayload, error) {
+func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger) (*model.ResponsePayload, error) {
 	var a *activities.PluginActivities
 	result := &model.ResponsePayload{}
 	ctx = setContext(ctx, 600, log)
 
-	req := &model.ApplicationDeployRequest{}
+	req := &clusterpluginspb.Plugin{}
 	err := json.Unmarshal(payload, req)
 	if err != nil {
 		return &model.ResponsePayload{
@@ -68,22 +69,22 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, capabil
 		}, err
 	}
 
-	for _, capability := range capabilities {
+	for _, capability := range req.Capabilities {
 		switch capability {
 		case "capten-sdk":
-			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionMTLSActivity, payload).Get(ctx, result)
+			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionMTLSActivity, req).Get(ctx, result)
 			if err != nil {
 				return result, err
 			}
 
 		case "vault-store":
-			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionVaultStoreActivity, payload).Get(ctx, result)
+			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionVaultStoreActivity, req).Get(ctx, result)
 			if err != nil {
 				return result, err
 			}
 
 		case "postgres-store":
-			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionPostgresStoreActivity, payload).Get(ctx, result)
+			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionPostgresStoreActivity, req).Get(ctx, result)
 			if err != nil {
 				return result, err
 			}
@@ -93,12 +94,12 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, capabil
 		}
 	}
 
-	err = workflow.ExecuteActivity(ctx, a.PluginDeployActivity, payload).Get(ctx, result)
+	err = workflow.ExecuteActivity(ctx, a.PluginDeployActivity, req).Get(ctx, result)
 	if err != nil {
 		return result, err
 	}
 
-	err = workflow.ExecuteActivity(ctx, a.PluginDeployPostActionActivity, payload).Get(ctx, result)
+	err = workflow.ExecuteActivity(ctx, a.PluginDeployPostActionActivity, req).Get(ctx, result)
 	if err != nil {
 		return result, err
 	}
