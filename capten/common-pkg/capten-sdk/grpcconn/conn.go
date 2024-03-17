@@ -1,19 +1,19 @@
 package grpcconn
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
-	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type GRPCClient struct {
-	conn   *grpc.ClientConn
-	conf   *GRPCConfig
-	Client captensdkpb.CaptenSdkClient
+	conn      *grpc.ClientConn
+	conf      *GRPCConfig
+	sdkClient captensdkpb.CaptenSdkClient
 }
 
 type GRPCConfig struct {
@@ -43,15 +43,23 @@ func NewGRPCClientWithConfig(conf *GRPCConfig) (*GRPCClient, error) {
 		return nil, fmt.Errorf("gRPC client did not connect to server: %v", err)
 	}
 
-	serverpb.NewServerClient(conn)
 	client := &GRPCClient{
-		conn:   conn,
-		Client: captensdkpb.NewCaptenSdkClient(conn),
-		conf:   conf,
+		conn:      conn,
+		sdkClient: captensdkpb.NewCaptenSdkClient(conn),
+		conf:      conf,
 	}
 	return client, nil
 }
 
 func (g *GRPCClient) Close() {
 	g.conn.Close()
+}
+
+func (g *GRPCClient) SetupDatabase(ctx context.Context, pluginName, dbOemName, dbName, serviceUserName string) (*captensdkpb.SetupDatabaseResponse, error) {
+	return g.sdkClient.SetupDatabase(ctx, &captensdkpb.SetupDatabaseRequest{
+		PluginName:      pluginName,
+		DbOemName:       dbOemName,
+		DbName:          dbName,
+		ServiceUserName: serviceUserName,
+	})
 }

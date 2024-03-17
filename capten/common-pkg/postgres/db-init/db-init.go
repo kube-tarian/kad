@@ -20,13 +20,17 @@ const (
 )
 
 type Config struct {
+	BaseConfig
+	DBName            string `envconfig:"PG_DB_NAME" required:"false"`
+	DBServiceUsername string `envconfig:"PG_DB_SERVICE_USERNAME" required:"false"`
+	Password          string `envconfig:"PG_DB_SERVICE_USER_PASSWORD" required:"false"`
+	AdminPassword     string `envconfig:"PG_DB_ADMIN_PASSWORD" required:"false"`
+}
+
+type BaseConfig struct {
 	DBAddress             string `envconfig:"PG_DB_ADDRESS" required:"true"`
 	DBAdminCredIdentifier string `envconfig:"PG_DB_ADMIN_CRED_IDENTIFIER" default:"postgres-admin"`
 	EntityName            string `envconfig:"PG_DB_ENTITY_NAME" required:"true"`
-	DBName                string `envconfig:"PG_DB_NAME" required:"true"`
-	DBServiceUsername     string `envconfig:"PG_DB_SERVICE_USERNAME" required:"true"`
-	Password              string `envconfig:"PG_DB_SERVICE_USER_PASSWORD" required:"false"`
-	AdminPassword         string `envconfig:"PG_DB_SERVICE_ADMIN_PASSWORD" required:"false"`
 }
 
 func CreatedDatabase(log logging.Logger) (err error) {
@@ -41,9 +45,8 @@ func CreatedDatabase(log logging.Logger) (err error) {
 
 func CreatedDatabaseWithConfig(log logging.Logger, conf *Config) (err error) {
 	var adminCredential credentials.ServiceCredential
-	if len(conf.Password) == 0 {
-		adminCredential, err = credential.GetServiceUserCredential(context.Background(),
-			conf.EntityName, conf.DBAdminCredIdentifier)
+	if len(conf.AdminPassword) == 0 {
+		adminCredential, err = credential.GetServiceUserCredential(context.Background(), conf.EntityName, conf.DBAdminCredIdentifier)
 		if err != nil {
 			return err
 		}
@@ -71,7 +74,7 @@ func CreatedDatabaseWithConfig(log logging.Logger, conf *Config) (err error) {
 			conf.EntityName, conf.DBServiceUsername)
 		if err != nil {
 			log.Infof("user %s not exist in DB, %v", conf.DBServiceUsername, err)
-			serviceUserPassword = generateRandomPassword(12)
+			serviceUserPassword = GenerateRandomPassword(12)
 			serviceUserName = conf.DBServiceUsername
 		} else {
 			serviceUserPassword = serviceCredential.Password
@@ -104,7 +107,7 @@ func CreatedDatabaseWithConfig(log logging.Logger, conf *Config) (err error) {
 	return
 }
 
-func generateRandomPassword(length int) string {
+func GenerateRandomPassword(length int) string {
 	var passwordChars = uppercaseChars + lowercaseChars + numberChars + specialChars
 	password := make([]byte, length)
 	maxCharIndex := big.NewInt(int64(len(passwordChars)))

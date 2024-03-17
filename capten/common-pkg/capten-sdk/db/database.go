@@ -3,11 +3,9 @@ package db
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/grpcconn"
 	"github.com/kube-tarian/kad/capten/common-pkg/postgres/db-migrate/migration"
 	"github.com/kube-tarian/kad/capten/common-pkg/postgres/db-migrate/postgres"
@@ -21,33 +19,19 @@ type DBClient struct {
 }
 
 type DBConfig struct {
-	DbOemName  OemName `envconfig:"DB_OEM_NAME" required:"true"`
-	Parameters *DBParameters
-}
-type DBParameters struct {
-	DbName            string `envconfig:"DB_NAME" required:"true"`
-	DbServiceUserName string `envconfig:"DB_SERVICE_USER_NAME" required:"true"`
+	PluginName        string  `envconfig:"PLUGIN_NAME" required:"true"`
+	DbOemName         OemName `envconfig:"DB_OEM_NAME" required:"true"`
+	DbName            string  `envconfig:"DB_NAME" required:"true"`
+	DbServiceUserName string  `envconfig:"DB_SERVICE_USER_NAME" required:"true"`
 }
 
 func NewDBClient() (*DBClient, error) {
-	oemNameFromEnv, ok := os.LookupEnv("DB_OEM_NAME")
-	if !ok {
-		return nil, fmt.Errorf("DB_OEM_NAME is missed to provide in environment variables")
-	}
-	oemName, ok := GetEnum(oemNameFromEnv)
-	if !ok {
-		return nil, fmt.Errorf("%s: Unsupported database", oemNameFromEnv)
+	conf := &DBConfig{}
+	if err := envconfig.Process("", conf); err != nil {
+		return nil, fmt.Errorf("DB config read failed, %v", err)
 	}
 
-	params := &DBParameters{}
-	if err := envconfig.Process(oemName.String(), params); err != nil {
-		return nil, fmt.Errorf("DB config parameters read failed, %v", err)
-	}
-
-	return NewDBClientWithConfig(&DBConfig{
-		DbOemName:  oemName,
-		Parameters: params,
-	}), nil
+	return NewDBClientWithConfig(conf), nil
 }
 
 func NewDBClientWithConfig(conf *DBConfig) *DBClient {
@@ -56,27 +40,28 @@ func NewDBClientWithConfig(conf *DBConfig) *DBClient {
 	}
 }
 
-func (d *DBClient) SetupDatabase() error {
+func (d *DBClient) SetupDatabase() (string, error) {
 	client, err := grpcconn.NewGRPCClient()
 	if err != nil {
-		return fmt.Errorf("grpc connection failed while setting up database, %v", err)
+		return "", fmt.Errorf("grpc connection failed while setting up database, %v", err)
 	}
 	defer client.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	response, err := client.Client.SetupDatabase(ctx, &captensdkpb.DBSetupRequest{
-		DbOemName:       d.conf.DbOemName.String(),
-		DbName:          d.conf.Parameters.DbName,
-		ServiceUserName: d.conf.Parameters.DbServiceUserName,
-	})
+	response, err := client.SetupDatabase(ctx,
+		d.conf.PluginName,
+		d.conf.DbOemName.String(),
+		d.conf.DbName,
+		d.conf.DbServiceUserName,
+	)
 	if err != nil {
-		return fmt.Errorf("%s database setup in %s OEM failed: %v", d.conf.DbOemName, d.conf.DbOemName, err)
+		return "", fmt.Errorf("%s database setup in %s OEM failed: %v", d.conf.DbOemName, d.conf.DbOemName, err)
 	}
-	fmt.Printf("DB setup status: %v, message: %v, DB URL: %v\n", response.Status, response.StatusMessage, response.DbURL)
+	fmt.Printf("DB setup status: %v, message: %v, DB URL: %v\n", response.Status, response.StatusMessage, response.SvcUserCredentialsPathInVault)
 
-	return nil
+	return response.SvcUserCredentialsPathInVault, nil
 }
 
 func (d *DBClient) RunMigrations(data map[string][]byte) error {
@@ -85,8 +70,8 @@ func (d *DBClient) RunMigrations(data map[string][]byte) error {
 	err := postgres.RunMigrationsBinDataWithConfig(
 		&postgres.DBConfig{
 			DBAddr:    d.dbAddress,
-			DBName:    d.conf.Parameters.DbName,
-			Username:  d.conf.Parameters.DbServiceUserName,
+			DBName:    d.conf.DbName,
+			Username:  d.conf.DbServiceUserName,
 			Password:  d.serviceUserPassword,
 			SourceURI: "go-bindata",
 		},
@@ -94,7 +79,7 @@ func (d *DBClient) RunMigrations(data map[string][]byte) error {
 		migration.UP,
 	)
 	if err != nil {
-		return fmt.Errorf("Run migrations failed, reason: %v", err)
+		return fmt.Errorf("run migrations failed, reason: %v", err)
 	}
 	return nil
 }
