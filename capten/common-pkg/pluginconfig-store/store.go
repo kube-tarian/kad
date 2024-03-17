@@ -1,10 +1,11 @@
-package pluginappstore
+package pluginconfigstore
 
 import (
 	"strings"
 
 	"github.com/intelops/go-common/logging"
 	dbclient "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-client"
+	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 )
 
 const (
@@ -15,6 +16,10 @@ type Store struct {
 	client   *dbclient.Client
 	log      logging.Logger
 	keyspace string
+}
+
+type PluginConfig struct {
+	*clusterpluginspb.Plugin
 }
 
 func NewStore(log logging.Logger) (*Store, error) {

@@ -1,4 +1,4 @@
-package pluginappstore
+package pluginconfigstore
 
 import (
 	"encoding/base64"
@@ -52,7 +52,7 @@ func CreatePluginConfigSelectAllQuery(keyspace string) string {
 	return fmt.Sprintf("SELECT %s FROM %s.ClusterPluginConfig", strings.Join(pluginConfigfields, ", "), keyspace)
 }
 
-func (a *Store) UpsertPluginConfig(config *clusterpluginspb.Plugin) error {
+func (a *Store) UpsertPluginConfig(config *PluginConfig) error {
 	if len(config.PluginName) == 0 {
 		return fmt.Errorf("app release name empty")
 	}
@@ -79,10 +79,10 @@ func (a *Store) DeletePluginConfigByReleaseName(releaseName string) error {
 	return nil
 }
 
-func (a *Store) GetPluginConfig(appReleaseName string) (*clusterpluginspb.Plugin, error) {
+func (a *Store) GetPluginConfig(appReleaseName string) (*PluginConfig, error) {
 	selectQuery := a.client.Session().Query(CreatePluginConfigSelectByFieldNameQuery(a.keyspace, releaseName), appReleaseName)
 
-	config := &clusterpluginspb.Plugin{}
+	config := &PluginConfig{}
 	var values string
 
 	if err := selectQuery.Scan(
@@ -124,7 +124,7 @@ func (a *Store) GetAllPlugins() ([]*clusterpluginspb.Plugin, error) {
 	return ret, nil
 }
 
-func formUpdateKvPairs(config *clusterpluginspb.Plugin) (string, bool) {
+func formUpdateKvPairs(config *PluginConfig) (string, bool) {
 	params := []string{}
 
 	if config.Values != nil {
