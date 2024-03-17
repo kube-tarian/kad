@@ -145,38 +145,9 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 	}, nil
 }
 
-func (p *PluginActivities) PluginDeployActivity(ctx context.Context, req *model.ApplicationDeployRequest) (model.ResponsePayload, error) {
-	err := p.updateStatus(req.ReleaseName, "plugin-install-"+"initializing")
-	if err != nil {
-		return model.ResponsePayload{
-			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
-		}, err
-	}
-
-	// Call application install
-	resp, err := installApplication(req)
-	if err != nil {
-		status := "plugin-install-" + "failed"
-		_ = p.updateStatus(req.ReleaseName, status)
-		return resp, err
-	}
-
-	err = p.updateStatus(req.ReleaseName, "plugin-install-"+"initialized")
-	if err != nil {
-		return model.ResponsePayload{
-			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
-		}, err
-	}
-	return model.ResponsePayload{
-		Status: "SUCCESS",
-	}, nil
-}
-
 // PluginDeployPostActionActivity... Updates the plugin deployment as "installed"
 func (p *PluginActivities) PluginDeployPostActionActivity(ctx context.Context, req *model.ApplicationDeployRequest) (model.ResponsePayload, error) {
-	err := p.updateStatus(req.ReleaseName, "installed")
+	err := p.updateStatus(req.ReleaseName, "deployed")
 	if err != nil {
 		return model.ResponsePayload{
 			Status:  "FAILED",
@@ -254,4 +225,18 @@ func (p *PluginActivities) updateConfigmap(namespace, cmName string, data map[st
 		return fmt.Errorf("plugin configmap %s not found", cmName)
 	}
 	return nil
+}
+
+func (p *PluginActivities) PluginDeployUpdateStatusActivity(ctx context.Context, pluginName, status string) (model.ResponsePayload, error) {
+	err := p.updateStatus(pluginName, status)
+	if err != nil {
+		return model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
+
+	return model.ResponsePayload{
+		Status: "SUCCESS",
+	}, nil
 }
