@@ -73,7 +73,7 @@ func (s *Server) SyncPluginStore(ctx context.Context, request *pluginstorepb.Syn
 	}
 	s.log.Infof("Sync plugin store request recieved for cluster %s, [org: %s]", clusterId, orgId)
 
-	err = s.pluginStore.SyncPlugins(clusterId, request.StoreType)
+	err = s.pluginStore.SyncPlugins(orgId, clusterId, request.StoreType)
 	if err != nil {
 		s.log.Errorf("Sync plugin store request failed for cluster %s, [org: %s], %w", clusterId, orgId, err)
 		return &pluginstorepb.SyncPluginStoreResponse{
@@ -129,7 +129,7 @@ func (s *Server) GetPluginValues(ctx context.Context, request *pluginstorepb.Get
 	s.log.Infof("Get plugin values request recieved for plugin %s-%s, cluster %s, [org: %s]",
 		request.PluginName, request.Version, clusterId, orgId)
 
-	values, err := s.pluginStore.GetPluginValues(clusterId, request.StoreType, request.PluginName, request.Version)
+	values, err := s.pluginStore.GetPluginValues(orgId, clusterId, request.StoreType, request.PluginName, request.Version)
 	if err != nil {
 		s.log.Errorf("Get plugin values request failed for plugin %s-%s, cluster %s, [org: %s], %w",
 			request.PluginName, request.Version, clusterId, orgId, err)
