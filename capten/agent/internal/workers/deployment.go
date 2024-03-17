@@ -101,12 +101,46 @@ func (d *Deployment) SendEventV2(
 	}
 
 	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
-	var run client.WorkflowRun
-	if capabilities == nil {
-		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
-	} else {
-		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON), capabilities)
+	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
+	if err != nil {
+		return nil, err
 	}
+
+	d.log.Infof("Started workflow, ID: %v, WorkflowName: %v RunID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
+
+	// Wait for 5mins till workflow finishes
+	// Timeout with 5mins
+	// return run, d.getWorkflowStatusByLatestWorkflow(run)
+	var result model.ResponsePayload
+	err = run.Get(ctx, &result)
+	if err != nil {
+		d.log.Errorf("Result for workflow ID: %v, workflowName: %v, runID: %v", run.GetID(), DeploymentWorkerWorkflowName, run.GetRunID())
+		d.log.Errorf("Workflow result failed, %v", err)
+		return run, err
+	}
+	d.log.Infof("workflow finished success, %+v", result.ToString())
+	return run, nil
+}
+
+func (d *Deployment) SendEventV2(
+	ctx context.Context,
+	workflowName string,
+	action string,
+	deployPayload any,
+) (client.WorkflowRun, error) {
+
+	options := client.StartWorkflowOptions{
+		ID:        uuid.NewString(),
+		TaskQueue: DeploymentWorkerTaskQueue,
+	}
+
+	deployPayloadJSON, err := json.Marshal(deployPayload)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
+	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
 	if err != nil {
 		return nil, err
 	}
