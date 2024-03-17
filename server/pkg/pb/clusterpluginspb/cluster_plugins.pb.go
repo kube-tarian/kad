@@ -271,7 +271,7 @@ func (x *Plugin) GetValues() []byte {
 	return nil
 }
 
-func (x *Plugin) GetOverrideValues() map[string]string {
+func (x *Plugin) GetOverrideValues() []byte {
 	if x != nil {
 		return x.OverrideValues
 	}
@@ -843,7 +843,7 @@ func file_cluster_plugins_proto_rawDescGZIP() []byte {
 }
 
 var file_cluster_plugins_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_cluster_plugins_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_cluster_plugins_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_cluster_plugins_proto_goTypes = []interface{}{
 	(StatusCode)(0),                       // 0: clusterpluginspb.StatusCode
 	(StoreType)(0),                        // 1: clusterpluginspb.StoreType
@@ -855,29 +855,27 @@ var file_cluster_plugins_proto_goTypes = []interface{}{
 	(*ClusterPlugin)(nil),                 // 7: clusterpluginspb.ClusterPlugin
 	(*GetClusterPluginsRequest)(nil),      // 8: clusterpluginspb.GetClusterPluginsRequest
 	(*GetClusterPluginsResponse)(nil),     // 9: clusterpluginspb.GetClusterPluginsResponse
-	nil,                                   // 10: clusterpluginspb.Plugin.OverrideValuesEntry
 }
 var file_cluster_plugins_proto_depIdxs = []int32{
 	1,  // 0: clusterpluginspb.Plugin.storeType:type_name -> clusterpluginspb.StoreType
-	10, // 1: clusterpluginspb.Plugin.overrideValues:type_name -> clusterpluginspb.Plugin.OverrideValuesEntry
-	2,  // 2: clusterpluginspb.DeployClusterPluginRequest.plugin:type_name -> clusterpluginspb.Plugin
-	0,  // 3: clusterpluginspb.DeployClusterPluginResponse.status:type_name -> clusterpluginspb.StatusCode
-	1,  // 4: clusterpluginspb.UnDeployClusterPluginRequest.storeType:type_name -> clusterpluginspb.StoreType
-	0,  // 5: clusterpluginspb.UnDeployClusterPluginResponse.status:type_name -> clusterpluginspb.StatusCode
-	1,  // 6: clusterpluginspb.ClusterPlugin.storeType:type_name -> clusterpluginspb.StoreType
-	0,  // 7: clusterpluginspb.GetClusterPluginsResponse.status:type_name -> clusterpluginspb.StatusCode
-	7,  // 8: clusterpluginspb.GetClusterPluginsResponse.plugins:type_name -> clusterpluginspb.ClusterPlugin
-	3,  // 9: clusterpluginspb.ClusterPlugins.DeployClusterPlugin:input_type -> clusterpluginspb.DeployClusterPluginRequest
-	5,  // 10: clusterpluginspb.ClusterPlugins.UnDeployClusterPlugin:input_type -> clusterpluginspb.UnDeployClusterPluginRequest
-	8,  // 11: clusterpluginspb.ClusterPlugins.GetClusterPlugins:input_type -> clusterpluginspb.GetClusterPluginsRequest
-	4,  // 12: clusterpluginspb.ClusterPlugins.DeployClusterPlugin:output_type -> clusterpluginspb.DeployClusterPluginResponse
-	6,  // 13: clusterpluginspb.ClusterPlugins.UnDeployClusterPlugin:output_type -> clusterpluginspb.UnDeployClusterPluginResponse
-	9,  // 14: clusterpluginspb.ClusterPlugins.GetClusterPlugins:output_type -> clusterpluginspb.GetClusterPluginsResponse
-	12, // [12:15] is the sub-list for method output_type
-	9,  // [9:12] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	2,  // 1: clusterpluginspb.DeployClusterPluginRequest.plugin:type_name -> clusterpluginspb.Plugin
+	0,  // 2: clusterpluginspb.DeployClusterPluginResponse.status:type_name -> clusterpluginspb.StatusCode
+	1,  // 3: clusterpluginspb.UnDeployClusterPluginRequest.storeType:type_name -> clusterpluginspb.StoreType
+	0,  // 4: clusterpluginspb.UnDeployClusterPluginResponse.status:type_name -> clusterpluginspb.StatusCode
+	1,  // 5: clusterpluginspb.ClusterPlugin.storeType:type_name -> clusterpluginspb.StoreType
+	0,  // 6: clusterpluginspb.GetClusterPluginsResponse.status:type_name -> clusterpluginspb.StatusCode
+	7,  // 7: clusterpluginspb.GetClusterPluginsResponse.plugins:type_name -> clusterpluginspb.ClusterPlugin
+	3,  // 8: clusterpluginspb.ClusterPlugins.DeployClusterPlugin:input_type -> clusterpluginspb.DeployClusterPluginRequest
+	5,  // 9: clusterpluginspb.ClusterPlugins.UnDeployClusterPlugin:input_type -> clusterpluginspb.UnDeployClusterPluginRequest
+	8,  // 10: clusterpluginspb.ClusterPlugins.GetClusterPlugins:input_type -> clusterpluginspb.GetClusterPluginsRequest
+	4,  // 11: clusterpluginspb.ClusterPlugins.DeployClusterPlugin:output_type -> clusterpluginspb.DeployClusterPluginResponse
+	6,  // 12: clusterpluginspb.ClusterPlugins.UnDeployClusterPlugin:output_type -> clusterpluginspb.UnDeployClusterPluginResponse
+	9,  // 13: clusterpluginspb.ClusterPlugins.GetClusterPlugins:output_type -> clusterpluginspb.GetClusterPluginsResponse
+	11, // [11:14] is the sub-list for method output_type
+	8,  // [8:11] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_cluster_plugins_proto_init() }
@@ -989,7 +987,7 @@ func file_cluster_plugins_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cluster_plugins_proto_rawDesc,
 			NumEnums:      2,
-			NumMessages:   9,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -160,18 +160,3 @@ func (a *Agent) unInstallPluginWithWorkflow(req *model.ApplicationDeleteRequest,
 		return
 	}
 }
-
-func prepareAppDeployRequestFromPlugin(data *clusterpluginspb.Plugin) *model.ApplicationInstallRequest {
-	return &model.ApplicationInstallRequest{
-		PluginName:     "helm",
-		RepoName:       data.ChartName,
-		RepoURL:        data.ChartRepo,
-		ChartName:      data.ChartName,
-		Namespace:      data.DefaultNamespace,
-		ReleaseName:    data.ChartName,
-		Version:        data.Version,
-		ClusterName:    "capten",
-		OverrideValues: string(data.Values),
-		Timeout:        10,
-	}
-}

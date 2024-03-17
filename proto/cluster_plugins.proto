@@ -39,7 +39,7 @@ message Plugin {
   string uiEndpoint = 12;
 	repeated string capabilities = 13;
   bytes values = 14;
-  map<string, string> overrideValues = 15;
+  bytes overrideValues = 15;
   string installStatus = 16;
 }
 
