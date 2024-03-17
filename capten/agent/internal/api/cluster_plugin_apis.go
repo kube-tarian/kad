@@ -5,6 +5,7 @@ import (
 
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
+	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	"github.com/kube-tarian/kad/capten/model"
 )
 
@@ -40,29 +41,32 @@ func (a *Agent) DeployClusterPlugin(ctx context.Context, request *clusterplugins
 	*clusterpluginspb.DeployClusterPluginResponse, error) {
 	a.log.Infof("Recieved App Install request for appName %s, version %+v", request.Plugin.PluginName, request.Plugin.Version)
 
-	plugin := request.Plugin
-	apiEndpoint, err := executeStringTemplateValues(plugin.ApiEndpoint, plugin.Values)
+	pluginCofnig := &pluginconfigstore.PluginConfig{
+		Plugin: request.Plugin,
+	}
+
+	apiEndpoint, err := executeStringTemplateValues(pluginCofnig.ApiEndpoint, pluginCofnig.Values)
 	if err != nil {
-		a.log.Errorf("failed to derive template launch URL for app %s, %v", plugin.PluginName, err)
+		a.log.Errorf("failed to derive template launch URL for app %s, %v", pluginCofnig.PluginName, err)
 		return &clusterpluginspb.DeployClusterPluginResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to prepare app values",
 		}, nil
 	}
 
-	plugin.InstallStatus = string(model.AppIntallingStatus)
-	plugin.ApiEndpoint = apiEndpoint
+	pluginCofnig.InstallStatus = string(model.AppIntallingStatus)
+	pluginCofnig.ApiEndpoint = apiEndpoint
 
-	if err := a.pas.UpsertPluginConfig(plugin); err != nil {
-		a.log.Errorf("failed to update app config data for app %s, %v", plugin.PluginName, err)
+	if err := a.pas.UpsertPluginConfig(pluginCofnig); err != nil {
+		a.log.Errorf("failed to update app config data for app %s, %v", pluginCofnig.PluginName, err)
 		return &clusterpluginspb.DeployClusterPluginResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to update app config data",
 		}, nil
 	}
 
-	deployReq := prepareAppDeployRequestFromPlugin(plugin)
-	go a.installPluginWithWorkflow(deployReq, plugin)
+	// deployReq := prepareAppDeployRequestFromPlugin(plugin)
+	go a.deployPluginWithWorkflow(request.Plugin, pluginCofnig)
 
 	a.log.Infof("Triggerred app [%s] install", request.Plugin.PluginName)
 	return &clusterpluginspb.DeployClusterPluginResponse{
@@ -118,9 +122,9 @@ func (a *Agent) UnDeployClusterPlugin(ctx context.Context, request *clusterplugi
 	}, nil
 }
 
-func (a *Agent) installPluginWithWorkflow(req *model.ApplicationInstallRequest, pluginConfig *clusterpluginspb.Plugin) {
+func (a *Agent) deployPluginWithWorkflow(plugin *clusterpluginspb.Plugin, pluginConfig *pluginconfigstore.PluginConfig) {
 	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppInstallAction), req, pluginConfig.Capabilities)
+	_, err := wd.SendEventV2(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppInstallAction), plugin)
 	if err != nil {
 		pluginConfig.InstallStatus = string(model.AppIntallFailedStatus)
 		if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
@@ -138,7 +142,7 @@ func (a *Agent) installPluginWithWorkflow(req *model.ApplicationInstallRequest, 
 	}
 }
 
-func (a *Agent) unInstallPluginWithWorkflow(req *model.ApplicationDeleteRequest, appConfig *clusterpluginspb.Plugin) {
+func (a *Agent) unInstallPluginWithWorkflow(req *model.ApplicationDeleteRequest, appConfig *pluginconfigstore.PluginConfig) {
 	wd := workers.NewDeployment(a.tc, a.log)
 	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppUnInstallAction), req, appConfig.Capabilities)
 	if err != nil {
@@ -164,7 +168,7 @@ func prepareAppDeployRequestFromPlugin(data *clusterpluginspb.Plugin) *model.App
 		RepoURL:        data.ChartRepo,
 		ChartName:      data.ChartName,
 		Namespace:      data.DefaultNamespace,
-		ReleaseName:    data.PluginName,
+		ReleaseName:    data.ChartName,
 		Version:        data.Version,
 		ClusterName:    "capten",
 		OverrideValues: string(data.Values),

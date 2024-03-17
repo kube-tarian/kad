@@ -8,7 +8,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/db"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
-	pluginappstore "github.com/kube-tarian/kad/capten/common-pkg/pluginapp-store"
+	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	"github.com/kube-tarian/kad/capten/model"
 )
 
@@ -18,7 +18,7 @@ type Configuration struct {
 
 type PluginActivities struct {
 	config    *Configuration
-	pas       *pluginappstore.Store
+	pas       *pluginconfigstore.Store
 	k8sClient *k8s.K8SClient
 }
 
@@ -34,7 +34,7 @@ func NewPluginActivities() (*PluginActivities, error) {
 		return nil, err
 	}
 
-	pas, err := pluginappstore.NewStore(logger)
+	pas, err := pluginconfigstore.NewStore(logger)
 	if err != nil {
 		logger.Errorf("failed to initialize plugin app store, %v", err)
 		return nil, err
