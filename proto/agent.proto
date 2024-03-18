@@ -225,6 +225,7 @@ message AppLaunchConfig {
   bytes icon = 4;
   string launchURL = 5;
   string launchUIDescription = 6;
+  bool ssoSupported = 7;
 }
 
 message UpgradeAppRequest {
