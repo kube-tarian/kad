@@ -20,6 +20,12 @@ func (s *Server) configureSSOForClusterApps(ctx context.Context, orgId, clusterI
 	}
 
 	for _, app := range resp.LaunchConfigList {
+		if !app.SsoSupported {
+			s.log.Infof("SSP not supported for app %s, clusterId: %s, [org: %s]",
+				app.ReleaseName, clusterID, orgId)
+			continue
+		}
+
 		appClientName := fmt.Sprintf("%s-%s", clusterID, app.ReleaseName)
 		s.log.Infof("Register app %s as app-client %s with IAM, clusterId: %s, [org: %s]",
 			app.ReleaseName, appClientName, clusterID, orgId)
