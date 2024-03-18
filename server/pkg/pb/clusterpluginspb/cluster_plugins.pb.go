@@ -139,6 +139,7 @@ type Plugin struct {
 	Values              []byte            `protobuf:"bytes,14,opt,name=values,proto3" json:"values,omitempty"`
 	OverrideValues      map[string]string `protobuf:"bytes,15,rep,name=overrideValues,proto3" json:"overrideValues,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	InstallStatus         string            `protobuf:"bytes,16,opt,name=installStatus,proto3" json:"installStatus,omitempty"`
+	LastUpdateTime      string    `protobuf:"bytes,17,opt,name=lastUpdateTime,proto3" json:"lastUpdateTime,omitempty"`
 }
 
 func (x *Plugin) Reset() {
@@ -281,6 +282,13 @@ func (x *Plugin) GetOverrideValues() []byte {
 func (x *Plugin) GetInstallStatus() string {
 	if x != nil {
 		return x.InstallStatus
+	}
+	return ""
+}
+
+func (x *Plugin) GetLastUpdateTime() string {
+	if x != nil {
+		return x.LastUpdateTime
 	}
 	return ""
 }

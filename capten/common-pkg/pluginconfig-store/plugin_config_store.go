@@ -13,18 +13,18 @@ import (
 )
 
 const (
-	insertPluginConfigByReleaseNameQuery = "INSERT INTO %s.ClusterPluginConfig(release_name) VALUES (?)"
-	updatePluginConfigByReleaseNameQuery = "UPDATE %s.ClusterPluginConfig SET %s WHERE release_name = ?"
-	deletePluginConfigByReleaseNameQuery = "DELETE FROM %s.ClusterPluginConfig WHERE release_name= ? "
+	insertPluginConfigByReleaseNameQuery = "INSERT INTO %s.ClusterPluginConfig(plugin_name) VALUES (?)"
+	updatePluginConfigByReleaseNameQuery = "UPDATE %s.ClusterPluginConfig SET %s WHERE plugin_name = ?"
+	deletePluginConfigByReleaseNameQuery = "DELETE FROM %s.ClusterPluginConfig WHERE plugin_name= ? "
 )
 
 const (
 	storeType, chartRepo, defaultNamespace = "store_type", "chart_repo", "default_namespace"
-	pluginEndpoint, capabilities, values   = "plugin_endpoint", "capabilities", "values"
-	action                                 = "action"
+	apiEndpoint, capabilities, values      = "api_endpoint", "capabilities", "values"
+	action, uiEndpoint                     = "action", "ui_endpoint"
 	appName, description, category         = "app_name", "description", "category"
-	chartName, repoName, repoUrl           = "chart_name", "repo_name", "repo_url"
-	namespace, releaseName, version        = "namespace", "release_name", "version"
+	chartName, repoName                    = "chart_name", "repo_name"
+	releaseName, version                   = "release_name", "version"
 	launchUrl, launchUIDesc                = "launch_url", "launch_redirect_url"
 	createNamespace, privilegedNamespace   = "create_namespace", "privileged_namespace"
 	overrideValues, launchUiValues         = "override_values", "launch_ui_values"
@@ -39,8 +39,9 @@ var (
 	pluginConfigfields = []string{
 		storeType, pluginName, description, category,
 		version, icon, chartName, chartRepo,
-		defaultNamespace, privilegedNamespace, pluginEndpoint,
-		capabilities, values, action,
+		defaultNamespace, privilegedNamespace, apiEndpoint,
+		uiEndpoint, capabilities, values, overrideValues,
+		installStatus, updateTime,
 	}
 )
 
@@ -79,22 +80,30 @@ func (a *Store) DeletePluginConfigByReleaseName(releaseName string) error {
 	return nil
 }
 
-func (a *Store) GetPluginConfig(appReleaseName string) (*PluginConfig, error) {
-	selectQuery := a.client.Session().Query(CreatePluginConfigSelectByFieldNameQuery(a.keyspace, releaseName), appReleaseName)
+func (a *Store) GetPluginConfig(pluginNameKey string) (*PluginConfig, error) {
+	a.log.Infof("Select query: %v", CreatePluginConfigSelectByFieldNameQuery(a.keyspace, pluginName))
+	selectQuery := a.client.Session().Query(CreatePluginConfigSelectByFieldNameQuery(a.keyspace, pluginName), pluginNameKey)
 
-	config := &PluginConfig{}
-	var values string
+	config := &PluginConfig{
+		Plugin: &clusterpluginspb.Plugin{},
+	}
+	var valuesValue, overrideValuesValue, capabilitiesValue string
 
 	if err := selectQuery.Scan(
 		&config.StoreType, &config.PluginName, &config.Description,
 		&config.Category, &config.Version, &config.Icon, &config.ChartName,
 		&config.ChartRepo, &config.DefaultNamespace, &config.PrivilegedNamespace,
-		&config.ApiEndpoint, &config.Capabilities, &values,
+		&config.ApiEndpoint, &config.UiEndpoint, &capabilitiesValue, &valuesValue,
+		&overrideValuesValue, &config.InstallStatus, &config.LastUpdateTime,
 	); err != nil {
 		return nil, err
 	}
 
-	config.Values, _ = base64.StdEncoding.DecodeString(values)
+	config.Values, _ = base64.StdEncoding.DecodeString(valuesValue)
+	config.OverrideValues, _ = base64.StdEncoding.DecodeString(overrideValuesValue)
+	capabilityList := strings.Split(capabilitiesValue, ",")
+	config.Capabilities = capabilityList
+	// config.StoreType = clusterpluginspb.StoreType(storeTypeValue)
 
 	return config, nil
 }
@@ -103,18 +112,22 @@ func (a *Store) GetAllPlugins() ([]*clusterpluginspb.Plugin, error) {
 	selectAllQuery := a.client.Session().Query(CreatePluginConfigSelectAllQuery(a.keyspace))
 	iter := selectAllQuery.Iter()
 
-	config := clusterpluginspb.Plugin{}
-	var values string
+	config := &PluginConfig{
+		Plugin: &clusterpluginspb.Plugin{},
+	}
+	var valuesValue, overrideValuesValue, capabilitiesValue string
 
 	ret := make([]*clusterpluginspb.Plugin, 0)
 	for iter.Scan(
 		&config.StoreType, &config.PluginName, &config.Description,
 		&config.Category, &config.Version, &config.Icon, &config.ChartName,
 		&config.ChartRepo, &config.DefaultNamespace, &config.PrivilegedNamespace,
-		&config.ApiEndpoint, &config.Capabilities, &values,
+		&config.ApiEndpoint, &config.UiEndpoint, &capabilitiesValue, &valuesValue,
+		&overrideValuesValue, &config.InstallStatus, &config.LastUpdateTime,
 	) {
-		configCopy := config
+		configCopy := *config.Plugin
 		configCopy.Values, _ = base64.StdEncoding.DecodeString(values)
+		configCopy.Capabilities = strings.Split(capabilitiesValue, ",")
 		ret = append(ret, &configCopy)
 	}
 
@@ -132,16 +145,20 @@ func formUpdateKvPairs(config *PluginConfig) (string, bool) {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", values, encoded))
 	}
+	if config.OverrideValues != nil {
+		encoded := base64.StdEncoding.EncodeToString(config.OverrideValues)
+		params = append(params,
+			fmt.Sprintf("%s = '%s'", overrideValues, encoded))
+	}
 
 	if config.PrivilegedNamespace {
 		params = append(params,
 			fmt.Sprintf("%s = true", privilegedNamespace))
 	}
 
-	if config.PluginName != "" {
-		params = append(params,
-			fmt.Sprintf("%s = '%s'", appName, config.PluginName))
-	}
+	params = append(params,
+		fmt.Sprintf("%s = %d", storeType, config.StoreType))
+
 	if config.Description != "" {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", description, config.Description))
@@ -155,20 +172,15 @@ func formUpdateKvPairs(config *PluginConfig) (string, bool) {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", chartName, config.ChartName))
 	}
-	if config.ChartName != "" {
-		params = append(params,
-			fmt.Sprintf("%s = '%s'", repoName, config.ChartName))
-	}
 	if config.ChartRepo != "" {
 		params = append(params,
-			fmt.Sprintf("%s = '%s'", repoUrl, config.ChartRepo))
+			fmt.Sprintf("%s = '%s'", chartRepo, config.ChartRepo))
 	}
 
 	if config.DefaultNamespace != "" {
 		params = append(params,
-			fmt.Sprintf("%s = '%s'", namespace, config.DefaultNamespace))
+			fmt.Sprintf("%s = '%s'", defaultNamespace, config.DefaultNamespace))
 	}
-
 	if config.Version != "" {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", version, config.Version))
@@ -182,25 +194,22 @@ func formUpdateKvPairs(config *PluginConfig) (string, bool) {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", installStatus, config.InstallStatus))
 	}
-
 	if config.ApiEndpoint != "" {
 		params = append(params,
-			fmt.Sprintf("%s = '%s'", pluginEndpoint, config.ApiEndpoint))
+			fmt.Sprintf("%s = '%s'", apiEndpoint, config.ApiEndpoint))
+	}
+	if config.UiEndpoint != "" {
+		params = append(params,
+			fmt.Sprintf("%s = '%s'", uiEndpoint, config.UiEndpoint))
+	}
+	if len(config.Capabilities) > 0 {
+		capabilitiesList := strings.Join(config.Capabilities, ",")
+		params = append(params,
+			fmt.Sprintf("%s = '%s'", capabilities, capabilitiesList))
 	}
 
 	params = append(params,
 		fmt.Sprintf("%s = '%s'", updateTime, time.Now().Format(time.RFC3339)))
-
-	if len(params) == 0 {
-		// query is empty there is nothing to update
-		return "", true
-	}
-
-	params = append(params,
-		fmt.Sprintf("%s = '%s'", pluginName, "helm"))
-
-	params = append(params,
-		fmt.Sprintf("%s = true", createNamespace))
 
 	return strings.Join(params, ", "), false
 }

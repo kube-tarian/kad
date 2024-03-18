@@ -41,6 +41,7 @@ message Plugin {
   bytes values = 14;
   bytes overrideValues = 15;
   string installStatus = 16;
+  string lastUpdateTime = 17;
 }
 
 message DeployClusterPluginRequest {

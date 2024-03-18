@@ -285,6 +285,13 @@ func (x *Plugin) GetInstallStatus() string {
 	return ""
 }
 
+func (x *Plugin) GetLastUpdateTime() string {
+	if x != nil {
+		return x.LastUpdateTime
+	}
+	return ""
+}
+
 type DeployClusterPluginRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
