@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
+	pluginconfigtore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/activities"
 	"github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
@@ -21,19 +23,16 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 	result := &model.ResponsePayload{}
 	logger := logging.NewLogger()
 
-	// var a *activities.Activities
-	var a *activities.PluginActivities
-	var err error
+	pas, err := pluginconfigtore.NewStore(logger)
+	if err != nil {
+		logger.Errorf("failed to initialize plugin app store, %v", err)
+	}
+
 	switch action {
 	case string(model.AppInstallAction), string(model.AppUpdateAction), string(model.AppUpgradeAction):
-		result, err = hanldeDeployWorkflow(ctx, payload, logger)
+		result, err = hanldeDeployWorkflow(ctx, payload, logger, pas)
 	case string(model.AppUnInstallAction):
-		ctx = setContext(ctx, 600, logger)
-		req := &model.DeployerDeleteRequest{}
-		err = json.Unmarshal(payload, req)
-		if err == nil {
-			err = workflow.ExecuteActivity(ctx, a.PluginUndeployActivity, payload).Get(ctx, result)
-		}
+		result, err = hanldeUndeployWorkflow(ctx, payload, logger, pas)
 	default:
 		err = fmt.Errorf("unknown action %v", action)
 	}
@@ -59,7 +58,7 @@ func setContext(ctx workflow.Context, timeInSeconds int, log logging.Logger) wor
 	return ctx
 }
 
-func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger) (*model.ResponsePayload, error) {
+func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger, pas *pluginconfigtore.Store) (*model.ResponsePayload, error) {
 	var a *activities.PluginActivities
 	result := &model.ResponsePayload{}
 	ctx = setContext(ctx, 600, log)
@@ -98,7 +97,7 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log log
 		}
 	}
 
-	result, err = executeAppDeployment(ctx, req, a)
+	result, err = executeAppDeployment(ctx, req, a, log, pas)
 	if err != nil {
 		return result, err
 	}
@@ -110,7 +109,73 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log log
 	return result, err
 }
 
-func executeAppDeployment(ctx workflow.Context, req *clusterpluginspb.Plugin, a *activities.PluginActivities) (result *model.ResponsePayload, err error) {
+func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger, pas *pluginconfigtore.Store) (*model.ResponsePayload, error) {
+	var a *activities.PluginActivities
+	result := &model.ResponsePayload{}
+	ctx = setContext(ctx, 600, log)
+
+	req := &clusterpluginspb.UnDeployClusterPluginRequest{}
+	err := json.Unmarshal(payload, req)
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"wrong content: %s\"}", err.Error())),
+		}, err
+	}
+
+	pluginConfig, err := pas.GetPluginConfig(req.PluginName)
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"Failed to fetch plugin configuration: %s\"}", err.Error())),
+		}, err
+	}
+
+	result, err = executeAppUndeployment(ctx, pluginConfig, a, log, pas)
+	if err != nil {
+		return result, err
+	}
+
+	for _, capability := range pluginConfig.Capabilities {
+		switch capability {
+		case "capten-sdk":
+			err = workflow.ExecuteActivity(ctx, a.PluginUndeployPreActionMTLSActivity, pluginConfig).Get(ctx, result)
+			if err != nil {
+				return result, err
+			}
+
+		case "vault-store":
+			err = workflow.ExecuteActivity(ctx, a.PluginUndeployPreActionVaultStoreActivity, pluginConfig).Get(ctx, result)
+			if err != nil {
+				return result, err
+			}
+
+		case "postgres-store":
+			err = workflow.ExecuteActivity(ctx, a.PluginUndeployPreActionPostgresStoreActivity, pluginConfig).Get(ctx, result)
+			if err != nil {
+				return result, err
+			}
+
+		default:
+			log.Infof("Unsupported capability %s", capability)
+		}
+	}
+
+	err = workflow.ExecuteActivity(ctx, a.PluginUndeployPostActionActivity, pluginConfig).Get(ctx, result)
+	if err != nil {
+		return result, err
+	}
+
+	return result, err
+}
+
+func executeAppDeployment(
+	ctx workflow.Context,
+	req *clusterpluginspb.Plugin,
+	a *activities.PluginActivities,
+	log logging.Logger,
+	pas *pluginconfigtore.Store,
+) (result *model.ResponsePayload, err error) {
 	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installing").Get(ctx, result)
 	if err != nil {
 		return result, err
@@ -130,23 +195,160 @@ func executeAppDeployment(ctx workflow.Context, req *clusterpluginspb.Plugin, a 
 		}, nil
 	}
 
+	launchURL, err := executeStringTemplateValues(req.UiEndpoint, req.OverrideValues)
+	if err != nil {
+		log.Errorf("failed to derive template launch URL for app %s, %v", req.PluginName, err)
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \" failed to prepare app values, %s\"}", err.Error())),
+		}, nil
+	}
+
+	apiEndpoint, err := executeStringTemplateValues(req.ApiEndpoint, req.OverrideValues)
+	if err != nil {
+		log.Errorf("failed to derive template launch URL for app %s, %v", req.PluginName, err)
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \" failed to prepare app values, %s\"}", err.Error())),
+		}, nil
+	}
+
+	syncConfig := &agentpb.SyncAppData{
+		Config: &agentpb.AppConfig{
+			ReleaseName:         req.ChartName,
+			AppName:             req.ChartName,
+			Version:             req.Version,
+			Category:            req.Category,
+			Description:         req.Description,
+			ChartName:           req.ChartName,
+			RepoName:            req.ChartName,
+			RepoURL:             req.ChartRepo,
+			Namespace:           req.DefaultNamespace,
+			CreateNamespace:     true,
+			PrivilegedNamespace: req.PrivilegedNamespace,
+			Icon:                req.Icon,
+			LaunchURL:           launchURL,
+			LaunchUIDescription: req.UiEndpoint,
+			InstallStatus:       string(model.AppIntallingStatus),
+			DefualtApp:          true,
+			PluginName:          "helm",
+			PluginDescription:   "helm plugin client to deploy plugin-app",
+			ApiEndpoint:         apiEndpoint,
+		},
+		Values: &agentpb.AppValues{
+			OverrideValues: req.OverrideValues,
+			TemplateValues: req.Values,
+		},
+	}
+
+	if err := pas.UpsertAppConfig(syncConfig); err != nil {
+		log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err)
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \" failed to update app config data, %s\"}", err.Error())),
+		}, nil
+	}
+
 	appDeployReq := prepareAppDeployRequestFromPlugin(req, templateValues)
 	result = &model.ResponsePayload{}
 	err = workflow.ExecuteChildWorkflow(ctx, Workflow, appDeployReq).Get(ctx, &result)
 	if err != nil {
-		err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installfailed").Get(ctx, result)
-		if err != nil {
-			return result, err
+		syncConfig.Config.InstallStatus = string(model.AppIntallFailedStatus)
+		if err1 := pas.UpsertAppConfig(syncConfig); err1 != nil {
+			log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err1)
+		}
+
+		err1 := workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installfailed").Get(ctx, result)
+		if err1 != nil {
+			log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err1)
 		}
 		return result, err
 	}
 
+	syncConfig.Config.InstallStatus = string(model.AppIntalledStatus)
+	if err := pas.UpsertAppConfig(syncConfig); err != nil {
+		log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err)
+		// return &model.ResponsePayload{
+		// 	Status:  "FAILED",
+		// 	Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \" failed to update app config data, %s\"}", err.Error())),
+		// }, nil
+	}
+
 	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installed").Get(ctx, result)
+	if err != nil {
+		log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err)
+		// return result, err
+	}
+
+	return nil, nil
+}
+
+func executeAppUndeployment(
+	ctx workflow.Context,
+	req *pluginconfigtore.PluginConfig,
+	a *activities.PluginActivities,
+	log logging.Logger,
+	pas *pluginconfigtore.Store,
+) (result *model.ResponsePayload, err error) {
+	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installing").Get(ctx, result)
 	if err != nil {
 		return result, err
 	}
 
-	return
+	cwo := workflow.ChildWorkflowOptions{
+		WorkflowID: "APP-UNDEPLOY-CHILD-WORKFLOW-ID",
+	}
+	ctx = workflow.WithChildOptions(ctx, cwo)
+
+	syncConfig, err := pas.GetAppConfig(req.PluginName)
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \" failed to update app config data, %s\"}", err.Error())),
+		}, nil
+	}
+
+	syncConfig.Config.InstallStatus = string(model.AppUnInstallingStatus)
+	if err := pas.UpsertAppConfig(syncConfig); err != nil {
+		log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err)
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \" failed to update app config data, %s\"}", err.Error())),
+		}, nil
+	}
+
+	appDeployReq := prepareAppUndeployRequestFromPlugin(syncConfig)
+	result = &model.ResponsePayload{}
+	err = workflow.ExecuteChildWorkflow(ctx, Workflow, appDeployReq).Get(ctx, &result)
+	if err != nil {
+		syncConfig.Config.InstallStatus = string(model.AppUnUninstallFailedStatus)
+		if err1 := pas.UpsertAppConfig(syncConfig); err1 != nil {
+			log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err1)
+		}
+
+		err1 := workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-uninstallfailed").Get(ctx, result)
+		if err1 != nil {
+			log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err1)
+		}
+		return result, err
+	}
+
+	syncConfig.Config.InstallStatus = string(model.AppUnInstalledStatus)
+	if err := pas.DeleteAppConfigByReleaseName(syncConfig.Config.ChartName); err != nil {
+		log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err)
+		// return &model.ResponsePayload{
+		// 	Status:  "FAILED",
+		// 	Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \" failed to update app config data, %s\"}", err.Error())),
+		// }, nil
+	}
+
+	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-uninstalled").Get(ctx, result)
+	if err != nil {
+		log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err)
+		// return result, err
+	}
+
+	return nil, nil
 }
 
 func deriveTemplateValues(overrideValues, templateValues []byte) ([]byte, error) {
@@ -195,4 +397,39 @@ func prepareAppDeployRequestFromPlugin(data *clusterpluginspb.Plugin, values []b
 		OverrideValues: string(values),
 		Timeout:        10,
 	}
+}
+
+func prepareAppUndeployRequestFromPlugin(data *agentpb.SyncAppData) *model.ApplicationDeleteRequest {
+	return &model.ApplicationDeleteRequest{
+		PluginName:  "helm",
+		Namespace:   data.Config.Namespace,
+		ReleaseName: data.Config.ReleaseName,
+		ClusterName: "capten",
+		Timeout:     10,
+	}
+}
+
+func executeStringTemplateValues(data string, values []byte) (transformedData string, err error) {
+	if len(data) == 0 {
+		return
+	}
+
+	tmpl, err := template.New("templateVal").Parse(data)
+	if err != nil {
+		return
+	}
+
+	mapValues := map[string]any{}
+	if err = yaml.Unmarshal(values, &mapValues); err != nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, mapValues)
+	if err != nil {
+		return
+	}
+
+	transformedData = string(buf.Bytes())
+	return
 }

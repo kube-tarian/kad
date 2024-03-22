@@ -20,19 +20,8 @@ const (
 
 const (
 	storeType, chartRepo, defaultNamespace = "store_type", "chart_repo", "default_namespace"
-	apiEndpoint, capabilities, values      = "api_endpoint", "capabilities", "values"
+	capabilities, values                   = "capabilities", "values"
 	action, uiEndpoint                     = "action", "ui_endpoint"
-	appName, description, category         = "app_name", "description", "category"
-	chartName, repoName                    = "chart_name", "repo_name"
-	releaseName, version                   = "release_name", "version"
-	launchUrl, launchUIDesc                = "launch_url", "launch_redirect_url"
-	createNamespace, privilegedNamespace   = "create_namespace", "privileged_namespace"
-	overrideValues, launchUiValues         = "override_values", "launch_ui_values"
-	templateValues, defaultApp             = "template_values", "default_app"
-	icon, installStatus                    = "icon", "install_status"
-	updateTime                             = "update_time"
-	usecase, projectUrl, status, details   = "usecase", "project_url", "status", "details"
-	pluginName, pluginDescription          = "plugin_name", "plugin_description"
 )
 
 var (
@@ -58,7 +47,7 @@ func (a *Store) UpsertPluginConfig(config *PluginConfig) error {
 		return fmt.Errorf("app release name empty")
 	}
 
-	kvPairs, isEmptyUpdate := formUpdateKvPairs(config)
+	kvPairs, isEmptyUpdate := formPluginUpdateKvPairs(config)
 	batch := a.client.Session().NewBatch(gocql.LoggedBatch)
 	batch.Query(fmt.Sprintf(insertPluginConfigByReleaseNameQuery, a.keyspace), config.PluginName)
 	if !isEmptyUpdate {
@@ -67,7 +56,7 @@ func (a *Store) UpsertPluginConfig(config *PluginConfig) error {
 	return a.client.Session().ExecuteBatch(batch)
 }
 
-func (a *Store) DeletePluginConfigByReleaseName(releaseName string) error {
+func (a *Store) DeletePluginConfigByPluginName(releaseName string) error {
 
 	deleteQuery := a.client.Session().Query(fmt.Sprintf(deletePluginConfigByReleaseNameQuery,
 		a.keyspace), releaseName)
@@ -137,7 +126,7 @@ func (a *Store) GetAllPlugins() ([]*clusterpluginspb.Plugin, error) {
 	return ret, nil
 }
 
-func formUpdateKvPairs(config *PluginConfig) (string, bool) {
+func formPluginUpdateKvPairs(config *PluginConfig) (string, bool) {
 	params := []string{}
 
 	if config.Values != nil {
