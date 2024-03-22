@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
