@@ -24,15 +24,9 @@ type PluginActivities struct {
 }
 
 func NewPluginActivities() (*PluginActivities, error) {
-	if err != nil {
-		logger.Errorf("failed to initialize plugin app store, %v", err)
-		return nil, err
-	}
-
-	k8sclient, err := k8s.NewK8SClient(logger)
-	if err != nil {
-		logger.Errorf("failed to get k8s client, %v", err)
-		return nil, err
+	conf := &Configuration{}
+	if err := envconfig.Process("", conf); err != nil {
+		return nil, fmt.Errorf("cassandra config read faile, %v", err)
 	}
 
 	pas, err := pluginconfigstore.NewStore(logger)
