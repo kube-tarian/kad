@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/db"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/postgres/db-init"

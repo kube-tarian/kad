@@ -5,14 +5,15 @@ type WorkFlowStatus string
 type AppStatus string
 
 const (
-	AppIntallingStatus      AppStatus = "Installing"
-	AppIntalledStatus       AppStatus = "Installed"
-	AppUpgradingStatus      AppStatus = "Upgrading"
-	AppUpgradedStatus       AppStatus = "Upgraded"
-	AppIntallFailedStatus   AppStatus = "Installion Failed"
-	AppUpgradeFaileddStatus AppStatus = "Upgrade Failed"
-	AppUnInstalledStatus    AppStatus = "UnInstalled"
-	AppUnInstallingStatus   AppStatus = "UnInstalling"
+	AppIntallingStatus         AppStatus = "Installing"
+	AppIntalledStatus          AppStatus = "Installed"
+	AppUpgradingStatus         AppStatus = "Upgrading"
+	AppUpgradedStatus          AppStatus = "Upgraded"
+	AppIntallFailedStatus      AppStatus = "Installion Failed"
+	AppUpgradeFaileddStatus    AppStatus = "Upgrade Failed"
+	AppUnInstalledStatus       AppStatus = "UnInstalled"
+	AppUnUninstallFailedStatus AppStatus = "UnInstall Failed"
+	AppUnInstallingStatus      AppStatus = "UnInstalling"
 )
 
 type AppDeployAction string
