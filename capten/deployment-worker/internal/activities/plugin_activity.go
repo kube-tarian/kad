@@ -7,6 +7,7 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/db"
+	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	"github.com/kube-tarian/kad/capten/model"
@@ -53,8 +54,8 @@ func NewPluginActivities() (*PluginActivities, error) {
 	}, nil
 }
 
-func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx context.Context, req *model.ApplicationDeployRequest) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.ReleaseName, "postgres-"+"initializing")
+func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
+	err := p.updateStatus(req.PluginName, "postgres-"+"initializing")
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -66,7 +67,7 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 	sdkDBClient := db.NewDBClientWithConfig(&db.DBConfig{
 		DbOemName:         db.POSTGRES,
 		PluginName:        req.PluginName,
-		DbName:            req.Namespace + "-" + req.PluginName,
+		DbName:            req.DefaultNamespace + "-" + req.PluginName,
 		DbServiceUserName: req.PluginName,
 	})
 
@@ -78,9 +79,9 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 		}, err
 	}
 
-	err = p.k8sClient.CreateConfigmap(req.Namespace, req.PluginName+"-init-config", map[string]string{
+	err = p.createUpdateConfigmap(req.DefaultNamespace, req.PluginName+"-init-config", map[string]string{
 		"vault-path": vaultPath,
-	}, nil)
+	})
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -88,7 +89,45 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 		}, err
 	}
 
-	err = p.updateStatus(req.ReleaseName, "postgres-"+"initialized")
+	err = p.updateStatus(req.PluginName, "postgres-"+"initialized")
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update status: %s\"}", err.Error())),
+		}, err
+	}
+	return &model.ResponsePayload{
+		Status: "SUCCESS",
+	}, nil
+}
+
+func (p *PluginActivities) PluginUndeployPreActionPostgresStoreActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (*model.ResponsePayload, error) {
+	err := p.updateStatus(req.PluginName, "postgres-"+"uninitializing")
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update status: %s\"}", err.Error())),
+		}, err
+	}
+
+	// Call capten-sdk DB setup
+	db.NewDBClientWithConfig(&db.DBConfig{
+		DbOemName:         db.POSTGRES,
+		PluginName:        req.PluginName,
+		DbName:            req.DefaultNamespace + "-" + req.PluginName,
+		DbServiceUserName: req.PluginName,
+	})
+	// TODO: Invoke  captensdk DBDestroy
+
+	err = p.k8sClient.DeleteConfigmap(req.DefaultNamespace, req.PluginName+"-init-config")
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", err.Error())),
+		}, err
+	}
+
+	err = p.pas.DeletePluginConfigByPluginName(req.DefaultNamespace)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -102,9 +141,9 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 
 func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 	ctx context.Context,
-	req *model.ApplicationDeployRequest,
+	req *clusterpluginspb.Plugin,
 ) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.ReleaseName, "vaultstore-"+"initializing")
+	err := p.updateStatus(req.PluginName, "vaultstore-"+"initializing")
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -115,7 +154,7 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 	// Write the credentials in the vault
 	logger.Infof("vault store activity Not implemented yet")
 
-	err = p.updateStatus(req.ReleaseName, "vaultstore-"+"initialized")
+	err = p.updateStatus(req.PluginName, "vaultstore-"+"initialized")
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -127,8 +166,35 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 	}, nil
 }
 
-func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context, req *model.ApplicationDeployRequest) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.ReleaseName, "mtls-"+"initializing")
+func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
+	ctx context.Context,
+	req *pluginconfigstore.PluginConfig,
+) (*model.ResponsePayload, error) {
+	err := p.updateStatus(req.PluginName, "vaultstore-"+"uninitializing")
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
+	// TODO: Call vault policy creation and path authorizations
+	// Write the credentials in the vault
+	logger.Infof("vault store activity Not implemented yet")
+
+	err = p.updateStatus(req.PluginName, "vaultstore-"+"uninitialized")
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
+	return &model.ResponsePayload{
+		Status: "SUCCESS",
+	}, nil
+}
+
+func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
+	err := p.updateStatus(req.PluginName, "mtls-"+"uninitializing")
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -139,7 +205,31 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 	// Write the mtls in the vault/conigmap
 	logger.Infof("MTLS activity Not implemented yet")
 
-	err = p.updateStatus(req.ReleaseName, "mtls-"+"initialized")
+	err = p.updateStatus(req.PluginName, "mtls-"+"initialized")
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
+	return &model.ResponsePayload{
+		Status: "SUCCESS",
+	}, nil
+}
+
+func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (*model.ResponsePayload, error) {
+	err := p.updateStatus(req.PluginName, "mtls-"+"uninitializing")
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
+	// TODO: Call MTLS creation
+	// Write the mtls in the vault/conigmap
+	logger.Infof("MTLS activity Not implemented yet")
+
+	err = p.updateStatus(req.PluginName, "mtls-"+"initialized")
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -152,8 +242,8 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 }
 
 // PluginDeployPostActionActivity... Updates the plugin deployment as "installed"
-func (p *PluginActivities) PluginDeployPostActionActivity(ctx context.Context, req *model.ApplicationDeployRequest) (model.ResponsePayload, error) {
-	err := p.updateStatus(req.ReleaseName, "deployed")
+func (p *PluginActivities) PluginDeployPostActionActivity(ctx context.Context, req *clusterpluginspb.Plugin) (model.ResponsePayload, error) {
+	err := p.updateStatus(req.PluginName, "deployed")
 	if err != nil {
 		return model.ResponsePayload{
 			Status:  "FAILED",
@@ -165,8 +255,31 @@ func (p *PluginActivities) PluginDeployPostActionActivity(ctx context.Context, r
 	}, nil
 }
 
+// PluginDeployPostActionActivity... Updates the plugin deployment as "installed"
+func (p *PluginActivities) PluginUndeployPostActionActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (model.ResponsePayload, error) {
+	err := p.k8sClient.DeleteConfigmap(req.DefaultNamespace, req.PluginName+"-init-config")
+	if err != nil {
+		return model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
+
+	err = p.pas.DeletePluginConfigByPluginName(req.PluginName)
+	if err != nil {
+		return model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
+
+	return model.ResponsePayload{
+		Status: "SUCCESS",
+	}, nil
+}
+
 func (p *PluginActivities) PluginUndeployActivity(ctx context.Context, req *model.DeployerDeleteRequest) (model.ResponsePayload, error) {
-	err := p.updateStatus(req.ReleaseName, "delete-"+"initialized")
+	err := p.updateStatus(req.ReleaseName, "delete-"+"uninitialized")
 	if err != nil {
 		return model.ResponsePayload{
 			Status:  "FAILED",
@@ -194,20 +307,6 @@ func (p *PluginActivities) PluginUndeployActivity(ctx context.Context, req *mode
 	}, nil
 }
 
-func (p *PluginActivities) PluginUndeployPostActionsActivity(ctx context.Context, req *model.DeployerDeleteRequest) (model.ResponsePayload, error) {
-	err := p.pas.DeletePluginConfigByReleaseName(req.ReleaseName)
-	if err != nil {
-		return model.ResponsePayload{
-			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
-		}, err
-	}
-
-	return model.ResponsePayload{
-		Status: "SUCCESS",
-	}, nil
-}
-
 func (p *PluginActivities) updateStatus(releaseName, status string) error {
 	plugin, err := p.pas.GetPluginConfig(releaseName)
 	if err != nil {
@@ -218,10 +317,14 @@ func (p *PluginActivities) updateStatus(releaseName, status string) error {
 	return nil
 }
 
-func (p *PluginActivities) updateConfigmap(namespace, cmName string, data map[string]string) error {
+func (p *PluginActivities) createUpdateConfigmap(namespace, cmName string, data map[string]string) error {
 	cm, err := p.k8sClient.GetConfigmap(namespace, cmName)
 	if err != nil {
-		return fmt.Errorf("plugin configmap %s not found", cmName)
+		fmt.Printf("plugin configmap %s not found", cmName)
+		err = p.k8sClient.CreateConfigmap(namespace, cmName, data, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create configmap, reason: %v", err)
+		}
 	}
 	for k, v := range data {
 		cm[k] = v
