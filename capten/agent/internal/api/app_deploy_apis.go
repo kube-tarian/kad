@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
+	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
 )
