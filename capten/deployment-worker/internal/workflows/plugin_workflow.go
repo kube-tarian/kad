@@ -72,6 +72,7 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log log
 		}, err
 	}
 
+	log.Infof("Started plugin workflow for %s", req.PluginName)
 	for _, capability := range req.Capabilities {
 		switch capability {
 		case "capten-sdk":
@@ -105,6 +106,7 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log log
 	if err != nil {
 		return result, err
 	}
+	log.Infof("Finsihed plugin workflow for %s", req.PluginName)
 
 	return result, err
 }
@@ -393,7 +395,7 @@ func prepareAppDeployRequestFromPlugin(data *clusterpluginspb.Plugin, values []b
 	return &model.ApplicationInstallRequest{
 		PluginName:     "helm",
 		RepoName:       data.ChartName,
-		RepoURL:        data.ChartRepo,
+		RepoURL:        data.ChartRepo + "/charts",
 		ChartName:      data.ChartName,
 		Namespace:      data.DefaultNamespace,
 		ReleaseName:    data.ChartName,

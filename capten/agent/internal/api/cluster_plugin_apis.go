@@ -126,20 +126,17 @@ func (a *Agent) deployPluginWithWorkflow(plugin *clusterpluginspb.Plugin, plugin
 	wd := workers.NewDeployment(a.tc, a.log)
 	_, err := wd.SendEventV2(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppInstallAction), plugin)
 	if err != nil {
-		pluginConfig.InstallStatus = string(model.AppIntallFailedStatus)
-		if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
-			a.log.Errorf("failed to update plugin config for plugin %s, %v", pluginConfig.PluginName, err)
-			return
-		}
-		a.log.Errorf("failed to send event to workflow for plugin %s, %v", pluginConfig.PluginName, err)
+		// pluginConfig.InstallStatus = string(model.AppIntallFailedStatus)
+		// if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
+		// 	a.log.Errorf("failed to update plugin config for plugin %s, %v", pluginConfig.PluginName, err)
+		// 	return
+		// }
+		a.log.Errorf("sendEventV2 failed, plugin: %s, reason: %v", pluginConfig.PluginName, err)
 		return
 	}
-
-	pluginConfig.InstallStatus = string(model.AppIntalledStatus)
-	if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
-		a.log.Errorf("failed to update plugin config for plugin %s, %v", pluginConfig.PluginName, err)
-		return
-	}
+	// TODO: workflow will update the final status
+	// Write a periodic scheduler which will go through all apps not in installed status and check the status till either success or failed.
+	// Make SendEventV2 asynchrounous so that periodic scheduler will take care of monitoring.
 }
 
 func (a *Agent) unInstallPluginWithWorkflow(req *model.ApplicationDeleteRequest, pluginConfig *pluginconfigstore.PluginConfig) {
