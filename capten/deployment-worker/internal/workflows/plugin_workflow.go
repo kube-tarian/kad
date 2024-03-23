@@ -401,7 +401,7 @@ func prepareAppDeployRequestFromPlugin(data *clusterpluginspb.Plugin, values []b
 		PluginName:     "helm",
 		RepoName:       data.ChartName,
 		RepoURL:        data.ChartRepo,
-		ChartName:      data.ChartName,
+		ChartName:      data.ChartName + "/" + data.ChartName,
 		Namespace:      data.DefaultNamespace,
 		ReleaseName:    data.ChartName,
 		Version:        data.Version,
