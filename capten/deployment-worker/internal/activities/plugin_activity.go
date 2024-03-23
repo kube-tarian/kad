@@ -314,7 +314,7 @@ func (p *PluginActivities) updateStatus(releaseName, status string) error {
 func (p *PluginActivities) createUpdateConfigmap(namespace, cmName string, data map[string]string) error {
 	cm, err := p.k8sClient.GetConfigmap(namespace, cmName)
 	if err != nil {
-		fmt.Printf("plugin configmap %s not found", cmName)
+		logger.Infof("plugin configmap %s not found", cmName)
 		err = p.k8sClient.CreateConfigmap(namespace, cmName, data, nil)
 		if err != nil {
 			return fmt.Errorf("failed to create configmap, reason: %v", err)

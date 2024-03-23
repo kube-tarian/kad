@@ -176,6 +176,7 @@ func executeAppDeployment(
 	log logging.Logger,
 	pas *pluginconfigtore.Store,
 ) (result *model.ResponsePayload, err error) {
+	result = &model.ResponsePayload{}
 	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installing").Get(ctx, result)
 	if err != nil {
 		return result, err
@@ -249,18 +250,20 @@ func executeAppDeployment(
 		}, nil
 	}
 
+	log.Infof("Triggering child work flow for plugin %v, app: %v", req.PluginName, req.ChartName)
 	appDeployReq := prepareAppDeployRequestFromPlugin(req, templateValues)
 	result = &model.ResponsePayload{}
-	err = workflow.ExecuteChildWorkflow(ctx, Workflow, appDeployReq).Get(ctx, &result)
+	err = workflow.ExecuteChildWorkflow(ctx, Workflow, appDeployReq).Get(ctx, result)
 	if err != nil {
 		syncConfig.Config.InstallStatus = string(model.AppIntallFailedStatus)
 		if err1 := pas.UpsertAppConfig(syncConfig); err1 != nil {
 			log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err1)
 		}
 
-		err1 := workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installfailed").Get(ctx, result)
+		result1 := &model.ResponsePayload{}
+		err1 := workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installfailed").Get(ctx, result1)
 		if err1 != nil {
-			log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err1)
+			log.Errorf("failed to update app config data for app %s, %v, result: %v", req.PluginName, err1, result1)
 		}
 		return result, err
 	}
@@ -280,7 +283,9 @@ func executeAppDeployment(
 		// return result, err
 	}
 
-	return nil, nil
+	return &model.ResponsePayload{
+		Status: "SUCCESS",
+	}, nil
 }
 
 func executeAppUndeployment(

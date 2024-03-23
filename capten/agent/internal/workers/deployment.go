@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -56,7 +55,7 @@ func (d *Deployment) SendEvent(
 		return nil, err
 	}
 
-	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
+	d.log.Infof("Event sent to temporal: workflow: %s, action: %s, payload: %+v", action, deployPayload.String())
 	var run client.WorkflowRun
 	run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
 	if err != nil {
@@ -83,7 +82,7 @@ func (d *Deployment) SendEventV2(
 	ctx context.Context,
 	workflowName string,
 	action string,
-	deployPayload any,
+	deployPayload model.DeployRequest,
 ) (client.WorkflowRun, error) {
 
 	options := client.StartWorkflowOptions{
@@ -96,7 +95,7 @@ func (d *Deployment) SendEventV2(
 		return nil, err
 	}
 
-	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
+	d.log.Infof("Event sent to temporal: workflow: %s, action: %s, payload: %+v", workflowName, action, deployPayload)
 	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
 	if err != nil {
 		return nil, err
@@ -135,7 +134,7 @@ func (d *Deployment) SendDeleteEvent(
 		return nil, err
 	}
 
-	log.Printf("Event sent to temporal: %s: %+v", action, deployPayload)
+	d.log.Infof("Event sent to temporal: workflow: %s, action: %s, payload: %+v", workflowName, action, deployPayload)
 	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, deployPayload)
 	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, workflows.Workflow, action, payloadJSON)
 	var run client.WorkflowRun

@@ -1,5 +1,7 @@
 package model
 
+import "fmt"
+
 type WorkFlowStatus string
 
 type AppStatus string
@@ -24,6 +26,10 @@ const (
 	AppUpgradeAction   AppDeployAction = "upgrade"
 	AppUpdateAction    AppDeployAction = "update"
 )
+
+type DeployRequest interface {
+	String() string
+}
 
 type AppConfig struct {
 	AppName             string `json:"AppName,omitempty"`
@@ -53,6 +59,11 @@ type ApplicationInstallRequest struct {
 	Version        string `json:"Version,omitempty"`
 	ClusterName    string `json:"ClusterName,omitempty"`
 	OverrideValues string `json:"OverrideValues,omitempty"`
+}
+
+func (a *ApplicationInstallRequest) String() string {
+	return fmt.Sprintf("pluginName: %s, repoName: %s, repoURL: %s, chartName: %s, Namespace: %s, releaseName: %s, timeout: %v, version: %v, clusterName: %s",
+		a.PluginName, a.RepoName, a.RepoURL, a.ChartName, a.Namespace, a.ReleaseName, a.Timeout, a.Version, a.ClusterName)
 }
 
 type ApplicationDeleteRequest struct {

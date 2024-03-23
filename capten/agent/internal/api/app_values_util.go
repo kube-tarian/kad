@@ -33,7 +33,7 @@ func populateTemplateValues(appConfig *agentpb.SyncAppData, newOverrideValues, l
 		}
 		for k, v := range newOverrideMapping {
 			baseOverrideValuesMapping[k] = fmt.Sprintf("%v", v)
-			fmt.Printf("baseOverrideValuesMapping: %s: %s\n", k, fmt.Sprintf("%v", v))
+			log.Debugf("baseOverrideValuesMapping: %s: %s\n", k, fmt.Sprintf("%v", v))
 		}
 	}
 
@@ -46,7 +46,7 @@ func populateTemplateValues(appConfig *agentpb.SyncAppData, newOverrideValues, l
 
 	// replace template with new override values from the request
 	//fmt.Printf("template: %s\n", string(appConfig.Values.TemplateValues))
-	fmt.Printf("finalOverrideMapping: %s\n", string(finalOverrideMappingBytes))
+	log.Debugf("finalOverrideMapping: %s\n", string(finalOverrideMappingBytes))
 	populatedTemplateValuesMapping, err := deriveTemplateValuesMapping(finalOverrideMappingBytes, appConfig.Values.TemplateValues)
 	if err != nil {
 		log.Errorf("failed to derive template values, err: %v", err)
@@ -59,8 +59,8 @@ func populateTemplateValues(appConfig *agentpb.SyncAppData, newOverrideValues, l
 		// replace launchUiMapping with the new launchUi values from the request
 		// also append override values to that
 		launchUiValues = enrichBytesMapping(launchUiValues, finalOverrideMappingBytes)
-		fmt.Printf("launch: %s\n", string(appConfig.Values.LaunchUIValues))
-		fmt.Printf("launchUiValues: %s\n", string(launchUiValues))
+		log.Debugf("launch: %s\n", string(appConfig.Values.LaunchUIValues))
+		log.Debugf("launchUiValues: %s\n", string(launchUiValues))
 
 		launchUiMapping, err = deriveTemplateValuesMapping(launchUiValues, appConfig.Values.LaunchUIValues)
 		if err != nil {

@@ -70,7 +70,7 @@ func (a *Store) DeletePluginConfigByPluginName(releaseName string) error {
 }
 
 func (a *Store) GetPluginConfig(pluginNameKey string) (*PluginConfig, error) {
-	a.log.Infof("Select query: %v", CreatePluginConfigSelectByFieldNameQuery(a.keyspace, pluginName))
+	a.log.Debugf("Select query: %v", CreatePluginConfigSelectByFieldNameQuery(a.keyspace, pluginName))
 	selectQuery := a.client.Session().Query(CreatePluginConfigSelectByFieldNameQuery(a.keyspace, pluginName), pluginNameKey)
 
 	config := &PluginConfig{

@@ -40,3 +40,7 @@ func IsObjectNotFound(err error) bool {
 	}
 	return false
 }
+
+func (p *PluginConfig) String() string {
+	return p.Plugin.String()
+}
