@@ -304,6 +304,7 @@ func executeAppUndeployment(
 	log logging.Logger,
 	pas *pluginconfigtore.Store,
 ) (result *model.ResponsePayload, err error) {
+	result = &model.ResponsePayload{}
 	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installing").Get(ctx, result)
 	if err != nil {
 		return result, err
@@ -316,6 +317,7 @@ func executeAppUndeployment(
 
 	syncConfig, err := pas.GetAppConfig(req.PluginName)
 	if err != nil {
+		log.Errorf("appconfig fetch failed, %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \" failed to update app config data, %s\"}", err.Error())),
@@ -331,6 +333,7 @@ func executeAppUndeployment(
 		}, nil
 	}
 
+	log.Errorf("invoking child workflow")
 	appDeployReq := prepareAppUndeployRequestFromPlugin(syncConfig)
 	result = &model.ResponsePayload{}
 	err = workflow.ExecuteChildWorkflow(ctx, Workflow, appDeployReq).Get(ctx, &result)
@@ -340,9 +343,10 @@ func executeAppUndeployment(
 			log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err1)
 		}
 
-		err1 := workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-uninstallfailed").Get(ctx, result)
+		result1 := &model.ResponsePayload{}
+		err1 := workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-uninstallfailed").Get(ctx, result1)
 		if err1 != nil {
-			log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err1)
+			log.Errorf("failed to update app config data for app %s, error: %v, response: %+v", req.PluginName, err1, result1)
 		}
 		return result, err
 	}
