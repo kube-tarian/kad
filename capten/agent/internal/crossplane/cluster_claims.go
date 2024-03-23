@@ -20,7 +20,6 @@ import (
 	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
 	"github.com/kube-tarian/kad/capten/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
 )
 
 const (
@@ -54,12 +53,25 @@ func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) 
 	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore, tc: tc}, nil
 }
 
-func registerK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
+func registerK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, k8sClient *k8s.K8SClient) error {
 	obj, err := NewClusterClaimSyncHandler(log, dbStore)
 	if err != nil {
 		return err
 	}
-	return k8s.RegisterDynamicInformers(obj, dynamicClient, cgvk)
+
+	log.Debugf("Registering resource %s wather", cgvk.String())
+	_, err = k8sClient.Clientset.Discovery().ServerResourcesForGroupVersion(cgvk.GroupVersion().String())
+	if err != nil {
+		log.Debugf("Resource %s not found: %v", cgvk.String(), err)
+		return fmt.Errorf("resource not found")
+	}
+
+	err = k8s.RegisterDynamicInformers(obj, k8sClient.DynamicClientInterface, cgvk)
+	if err != nil {
+		return err
+	}
+	log.Infof("Resource %s wather registered", cgvk.String())
+	return nil
 }
 
 func getClusterClaimObj(obj any) (*model.ClusterClaim, error) {

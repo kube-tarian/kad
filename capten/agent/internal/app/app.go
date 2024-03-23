@@ -129,17 +129,6 @@ func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*j
 		}
 	}
 
-	if cfg.TektonSyncJobEnabled {
-		cs, err := job.NewTektonResourcesSync(log, cfg.TektonSyncJobInterval, as)
-		if err != nil {
-			log.Fatal("failed to init tekton resources sync job", err)
-		}
-		err = s.AddJob("tekton-resources-synch", cs)
-		if err != nil {
-			log.Fatal("failed to add tekton resources sync job", err)
-		}
-	}
-
 	log.Info("successfully initialized job scheduler")
 	return s, nil
 }
