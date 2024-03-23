@@ -121,6 +121,7 @@ func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log l
 	result := &model.ResponsePayload{}
 	ctx = setContext(ctx, 600, log)
 
+	log.Infof("Payload: %+v", payload)
 	req := &clusterpluginspb.UnDeployClusterPluginRequest{}
 	err := json.Unmarshal(payload, req)
 	if err != nil {
@@ -129,6 +130,7 @@ func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log l
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"wrong content: %s\"}", err.Error())),
 		}, err
 	}
+	log.Infof("pluginconfig: %+v", req)
 
 	pluginConfig, err := pas.GetPluginConfig(req.PluginName)
 	if err != nil {
