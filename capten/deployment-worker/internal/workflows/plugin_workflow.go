@@ -336,7 +336,7 @@ func executeAppUndeployment(
 	log.Errorf("invoking child workflow")
 	appDeployReq := prepareAppUndeployRequestFromPlugin(syncConfig)
 	result = &model.ResponsePayload{}
-	err = workflow.ExecuteChildWorkflow(ctx, Workflow, appDeployReq).Get(ctx, &result)
+	err = workflow.ExecuteChildWorkflow(ctx, Workflow, string(model.AppUnInstallAction), appDeployReq).Get(ctx, &result)
 	if err != nil {
 		syncConfig.Config.InstallStatus = string(model.AppUnUninstallFailedStatus)
 		if err1 := pas.UpsertAppConfig(syncConfig); err1 != nil {
