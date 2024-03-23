@@ -21,6 +21,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
+	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	pluginconfigtore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/reflection"
@@ -76,6 +77,7 @@ func Start() {
 	agentpb.RegisterAgentServer(grpcServer, rpcapi)
 	captenpluginspb.RegisterCaptenPluginsServer(grpcServer, rpcapi)
 	captensdkpb.RegisterCaptenSdkServer(grpcServer, rpcapi)
+	clusterpluginspb.RegisterClusterPluginsServer(grpcServer, rpcapi)
 
 	log.Infof("Agent listening at %v", listener.Addr())
 	reflection.Register(grpcServer)
