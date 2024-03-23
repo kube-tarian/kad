@@ -9,7 +9,7 @@ service capten_sdk {
     rpc GetContainerRegistryById(GetContainerRegistryByIdRequest) returns (GetContainerRegistryByIdResponse) {}
 
 
-  rpc SetupDatabase (DBSetupRequest) returns (DBSetupResponse) {}
+  rpc SetupDatabase (SetupDatabaseRequest) returns (SetupDatabaseResponse) {}
 
 }
 
@@ -57,16 +57,16 @@ message GetContainerRegistryByIdResponse {
     string statusMessage = 3;
 }
 
-message DBSetupRequest {
-    string dbOemName = 1;
-    string dbName = 2;
-    string serviceUserName = 3;
+message SetupDatabaseRequest {
+    string pluginName = 1;
+    string dbOemName = 2;
+    string dbName = 3;
+    string serviceUserName = 4;
   }
   
-  message DBSetupResponse {
+  message SetupDatabaseResponse {
     StatusCode status = 1;
     string statusMessage = 2;
-    string dbURL = 3;
-    string serviceUserPassword = 4;
+    string svcUserCredentialsPathInVault = 3;
   }
   
