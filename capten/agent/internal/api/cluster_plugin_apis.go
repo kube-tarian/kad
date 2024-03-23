@@ -96,24 +96,16 @@ func (a *Agent) UnDeployClusterPlugin(ctx context.Context, request *clusterplugi
 		}, nil
 	}
 
-	req := &model.ApplicationDeleteRequest{
-		PluginName:  "helm",
-		Namespace:   pluginConfigdata.DefaultNamespace,
-		ReleaseName: request.PluginName,
-		ClusterName: "capten",
-		Timeout:     10,
-	}
-
 	pluginConfigdata.InstallStatus = string(model.AppUnInstallingStatus)
 	if err := a.pas.UpsertPluginConfig(pluginConfigdata); err != nil {
-		a.log.Errorf("failed to update plugin config status with UnInstalling for plugin %s, %v", req.ReleaseName, err)
+		a.log.Errorf("failed to update plugin config status with UnInstalling for plugin %s, %v", pluginConfigdata.PluginName, err)
 		return &clusterpluginspb.UnDeployClusterPluginResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to undeploy the plugin",
 		}, nil
 	}
 
-	go a.unInstallPluginWithWorkflow(req, pluginConfigdata)
+	go a.unInstallPluginWithWorkflow(request, pluginConfigdata)
 
 	a.log.Infof("Triggerred plugin [%s] un install", request.PluginName)
 	return &clusterpluginspb.UnDeployClusterPluginResponse{
@@ -139,21 +131,21 @@ func (a *Agent) deployPluginWithWorkflow(plugin *clusterpluginspb.Plugin, plugin
 	// Make SendEventV2 asynchrounous so that periodic scheduler will take care of monitoring.
 }
 
-func (a *Agent) unInstallPluginWithWorkflow(req *model.ApplicationDeleteRequest, pluginConfig *pluginconfigstore.PluginConfig) {
+func (a *Agent) unInstallPluginWithWorkflow(request *clusterpluginspb.UnDeployClusterPluginRequest, pluginConfig *pluginconfigstore.PluginConfig) {
 	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppUnInstallAction), req)
+	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppUnInstallAction), request)
 	if err != nil {
-		a.log.Errorf("failed to send delete event to workflow for plugin %s, %v", req.ReleaseName, err)
+		a.log.Errorf("failed to send delete event to workflow for plugin %s, %v", pluginConfig.PluginName, err)
 
 		pluginConfig.InstallStatus = string(model.AppIntalledStatus)
 		if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
-			a.log.Errorf("failed to update plugin config status with Installed for plugin %s, %v", req.ReleaseName, err)
+			a.log.Errorf("failed to update plugin config status with Installed for plugin %s, %v", pluginConfig.PluginName, err)
 		}
 		return
 	}
 
-	if err := a.as.DeleteAppConfigByReleaseName(req.ReleaseName); err != nil {
-		a.log.Errorf("failed to delete installed plugin config record %s, %v", req.ReleaseName, err)
+	if err := a.as.DeleteAppConfigByReleaseName(pluginConfig.PluginName); err != nil {
+		a.log.Errorf("failed to delete installed plugin config record %s, %v", pluginConfig.PluginName, err)
 		return
 	}
 }

@@ -122,7 +122,7 @@ func (d *Deployment) SendDeleteEvent(
 	ctx context.Context,
 	workflowName string,
 	action string,
-	deployPayload *model.ApplicationDeleteRequest,
+	deployPayload any,
 ) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
