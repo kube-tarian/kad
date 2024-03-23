@@ -212,6 +212,7 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 }
 
 func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (*model.ResponsePayload, error) {
+	logger.Infof("request: %+v", req.String())
 	err := p.updateStatus(req.PluginName, "mtls-"+"uninitializing")
 	if err != nil {
 		return &model.ResponsePayload{

@@ -37,11 +37,11 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 		err = fmt.Errorf("unknown action %v", action)
 	}
 	if err != nil {
-		logger.Errorf("plugin %s workflow failed, Error: %v", action, err)
+		logger.Errorf("plugin deployment action %s workflow failed, Error: %v", action, err)
 		return *result, err
 	}
 
-	logger.Infof("Deployment workflow completed., result: %s", (result).ToString())
+	logger.Infof("plugin deployment action %s workflow completed., result: %s", action, (result).ToString())
 	return *result, nil
 }
 
@@ -130,7 +130,7 @@ func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log l
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"wrong content: %s\"}", err.Error())),
 		}, err
 	}
-	log.Infof("pluginconfig: %+v", req)
+	log.Infof("undeployclusterplugin request: %+v", req)
 
 	pluginConfig, err := pas.GetPluginConfig(req.PluginName)
 	if err != nil {
@@ -140,6 +140,7 @@ func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log l
 		}, err
 	}
 
+	log.Infof("pluginConfig: %+v", pluginConfig.String())
 	result, err = executeAppUndeployment(ctx, pluginConfig, a, log, pas)
 	if err != nil {
 		return result, err
@@ -305,7 +306,7 @@ func executeAppUndeployment(
 	pas *pluginconfigtore.Store,
 ) (result *model.ResponsePayload, err error) {
 	result = &model.ResponsePayload{}
-	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installing").Get(ctx, result)
+	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-undeploying").Get(ctx, result)
 	if err != nil {
 		return result, err
 	}
@@ -333,7 +334,7 @@ func executeAppUndeployment(
 		}, nil
 	}
 
-	log.Errorf("invoking child workflow")
+	log.Info("invoking child workflow")
 	appDeployReq := prepareAppUndeployRequestFromPlugin(syncConfig)
 	result = &model.ResponsePayload{}
 	err = workflow.ExecuteChildWorkflow(ctx, Workflow, string(model.AppUnInstallAction), appDeployReq).Get(ctx, &result)
@@ -351,8 +352,9 @@ func executeAppUndeployment(
 		return result, err
 	}
 
+	log.Info("finished child workflow")
 	syncConfig.Config.InstallStatus = string(model.AppUnInstalledStatus)
-	if err := pas.DeleteAppConfigByReleaseName(syncConfig.Config.ChartName); err != nil {
+	if err := pas.DeleteAppConfigByReleaseName(req.PluginName); err != nil {
 		log.Errorf("failed to update app config data for app %s, %v", req.PluginName, err)
 		// return &model.ResponsePayload{
 		// 	Status:  "FAILED",
