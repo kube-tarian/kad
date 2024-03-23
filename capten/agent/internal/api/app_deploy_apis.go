@@ -302,7 +302,7 @@ func (a *Agent) installAppWithWorkflow(req *model.ApplicationInstallRequest,
 
 func (a *Agent) unInstallAppWithWorkflow(req *model.ApplicationDeleteRequest, appConfig *agentpb.SyncAppData) {
 	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetWorkflowName(), string(model.AppUnInstallAction), req, nil)
+	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetWorkflowName(), string(model.AppUnInstallAction), req)
 	if err != nil {
 		a.log.Errorf("failed to send delete event to workflow for app %s, %v", req.ReleaseName, err)
 

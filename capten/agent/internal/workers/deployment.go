@@ -123,7 +123,6 @@ func (d *Deployment) SendDeleteEvent(
 	workflowName string,
 	action string,
 	deployPayload *model.ApplicationDeleteRequest,
-	capabilities []string,
 ) (client.WorkflowRun, error) {
 	options := client.StartWorkflowOptions{
 		ID:        uuid.NewString(),
@@ -136,14 +135,7 @@ func (d *Deployment) SendDeleteEvent(
 	}
 
 	d.log.Infof("Event sent to temporal: workflow: %s, action: %s, payload: %+v", workflowName, action, deployPayload)
-	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, DeploymentWorkerWorkflowName, action, deployPayload)
-	// run, err := d.client.TemporalClient.ExecuteWorkflow(ctx, options, workflows.Workflow, action, payloadJSON)
-	var run client.WorkflowRun
-	if capabilities == nil {
-		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(payloadJSON))
-	} else {
-		run, err = d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(payloadJSON), capabilities)
-	}
+	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(payloadJSON))
 	if err != nil {
 		return nil, err
 	}

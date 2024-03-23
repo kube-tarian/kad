@@ -141,7 +141,7 @@ func (a *Agent) deployPluginWithWorkflow(plugin *clusterpluginspb.Plugin, plugin
 
 func (a *Agent) unInstallPluginWithWorkflow(req *model.ApplicationDeleteRequest, pluginConfig *pluginconfigstore.PluginConfig) {
 	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppUnInstallAction), req, pluginConfig.Capabilities)
+	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppUnInstallAction), req)
 	if err != nil {
 		a.log.Errorf("failed to send delete event to workflow for plugin %s, %v", req.ReleaseName, err)
 
