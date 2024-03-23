@@ -395,7 +395,7 @@ func prepareAppDeployRequestFromPlugin(data *clusterpluginspb.Plugin, values []b
 	return &model.ApplicationInstallRequest{
 		PluginName:     "helm",
 		RepoName:       data.ChartName,
-		RepoURL:        data.ChartRepo + "/charts",
+		RepoURL:        data.ChartRepo,
 		ChartName:      data.ChartName,
 		Namespace:      data.DefaultNamespace,
 		ReleaseName:    data.ChartName,
