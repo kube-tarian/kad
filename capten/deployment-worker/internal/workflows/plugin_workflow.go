@@ -37,7 +37,7 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 		err = fmt.Errorf("unknown action %v", action)
 	}
 	if err != nil {
-		logger.Errorf("Deployment workflow failed, Error: %v", err)
+		logger.Errorf("plugin %s workflow failed, Error: %v", action, err)
 		return *result, err
 	}
 
@@ -362,7 +362,9 @@ func executeAppUndeployment(
 		// return result, err
 	}
 
-	return nil, nil
+	return &model.ResponsePayload{
+		Status: "SUCCESS",
+	}, nil
 }
 
 func deriveTemplateValues(overrideValues, templateValues []byte) ([]byte, error) {
