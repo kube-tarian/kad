@@ -37,7 +37,7 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 		err = fmt.Errorf("unknown action %v", action)
 	}
 	if err != nil {
-		logger.Errorf("Deployment workflow failed: %v, Error: %v", string(payload), err)
+		logger.Errorf("Deployment workflow failed, Error: %v", err)
 		return *result, err
 	}
 
@@ -78,32 +78,37 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log log
 		case "capten-sdk":
 			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionMTLSActivity, req).Get(ctx, result)
 			if err != nil {
+				log.Errorf("pre-installation capten-sdk failed, %s, reason: %v", req.PluginName, err)
 				return result, err
 			}
 
 		case "vault-store":
 			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionVaultStoreActivity, req).Get(ctx, result)
 			if err != nil {
+				log.Errorf("pre-installation vault-store failed, %s, reason: %v", req.PluginName, err)
 				return result, err
 			}
 
 		case "postgres-store":
 			err = workflow.ExecuteActivity(ctx, a.PluginDeployPreActionPostgresStoreActivity, req).Get(ctx, result)
 			if err != nil {
+				log.Errorf("pre-installation postgres failed, %s, reason: %v", req.PluginName, err)
 				return result, err
 			}
 
 		default:
-			log.Infof("Unsupported capability %s", capability)
+			log.Infof("Unsupported capability %s for plugin %s", capability, req.PluginName)
 		}
 	}
 
 	result, err = executeAppDeployment(ctx, req, a, log, pas)
 	if err != nil {
+		log.Errorf("App installation failed, %s, reason: %v", req.PluginName, err)
 		return result, err
 	}
 	err = workflow.ExecuteActivity(ctx, a.PluginDeployPostActionActivity, req).Get(ctx, result)
 	if err != nil {
+		log.Errorf("post-action failed, %s, reason: %v", req.PluginName, err)
 		return result, err
 	}
 	log.Infof("Finsihed plugin workflow for %s", req.PluginName)
@@ -223,7 +228,7 @@ func executeAppDeployment(
 			Version:             req.Version,
 			Category:            req.Category,
 			Description:         req.Description,
-			ChartName:           req.ChartName,
+			ChartName:           req.ChartName + "/" + req.ChartName,
 			RepoName:            req.ChartName,
 			RepoURL:             req.ChartRepo,
 			Namespace:           req.DefaultNamespace,
