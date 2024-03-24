@@ -29,7 +29,7 @@ func TestStore(t *testing.T) {
 
 	log.Info("%v", pcStore)
 	err = pcStore.UpsertPluginConfig(&PluginConfig{
-		Plugin: &clusterpluginspb.Plugin{
+		Plugin: clusterpluginspb.Plugin{
 			PluginName:          "test",
 			StoreType:           clusterpluginspb.StoreType_LOCAL_CAPTEN_STORE,
 			Description:         "test",

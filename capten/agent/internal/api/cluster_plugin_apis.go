@@ -42,7 +42,7 @@ func (a *Agent) DeployClusterPlugin(ctx context.Context, request *clusterplugins
 	a.log.Infof("Recieved Plugin Deploy request for plugin %s, version %+v", request.Plugin.PluginName, request.Plugin.Version)
 
 	pluginConfig := &pluginconfigstore.PluginConfig{
-		Plugin: request.Plugin,
+		Plugin: *request.Plugin,
 	}
 
 	apiEndpoint, err := executeStringTemplateValues(pluginConfig.ApiEndpoint, pluginConfig.Values)

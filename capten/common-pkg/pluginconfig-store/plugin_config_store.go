@@ -73,9 +73,7 @@ func (a *Store) GetPluginConfig(pluginNameKey string) (*PluginConfig, error) {
 	a.log.Debugf("Select query: %v", CreatePluginConfigSelectByFieldNameQuery(a.keyspace, pluginName))
 	selectQuery := a.client.Session().Query(CreatePluginConfigSelectByFieldNameQuery(a.keyspace, pluginName), pluginNameKey)
 
-	config := &PluginConfig{
-		Plugin: &clusterpluginspb.Plugin{},
-	}
+	config := &PluginConfig{}
 	var valuesValue, overrideValuesValue, capabilitiesValue string
 
 	if err := selectQuery.Scan(
@@ -101,9 +99,7 @@ func (a *Store) GetAllPlugins() ([]*clusterpluginspb.Plugin, error) {
 	selectAllQuery := a.client.Session().Query(CreatePluginConfigSelectAllQuery(a.keyspace))
 	iter := selectAllQuery.Iter()
 
-	config := &PluginConfig{
-		Plugin: &clusterpluginspb.Plugin{},
-	}
+	config := &PluginConfig{}
 	var valuesValue, overrideValuesValue, capabilitiesValue string
 
 	ret := make([]*clusterpluginspb.Plugin, 0)
@@ -114,7 +110,7 @@ func (a *Store) GetAllPlugins() ([]*clusterpluginspb.Plugin, error) {
 		&config.ApiEndpoint, &config.UiEndpoint, &capabilitiesValue, &valuesValue,
 		&overrideValuesValue, &config.InstallStatus, &config.LastUpdateTime,
 	) {
-		configCopy := *config.Plugin
+		configCopy := config.Plugin
 		configCopy.Values, _ = base64.StdEncoding.DecodeString(values)
 		configCopy.Capabilities = strings.Split(capabilitiesValue, ",")
 		ret = append(ret, &configCopy)

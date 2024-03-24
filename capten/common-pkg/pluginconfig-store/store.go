@@ -19,7 +19,7 @@ type Store struct {
 }
 
 type PluginConfig struct {
-	*clusterpluginspb.Plugin
+	clusterpluginspb.Plugin
 }
 
 func NewStore(log logging.Logger) (*Store, error) {
