@@ -1,12 +1,15 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"html/template"
 
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	"github.com/kube-tarian/kad/capten/model"
+	"gopkg.in/yaml.v2"
 )
 
 func (a *Agent) GetClusterPlugins(ctx context.Context, request *clusterpluginspb.GetClusterPluginsRequest) (
@@ -45,18 +48,17 @@ func (a *Agent) DeployClusterPlugin(ctx context.Context, request *clusterplugins
 		Plugin: *request.Plugin,
 	}
 
-	apiEndpoint, err := executeStringTemplateValues(pluginConfig.ApiEndpoint, pluginConfig.Values)
+	values, err := replaceTemplateValuesInByteData(pluginConfig.Plugin.Values, pluginConfig.Plugin.OverrideValues)
 	if err != nil {
-		a.log.Errorf("failed to derive template launch URL for plugin %s, %v", pluginConfig.PluginName, err)
+		a.log.Errorf("failed to derive template values for plugin %s, %v", pluginConfig.PluginName, err)
 		return &clusterpluginspb.DeployClusterPluginResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to prepare plugin values",
 		}, nil
 	}
 
+	pluginConfig.Plugin.Values = values
 	pluginConfig.InstallStatus = string(model.AppIntallingStatus)
-	pluginConfig.ApiEndpoint = apiEndpoint
-
 	if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
 		a.log.Errorf("failed to update plugin config data for plugin %s, %v", pluginConfig.PluginName, err)
 		return &clusterpluginspb.DeployClusterPluginResponse{
@@ -142,4 +144,26 @@ func (a *Agent) unInstallPluginWithWorkflow(request *clusterpluginspb.UnDeployCl
 			a.log.Errorf("failed to update plugin config status with Installed for plugin %s, %v", pluginConfig.PluginName, err)
 		}
 	}
+}
+
+func replaceTemplateValuesInByteData(data []byte,
+	values []byte) (transformedData []byte, err error) {
+	tmpl, err := template.New("templateVal").Parse(string(data))
+	if err != nil {
+		return
+	}
+
+	mapValues := map[string]any{}
+	if err = yaml.Unmarshal(values, &mapValues); err != nil {
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, mapValues)
+	if err != nil {
+		return
+	}
+
+	transformedData = buf.Bytes()
+	return
 }
