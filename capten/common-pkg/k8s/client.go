@@ -136,7 +136,11 @@ func (k *K8SClient) UpdateConfigmap(namespace, cmName string, data map[string]st
 }
 
 func (k *K8SClient) DeleteConfigmap(namespace, cmName string) error {
-	return k.Clientset.CoreV1().ConfigMaps(namespace).Delete(context.TODO(), cmName, metav1.DeleteOptions{})
+	cm, _ := k.Clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), cmName, metav1.GetOptions{})
+	if cm != nil {
+		return k.Clientset.CoreV1().ConfigMaps(namespace).Delete(context.TODO(), cmName, metav1.DeleteOptions{})
+	}
+	return nil
 }
 
 func (k *K8SClient) GetConfigmap(namespace, cmName string) (map[string]string, error) {
