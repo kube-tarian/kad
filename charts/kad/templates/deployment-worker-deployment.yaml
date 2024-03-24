@@ -49,23 +49,26 @@ spec:
               value: "{{ .Values.service.port }}"
             - name: HOME
               value: /tmp
-            - name: CASSANDRA_SERVICE_URL
-              value: "{{ .Values.cassandra.serviceURL }}"
-            - name: CASSANDRA_KEYSPACE_NAME
-              value: "{{ .Values.cassandra.keyspaceName }}"
-            - name: CASSANDRA_TABLE_NAME
-              value: "{{ .Values.cassandra.name }}"
-            - name: CASSANDRA_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Values.cassandra.secretName }}"
-                  key: "username"
-            - name: CASSANDRA_PASSWORD
-              #value: "{{ .Values.cassandra.password }}"
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Values.cassandra.secretName }}"
-                  key: "password"
+            - name: VAULT_ADDR
+              value: {{ .Values.vault.address }}
+            - name: VAULT_CRED_ADDR
+              value: {{ .Values.vaultCred.address }}
+            - name: DOMAIN_NAME
+              value: {{ .Values.DomainName }}
+            - name: VAULT_ROLE
+              value: {{ .Values.vault.role }}
+            - name: DB_ADDRESSES
+              value: {{ .Values.cassandra.addresses }}
+            - name: DB_SERVICE_USERNAME
+              value: {{ .Values.cassandra.userName }}
+            - name: DB_ENTITY_NAME
+              value: {{ .Values.cassandra.entityName }}
+            - name: DB_NAME
+              value: {{ .Values.cassandra.keyspace }}
+            - name: CASSANDRA_SECRET_NAME
+              value: {{ .Values.cassandra.secretName }}
+            - name: AGENT_ADDRESSES
+              value: {{ include "kad.fullname" . }}-agent
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
