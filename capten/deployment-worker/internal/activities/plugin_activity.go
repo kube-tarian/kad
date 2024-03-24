@@ -145,7 +145,7 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 		logger.Errorf("createupdate configmap failed: %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", err.Error())),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", req.PluginName+"-init-config")),
 		}, err
 	}
 
@@ -189,7 +189,7 @@ func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
 }
 
 func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.PluginName, "mtls-"+"uninitializing")
+	err := p.updateStatus(req.PluginName, "mtls-"+"initializing")
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -205,7 +205,7 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 		logger.Errorf("createupdate configmap failed: %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap failed, %s\"}", err.Error())),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap failed, %s\"}", req.PluginName+"-init-config")),
 		}, err
 	}
 
@@ -234,7 +234,7 @@ func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Conte
 	// Write the mtls in the vault/conigmap
 	logger.Infof("MTLS activity Not implemented yet")
 
-	err = p.updateStatus(req.PluginName, "mtls-"+"initialized")
+	err = p.updateStatus(req.PluginName, "mtls-"+"uninitialized")
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -266,7 +266,7 @@ func (p *PluginActivities) PluginUndeployPostActionActivity(ctx context.Context,
 	if err != nil {
 		return model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"delete configmap %s faled\"}", req.PluginName+"-init-config")),
 		}, err
 	}
 
@@ -323,13 +323,12 @@ func (p *PluginActivities) updateStatus(releaseName, status string) error {
 }
 
 func (p *PluginActivities) createUpdateConfigmap(namespace, cmName string, data map[string]string) error {
-	logger.Infof("createupdate configmap: %s, %s, %v", namespace, cmName, data)
 	cm, err := p.k8sClient.GetConfigmap(namespace, cmName)
 	if err != nil {
 		logger.Infof("plugin configmap %s not found", cmName)
 		err = p.k8sClient.CreateConfigmap(namespace, cmName, data, nil)
 		if err != nil {
-			return fmt.Errorf("failed to create configmap, reason: %v", err)
+			return fmt.Errorf("failed to create configmap %v", cmName)
 		}
 	}
 	for k, v := range data {
