@@ -176,6 +176,7 @@ message ClusterAppConfig {
   string installStatus = 15;
   string runtimeStatus = 16;
   bool defualtApp = 17;
+  string pluginName = 18;
 }
 
 message AddStoreAppRequest {
