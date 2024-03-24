@@ -142,6 +142,7 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 
 	err = p.createUpdateConfigmap(req.DefaultNamespace, req.PluginName+"-init-config", map[string]string{})
 	if err != nil {
+		logger.Errorf("createupdate configmap failed: %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", err.Error())),
@@ -201,9 +202,10 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 
 	err = p.createUpdateConfigmap(req.DefaultNamespace, req.PluginName+"-init-config", map[string]string{})
 	if err != nil {
+		logger.Errorf("createupdate configmap failed: %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", err.Error())),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap failed, %s\"}", err.Error())),
 		}, err
 	}
 
