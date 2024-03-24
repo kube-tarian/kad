@@ -140,10 +140,10 @@ func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log l
 		}, err
 	}
 
-	// result, err = executeAppUndeployment(ctx, pluginConfig, a, log, pas)
-	// if err != nil {
-	// 	return result, err
-	// }
+	result, err = executeAppUndeployment(ctx, pluginConfig, a, log, pas)
+	if err != nil {
+		return result, err
+	}
 
 	for _, capability := range pluginConfig.Capabilities {
 		switch capability {
