@@ -250,12 +250,16 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 		}
 	}
 
-	pluginData, updatedValues, err := p.updatePluginDataTemplateValues(orgId, clusterId, pluginData, values)
+	overrideValuesMapping, err := p.getOverrideTemplateValues(orgId, clusterId)
 	if err != nil {
 		return err
 	}
 
-	overrideValuesMapping := map[string]string{}
+	err = p.updatePluginDataAPIValues(orgId, clusterId, pluginData, overrideValuesMapping)
+	if err != nil {
+		return err
+	}
+
 	if isUISSOCapabilitySupported(validCapabilities) {
 		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginData.UiEndpoint)
 		if err != nil {
@@ -285,7 +289,7 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 		ApiEndpoint:         pluginData.ApiEndpoint,
 		UiEndpoint:          pluginData.UiEndpoint,
 		Capabilities:        validCapabilities,
-		Values:              updatedValues,
+		Values:              values,
 		OverrideValues:      overrideValues,
 	}
 
@@ -394,31 +398,34 @@ func (p *PluginStore) registerPluginSSO(orgId, clusterId, pluginName, uiSSOURL s
 	return
 }
 
-func (p *PluginStore) updatePluginDataTemplateValues(orgId, clusterID string,
-	pluginData *pluginstorepb.PluginData, values []byte) (*pluginstorepb.PluginData, []byte, error) {
-	clusterGlobalValues, err := p.getClusterGlobalValues(orgId, clusterID)
+func (p *PluginStore) updatePluginDataAPIValues(orgId, clusterID string,
+	pluginData *pluginstorepb.PluginData, overrideValues map[string]string) error {
+	apiEndpoint, err := replaceTemplateValuesInString(pluginData.ApiEndpoint, overrideValues)
 	if err != nil {
-		return pluginData, values, fmt.Errorf("failed to get cluster global values, %v", err)
+		return fmt.Errorf("failed to update template values in plguin data, %v", err)
 	}
 
-	apiEndpoint, err := replaceTemplateValuesInString(pluginData.ApiEndpoint, clusterGlobalValues)
+	uiEndpoint, err := replaceTemplateValuesInString(pluginData.UiEndpoint, overrideValues)
 	if err != nil {
-		return pluginData, values, fmt.Errorf("failed to update template values in plguin data, %v", err)
-	}
-
-	uiEndpoint, err := replaceTemplateValuesInString(pluginData.UiEndpoint, clusterGlobalValues)
-	if err != nil {
-		return pluginData, values, fmt.Errorf("failed to update template values in plguin data, %v", err)
-	}
-
-	updatedValues, err := replaceTemplateValuesInByteData(values, clusterGlobalValues)
-	if err != nil {
-		return pluginData, values, fmt.Errorf("failed to update template values in plguin values, %v", err)
+		return fmt.Errorf("failed to update template values in plguin data, %v", err)
 	}
 
 	pluginData.ApiEndpoint = apiEndpoint
 	pluginData.UiEndpoint = uiEndpoint
-	return pluginData, updatedValues, nil
+	return nil
+}
+
+func (p *PluginStore) getOverrideTemplateValues(orgId, clusterID string) (map[string]string, error) {
+	clusterGlobalValues, err := p.getClusterGlobalValues(orgId, clusterID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get cluster global values, %v", err)
+	}
+
+	overrideValues := map[string]string{}
+	for key, val := range clusterGlobalValues {
+		overrideValues[key] = fmt.Sprintf("%v", val)
+	}
+	return overrideValues, nil
 }
 
 func (p *PluginStore) getClusterGlobalValues(orgId, clusterID string) (map[string]interface{}, error) {
@@ -460,7 +467,7 @@ func replaceTemplateValuesInByteData(data []byte,
 	return
 }
 
-func replaceTemplateValuesInString(data string, values map[string]interface{}) (transformedData string, err error) {
+func replaceTemplateValuesInString(data string, values map[string]string) (transformedData string, err error) {
 	if len(data) == 0 {
 		return
 	}
