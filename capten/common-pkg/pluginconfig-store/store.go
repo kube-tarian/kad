@@ -1,6 +1,7 @@
 package pluginconfigstore
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/intelops/go-common/logging"
@@ -42,5 +43,6 @@ func IsObjectNotFound(err error) bool {
 }
 
 func (p *PluginConfig) String() string {
-	return p.Plugin.String()
+	return fmt.Sprintf("plugin-name: %v, description: %v, chart-name: %v, chart-repo: %v, default-namespace: %v, privileged-namespace: %v, capabilities: %v, category: %v",
+		p.PluginName, p.Description, p.ChartName, p.ChartRepo, p.DefaultNamespace, p.PrivilegedNamespace, p.Capabilities, p.Category)
 }
