@@ -141,11 +141,5 @@ func (a *Agent) unInstallPluginWithWorkflow(request *clusterpluginspb.UnDeployCl
 		if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
 			a.log.Errorf("failed to update plugin config status with Installed for plugin %s, %v", pluginConfig.PluginName, err)
 		}
-		return
-	}
-
-	if err := a.as.DeleteAppConfigByReleaseName(pluginConfig.PluginName); err != nil {
-		a.log.Errorf("failed to delete installed plugin config record %s, %v", pluginConfig.PluginName, err)
-		return
 	}
 }

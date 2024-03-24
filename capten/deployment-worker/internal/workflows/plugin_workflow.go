@@ -140,7 +140,6 @@ func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log l
 		}, err
 	}
 
-	log.Infof("pluginConfig: %+v", pluginConfig.String())
 	// result, err = executeAppUndeployment(ctx, pluginConfig, a, log, pas)
 	// if err != nil {
 	// 	return result, err
