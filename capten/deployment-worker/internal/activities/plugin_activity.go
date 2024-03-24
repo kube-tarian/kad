@@ -113,14 +113,6 @@ func (p *PluginActivities) PluginUndeployPreActionPostgresStoreActivity(ctx cont
 	})
 	// TODO: Invoke  captensdk DBDestroy
 
-	err = p.k8sClient.DeleteConfigmap(req.DefaultNamespace, req.PluginName+"-init-config")
-	if err != nil {
-		return &model.ResponsePayload{
-			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", err.Error())),
-		}, err
-	}
-
 	err = p.pas.DeletePluginConfigByPluginName(req.DefaultNamespace)
 	if err != nil {
 		return &model.ResponsePayload{
@@ -147,6 +139,14 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 	// TODO: Call vault policy creation and path authorizations
 	// Write the credentials in the vault
 	logger.Infof("vault store activity Not implemented yet")
+
+	err = p.createUpdateConfigmap(req.DefaultNamespace, req.PluginName+"-init-config", map[string]string{})
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", err.Error())),
+		}, err
+	}
 
 	err = p.updateStatus(req.PluginName, "vaultstore-"+"initialized")
 	if err != nil {
@@ -198,6 +198,14 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 	// TODO: Call MTLS creation
 	// Write the mtls in the vault/conigmap
 	logger.Infof("MTLS activity Not implemented yet")
+
+	err = p.createUpdateConfigmap(req.DefaultNamespace, req.PluginName+"-init-config", map[string]string{})
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", err.Error())),
+		}, err
+	}
 
 	err = p.updateStatus(req.PluginName, "mtls-"+"initialized")
 	if err != nil {
@@ -313,6 +321,7 @@ func (p *PluginActivities) updateStatus(releaseName, status string) error {
 }
 
 func (p *PluginActivities) createUpdateConfigmap(namespace, cmName string, data map[string]string) error {
+	logger.Infof("createupdate configmap: %s, %s, %v", namespace, cmName, data)
 	cm, err := p.k8sClient.GetConfigmap(namespace, cmName)
 	if err != nil {
 		logger.Infof("plugin configmap %s not found", cmName)
