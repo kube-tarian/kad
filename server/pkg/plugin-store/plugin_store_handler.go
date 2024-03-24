@@ -243,6 +243,13 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 		p.log.Infof("skipped plugin %s invalid capabilities %v", pluginName, invalidCapabilities)
 	}
 
+	if len(values) == 0 {
+		values, err = p.GetPluginValues(orgId, clusterId, storeType, pluginName, version)
+		if err != nil {
+			p.log.Infof("no values defined for plugin %s", pluginName)
+		}
+	}
+
 	pluginData, updatedValues, err := p.updatePluginDataTemplateValues(orgId, clusterId, pluginData, values)
 	if err != nil {
 		return err

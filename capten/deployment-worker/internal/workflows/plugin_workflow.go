@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
@@ -192,7 +193,7 @@ func executeAppDeployment(
 	}
 
 	cwo := workflow.ChildWorkflowOptions{
-		WorkflowID: "APP-DEPLOY-CHILD-WORKFLOW-ID",
+		WorkflowID: uuid.NewString(),
 	}
 	ctx = workflow.WithChildOptions(ctx, cwo)
 
@@ -240,9 +241,9 @@ func executeAppDeployment(
 			LaunchURL:           launchURL,
 			LaunchUIDescription: req.UiEndpoint,
 			InstallStatus:       string(model.AppIntallingStatus),
-			DefualtApp:          true,
-			PluginName:          "helm",
-			PluginDescription:   "helm plugin client to deploy plugin-app",
+			DefualtApp:          false,
+			PluginName:          req.PluginName,
+			PluginDescription:   req.Description,
 			ApiEndpoint:         apiEndpoint,
 		},
 		Values: &agentpb.AppValues{
