@@ -221,3 +221,20 @@ func (k *K8SClient) GetServiceData(namespace, serviceName string) (*ServiceData,
 		Ports: ports,
 	}, nil
 }
+
+func (k *K8SClient) CreateNamespace(namespace string) error {
+	_, err := k.Clientset.CoreV1().Namespaces().Create(context.TODO(), &v1.Namespace{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Namespace",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	}, metav1.CreateOptions{})
+
+	if !k8serror.IsAlreadyExists(err) {
+		return err
+	}
+	return nil
+}

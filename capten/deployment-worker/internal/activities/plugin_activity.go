@@ -323,6 +323,11 @@ func (p *PluginActivities) updateStatus(releaseName, status string) error {
 }
 
 func (p *PluginActivities) createUpdateConfigmap(namespace, cmName string, data map[string]string) error {
+	err := p.k8sClient.CreateNamespace(namespace)
+	if err != nil {
+		logger.Errorf("Creation of namespace failed: %v", err)
+		return fmt.Errorf("creation of namespace faield")
+	}
 	cm, err := p.k8sClient.GetConfigmap(namespace, cmName)
 	if err != nil {
 		logger.Infof("plugin configmap %s not found", cmName)
