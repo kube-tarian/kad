@@ -141,10 +141,10 @@ func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log l
 	}
 
 	log.Infof("pluginConfig: %+v", pluginConfig.String())
-	result, err = executeAppUndeployment(ctx, pluginConfig, a, log, pas)
-	if err != nil {
-		return result, err
-	}
+	// result, err = executeAppUndeployment(ctx, pluginConfig, a, log, pas)
+	// if err != nil {
+	// 	return result, err
+	// }
 
 	for _, capability := range pluginConfig.Capabilities {
 		switch capability {
@@ -337,7 +337,7 @@ func executeAppUndeployment(
 	log.Info("invoking child workflow")
 	appDeployReq := prepareAppUndeployRequestFromPlugin(syncConfig)
 	result = &model.ResponsePayload{}
-	err = workflow.ExecuteChildWorkflow(ctx, Workflow, string(model.AppUnInstallAction), appDeployReq).Get(ctx, &result)
+	err = workflow.ExecuteChildWorkflow(ctx, Workflow, string(model.AppUnInstallAction), appDeployReq).Get(ctx, result)
 	if err != nil {
 		syncConfig.Config.InstallStatus = string(model.AppUnUninstallFailedStatus)
 		if err1 := pas.UpsertAppConfig(syncConfig); err1 != nil {
