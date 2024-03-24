@@ -137,7 +137,7 @@ func (a *Agent) unInstallPluginWithWorkflow(request *clusterpluginspb.UnDeployCl
 	if err != nil {
 		a.log.Errorf("failed to send delete event to workflow for plugin %s, %v", pluginConfig.PluginName, err)
 
-		pluginConfig.InstallStatus = string(model.AppIntalledStatus)
+		pluginConfig.InstallStatus = string(model.AppUnUninstallFailedStatus)
 		if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
 			a.log.Errorf("failed to update plugin config status with Installed for plugin %s, %v", pluginConfig.PluginName, err)
 		}
