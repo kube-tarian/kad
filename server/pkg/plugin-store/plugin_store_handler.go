@@ -248,15 +248,20 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 		return err
 	}
 
-	overrideValues := map[string]string{}
+	overrideValuesMapping := map[string]string{}
 	if isUISSOCapabilitySupported(validCapabilities) {
 		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginData.UiEndpoint)
 		if err != nil {
 			return err
 		}
-		overrideValues[oAuthBaseURLName] = p.cfg.CaptenOAuthURL
-		overrideValues[oAuthClientIdName] = clientId
-		overrideValues[oAuthClientSecretName] = clientSecret
+		overrideValuesMapping[oAuthBaseURLName] = p.cfg.CaptenOAuthURL
+		overrideValuesMapping[oAuthClientIdName] = clientId
+		overrideValuesMapping[oAuthClientSecretName] = clientSecret
+	}
+
+	overrideValues, err := yaml.Marshal(overrideValuesMapping)
+	if err != nil {
+		return err
 	}
 
 	plugin := &clusterpluginspb.Plugin{

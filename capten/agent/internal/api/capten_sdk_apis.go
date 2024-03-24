@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
 )
 
 func (a *Agent) GetGitProjectById(ctx context.Context, request *captensdkpb.GetGitProjectByIdRequest) (

@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
 	v1 "k8s.io/api/core/v1"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 
 	"github.com/intelops/go-common/credentials"

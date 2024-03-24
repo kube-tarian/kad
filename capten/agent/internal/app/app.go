@@ -15,12 +15,14 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
 	"github.com/kube-tarian/kad/capten/agent/internal/crossplane"
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/util"
+	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
+	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
+	pluginconfigtore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/reflection"
 )
@@ -49,7 +51,12 @@ func Start() {
 		log.Errorf("failed to initialize store, %v", err)
 	}
 
-	rpcapi, err := agentapi.NewAgent(log, cfg, as)
+	pas, err := pluginconfigtore.NewStore(log)
+	if err != nil {
+		log.Errorf("failed to initialize plugin app store, %v", err)
+	}
+
+	rpcapi, err := agentapi.NewAgent(log, cfg, as, pas)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 	}
@@ -70,6 +77,7 @@ func Start() {
 	agentpb.RegisterAgentServer(grpcServer, rpcapi)
 	captenpluginspb.RegisterCaptenPluginsServer(grpcServer, rpcapi)
 	captensdkpb.RegisterCaptenSdkServer(grpcServer, rpcapi)
+	clusterpluginspb.RegisterClusterPluginsServer(grpcServer, rpcapi)
 
 	log.Infof("Agent listening at %v", listener.Addr())
 	reflection.Register(grpcServer)

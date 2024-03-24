@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
 	"github.com/stretchr/testify/suite"
 	"gopkg.in/yaml.v2"
@@ -27,7 +27,7 @@ func TestAgentTestSuite(t *testing.T) {
 		t.Fatal(err)
 	}*/
 
-	agent, err := NewAgent(agentSuite.logger, &config.SericeConfig{}, nil)
+	agent, err := NewAgent(agentSuite.logger, &config.SericeConfig{}, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

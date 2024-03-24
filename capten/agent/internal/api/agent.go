@@ -7,11 +7,12 @@ import (
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captensdkpb"
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
+	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
+	pluginconfigtore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 )
 
 var _ agentpb.AgentServer = &Agent{}
@@ -23,12 +24,13 @@ type Agent struct {
 	clusterpluginspb.UnimplementedClusterPluginsServer
 	tc       *temporalclient.Client
 	as       *captenstore.Store
+	pas      *pluginconfigtore.Store
 	log      logging.Logger
 	cfg      *config.SericeConfig
 	createPr bool
 }
 
-func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store) (*Agent, error) {
+func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store, pas *pluginconfigtore.Store) (*Agent, error) {
 	var tc *temporalclient.Client
 	var err error
 
@@ -40,6 +42,7 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Stor
 	agent := &Agent{
 		tc:  tc,
 		as:  as,
+		pas: pas,
 		cfg: cfg,
 		log: log,
 	}
