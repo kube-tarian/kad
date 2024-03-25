@@ -1,5 +1,5 @@
 {
-    "templateGitRepo": "https://github.com/vramk23/infrapub",
+    "templateGitRepo": "https://github.com/intelops/capten-templates",
     "tektonProject": "cicd/tekton",
     "tektonPipelinePath": "cicd/tekton-pipelines",
     "pipelineClusterConfigSyncPath": "cicd/tekton-cluster-tasks",
