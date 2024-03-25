@@ -14,6 +14,7 @@ import (
 
 type DBConfig struct {
 	DBAddr     string `envconfig:"PG_DB_ADDRESS" required:"true"`
+	DBPort     string `envconfig:"PG_DB_PORT" default:"5432"`
 	EntityName string `envconfig:"PG_DB_ENTITY_NAME" required:"true"`
 	DBName     string `envconfig:"PG_DB_NAME" required:"true"`
 	Username   string `envconfig:"PG_DB_SERVICE_USERNAME" required:"true"`
@@ -31,7 +32,7 @@ func RunMigrations(mode migration.Mode) error {
 }
 
 func RunMigrationsWithConfig(conf *DBConfig, mode migration.Mode) error {
-	dbConnectionString, err := getDbConnectionURLFromDbType(conf, "")
+	dbConnectionString, err := getDbConnectionURLFromDbType(conf, conf.Password)
 	if err != nil {
 		return errors.WithMessage(err, "DB connection Url create failed")
 	}
@@ -41,6 +42,15 @@ func RunMigrationsWithConfig(conf *DBConfig, mode migration.Mode) error {
 		return err
 	}
 	return nil
+}
+
+func RunMigrationsBinData(s *bindata.AssetSource, mode migration.Mode) error {
+	conf := &DBConfig{}
+	if err := envconfig.Process("", conf); err != nil {
+		return err
+	}
+
+	return RunMigrationsBinDataWithConfig(conf, s, mode)
 }
 
 func RunMigrationsBinDataWithConfig(conf *DBConfig, s *bindata.AssetSource, mode migration.Mode) error {
@@ -64,13 +74,13 @@ func getDbConnectionURLFromDbType(conf *DBConfig, password string) (string, erro
 			return "", err
 		}
 		// postgres://user:password@host:port/dbname?query
-		return fmt.Sprintf("postgres://%s:%s@%s:5432/%s",
-			conf.Username, url.QueryEscape(serviceCredential.Password), conf.DBAddr, conf.DBName), nil
+		return fmt.Sprintf("postgres://%s:%s@%s:%v/%s",
+			conf.Username, url.QueryEscape(serviceCredential.Password), conf.DBAddr, conf.DBPort, conf.DBName), nil
 	}
 
 	// postgres://user:password@host:port/dbname?query
-	return fmt.Sprintf("postgres://%s:%s@%s:5432/%s?sslmode=disable",
-		conf.Username, password, conf.DBAddr, conf.DBName), nil
+	return fmt.Sprintf("postgres://%s:%s@%s:%v/%s?sslmode=disable",
+		conf.Username, password, conf.DBAddr, conf.DBPort, conf.DBName), nil
 }
 
 func GetResource(names []string, afn bindata.AssetFunc) *bindata.AssetSource {

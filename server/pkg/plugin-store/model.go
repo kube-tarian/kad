@@ -4,6 +4,19 @@ const (
 	tmpGitProjectCloneStr          = "clone*"
 	gitProjectAccessTokenAttribute = "accessToken"
 	gitProjectUserId               = "userID"
+
+	uiSSOCapabilityName   = "ui-sso-oauth"
+	oAuthBaseURLName      = "oAuthBaseURL"
+	oAuthClientIdName     = "oAuthClientId"
+	oAuthClientSecretName = "oAuthClientSecret"
+)
+
+var (
+	supporttedCapabilities = map[string]bool{
+		"ui-sso-oauth":    true,
+		"capten-sdk":      true,
+		"postgress-store": true,
+		"vault-store":     true}
 )
 
 type Config struct {
@@ -13,6 +26,7 @@ type Config struct {
 	PluginStoreProjectURL    string `envconfig:"PLUGIN_STORE_PROJECT_URL" default:"https://github.com/vramk23/capten-plugins"`
 	PluginStoreProjectID     string `envconfig:"PLUGIN_STORE_PROJECT_ID" default:"1cf5201d-5f35-4d5b-afe0-4b9d0e0d4cd2"`
 	GitVaultEntityName       string `envconfig:"GIT_VAULT_ENTITY_NAME" default:"git-project"`
+	CaptenOAuthURL           string `envconfig:"CAPTEN_OAUTH_URL" default:"https://alpha.optimizor.app/api/.ory"`
 }
 
 type PluginListData struct {
@@ -28,7 +42,8 @@ type DeploymentConfig struct {
 }
 
 type PluginConfig struct {
-	Endpoint     string   `yaml:"Endpoint"`
+	ApiEndpoint  string   `yaml:"apiEndpoint"`
+	UiEndpoint   string   `yaml:"uiEndpoint"`
 	Capabilities []string `yaml:"capabilities"`
 }
 

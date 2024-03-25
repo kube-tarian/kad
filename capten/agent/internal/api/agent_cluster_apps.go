@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 )
 
 func (a *Agent) SyncApp(ctx context.Context, request *agentpb.SyncAppRequest) (
@@ -68,17 +68,23 @@ func (a *Agent) GetClusterAppLaunches(ctx context.Context, request *agentpb.GetC
 
 	cfgs := make([]*agentpb.AppLaunchConfig, 0)
 	for _, r := range res {
+		ssoSupported := false
+		if len(r.Values.LaunchUIValues) != 0 {
+			ssoSupported = true
+		}
+
 		appConfig := r.GetConfig()
 		if len(appConfig.LaunchURL) == 0 {
 			continue
 		}
 
 		cfgs = append(cfgs, &agentpb.AppLaunchConfig{
-			ReleaseName: r.GetConfig().GetReleaseName(),
-			Category:    r.GetConfig().GetCategory(),
-			Description: r.GetConfig().GetLaunchUIDescription(),
-			Icon:        r.GetConfig().GetIcon(),
-			LaunchURL:   r.GetConfig().GetLaunchURL(),
+			ReleaseName:  r.GetConfig().GetReleaseName(),
+			Category:     r.GetConfig().GetCategory(),
+			Description:  r.GetConfig().GetLaunchUIDescription(),
+			Icon:         r.GetConfig().GetIcon(),
+			LaunchURL:    r.GetConfig().GetLaunchURL(),
+			SsoSupported: ssoSupported,
 		})
 	}
 

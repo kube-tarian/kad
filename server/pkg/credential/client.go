@@ -50,7 +50,7 @@ func GetGenericCredential(ctx context.Context, entityName, credIndentifer string
 
 	cred, err = credReader.GetCredential(context.Background(), credentials.GenericCredentialType, entityName, credIndentifer)
 	if err != nil {
-		err = errors.WithMessagef(err, "error in reading cred for %s/%s", clusterCertEntity, credIndentifer)
+		err = errors.WithMessagef(err, "error in reading cred for %s/%s", entityName, credIndentifer)
 	}
 	return
 }

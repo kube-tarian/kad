@@ -16,7 +16,6 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/dynamic"
 )
 
 var (
@@ -40,12 +39,25 @@ func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*P
 	return &ProvidersSyncHandler{log: log, dbStore: dbStore, tc: tc, activeProviders: map[string]bool{}}, nil
 }
 
-func registerK8SProviderWatcher(log logging.Logger, dbStore *captenstore.Store, dynamicClient dynamic.Interface) error {
+func registerK8SProviderWatcher(log logging.Logger, dbStore *captenstore.Store, k8sClient *k8s.K8SClient) error {
 	provider, err := NewProvidersSyncHandler(log, dbStore)
 	if err != nil {
 		return err
 	}
-	return k8s.RegisterDynamicInformers(provider, dynamicClient, pgvk)
+
+	log.Debugf("Registering resource %s wather", pgvk.String())
+	_, err = k8sClient.Clientset.Discovery().ServerResourcesForGroupVersion(pgvk.GroupVersion().String())
+	if err != nil {
+		log.Debugf("Resource %s not found: %v\n", pgvk.String(), err)
+		return fmt.Errorf("resource not found")
+	}
+
+	err = k8s.RegisterDynamicInformers(provider, k8sClient.DynamicClientInterface, pgvk)
+	if err != nil {
+		return err
+	}
+	log.Infof("Resource %s wather registered", pgvk.String())
+	return nil
 }
 
 func getProviderObj(obj any) (*model.Provider, error) {

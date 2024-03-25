@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/intelops/go-common/logging"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
@@ -151,6 +152,10 @@ func (a *Agent) addProjectToArgoCD(ctx context.Context, projectUrl, userID, acce
 	argocdClient, err := argocd.NewClient(&logging.Logging{})
 	if err != nil {
 		return err
+	}
+
+	if !strings.HasSuffix(projectUrl, ".git") {
+		projectUrl = projectUrl + ".git"
 	}
 
 	repo := &argocd.Repository{

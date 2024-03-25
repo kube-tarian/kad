@@ -55,8 +55,9 @@ message PluginData {
   string chartRepo = 8;
 	string defaultNamespace = 9;
 	bool privilegedNamespace = 10;
-  string pluginEndpoint = 11;
-	repeated string capabilities = 12;
+  string apiEndpoint = 11;
+  string uiEndpoint = 12;
+	repeated string capabilities = 13;
 }
 
 message ConfigurePluginStoreRequest {

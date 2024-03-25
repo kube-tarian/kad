@@ -44,8 +44,50 @@ func NewWorker(taskQueueName string, wf, activity interface{}, logger logging.Lo
 	return worker, nil
 }
 
-func (w *Worker) RegisterToTemporal(taskQueueName string, wf, activity interface{}) (err error) {
+func NewWorkerV2(taskQueueName string, logger logging.Logger) (*Worker, error) {
+	cfg, err := fetchConfiguration()
+	if err != nil {
+		return nil, err
+	}
+
+	worker := &Worker{
+		conf:   cfg,
+		logger: logger,
+	}
+
+	err = worker.createWorker(taskQueueName)
+	if err != nil {
+		return nil, err
+	}
+
+	return worker, nil
+}
+
+func (w *Worker) RegisterToTemporal(taskQueueName string, wf, activity interface{}) error {
 	// The client and worker are heavyweight objects that should be created once per process.
+	err := w.createWorker(taskQueueName)
+	if err != nil {
+		return err
+	}
+	w.temporalWorker.RegisterWorkflow(wf)
+	w.temporalWorker.RegisterActivity(activity)
+
+	return nil
+}
+
+func (w *Worker) RegisterWorkflows(wfList ...interface{}) {
+	for _, wf := range wfList {
+		w.temporalWorker.RegisterWorkflow(wf)
+	}
+}
+
+func (w *Worker) RegisterActivities(activityList ...interface{}) {
+	for _, a := range activityList {
+		w.temporalWorker.RegisterActivity(a)
+	}
+}
+
+func (w *Worker) createWorker(taskQueueName string) (err error) {
 	w.temporalClient, err = temporalclient.NewClient(w.logger)
 	if err != nil {
 		return fmt.Errorf("unable to create client, %v", err)
@@ -57,9 +99,6 @@ func (w *Worker) RegisterToTemporal(taskQueueName string, wf, activity interface
 	}
 
 	w.temporalWorker = worker.New(w.temporalClient.TemporalClient, taskQueueName, worker.Options{})
-	w.temporalWorker.RegisterWorkflow(wf)
-	w.temporalWorker.RegisterActivity(activity)
-
 	return nil
 }
 
