@@ -1,0 +1,1 @@
+ALTER TABLE ClusterAppConfig DROP COLUMN plugin_store_type;

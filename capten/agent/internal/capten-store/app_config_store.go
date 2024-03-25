@@ -43,7 +43,7 @@ const (
 	updateTime                           = "update_time"
 	usecase, projectUrl, status, details = "usecase", "project_url", "status", "details"
 	pluginName, pluginDescription        = "plugin_name", "plugin_description"
-	apiEndpoint                          = "api_endpoint"
+	apiEndpoint, pluginStoreType         = "api_endpoint", "plugin_store_type"
 )
 
 var (
@@ -57,7 +57,7 @@ var (
 		templateValues, defaultApp,
 		icon, installStatus,
 		updateTime, pluginName, pluginDescription,
-		apiEndpoint,
+		apiEndpoint, pluginStoreType,
 	}
 )
 
@@ -104,6 +104,7 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 		&config.Icon, &config.InstallStatus,
 		&config.LastUpdateTime, &config.PluginName,
 		&config.PluginDescription, &config.ApiEndpoint,
+		&config.PluginStoreType,
 	); err != nil {
 		return nil, err
 	}
@@ -141,6 +142,7 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&config.Icon, &config.InstallStatus,
 		&config.LastUpdateTime, &config.PluginName,
 		&config.PluginDescription, &config.ApiEndpoint,
+		&config.PluginStoreType,
 	) {
 		configCopy := config
 		overrideValuesCopy, _ := base64.StdEncoding.DecodeString(overrideValues)
@@ -264,6 +266,9 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 		params = append(params,
 			fmt.Sprintf("%s = '%s'", apiEndpoint, config.Config.ApiEndpoint))
 	}
+
+	params = append(params,
+		fmt.Sprintf("%s = %d", pluginStoreType, config.Config.PluginStoreType))
 
 	params = append(params,
 		fmt.Sprintf("%s = '%s'", updateTime, time.Now().Format(time.RFC3339)))

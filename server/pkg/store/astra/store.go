@@ -44,6 +44,7 @@ func (a *AstraServerStore) CleanupDatabase() error {
 	initDbQueries := []string{
 		//fmt.Sprintf(dropCaptenClusterTableQuery, a.keyspace),
 		//fmt.Sprintf(dropAppConfigTableQuery, a.keyspace),
+		fmt.Sprintf(dropPluginStoreConfigTableQuery, a.keyspace),
 		fmt.Sprintf(dropPluginStoreTableQuery, a.keyspace),
 	}
 	return a.executeDBQueries(initDbQueries)

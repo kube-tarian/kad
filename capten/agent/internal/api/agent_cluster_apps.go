@@ -15,6 +15,7 @@ func (a *Agent) SyncApp(ctx context.Context, request *agentpb.SyncAppRequest) (
 		}, nil
 	}
 
+	request.Data.Config.PluginStoreType = agentpb.PluginStoreType_DEFAULT_CAPTEN_STORE
 	if err := a.as.UpsertAppConfig(request.Data); err != nil {
 		a.log.Errorf("failed to update sync app config, %v", err)
 		return &agentpb.SyncAppResponse{

@@ -13,7 +13,7 @@ import (
 const (
 	insertStoreConfig           = `INSERT INTO %s.plugin_store_config (cluster_id, store_type, git_project_id, git_project_url, last_updated_time) VALUES (%s, %d, '%s', '%s', '%s') IF NOT EXISTS`
 	updateStoreConfig           = `UPDATE %s.plugin_store_config SET store_type = %d, git_project_id = '%s', git_project_url = '%s', last_updated_time = '%s' WHERE cluster_id = %s`
-	readStoreConfigForStoreType = `SELECT store_type, git_project_id, git_project_url, last_updated_time FROM %s.plugin_store_config WHERE cluster_id = %s`
+	readStoreConfigForStoreType = `SELECT git_project_id, git_project_url, last_updated_time FROM %s.plugin_store_config WHERE cluster_id = %s and store_type = %d`
 
 	insertPluginData            = `INSERT INTO %s.plugin_data (git_project_id, plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, api_endpoint,  ui_endpoint, capabilities) VALUES (%s, '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s', %v, '%s', %t, '%s', '%s', %v) IF NOT EXISTS`
 	updatePluginData            = `UPDATE %s.plugin_data SET last_updated_time = '%s', store_type = %d, description = '%s', category = '%s', icon = '%s', chart_name = '%s', chart_repo = '%s', versions = %v, default_namespace = '%s', privileged_namespace = %t, api_endpoint = '%s',  ui_endpoint = '%s', capabilities = %v WHERE git_project_id = %s and plugin_name = '%s'`
@@ -56,9 +56,9 @@ func (a *AstraServerStore) WritePluginStoreConfig(clusterId string, config *plug
 	return nil
 }
 
-func (a *AstraServerStore) ReadPluginStoreConfig(clusterId string) (*pluginstorepb.PluginStoreConfig, error) {
+func (a *AstraServerStore) ReadPluginStoreConfig(clusterId string, storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error) {
 	selectQuery := &pb.Query{
-		Cql: fmt.Sprintf(readStoreConfigForStoreType, a.keyspace, clusterId),
+		Cql: fmt.Sprintf(readStoreConfigForStoreType, a.keyspace, clusterId, storeType),
 	}
 
 	response, err := a.c.Session().ExecuteQuery(selectQuery)
@@ -75,26 +75,21 @@ func (a *AstraServerStore) ReadPluginStoreConfig(clusterId string) (*pluginstore
 	if err != nil {
 		return nil, err
 	}
-
+	config.StoreType = storeType
 	return config, nil
 }
 
 func toPluginStoreConfig(row *pb.Row) (*pluginstorepb.PluginStoreConfig, error) {
-	storeType, err := client.ToInt(row.Values[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed to get app name: %w", err)
-	}
-	gitProjectId, err := client.ToString(row.Values[1])
+	gitProjectId, err := client.ToString(row.Values[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chart name: %w", err)
 	}
-	gitProjectURL, err := client.ToString(row.Values[2])
+	gitProjectURL, err := client.ToString(row.Values[1])
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chart name: %w", err)
 	}
 
 	return &pluginstorepb.PluginStoreConfig{
-		StoreType:     pluginstorepb.StoreType(storeType),
 		GitProjectId:  gitProjectId,
 		GitProjectURL: gitProjectURL,
 	}, nil

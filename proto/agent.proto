@@ -188,6 +188,12 @@ message AppStatus {
   string runtimeStatus = 1;
 }
 
+enum PluginStoreType {
+  DEFAULT_CAPTEN_STORE = 0;
+  CENTRAL_CAPTEN_STORE = 1;
+  LOCAL_CAPTEN_STORE = 2;
+}
+
 message AppConfig {
   string releaseName = 1;
   string appName = 2;
@@ -210,6 +216,7 @@ message AppConfig {
   string pluginName = 19;
   string pluginDescription = 20;
   string apiEndpoint = 21;
+  PluginStoreType pluginStoreType = 22;
 }
 
 message AppValues {

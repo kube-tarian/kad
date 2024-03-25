@@ -158,6 +158,12 @@ message ClusterAttribute {
   string value = 2;  
 }
 
+enum PluginStoreType {
+  DEFAULT_STORE = 0;
+  CENTRAL_STORE = 1;
+  LOCAL_STORE = 2;
+}
+
 message ClusterAppConfig {
   string releaseName = 1;
   string appName = 2;
@@ -177,6 +183,7 @@ message ClusterAppConfig {
   string runtimeStatus = 16;
   bool defualtApp = 17;
   string pluginName = 18;
+  PluginStoreType pluginStoreType = 19;
 }
 
 message AddStoreAppRequest {
