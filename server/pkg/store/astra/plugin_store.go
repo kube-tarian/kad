@@ -12,7 +12,7 @@ import (
 
 const (
 	insertStoreConfig           = `INSERT INTO %s.plugin_store_config (cluster_id, store_type, git_project_id, git_project_url, last_updated_time) VALUES (%s, %d, '%s', '%s', '%s') IF NOT EXISTS`
-	updateStoreConfig           = `UPDATE %s.plugin_store_config SET store_type = %d, git_project_id = '%s', git_project_url = '%s', last_updated_time = '%s' WHERE cluster_id = %s`
+	updateStoreConfig           = `UPDATE %s.plugin_store_config SET git_project_id = '%s', git_project_url = '%s', last_updated_time = '%s' WHERE cluster_id = %s and store_type = %d`
 	readStoreConfigForStoreType = `SELECT git_project_id, git_project_url, last_updated_time FROM %s.plugin_store_config WHERE cluster_id = %s and store_type = %d`
 
 	insertPluginData            = `INSERT INTO %s.plugin_data (git_project_id, plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, api_endpoint,  ui_endpoint, capabilities) VALUES (%s, '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s', %v, '%s', %t, '%s', '%s', %v) IF NOT EXISTS`
@@ -44,8 +44,8 @@ func (a *AstraServerStore) WritePluginStoreConfig(clusterId string, config *plug
 
 	query = &pb.Query{
 		Cql: fmt.Sprintf(updateStoreConfig,
-			a.keyspace, config.StoreType, config.GitProjectId, config.GitProjectURL,
-			time.Now().Format(time.RFC3339), clusterId),
+			a.keyspace, config.GitProjectId, config.GitProjectURL,
+			time.Now().Format(time.RFC3339), clusterId, config.StoreType),
 	}
 
 	_, err = a.c.Session().ExecuteQuery(query)

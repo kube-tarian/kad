@@ -23,7 +23,8 @@ type Config struct {
 	PluginsStoreProjectMount string `envconfig:"PLUGIN_STORE_PROJECT_MOUNT" default:"/plugin-store-clone"`
 	PluginsStorePath         string `envconfig:"PLUGIN_STORE_PATH" default:"/plugin-store"`
 	PluginsFileName          string `envconfig:"PLUGIN_LIST_FILE" default:"plugin-list.yaml"`
-	PluginStoreProjectURL    string `envconfig:"PLUGIN_STORE_PROJECT_URL" default:"https://github.com/vramk23/capten-plugins"`
+	PluginStoreProjectURL    string `envconfig:"PLUGIN_STORE_PROJECT_URL" default:"https://github.com/intelops/capten-plugins"`
+	PluginStoreProjectAccess string `envconfig:"PLUGIN_STORE_PROJECT_ACCESS" default:""`
 	PluginStoreProjectID     string `envconfig:"PLUGIN_STORE_PROJECT_ID" default:"1cf5201d-5f35-4d5b-afe0-4b9d0e0d4cd2"`
 	GitVaultEntityName       string `envconfig:"GIT_VAULT_ENTITY_NAME" default:"git-project"`
 	CaptenOAuthURL           string `envconfig:"CAPTEN_OAUTH_URL" default:"https://alpha.optimizor.app/api/.ory"`
