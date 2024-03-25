@@ -51,7 +51,7 @@ func (p *PluginStore) ConfigureStore(clusterId string, config *pluginstorepb.Plu
 
 func (p *PluginStore) GetStoreConfig(clusterId string, storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error) {
 	if storeType == pluginstorepb.StoreType_LOCAL_STORE {
-		config, err := p.dbStore.ReadPluginStoreConfig(clusterId)
+		config, err := p.dbStore.ReadPluginStoreConfig(clusterId, storeType)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
 				return &pluginstorepb.PluginStoreConfig{

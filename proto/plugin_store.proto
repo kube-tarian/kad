@@ -25,8 +25,9 @@ enum StatusCode {
 }
 
 enum StoreType {
-  CENTRAL_STORE = 0;
-  LOCAL_STORE = 1;  
+  DEFAULT_STORE = 0;
+  CENTRAL_STORE = 1;
+  LOCAL_STORE = 2;
 }
 
 message PluginStoreConfig {
