@@ -335,7 +335,7 @@ func stringContains(arr []string, target string) bool {
 func (p *PluginStore) getGitProjectAccessToken(orgId, clusterId, projectId string,
 	storeType pluginstorepb.StoreType) (string, error) {
 	if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
-		return "", nil
+		return p.cfg.PluginStoreProjectAccess, nil
 	}
 
 	agent, err := p.agentHandler.GetAgent(orgId, clusterId)

@@ -30,6 +30,7 @@ env:
   logLevel: info
   database: astra
   pluginsStoreProjectMount: /plugin-store
+  pluginsStoreProjectURL: https://github.com/intelops/capten-plugins
 
 extraEnv:
   - name: AUTH_ENABLED
