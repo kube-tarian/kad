@@ -16,7 +16,7 @@ func (s *Server) ConfigurePluginStore(ctx context.Context, request *pluginstorep
 			StatusMessage: "request validation failed",
 		}, err
 	}
-	s.log.Infof("Configure plugin store request recieved for cluster %s, [org: %s]", clusterId, orgId)
+	s.log.Infof("Configure plugin store request recieved for store type %d, cluster %s, [org: %s]", request.Config.StoreType, clusterId, orgId)
 
 	err = s.pluginStore.ConfigureStore(clusterId, request.Config)
 	if err != nil {
@@ -43,7 +43,7 @@ func (s *Server) GetPluginStoreConfig(ctx context.Context, request *pluginstorep
 			StatusMessage: "request validation failed",
 		}, err
 	}
-	s.log.Infof("Get plugin store config request recieved for cluster %s, [org: %s]", clusterId, orgId)
+	s.log.Infof("Get plugin store config request recieved for store type %d, cluster %s, [org: %s]", request.StoreType, clusterId, orgId)
 
 	config, err := s.pluginStore.GetStoreConfig(clusterId, request.StoreType)
 	if err != nil {
@@ -71,7 +71,7 @@ func (s *Server) SyncPluginStore(ctx context.Context, request *pluginstorepb.Syn
 			StatusMessage: "request validation failed",
 		}, err
 	}
-	s.log.Infof("Sync plugin store request recieved for cluster %s, [org: %s]", clusterId, orgId)
+	s.log.Infof("Sync plugin store request recieved for store type %d, cluster %s, [org: %s]", request.StoreType, clusterId, orgId)
 
 	err = s.pluginStore.SyncPlugins(orgId, clusterId, request.StoreType)
 	if err != nil {
