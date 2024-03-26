@@ -63,7 +63,7 @@ func (a *AstraServerStore) ReadPluginStoreConfig(clusterId string, storeType plu
 
 	response, err := a.c.Session().ExecuteQuery(selectQuery)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read store config, %w", err)
+		return nil, fmt.Errorf("failed to read store config, %s, %w", selectQuery.Cql, err)
 	}
 
 	result := response.GetResultSet()
