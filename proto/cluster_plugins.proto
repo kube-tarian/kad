@@ -39,7 +39,9 @@ message Plugin {
   string uiEndpoint = 12;
 	repeated string capabilities = 13;
   bytes values = 14;
-  map<string, string> overrideValues = 15;
+  bytes overrideValues = 15;
+  string installStatus = 16;
+  string lastUpdateTime = 17;
 }
 
 message DeployClusterPluginRequest {
@@ -68,6 +70,7 @@ message ClusterPlugin {
   string category = 4;
   string version = 5;
   bytes icon = 6;
+	string installStatus = 7;
 }
 
 message GetClusterPluginsRequest {

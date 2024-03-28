@@ -38,8 +38,6 @@ const (
 	Server_UnDeployStoreApp_FullMethodName           = "/serverpb.Server/UnDeployStoreApp"
 	Server_UpgradeStoreApp_FullMethodName            = "/serverpb.Server/UpgradeStoreApp"
 	Server_StoreCredential_FullMethodName            = "/serverpb.Server/StoreCredential"
-	Server_SetupDatabase_FullMethodName              = "/serverpb.Server/SetupDatabase"
-	Server_RunMigrations_FullMethodName              = "/serverpb.Server/RunMigrations"
 )
 
 // ServerClient is the client API for Server service.
@@ -65,8 +63,6 @@ type ServerClient interface {
 	UnDeployStoreApp(ctx context.Context, in *UnDeployStoreAppRequest, opts ...grpc.CallOption) (*UnDeployStoreAppResponse, error)
 	UpgradeStoreApp(ctx context.Context, in *UpgradeStoreAppRequest, opts ...grpc.CallOption) (*UpgradeStoreAppResponse, error)
 	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
-	SetupDatabase(ctx context.Context, in *DBSetupRequest, opts ...grpc.CallOption) (*DBSetupResponse, error)
-	RunMigrations(ctx context.Context, in *DBMigrationRequest, opts ...grpc.CallOption) (*DBMigrationResponse, error)
 }
 
 type serverClient struct {
@@ -248,24 +244,6 @@ func (c *serverClient) StoreCredential(ctx context.Context, in *StoreCredentialR
 	return out, nil
 }
 
-func (c *serverClient) SetupDatabase(ctx context.Context, in *DBSetupRequest, opts ...grpc.CallOption) (*DBSetupResponse, error) {
-	out := new(DBSetupResponse)
-	err := c.cc.Invoke(ctx, Server_SetupDatabase_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) RunMigrations(ctx context.Context, in *DBMigrationRequest, opts ...grpc.CallOption) (*DBMigrationResponse, error) {
-	out := new(DBMigrationResponse)
-	err := c.cc.Invoke(ctx, Server_RunMigrations_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // ServerServer is the server API for Server service.
 // All implementations must embed UnimplementedServerServer
 // for forward compatibility
@@ -289,8 +267,6 @@ type ServerServer interface {
 	UnDeployStoreApp(context.Context, *UnDeployStoreAppRequest) (*UnDeployStoreAppResponse, error)
 	UpgradeStoreApp(context.Context, *UpgradeStoreAppRequest) (*UpgradeStoreAppResponse, error)
 	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
-	SetupDatabase(context.Context, *DBSetupRequest) (*DBSetupResponse, error)
-	RunMigrations(context.Context, *DBMigrationRequest) (*DBMigrationResponse, error)
 	mustEmbedUnimplementedServerServer()
 }
 
@@ -354,12 +330,6 @@ func (UnimplementedServerServer) UpgradeStoreApp(context.Context, *UpgradeStoreA
 }
 func (UnimplementedServerServer) StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreCredential not implemented")
-}
-func (UnimplementedServerServer) SetupDatabase(context.Context, *DBSetupRequest) (*DBSetupResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetupDatabase not implemented")
-}
-func (UnimplementedServerServer) RunMigrations(context.Context, *DBMigrationRequest) (*DBMigrationResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RunMigrations not implemented")
 }
 func (UnimplementedServerServer) mustEmbedUnimplementedServerServer() {}
 
@@ -716,42 +686,6 @@ func _Server_StoreCredential_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Server_SetupDatabase_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DBSetupRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).SetupDatabase(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_SetupDatabase_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).SetupDatabase(ctx, req.(*DBSetupRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_RunMigrations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DBMigrationRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).RunMigrations(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_RunMigrations_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).RunMigrations(ctx, req.(*DBMigrationRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Server_ServiceDesc is the grpc.ServiceDesc for Server service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -834,14 +768,6 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "StoreCredential",
 			Handler:    _Server_StoreCredential_Handler,
-		},
-		{
-			MethodName: "SetupDatabase",
-			Handler:    _Server_SetupDatabase_Handler,
-		},
-		{
-			MethodName: "RunMigrations",
-			Handler:    _Server_RunMigrations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

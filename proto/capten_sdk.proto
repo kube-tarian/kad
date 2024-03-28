@@ -58,15 +58,15 @@ message GetContainerRegistryByIdResponse {
 }
 
 message DBSetupRequest {
-    string dbOemName = 1;
-    string dbName = 2;
-    string serviceUserName = 3;
+    string pluginName = 1;
+    string dbOemName = 2;
+    string dbName = 3;
+    string serviceUserName = 4;
   }
   
   message DBSetupResponse {
     StatusCode status = 1;
     string statusMessage = 2;
-    string dbURL = 3;
-    string serviceUserPassword = 4;
+    string vaultPath = 3;
   }
   

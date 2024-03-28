@@ -30,9 +30,6 @@ service Server {
   rpc UpgradeStoreApp(UpgradeStoreAppRequest) returns (UpgradeStoreAppResponse) {}
 
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
-
-  rpc SetupDatabase (DBSetupRequest) returns (DBSetupResponse) {}
-  rpc RunMigrations (DBMigrationRequest) returns (DBMigrationResponse) {}
 }
 
 enum StatusCode {
@@ -161,6 +158,12 @@ message ClusterAttribute {
   string value = 2;  
 }
 
+enum PluginStoreType {
+  DEFAULT_STORE = 0;
+  CENTRAL_STORE = 1;
+  LOCAL_STORE = 2;
+}
+
 message ClusterAppConfig {
   string releaseName = 1;
   string appName = 2;
@@ -179,6 +182,8 @@ message ClusterAppConfig {
   string installStatus = 15;
   string runtimeStatus = 16;
   bool defualtApp = 17;
+  string pluginName = 18;
+  PluginStoreType pluginStoreType = 19;
 }
 
 message AddStoreAppRequest {
@@ -317,31 +322,6 @@ message UnDeployStoreAppRequest {
 }
 
 message UnDeployStoreAppResponse{
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message DBSetupRequest {
-  string dbOemName = 1;
-  string dbName = 2;
-  string serviceUserName = 3;
-}
-
-message DBSetupResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-  string dbURL = 3;
-  string serviceUserPassword = 4;
-}
-
-message DBMigrationRequest {
-  string dbOemName = 1;
-  string dbName = 2;
-  string serviceUserName = 3;
-  map<string, bytes> migrations = 4;
-}
-
-message DBMigrationResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }

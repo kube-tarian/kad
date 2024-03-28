@@ -25,7 +25,7 @@ type ServerStore interface {
 	GetAppsFromStore() ([]types.AppConfig, error)
 	GetStoreAppValues(name, version string) (*types.AppConfig, error)
 	WritePluginStoreConfig(clusterId string, config *pluginstorepb.PluginStoreConfig) error
-	ReadPluginStoreConfig(clusterId string) (*pluginstorepb.PluginStoreConfig, error)
+	ReadPluginStoreConfig(clusterId string, storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error)
 	WritePluginData(gitProjectId string, pluginData *pluginstorepb.PluginData) error
 	ReadPluginData(gitProjectId string, pluginName string) (*pluginstorepb.PluginData, error)
 	ReadPlugins(gitProjectId string) ([]*pluginstorepb.Plugin, error)
