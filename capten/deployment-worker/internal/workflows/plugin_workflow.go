@@ -245,6 +245,7 @@ func executeAppDeployment(
 			PluginName:          req.PluginName,
 			PluginDescription:   req.Description,
 			ApiEndpoint:         apiEndpoint,
+			PluginStoreType:     agentpb.PluginStoreType(req.StoreType),
 		},
 		Values: &agentpb.AppValues{
 			OverrideValues: req.OverrideValues,
