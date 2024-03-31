@@ -96,14 +96,34 @@ func (p *PluginStore) SyncPlugins(orgId, clusterId string, storeType pluginstore
 		return errors.WithMessage(err, "failed to unmarshall store config file")
 	}
 
+	addedPlugins := map[string]bool{}
 	for _, pluginName := range plugins.Plugins {
 		err := p.addPluginApp(config.GitProjectId, pluginStoreDir, pluginName)
 		if err != nil {
 			p.log.Errorf("%v", err)
 			continue
 		}
+		addedPlugins[pluginName] = true
 		p.log.Infof("stored plugin data for plugin %s for cluster %s", pluginName, clusterId)
 	}
+
+	dbPlugins, err := p.dbStore.ReadPlugins(config.GitProjectId)
+	if err != nil {
+		if !strings.Contains(err.Error(), "not found") {
+			return err
+		}
+	}
+
+	for _, dbPlugin := range dbPlugins {
+		if _, ok := addedPlugins[dbPlugin.PluginName]; !ok {
+			if err = p.dbStore.DeletePlugin(config.GitProjectId, dbPlugin.PluginName); err != nil {
+				p.log.Infof("failed to deleted plugin data for plugin %s for cluster %s",
+					dbPlugin.PluginName, clusterId)
+			}
+			p.log.Infof("deleted plugin data for plugin %s for cluster %s", dbPlugin.PluginName, clusterId)
+		}
+	}
+
 	return nil
 }
 

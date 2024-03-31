@@ -19,6 +19,7 @@ const (
 	updatePluginData            = `UPDATE %s.plugin_data SET last_updated_time = '%s', store_type = %d, description = '%s', category = '%s', icon = '%s', chart_name = '%s', chart_repo = '%s', versions = %v, default_namespace = '%s', privileged_namespace = %t, api_endpoint = '%s',  ui_endpoint = '%s', capabilities = %v WHERE git_project_id = %s and plugin_name = '%s'`
 	readPlugins                 = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, versions FROM %s.plugin_data WHERE git_project_id = %s`
 	readPluginDataForPluginName = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, api_endpoint,  ui_endpoint, capabilities FROM %s.plugin_data WHERE git_project_id = %s and plugin_name = '%s'`
+	deletePluginData            = "DELETE FROM %s.plugin_data WHERE git_project_id = %s and plugin_name = '%s'"
 )
 
 func (a *AstraServerStore) WritePluginStoreConfig(clusterId string, config *pluginstorepb.PluginStoreConfig) error {
@@ -131,8 +132,7 @@ func (a *AstraServerStore) WritePluginData(gitProjectId string, pluginData *plug
 	if err != nil {
 		return fmt.Errorf("failed to update the plugin data, %s, %w", query.Cql, err)
 	}
-	a.log.Debugf("updated store plugin %s, %v", pluginData.PluginName)
-
+	a.log.Debugf("updated store plugin %s", pluginData.PluginName)
 	return nil
 }
 
@@ -184,6 +184,19 @@ func (a *AstraServerStore) ReadPlugins(gitProjectId string) ([]*pluginstorepb.Pl
 	}
 
 	return plugins, nil
+}
+
+func (a *AstraServerStore) DeletePlugin(gitProjectId, pluginName string) error {
+	deleteQuery := &pb.Query{
+		Cql: fmt.Sprintf(deletePluginData, a.keyspace, gitProjectId, pluginName),
+	}
+
+	_, err := a.c.Session().ExecuteQuery(deleteQuery)
+	if err != nil {
+		return fmt.Errorf("failed to delete plugin, %w", err)
+	}
+
+	return nil
 }
 
 func toPluginData(row *pb.Row, columns []*pb.ColumnSpec) (*pluginstorepb.PluginData, error) {

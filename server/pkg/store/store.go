@@ -29,6 +29,7 @@ type ServerStore interface {
 	WritePluginData(gitProjectId string, pluginData *pluginstorepb.PluginData) error
 	ReadPluginData(gitProjectId string, pluginName string) (*pluginstorepb.PluginData, error)
 	ReadPlugins(gitProjectId string) ([]*pluginstorepb.Plugin, error)
+	DeletePlugin(gitProjectId, pluginName string) error
 }
 
 func NewStore(log logging.Logger, db string) (ServerStore, error) {
