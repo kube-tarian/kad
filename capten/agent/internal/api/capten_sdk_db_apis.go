@@ -74,8 +74,9 @@ func setupPostgresDatabase(log logging.Logger, req *captensdkpb.DBSetupRequest) 
 		UserName: conf.DBServiceUsername,
 		Password: conf.Password,
 		AdditionalData: map[string]string{
-			"db-url":  conf.DBAddress,
-			"db-name": conf.DBName,
+			"db-url":       conf.DBAddress,
+			"db-name":      conf.DBName,
+			"service-user": req.ServiceUserName,
 		},
 	})
 	return fmt.Sprintf("%s/%s/%s", credentials.CertCredentialType, req.PluginName, conf.EntityName),
