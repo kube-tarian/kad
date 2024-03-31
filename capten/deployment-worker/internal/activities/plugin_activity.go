@@ -15,6 +15,27 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const (
+	postgresStoreInitializingStatus   = "postgres-" + "initializing"
+	postgresStoreInitializedStatus    = "postgres-" + "initialized"
+	postgresStoreUninitializingStatus = "postgres-" + "uninitializing"
+	postgresStoreUninitializedStatus  = "postgres-" + "uninitialized"
+	vaultStoreInitializingStatus      = "vaultstore-" + "initializing"
+	vaultStoreInitializedStatus       = "vaultstore-" + "initialized"
+	vaultStoreUnitializingStatus      = "vaultstore-" + "uninitializing"
+	vaultStoreUninitializedStatus     = "vaultstore-" + "uninitialized"
+	mtlsInitializingStatus            = "mtls-" + "initializing"
+	mtlsInitializedStatus             = "mtls-" + "initialized"
+	mtlsUnitializingStatus            = "mtls-" + "uninitializing"
+	mtlsUnitializedStatus             = "mtls-" + "uninitialized"
+	deleteUnitiazedStatus             = "delete-" + "uninitialized"
+	deleteSuccessStatus               = "delete-" + "success"
+	deleteFailedStatus                = "delete-" + "failed"
+	deployedStatus                    = "deployed"
+
+	pluginConfigmapNameTemplate = "-init-config"
+)
+
 type Configuration struct {
 	AgentAddress string `envconfig:"AGENT_ADDRESSES" required:"true"`
 }
@@ -51,7 +72,7 @@ func NewPluginActivities() (*PluginActivities, error) {
 }
 
 func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.PluginName, "postgres-"+"initializing")
+	err := p.updateStatus(req.PluginName, postgresStoreInitializingStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -75,7 +96,8 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 		}, err
 	}
 
-	err = p.createUpdateConfigmap(ctx, req.DefaultNamespace, req.PluginName+"-init-config", map[string]string{
+	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
+	err = p.createUpdateConfigmap(ctx, req.DefaultNamespace, pluginInitConfigmapName, map[string]string{
 		"vault-path": vaultPath,
 	})
 	if err != nil {
@@ -85,7 +107,7 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 		}, err
 	}
 
-	err = p.updateStatus(req.PluginName, "postgres-"+"initialized")
+	err = p.updateStatus(req.PluginName, postgresStoreInitializedStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -98,7 +120,7 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 }
 
 func (p *PluginActivities) PluginUndeployPreActionPostgresStoreActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.PluginName, "postgres-"+"uninitializing")
+	err := p.updateStatus(req.PluginName, postgresStoreUninitializingStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -115,13 +137,19 @@ func (p *PluginActivities) PluginUndeployPreActionPostgresStoreActivity(ctx cont
 	})
 	// TODO: Invoke  captensdk DBDestroy
 
-	err = p.pas.DeletePluginConfigByPluginName(req.DefaultNamespace)
+	err = p.pas.DeletePluginConfigByPluginName(req.PluginName)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update status: %s\"}", err.Error())),
 		}, err
 	}
+
+	err = p.updateStatus(req.PluginName, postgresStoreUninitializedStatus)
+	if err != nil {
+		logger.Errorf("failed to update uninitialized status, %v", err)
+	}
+
 	return &model.ResponsePayload{
 		Status: "SUCCESS",
 	}, nil
@@ -131,7 +159,7 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 	ctx context.Context,
 	req *clusterpluginspb.Plugin,
 ) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.PluginName, "vaultstore-"+"initializing")
+	err := p.updateStatus(req.PluginName, vaultStoreInitializingStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -162,18 +190,19 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 		}, err
 	}
 
-	err = p.createUpdateConfigmap(ctx, req.DefaultNamespace, req.PluginName+"-init-config", map[string]string{
+	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
+	err = p.createUpdateConfigmap(ctx, req.DefaultNamespace, pluginInitConfigmapName, map[string]string{
 		"vault-token-secret-name": req.PluginName + "-vault-token",
 	})
 	if err != nil {
 		logger.Errorf("createupdate configmap failed: %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", req.PluginName+"-init-config")),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", pluginInitConfigmapName)),
 		}, err
 	}
 
-	err = p.updateStatus(req.PluginName, "vaultstore-"+"initialized")
+	err = p.updateStatus(req.PluginName, vaultStoreInitializedStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -190,7 +219,7 @@ func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
 	req *pluginconfigstore.PluginConfig,
 ) (*model.ResponsePayload, error) {
 	// If any failure log error and should not return error
-	err := p.updateStatus(req.PluginName, "vaultstore-"+"uninitializing")
+	err := p.updateStatus(req.PluginName, vaultStoreUnitializingStatus)
 	if err != nil {
 		logger.Errorf("failed to update undeploy status to vaultstore-uninitializing, %v", err)
 	}
@@ -201,7 +230,7 @@ func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
 		logger.Errorf("failed to delete secret %s, %v", req.PluginName+"-vault-token", err)
 	}
 
-	err = p.updateStatus(req.PluginName, "vaultstore-"+"uninitialized")
+	err = p.updateStatus(req.PluginName, vaultStoreUninitializedStatus)
 	if err != nil {
 		logger.Errorf("failed to update undeploy status to vaultstore-uninitialized, %v", err)
 	}
@@ -211,7 +240,7 @@ func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
 }
 
 func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.PluginName, "mtls-"+"initializing")
+	err := p.updateStatus(req.PluginName, mtlsInitializingStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -222,16 +251,17 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 	// Write the mtls in the vault/conigmap
 	logger.Infof("MTLS activity Not implemented yet")
 
-	err = p.createUpdateConfigmap(ctx, req.DefaultNamespace, req.PluginName+"-init-config", map[string]string{})
+	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
+	err = p.createUpdateConfigmap(ctx, req.DefaultNamespace, pluginInitConfigmapName, map[string]string{})
 	if err != nil {
 		logger.Errorf("createupdate configmap failed: %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap failed, %s\"}", req.PluginName+"-init-config")),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap failed, %s\"}", pluginInitConfigmapName)),
 		}, err
 	}
 
-	err = p.updateStatus(req.PluginName, "mtls-"+"initialized")
+	err = p.updateStatus(req.PluginName, mtlsInitializedStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -244,7 +274,7 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 }
 
 func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.PluginName, "mtls-"+"uninitializing")
+	err := p.updateStatus(req.PluginName, mtlsUnitializingStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -255,7 +285,7 @@ func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Conte
 	// Write the mtls in the vault/conigmap
 	logger.Infof("MTLS activity Not implemented yet")
 
-	err = p.updateStatus(req.PluginName, "mtls-"+"uninitialized")
+	err = p.updateStatus(req.PluginName, mtlsUnitializedStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -269,18 +299,19 @@ func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Conte
 
 // PluginDeployPostActionActivity... Updates the plugin deployment as "installed"
 func (p *PluginActivities) PluginDeployPostActionActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
-	err := p.createUpdateConfigmap(ctx, req.DefaultNamespace, req.PluginName+"-init-config", map[string]string{
+	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
+	err := p.createUpdateConfigmap(ctx, req.DefaultNamespace, pluginInitConfigmapName, map[string]string{
 		"capten-agent-address": p.config.AgentAddress,
 	})
 	if err != nil {
 		logger.Errorf("update configmap failed to add agent address: %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap failed, %s\"}", req.PluginName+"-init-config")),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap failed, %s\"}", pluginInitConfigmapName)),
 		}, err
 	}
 
-	err = p.updateStatus(req.PluginName, "deployed")
+	err = p.updateStatus(req.PluginName, deployedStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -294,11 +325,12 @@ func (p *PluginActivities) PluginDeployPostActionActivity(ctx context.Context, r
 
 // PluginDeployPostActionActivity... Updates the plugin deployment as "installed"
 func (p *PluginActivities) PluginUndeployPostActionActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (*model.ResponsePayload, error) {
-	err := p.k8sClient.DeleteConfigmap(ctx, req.DefaultNamespace, req.PluginName+"-init-config")
+	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
+	err := p.k8sClient.DeleteConfigmap(ctx, req.DefaultNamespace, pluginInitConfigmapName)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"delete configmap %s faled\"}", req.PluginName+"-init-config")),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"delete configmap %s faled\"}", pluginInitConfigmapName)),
 		}, err
 	}
 
@@ -318,7 +350,7 @@ func (p *PluginActivities) PluginUndeployPostActionActivity(ctx context.Context,
 }
 
 func (p *PluginActivities) PluginUndeployActivity(ctx context.Context, req *model.DeployerDeleteRequest) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.ReleaseName, "delete-"+"uninitialized")
+	err := p.updateStatus(req.ReleaseName, deleteUnitiazedStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -328,12 +360,11 @@ func (p *PluginActivities) PluginUndeployActivity(ctx context.Context, req *mode
 
 	resp, err := uninstallApplication(req)
 	if err != nil {
-		status := "delete-" + "failed"
-		_ = p.updateStatus(req.ReleaseName, status)
+		_ = p.updateStatus(req.ReleaseName, deleteFailedStatus)
 		return &resp, err
 	}
 
-	err = p.updateStatus(req.ReleaseName, "delete-"+"success")
+	err = p.updateStatus(req.ReleaseName, deleteSuccessStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
