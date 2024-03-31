@@ -47,7 +47,7 @@ DomainName: capten
 vault:
   address: http://vault:8200
   role: vault-role-capten-agent
-  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin,vault-policy-generic-cred-admin"
+  policyNames: "vault-policy-certs-admin,vault-policy-service-cred-admin,vault-policy-generic-cred-admin,vault-policy-plugin-cred-admin"
 
 vaultCred:
   address: http://vault-cred:8080

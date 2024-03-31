@@ -3,6 +3,7 @@ package helm
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	helmclient "github.com/kube-tarian/kad/capten/common-pkg/plugins/helm/go-helm-client"
 	"github.com/kube-tarian/kad/capten/model"
@@ -22,6 +23,7 @@ func (h *HelmCLient) Delete(req *model.DeleteRequestPayload) (json.RawMessage, e
 		ReleaseName: req.ReleaseName,
 		Namespace:   req.Namespace,
 		Wait:        true,
+		Timeout:     time.Duration(req.Timeout) * time.Minute,
 	}
 
 	// Uninstall the chart release.
