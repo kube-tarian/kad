@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -84,7 +85,7 @@ func (p *PluginStore) SyncPlugins(orgId, clusterId string, storeType pluginstore
 	}
 	defer os.RemoveAll(pluginStoreDir)
 
-	pluginListFilePath := pluginStoreDir + "/" + p.cfg.PluginsStorePath + "/" + p.cfg.PluginsFileName
+	pluginListFilePath := p.getPluginListFilePath(pluginStoreDir)
 	p.log.Infof("Loading plugin data from %s", pluginListFilePath)
 	pluginListData, err := os.ReadFile(pluginListFilePath)
 	if err != nil {
@@ -152,7 +153,7 @@ func (p *PluginStore) clonePluginStoreProject(orgId, clusterId, projectURL, proj
 }
 
 func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName string) error {
-	appData, err := os.ReadFile(pluginStoreDir + "/" + p.cfg.PluginsStorePath + "/" + pluginName + "/plugin.yaml")
+	appData, err := os.ReadFile(p.getPluginFilePath(pluginStoreDir, pluginName))
 	if err != nil {
 		return errors.WithMessagef(err, "failed to read store plugin %s", pluginName)
 	}
@@ -164,29 +165,22 @@ func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName stri
 
 	var iconData []byte
 	if len(pluginData.Icon) != 0 {
-		iconData, err = os.ReadFile(pluginStoreDir + "/" + p.cfg.PluginsStorePath + "/" + pluginName + "/" + pluginData.Icon)
+		iconData, err = os.ReadFile(p.getPluginIconFilePath(pluginStoreDir, pluginName, pluginData.Icon))
 		if err != nil {
 			return errors.WithMessagef(err, "failed to read icon %s for plugin %s", pluginData.Icon, pluginName)
 		}
 	}
 
-	if pluginData.PluginName == "" || len(pluginData.DeploymentConfig.Versions) == 0 {
+	if pluginData.PluginName == "" || len(pluginData.Versions) == 0 {
 		return fmt.Errorf("app name/version is missing for %s", pluginName)
 	}
 
 	plugin := &pluginstorepb.PluginData{
-		PluginName:          pluginData.PluginName,
-		Description:         pluginData.Description,
-		Category:            pluginData.Category,
-		ChartName:           pluginData.DeploymentConfig.ChartName,
-		ChartRepo:           pluginData.DeploymentConfig.ChartRepo,
-		Versions:            pluginData.DeploymentConfig.Versions,
-		DefaultNamespace:    pluginData.DeploymentConfig.DefaultNamespace,
-		PrivilegedNamespace: pluginData.DeploymentConfig.PrivilegedNamespace,
-		ApiEndpoint:         pluginData.PluginConfig.ApiEndpoint,
-		UiEndpoint:          pluginData.PluginConfig.UiEndpoint,
-		Capabilities:        pluginData.PluginConfig.Capabilities,
-		Icon:                iconData,
+		PluginName:  pluginData.PluginName,
+		Description: pluginData.Description,
+		Category:    pluginData.Category,
+		Versions:    pluginData.Versions,
+		Icon:        iconData,
 	}
 
 	if err := p.dbStore.WritePluginData(gitProjectId, plugin); err != nil {
@@ -233,13 +227,40 @@ func (p *PluginStore) GetPluginValues(orgId, clusterId string, storeType plugins
 	}
 	defer os.RemoveAll(pluginStoreDir)
 
-	pluginValuesPath := pluginStoreDir + "/" + p.cfg.PluginsStorePath + "/" + pluginName + "/" + version + "/" + "values.yaml"
+	pluginConfig, err := p.getPluginConfig(pluginStoreDir, pluginName, version)
+	if err != nil {
+		return nil, err
+	}
+
+	return p.getPluginValues(pluginConfig, pluginStoreDir, pluginName, version)
+}
+
+func (p *PluginStore) getPluginValues(pluginConfig *PluginConfig, pluginStoreDir, pluginName, version string) ([]byte, error) {
+	pluginValuesPath := p.getPluginDeployValuesFilePath(pluginStoreDir, pluginName, version,
+		pluginConfig.Deployment.ControlplaneCluster.ValuesFile)
 	p.log.Infof("Loading %s plugin values from %s", pluginName, pluginValuesPath)
-	pluginListData, err := os.ReadFile(pluginValuesPath)
+	pluginValuesData, err := os.ReadFile(pluginValuesPath)
 	if err != nil {
 		return nil, errors.WithMessage(err, "failed to read plugins values file")
 	}
-	return pluginListData, nil
+	return pluginValuesData, nil
+}
+
+func (p *PluginStore) getPluginConfig(pluginStoreDir, pluginName, version string) (*PluginConfig, error) {
+	pluginConfigPath := p.getPluginConfigFilePath(pluginStoreDir, pluginName, version)
+	pluginConfigData, err := os.ReadFile(pluginConfigPath)
+	if err != nil {
+		return nil, errors.WithMessage(err, "failed to read store config file")
+	}
+
+	pluginConfig := &PluginConfig{}
+	if err := yaml.Unmarshal(pluginConfigData, pluginConfig); err != nil {
+		return nil, errors.WithMessage(err, "failed to unmarshall store config file")
+	}
+	if pluginConfig.Deployment.ControlplaneCluster == nil {
+		return nil, errors.WithMessage(err, "no deployment found")
+	}
+	return pluginConfig, nil
 }
 
 func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstorepb.StoreType,
@@ -258,13 +279,24 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 		return fmt.Errorf("version %s not supported", version)
 	}
 
-	validCapabilities, invalidCapabilities := filterSupporttedCapabilties(pluginData.Capabilities)
+	pluginStoreDir, err := p.clonePluginStoreProject(orgId, clusterId, config.GitProjectURL, config.GitProjectId, storeType)
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(pluginStoreDir)
+
+	pluginConfig, err := p.getPluginConfig(pluginStoreDir, pluginName, version)
+	if err != nil {
+		return err
+	}
+
+	validCapabilities, invalidCapabilities := filterSupporttedCapabilties(pluginConfig.Capabilities)
 	if len(invalidCapabilities) > 0 {
 		p.log.Infof("skipped plugin %s invalid capabilities %v", pluginName, invalidCapabilities)
 	}
 
 	if len(values) == 0 {
-		values, err = p.GetPluginValues(orgId, clusterId, storeType, pluginName, version)
+		values, err = p.getPluginValues(pluginConfig, pluginStoreDir, pluginName, version)
 		if err != nil {
 			p.log.Infof("no values defined for plugin %s", pluginName)
 		}
@@ -275,13 +307,13 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 		return err
 	}
 
-	err = p.updatePluginDataAPIValues(orgId, clusterId, pluginData, overrideValuesMapping)
+	apiEndpoint, uiEndpoint, err := p.getPluginDataAPIValues(pluginConfig, overrideValuesMapping)
 	if err != nil {
 		return err
 	}
 
 	if isUISSOCapabilitySupported(validCapabilities) {
-		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginData.UiEndpoint)
+		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginConfig.UIEndpoint)
 		if err != nil {
 			return err
 		}
@@ -302,12 +334,12 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 		Category:            pluginData.Category,
 		Icon:                pluginData.Icon,
 		Version:             version,
-		ChartName:           pluginData.ChartName,
-		ChartRepo:           pluginData.ChartRepo,
-		DefaultNamespace:    pluginData.DefaultNamespace,
-		PrivilegedNamespace: pluginData.PrivilegedNamespace,
-		ApiEndpoint:         pluginData.ApiEndpoint,
-		UiEndpoint:          pluginData.UiEndpoint,
+		ChartName:           pluginConfig.Deployment.ControlplaneCluster.ChartName,
+		ChartRepo:           pluginConfig.Deployment.ControlplaneCluster.ChartRepo,
+		DefaultNamespace:    pluginConfig.Deployment.ControlplaneCluster.DefaultNamespace,
+		PrivilegedNamespace: pluginConfig.Deployment.ControlplaneCluster.PrivilegedNamespace,
+		ApiEndpoint:         apiEndpoint,
+		UiEndpoint:          uiEndpoint,
 		Capabilities:        validCapabilities,
 		Values:              values,
 		OverrideValues:      overrideValues,
@@ -418,21 +450,17 @@ func (p *PluginStore) registerPluginSSO(orgId, clusterId, pluginName, uiSSOURL s
 	return
 }
 
-func (p *PluginStore) updatePluginDataAPIValues(orgId, clusterID string,
-	pluginData *pluginstorepb.PluginData, overrideValues map[string]string) error {
-	apiEndpoint, err := replaceTemplateValuesInString(pluginData.ApiEndpoint, overrideValues)
+func (p *PluginStore) getPluginDataAPIValues(pluginConfig *PluginConfig, overrideValues map[string]string) (string, string, error) {
+	apiEndpoint, err := replaceTemplateValuesInString(pluginConfig.ApiEndpoint, overrideValues)
 	if err != nil {
-		return fmt.Errorf("failed to update template values in plguin data, %v", err)
+		return "", "", fmt.Errorf("failed to update template values in plguin data, %v", err)
 	}
 
-	uiEndpoint, err := replaceTemplateValuesInString(pluginData.UiEndpoint, overrideValues)
+	uiEndpoint, err := replaceTemplateValuesInString(pluginConfig.UIEndpoint, overrideValues)
 	if err != nil {
-		return fmt.Errorf("failed to update template values in plguin data, %v", err)
+		return "", "", fmt.Errorf("failed to update template values in plguin data, %v", err)
 	}
-
-	pluginData.ApiEndpoint = apiEndpoint
-	pluginData.UiEndpoint = uiEndpoint
-	return nil
+	return apiEndpoint, uiEndpoint, nil
 }
 
 func (p *PluginStore) getOverrideTemplateValues(orgId, clusterID string) (map[string]string, error) {
@@ -505,4 +533,28 @@ func replaceTemplateValuesInString(data string, values map[string]string) (trans
 
 	transformedData = string(buf.Bytes())
 	return
+}
+
+func prepareFilePath(parts ...string) string {
+	return filepath.Join(parts...)
+}
+
+func (p *PluginStore) getPluginListFilePath(parentFolder string) string {
+	return prepareFilePath(parentFolder, p.cfg.PluginsStorePath, p.cfg.PluginsFileName)
+}
+
+func (p *PluginStore) getPluginFilePath(parentFolder, pluginName string) string {
+	return prepareFilePath(parentFolder, p.cfg.PluginsStorePath, pluginName, p.cfg.PluginFileName)
+}
+
+func (p *PluginStore) getPluginIconFilePath(parentFolder, pluginName, iconFileName string) string {
+	return prepareFilePath(parentFolder, p.cfg.PluginsStorePath, pluginName, iconFileName)
+}
+
+func (p *PluginStore) getPluginConfigFilePath(parentFolder, pluginName, version string) string {
+	return prepareFilePath(parentFolder, p.cfg.PluginsStorePath, pluginName, version, p.cfg.PluginConfigFileName)
+}
+
+func (p *PluginStore) getPluginDeployValuesFilePath(parentFolder, pluginName, version, valuesFile string) string {
+	return prepareFilePath(parentFolder, p.cfg.PluginsStorePath, pluginName, version, valuesFile)
 }

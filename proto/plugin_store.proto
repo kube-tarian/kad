@@ -52,13 +52,6 @@ message PluginData {
   string category = 4;
   repeated string versions = 5;
   bytes icon = 6;
-  string chartName = 7;
-  string chartRepo = 8;
-	string defaultNamespace = 9;
-	bool privilegedNamespace = 10;
-  string apiEndpoint = 11;
-  string uiEndpoint = 12;
-	repeated string capabilities = 13;
 }
 
 message ConfigurePluginStoreRequest {

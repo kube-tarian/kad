@@ -15,10 +15,10 @@ const (
 	updateStoreConfig           = `UPDATE %s.plugin_store_config SET git_project_id = '%s', git_project_url = '%s', last_updated_time = '%s' WHERE cluster_id = %s and store_type = %d`
 	readStoreConfigForStoreType = `SELECT git_project_id, git_project_url, last_updated_time FROM %s.plugin_store_config WHERE cluster_id = %s and store_type = %d`
 
-	insertPluginData            = `INSERT INTO %s.plugin_data (git_project_id, plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, api_endpoint,  ui_endpoint, capabilities) VALUES (%s, '%s', '%s', %d, '%s', '%s', '%s', '%s', '%s', %v, '%s', %t, '%s', '%s', %v) IF NOT EXISTS`
-	updatePluginData            = `UPDATE %s.plugin_data SET last_updated_time = '%s', store_type = %d, description = '%s', category = '%s', icon = '%s', chart_name = '%s', chart_repo = '%s', versions = %v, default_namespace = '%s', privileged_namespace = %t, api_endpoint = '%s',  ui_endpoint = '%s', capabilities = %v WHERE git_project_id = %s and plugin_name = '%s'`
+	insertPluginData            = `INSERT INTO %s.plugin_data (git_project_id, plugin_name, last_updated_time, store_type, description, category, icon, versions) VALUES (%s, '%s', '%s', %d, '%s', '%s', '%s', %v) IF NOT EXISTS`
+	updatePluginData            = `UPDATE %s.plugin_data SET last_updated_time = '%s', store_type = %d, description = '%s', category = '%s', icon = '%s', versions = %v WHERE git_project_id = %s and plugin_name = '%s'`
 	readPlugins                 = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, versions FROM %s.plugin_data WHERE git_project_id = %s`
-	readPluginDataForPluginName = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, chart_name, chart_repo, versions, default_namespace, privileged_namespace, api_endpoint,  ui_endpoint, capabilities FROM %s.plugin_data WHERE git_project_id = %s and plugin_name = '%s'`
+	readPluginDataForPluginName = `SELECT plugin_name, last_updated_time, store_type, description, category, icon, versions FROM %s.plugin_data WHERE git_project_id = %s and plugin_name = '%s'`
 	deletePluginData            = "DELETE FROM %s.plugin_data WHERE git_project_id = %s and plugin_name = '%s'"
 )
 
@@ -100,10 +100,7 @@ func (a *AstraServerStore) WritePluginData(gitProjectId string, pluginData *plug
 	query := &pb.Query{
 		Cql: fmt.Sprintf(insertPluginData,
 			a.keyspace, gitProjectId, pluginData.PluginName, time.Now().Format(time.RFC3339),
-			pluginData.StoreType, pluginData.Description, pluginData.Category, pluginData.Icon,
-			pluginData.ChartName, pluginData.ChartRepo, getSQLStringArray(pluginData.Versions),
-			pluginData.DefaultNamespace, pluginData.PrivilegedNamespace, pluginData.ApiEndpoint,
-			pluginData.UiEndpoint, getSQLStringArray(pluginData.Capabilities)),
+			pluginData.StoreType, pluginData.Description, pluginData.Category, pluginData.Icon, getSQLStringArray(pluginData.Versions)),
 	}
 
 	resp, err := a.c.Session().ExecuteQuery(query)
@@ -124,9 +121,7 @@ func (a *AstraServerStore) WritePluginData(gitProjectId string, pluginData *plug
 		Cql: fmt.Sprintf(updatePluginData,
 			a.keyspace, time.Now().Format(time.RFC3339),
 			pluginData.StoreType, pluginData.Description, pluginData.Category, pluginData.Icon,
-			pluginData.ChartName, pluginData.ChartRepo, getSQLStringArray(pluginData.Versions),
-			pluginData.DefaultNamespace, pluginData.PrivilegedNamespace, pluginData.ApiEndpoint,
-			pluginData.UiEndpoint, getSQLStringArray(pluginData.Capabilities), gitProjectId, pluginData.PluginName),
+			getSQLStringArray(pluginData.Versions), gitProjectId, pluginData.PluginName),
 	}
 	_, err = a.c.Session().ExecuteQuery(query)
 	if err != nil {
@@ -224,15 +219,7 @@ func toPluginData(row *pb.Row, columns []*pb.ColumnSpec) (*pluginstorepb.PluginD
 	if err != nil {
 		return nil, fmt.Errorf("failed to read icon: %w", err)
 	}
-	chartName, err := client.ToString(row.Values[6])
-	if err != nil {
-		return nil, fmt.Errorf("failed to read chartName: %w", err)
-	}
-	chartRepo, err := client.ToString(row.Values[7])
-	if err != nil {
-		return nil, fmt.Errorf("failed to read chartRepo: %w", err)
-	}
-	versions, err := client.ToList(row.Values[8], columns[8].Type)
+	versions, err := client.ToList(row.Values[6], columns[6].Type)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read versions: %w", err)
 	}
@@ -241,41 +228,11 @@ func toPluginData(row *pb.Row, columns []*pb.ColumnSpec) (*pluginstorepb.PluginD
 		return nil, fmt.Errorf("failed to convert versions: %w", err)
 	}
 
-	defaultNamespace, err := client.ToString(row.Values[9])
-	if err != nil {
-		return nil, fmt.Errorf("failed to read defaultNamespace: %w", err)
-	}
-	privilegedNamespace, err := client.ToBoolean(row.Values[10])
-	if err != nil {
-		return nil, fmt.Errorf("failed to read privilegedNamespace: %w", err)
-	}
-	apiEndpoint, err := client.ToString(row.Values[11])
-	if err != nil {
-		return nil, fmt.Errorf("failed to read pluginEndpoint: %w", err)
-	}
-	uiEndpoint, err := client.ToString(row.Values[12])
-	if err != nil {
-		return nil, fmt.Errorf("failed to read pluginEndpoint: %w", err)
-	}
-	capabilities, err := client.ToList(row.Values[13], columns[13].Type)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read capabilities: %w", err)
-	}
-	pluginCapabilities, err := convertToSlice(capabilities)
-	if err != nil {
-		return nil, fmt.Errorf("failed to convert versions: %w", err)
-	}
-
 	return &pluginstorepb.PluginData{
 		StoreType:  pluginstorepb.StoreType(storeType),
 		PluginName: pluginName, Description: description,
 		Category: category, Icon: []byte(icon),
-		ChartName: chartName, ChartRepo: chartRepo,
-		Versions: pluginVersions, DefaultNamespace: defaultNamespace,
-		PrivilegedNamespace: privilegedNamespace,
-		ApiEndpoint:         apiEndpoint,
-		UiEndpoint:          uiEndpoint,
-		Capabilities:        pluginCapabilities,
+		Versions: pluginVersions,
 	}, nil
 }
 
