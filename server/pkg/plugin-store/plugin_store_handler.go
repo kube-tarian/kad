@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -306,7 +307,7 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 	if err != nil {
 		return err
 	}
-
+	log.Println("Override value mapping", overrideValuesMapping)
 	apiEndpoint, uiEndpoint, err := p.getPluginDataAPIValues(pluginConfig, overrideValuesMapping)
 	if err != nil {
 		return err
@@ -472,7 +473,9 @@ func (p *PluginStore) getOverrideTemplateValues(orgId, clusterID string) (map[st
 	overrideValues := map[string]string{}
 	for key, val := range clusterGlobalValues {
 		overrideValues[key] = fmt.Sprintf("%v", val)
+
 	}
+	log.Println("Override value ", overrideValues)
 	return overrideValues, nil
 }
 
@@ -524,7 +527,8 @@ func replaceTemplateValuesInString(data string, values map[string]string) (trans
 	if err != nil {
 		return
 	}
-
+	log.Println("Data", data)
+	log.Println("values", values)
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, values)
 	if err != nil {
@@ -532,6 +536,7 @@ func replaceTemplateValuesInString(data string, values map[string]string) (trans
 	}
 
 	transformedData = string(buf.Bytes())
+	log.Println("Transfirmed data", transformedData)
 	return
 }
 
