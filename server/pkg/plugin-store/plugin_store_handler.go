@@ -317,7 +317,7 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 
 	if isUISSOCapabilitySupported(validCapabilities) {
 		log.Println("PLUGIN CONFIG UI ENDPOINT", pluginConfig.UIEndpoint)
-		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginConfig.UIEndpoint)
+		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, uiEndpoint)
 		if err != nil {
 			return err
 		}
