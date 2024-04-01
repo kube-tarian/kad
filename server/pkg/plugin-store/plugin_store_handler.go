@@ -312,12 +312,16 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 	if err != nil {
 		return err
 	}
+	log.Println("api Endpoint", apiEndpoint)
+	log.Println("UI endpoitn", uiEndpoint)
 
 	if isUISSOCapabilitySupported(validCapabilities) {
+		log.Println("PLUGIN CONFIG UI ENDPOINT", pluginConfig.UIEndpoint)
 		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginConfig.UIEndpoint)
 		if err != nil {
 			return err
 		}
+		log.Println(" CAPTEN OAuth URL", p.cfg.CaptenOAuthURL)
 		overrideValuesMapping[oAuthBaseURLName] = p.cfg.CaptenOAuthURL
 		overrideValuesMapping[oAuthClientIdName] = clientId
 		overrideValuesMapping[oAuthClientSecretName] = clientSecret
@@ -327,6 +331,7 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 	if err != nil {
 		return err
 	}
+	log.Println("String value", string(overrideValues))
 
 	plugin := &clusterpluginspb.Plugin{
 		StoreType:           clusterpluginspb.StoreType(pluginData.StoreType),
