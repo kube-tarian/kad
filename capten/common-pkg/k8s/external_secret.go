@@ -3,7 +3,6 @@ package k8s
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"gopkg.in/yaml.v2"
 )
@@ -136,9 +135,7 @@ func (k *K8SClient) CreateOrUpdateExternalSecret(ctx context.Context, externalSe
 				Property: key,
 			},
 		}
-		log.Println("Secret Key Data", secretKeyData)
-		k.log.Infof("Key is", key)
-		k.log.Infof("Path is", path)
+
 		secretKeysData = append(secretKeysData, secretKeyData)
 	}
 	externalSecret := ExternalSecret{
@@ -165,7 +162,7 @@ func (k *K8SClient) CreateOrUpdateExternalSecret(ctx context.Context, externalSe
 	if err != nil {
 		return
 	}
-	k.log.Info("External Secret Data", string(externalSecretData))
+
 	_, _, err = k.DynamicClient.CreateResource(ctx, []byte(externalSecretData))
 	if err != nil {
 		err = fmt.Errorf("failed to create vault external secret %s/%s, %v", namespace, externalSecretName, err)
