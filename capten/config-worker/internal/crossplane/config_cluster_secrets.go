@@ -39,7 +39,7 @@ func (cp *CrossPlaneApp) configureExternalSecretsOnCluster(ctx context.Context,
 	}
 
 	vaultAddressStr := fmt.Sprintf(vaultAddress, cp.cfg.DomainName)
-	logger.Infof("Vault Address String", vaultAddressStr)
+
 	for _, namespace := range namespaces {
 		cred := map[string][]byte{"token": []byte(token)}
 		err = k8sclient.CreateOrUpdateSecret(ctx, namespace, vaultAppRoleTokenSecret, v1.SecretTypeOpaque, cred, nil)

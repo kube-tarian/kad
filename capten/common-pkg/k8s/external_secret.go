@@ -112,7 +112,7 @@ func (k *K8SClient) CreateOrUpdateSecretStore(ctx context.Context, secretStoreNa
 	}
 
 	secretStoreData, err := yaml.Marshal(&secretStore)
-	k.log.Info("Secret Store", string(secretStoreData))
+
 	if err != nil {
 		return
 	}
