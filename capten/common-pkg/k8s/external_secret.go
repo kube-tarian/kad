@@ -128,7 +128,7 @@ func (k *K8SClient) CreateOrUpdateSecretStore(ctx context.Context, secretStoreNa
 func (k *K8SClient) CreateOrUpdateExternalSecret(ctx context.Context, externalSecretName, namespace,
 	secretStoreRefName, secretName, secretType string, vaultKeyPathdata map[string]string) (err error) {
 	secretKeysData := []ExternalSecretData{}
-	for key, path := range vaultKeyPathdata {
+	for path, key := range vaultKeyPathdata {
 		secretKeyData := ExternalSecretData{
 			SecretKey: key,
 			RemoteRef: ExternalSecretDataRemoteRef{
