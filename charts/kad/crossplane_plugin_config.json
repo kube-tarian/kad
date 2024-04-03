@@ -19,8 +19,8 @@
       "secretName": "vault-nats-secret",
       "vaultSecrets": [
       {
-          "secretKey": "generic/nats/auth-token",
-          "secretPath": "nats"
+          "secretKey": "token",
+          "secretPath": "generic/nats/auth-token"
       }
       ]
       },
@@ -29,19 +29,20 @@
       "secretName": "vault-cosign-secret",
       "vaultSecrets": [
       {
-          "secretKey": "generic/cosign/signer",
-          "secretPath": "cosign.pub"
+          "secretKey": "cosign.pub",
+          "secretPath": "generic/cosign/signer"
       }
       ]
       },
+      
       {
       "namespace": "ml-server",
       "secretName": "regcred-ghcr",
       "secretType": "kubernetes.io/dockerconfigjson",
       "vaultSecrets": [
       {
-          "secretKey": "generic/container-registry/docker-config",
-           "secretPath": ".dockerconfigjson"
+          "secretKey": ".dockerconfigjson",
+           "secretPath": "generic/container-registry/docker-config"
       }
     ]
       },
@@ -50,8 +51,8 @@
       "secretName": "vault-cosign-secret",
       "vaultSecrets": [
       {
-          "secretKey": "generic/cosign/signer",
-          "secretPath": "cosign.pub"
+          "secretKey": "cosign.pub",
+          "secretPath": "generic/cosign/signer"
       }
       ]
       }
