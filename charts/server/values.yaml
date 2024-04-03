@@ -39,8 +39,6 @@ extraEnv:
     value: false
   - name: REGISTER_LAUNCH_APPS_CONFIG
     value: true
-  - name: SYNC_APP_STORE
-    value: true
 
 imagePullSecrets: []
 nameOverride: ""

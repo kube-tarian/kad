@@ -15,7 +15,6 @@ import (
 	"github.com/kube-tarian/kad/server/pkg/config"
 	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
 	oryclient "github.com/kube-tarian/kad/server/pkg/ory-client"
-	storeapps "github.com/kube-tarian/kad/server/pkg/store-apps"
 
 	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/server/pkg/pb/pluginstorepb"
@@ -58,11 +57,6 @@ func main() {
 	err = serverStore.InitializeDatabase()
 	if err != nil {
 		log.Fatal("failed to initialize %s db, %w", cfg.Database, err)
-	}
-
-	err = storeapps.SyncStoreApps(log, serverStore)
-	if err != nil {
-		log.Fatalf("%v", err)
 	}
 
 	oryclient, err := oryclient.NewOryClient(log)
