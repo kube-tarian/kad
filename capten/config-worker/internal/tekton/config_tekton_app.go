@@ -2,25 +2,20 @@ package tekton
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
-	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
 	appconfig "github.com/kube-tarian/kad/capten/config-worker/internal/app_config"
 	"github.com/kube-tarian/kad/capten/config-worker/internal/crossplane"
 	"github.com/kube-tarian/kad/capten/model"
 	agentmodel "github.com/kube-tarian/kad/capten/model"
 	"github.com/otiai10/copy"
 	"github.com/pkg/errors"
-	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var (
@@ -141,50 +136,6 @@ func (cp *TektonApp) configureProjectAndApps(ctx context.Context, req *model.Tek
 	return string(agentmodel.WorkFlowStatusCompleted), nil
 }
 
-func (cp *TektonApp) deleteProjectAndApps(ctx context.Context, req *model.TektonPipelineUseCase) (status string, err error) {
-	logger.Infof("cloning user repo %s", req.RepoURL)
-	customerRepo, err := cp.helper.CloneUserRepo(ctx, req.RepoURL, req.CredentialIdentifiers[agentmodel.TektonGitProject].Id)
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to clone repos")
-	}
-
-	defer os.RemoveAll(customerRepo)
-	logger.Infof("removing pipeline directory from %s", req.RepoURL)
-	err = cp.helper.RemoveFilesFromRepo([]string{filepath.Join(cp.pluginConfig.TektonPipelinePath, req.PipelineName)})
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to remove pipeline from repo")
-	}
-	logger.Infof("removed pipeline resources from project %s", req.RepoURL)
-
-	err = updateArgoCDTemplate(filepath.Join(customerRepo, cp.pluginConfig.PipelineSyncUpdate.MainAppValues))
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updateArgoCDTemplate")
-	}
-
-	err = cp.helper.AddFilesToRepo([]string{"."})
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to add git repo")
-	}
-
-	err = cp.helper.CommitRepoChanges()
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to commit git repo")
-	}
-	logger.Infof("added cloned project %s changed to git", req.RepoURL)
-
-	err = cp.deleteSecrets(ctx, req)
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to create k8s secrets")
-	}
-
-	// err = cp.helper.DeleteArgoCDApp(ctx, pipelineNamespace, req.PipelineName, mainAppName)
-	// if err != nil {
-	// 	return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to delete argoCD apps")
-	// }
-
-	return string(agentmodel.WorkFlowStatusCompleted), nil
-}
-
 func (cp *TektonApp) synchTektonConfig(req *model.TektonProjectSyncUsecase, templateDir, reqRepo string) error {
 	for _, config := range []string{cp.pluginConfig.TektonProject, filepath.Join(cp.pluginConfig.PipelineClusterConfigSyncPath)} {
 		err := copy.Copy(filepath.Join(templateDir, config), filepath.Join(reqRepo, config),
@@ -268,151 +219,6 @@ func (cp *TektonApp) syncArgoCDChildApps(ctx context.Context, namespace string, 
 	return nil
 }
 
-func (cp *TektonApp) createOrUpdatePipeline(ctx context.Context, req *model.TektonPipelineUseCase) error {
-	/*gloablVal, err := cp.helper.GetClusterGlobalValues(ctx, map[string]string{
-		appconfig.DomainName: cp.cfg.DomainName})
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to get clusetr gloablValues")
-	}
-
-	err = updatePipelineTemplate(filepath.Join(customerRepo,
-		strings.ReplaceAll(cp.pluginConfig.PipelineSyncUpdate.PipelineValues, "<NAME>", req.PipelineName)), req.PipelineName, gloablVal[appconfig.DomainName])
-	if err != nil {
-		return string(agentmodel.WorkFlowStatusFailed), errors.WithMessage(err, "failed to updatePipelineTemplate")
-	}*/
-
-	log := logging.NewLogger()
-	k8sclient, err := k8s.NewK8SClient(log)
-	if err != nil {
-		return fmt.Errorf("failed to initalize k8s client, %v", err)
-	}
-
-	k8sclient.Clientset.CoreV1().Namespaces().Create(ctx, &v1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: pipelineNamespace}}, metav1.CreateOptions{})
-
-	// One time activity
-	key, pub, err := cp.helper.GetCosingKeys(ctx, cosignEntityName, cosignVaultId)
-	if err != nil {
-		return fmt.Errorf("failed to get cosign keys from vault, %v", err)
-	}
-
-	if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, cosignSecName,
-		v1.SecretTypeOpaque, map[string][]byte{appconfig.CosignKey: []byte(key),
-			appconfig.CosignPub: []byte(pub)}, map[string]string{}); err != nil {
-		return fmt.Errorf("failed to create/update cosign-keys k8s secret, %v", err)
-	}
-
-	for _, secret := range secrets {
-		strdata := make(map[string][]byte)
-		secName := secret + "-" + req.PipelineName
-		switch secret {
-		case dockerCred:
-			username, password, err := cp.helper.GetContainerRegCreds(ctx,
-				req.CredentialIdentifiers[agentmodel.Container].Identifier, req.CredentialIdentifiers[agentmodel.Container].Id)
-			if err != nil {
-				return fmt.Errorf("failed to get docker cfg secret, %v", err)
-			}
-
-			data, err := handleDockerCfgJSONContent(username, password, req.CredentialIdentifiers[agentmodel.Container].Url)
-			if err != nil {
-				return fmt.Errorf("failed to get docker cfg secret, %v", err)
-			}
-			strdata[".dockerconfigjson"] = data
-			strdata["config.json"] = data
-			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
-				v1.SecretTypeDockerConfigJson, strdata, map[string]string{}); err != nil {
-				return fmt.Errorf("failed to create/update k8s secret, %v", err)
-			}
-
-		case cosignDockerSecret:
-			username, password, err := cp.helper.GetContainerRegCreds(ctx,
-				req.CredentialIdentifiers[agentmodel.Container].Identifier, req.CredentialIdentifiers[agentmodel.Container].Id)
-			if err != nil {
-				return fmt.Errorf("failed to get docker cfg secret, %v", err)
-			}
-			strdata["username"] = []byte(username)
-			strdata["password"] = []byte(password)
-			strdata["registry"] = []byte(req.CredentialIdentifiers[agentmodel.Container].Url)
-			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
-				v1.SecretTypeOpaque, strdata, map[string]string{}); err != nil {
-				return fmt.Errorf("failed to create/update k8s secret, %v", err)
-			}
-
-		case gitCred, githubWebhook:
-			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.GitOrg].Id)
-			if err != nil {
-				return fmt.Errorf("failed to get git secret, %v", err)
-			}
-			strdata["username"] = []byte(username)
-			strdata["password"] = []byte(token)
-			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
-				v1.SecretTypeBasicAuth, strdata, nil); err != nil {
-				return fmt.Errorf("failed to create/update k8s secret, %v", err)
-			}
-		case argoCred:
-			cfg, err := argocd.GetConfig(log)
-			if err != nil {
-				return fmt.Errorf("failed to get argo-cd secret, %v", err)
-			}
-			strdata["SERVER_URL"] = []byte(cfg.ServiceURL)
-			strdata["USERNAME"] = []byte(cfg.Username)
-			strdata["PASSWORD"] = []byte(cfg.Password)
-			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
-				v1.SecretTypeOpaque, strdata, map[string]string{}); err != nil {
-				return fmt.Errorf("failed to create/update k8s secret, %v", err)
-			}
-		case crossplaneProjectConfig:
-			username, token, err := cp.helper.GetGitCreds(ctx, req.CredentialIdentifiers[agentmodel.CrossplaneGitProject].Id)
-			if err != nil {
-				return fmt.Errorf("failed to get git secret, %v", err)
-			}
-
-			kubeConfig, kubeCa, kubeEndpoint, err := cp.helper.GetClusterCreds(ctx, req.CredentialIdentifiers[agentmodel.ManagedCluster].Identifier, req.CredentialIdentifiers[agentmodel.ManagedCluster].Id)
-			if err != nil {
-				return fmt.Errorf("failed to get GetClusterCreds, %v", err)
-			}
-
-			projectURL := req.CredentialIdentifiers[agentmodel.CrossplaneGitProject].Url
-			projectURLParts := strings.Split(projectURL, "https://")
-			if len(projectURLParts) != 2 {
-				return fmt.Errorf("project url not in correct format, %s", projectURL)
-			}
-
-			strdata["GIT_USER_NAME"] = []byte(username)
-			strdata["GIT_TOKEN"] = []byte(token)
-			strdata["GIT_PROJECT_URL"] = []byte(projectURLParts[1])
-			strdata["APP_CONFIG_PATH"] = []byte(filepath.Join(cp.crossplanConfig.ClusterEndpointUpdates.ClusterDefaultAppValuesPath, req.CredentialIdentifiers[agentmodel.ManagedCluster].Url, "apps"))
-			strdata["CLUSTER_CA"] = []byte(kubeCa)
-			strdata["CLUSTER_ENDPOINT"] = []byte(kubeEndpoint)
-			strdata["CLUSTER_CONFIG"] = []byte(kubeConfig)
-			strdata["CLUSTER_NAME"] = []byte(req.CredentialIdentifiers[agentmodel.ManagedCluster].Url)
-
-			if err := k8sclient.CreateOrUpdateSecret(ctx, pipelineNamespace, secName,
-				v1.SecretTypeOpaque, strdata, nil); err != nil {
-				return fmt.Errorf("failed to create/update k8s secret, %v", err)
-			}
-
-		default:
-			return fmt.Errorf("secret step: %s type not found", secret)
-		}
-	}
-	return nil
-}
-
-func (cp *TektonApp) deleteSecrets(ctx context.Context, req *model.TektonPipelineUseCase) error {
-	k8sclient, err := k8s.NewK8SClient(logging.NewLogger())
-	if err != nil {
-		return fmt.Errorf("failed to initalize k8s client, %v", err)
-	}
-
-	for _, secret := range secrets {
-		if err := k8sclient.DeleteSecret(ctx, pipelineNamespace, secret+"-"+req.PipelineName); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 func replaceCaptenUrls(dir string, src, target string) error {
 	if !strings.HasSuffix(src, ".git") {
 		src += ".git"
@@ -472,31 +278,6 @@ func updateArgoCDTemplate(valuesFileName string) error {
 		return err
 	}
 
-	/*if tektonConfig.TektonPipelines == nil {
-		tektonConfig.TektonPipelines = &[]TektonPipeline{}
-	}
-
-	switch action {
-	case addPipeline:
-		tektonPipelines := []TektonPipeline{{Name: pipelineName}}
-
-		for _, pipeline := range *tektonConfig.TektonPipelines {
-			tektonPipelines = append(tektonPipelines, TektonPipeline{Name: pipeline.Name})
-		}
-
-		tektonConfig.TektonPipelines = &tektonPipelines
-	case deletePipeline:
-		tektonPipelines := []TektonPipeline{}
-		for _, pipeline := range *tektonConfig.TektonPipelines {
-			if pipeline.Name == pipelineName {
-				continue
-			}
-			tektonPipelines = append(tektonPipelines, TektonPipeline{Name: pipeline.Name})
-		}
-
-		tektonConfig.TektonPipelines = &tektonPipelines
-	}*/
-
 	jsonBytes, err := json.Marshal(tektonConfig)
 	if err != nil {
 		return err
@@ -509,65 +290,4 @@ func updateArgoCDTemplate(valuesFileName string) error {
 
 	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
 	return err
-}
-
-func updatePipelineTemplate(valuesFileName, pipelineName, domainName string) error {
-	data, err := os.ReadFile(valuesFileName)
-	if err != nil {
-		return err
-	}
-
-	jsonData, err := k8s.ConvertYamlToJson(data)
-	if err != nil {
-		return err
-	}
-
-	var tektonPipelineConfig TektonPieplineConfigValues
-	err = json.Unmarshal(jsonData, &tektonPipelineConfig)
-	if err != nil {
-		return err
-	}
-
-	tektonPipelineConfig.IngressDomainName = domainName
-	tektonPipelineConfig.PipelineName = pipelineName
-	secretName := []SecretNames{}
-
-	for _, secret := range secrets {
-		secretName = append(secretName, SecretNames{Name: secret + "-" + pipelineName})
-	}
-
-	tektonPipelineConfig.SecretName = &secretName
-
-	jsonBytes, err := json.Marshal(tektonPipelineConfig)
-	if err != nil {
-		return err
-	}
-
-	yamlBytes, err := k8s.ConvertJsonToYaml(jsonBytes)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(valuesFileName, yamlBytes, os.ModeAppend)
-	return err
-}
-
-// handleDockerCfgJSONContent serializes a ~/.docker/config.json file
-func handleDockerCfgJSONContent(username, password, server string) ([]byte, error) {
-	dockerConfigAuth := DockerConfigEntry{
-		Username: username,
-		Password: password,
-		Auth:     encodeDockerConfigFieldAuth(username, password),
-	}
-	dockerConfigJSON := DockerConfigJSON{
-		Auths: map[string]DockerConfigEntry{server: dockerConfigAuth},
-	}
-
-	return json.Marshal(dockerConfigJSON)
-}
-
-// encodeDockerConfigFieldAuth returns base64 encoding of the username and password string
-func encodeDockerConfigFieldAuth(username, password string) string {
-	fieldValue := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(fieldValue))
 }

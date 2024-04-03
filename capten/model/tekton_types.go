@@ -16,26 +16,7 @@ const (
 const (
 	TektonPipelineConfigUseCase = "tekton"
 	TektonHostName              = "tekton"
-	TektonPipelineCreate        = "tekton-pipeline-create"
 	TektonProjectSync           = "tekton-project-sync"
-	TektonPipelineDelete        = "tekton-pipeline-delete"
-)
-
-type TektonPipelineStatus string
-
-const (
-	TektonPipelineAvailable            TektonPipelineStatus = "available"
-	TektonPipelineConfigured           TektonPipelineStatus = "configured"
-	TektonPipelineConfigurationOngoing TektonPipelineStatus = "configuration-ongoing"
-	TektonPipelineConfigurationFailed  TektonPipelineStatus = "configuration-failed"
-)
-
-const (
-	TektonPipelineOutofSynch    TektonPipelineStatus = "OutOfSynch"
-	TektonPipelineInSynch       TektonPipelineStatus = "InSynch"
-	TektonPipelineFailedToSynch TektonPipelineStatus = "FailedToSynch"
-	TektonPipelineReady         TektonPipelineStatus = "Ready"
-	TektonPipelineNotReady      TektonPipelineStatus = "NotReady"
 )
 
 type TektonProject struct {
