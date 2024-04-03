@@ -71,11 +71,3 @@ type CrossplaneProviderUpdate struct {
 	GitProjectId string `json:"gitProjectId,omitempty"`
 	RepoURL      string `json:"repoURL,omitempty"`
 }
-
-type TektonPipelineUseCase struct {
-	Type                  string                               `json:"Type,omitempty"`
-	RepoURL               string                               `json:"RepoURL,omitempty"`
-	PipelineName          string                               `json:"PipelineName,omitempty"`
-	Timeout               uint32                               `json:"Timeout,omitempty"`
-	CredentialIdentifiers map[Identifiers]CredentialIdentifier `json:"CredentialIdentifiers,omitempty"`
-}

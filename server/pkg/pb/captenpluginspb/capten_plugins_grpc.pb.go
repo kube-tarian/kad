@@ -25,10 +25,6 @@ const (
 	CaptenPlugins_DeleteGitProject_FullMethodName            = "/captenpluginspb.capten_plugins/DeleteGitProject"
 	CaptenPlugins_GetGitProjects_FullMethodName              = "/captenpluginspb.capten_plugins/GetGitProjects"
 	CaptenPlugins_GetGitProjectsForLabels_FullMethodName     = "/captenpluginspb.capten_plugins/GetGitProjectsForLabels"
-	CaptenPlugins_GetTektonPipelines_FullMethodName          = "/captenpluginspb.capten_plugins/GetTektonPipelines"
-	CaptenPlugins_CreateTektonPipeline_FullMethodName        = "/captenpluginspb.capten_plugins/CreateTektonPipeline"
-	CaptenPlugins_UpdateTektonPipeline_FullMethodName        = "/captenpluginspb.capten_plugins/UpdateTektonPipeline"
-	CaptenPlugins_DeleteTektonPipeline_FullMethodName        = "/captenpluginspb.capten_plugins/DeleteTektonPipeline"
 	CaptenPlugins_AddContainerRegistry_FullMethodName        = "/captenpluginspb.capten_plugins/AddContainerRegistry"
 	CaptenPlugins_UpdateContainerRegistry_FullMethodName     = "/captenpluginspb.capten_plugins/UpdateContainerRegistry"
 	CaptenPlugins_DeleteContainerRegistry_FullMethodName     = "/captenpluginspb.capten_plugins/DeleteContainerRegistry"
@@ -65,10 +61,6 @@ type CaptenPluginsClient interface {
 	DeleteGitProject(ctx context.Context, in *DeleteGitProjectRequest, opts ...grpc.CallOption) (*DeleteGitProjectResponse, error)
 	GetGitProjects(ctx context.Context, in *GetGitProjectsRequest, opts ...grpc.CallOption) (*GetGitProjectsResponse, error)
 	GetGitProjectsForLabels(ctx context.Context, in *GetGitProjectsForLabelsRequest, opts ...grpc.CallOption) (*GetGitProjectsForLabelsResponse, error)
-	GetTektonPipelines(ctx context.Context, in *GetTektonPipelinesRequest, opts ...grpc.CallOption) (*GetTektonPipelinesResponse, error)
-	CreateTektonPipeline(ctx context.Context, in *CreateTektonPipelineRequest, opts ...grpc.CallOption) (*CreateTektonPipelineResponse, error)
-	UpdateTektonPipeline(ctx context.Context, in *UpdateTektonPipelineRequest, opts ...grpc.CallOption) (*UpdateTektonPipelineResponse, error)
-	DeleteTektonPipeline(ctx context.Context, in *DeleteTektonPipelineRequest, opts ...grpc.CallOption) (*DeleteTektonPipelineResponse, error)
 	AddContainerRegistry(ctx context.Context, in *AddContainerRegistryRequest, opts ...grpc.CallOption) (*AddContainerRegistryResponse, error)
 	UpdateContainerRegistry(ctx context.Context, in *UpdateContainerRegistryRequest, opts ...grpc.CallOption) (*UpdateContainerRegistryResponse, error)
 	DeleteContainerRegistry(ctx context.Context, in *DeleteContainerRegistryRequest, opts ...grpc.CallOption) (*DeleteContainerRegistryResponse, error)
@@ -151,42 +143,6 @@ func (c *captenPluginsClient) GetGitProjects(ctx context.Context, in *GetGitProj
 func (c *captenPluginsClient) GetGitProjectsForLabels(ctx context.Context, in *GetGitProjectsForLabelsRequest, opts ...grpc.CallOption) (*GetGitProjectsForLabelsResponse, error) {
 	out := new(GetGitProjectsForLabelsResponse)
 	err := c.cc.Invoke(ctx, CaptenPlugins_GetGitProjectsForLabels_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *captenPluginsClient) GetTektonPipelines(ctx context.Context, in *GetTektonPipelinesRequest, opts ...grpc.CallOption) (*GetTektonPipelinesResponse, error) {
-	out := new(GetTektonPipelinesResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_GetTektonPipelines_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *captenPluginsClient) CreateTektonPipeline(ctx context.Context, in *CreateTektonPipelineRequest, opts ...grpc.CallOption) (*CreateTektonPipelineResponse, error) {
-	out := new(CreateTektonPipelineResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_CreateTektonPipeline_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *captenPluginsClient) UpdateTektonPipeline(ctx context.Context, in *UpdateTektonPipelineRequest, opts ...grpc.CallOption) (*UpdateTektonPipelineResponse, error) {
-	out := new(UpdateTektonPipelineResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_UpdateTektonPipeline_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *captenPluginsClient) DeleteTektonPipeline(ctx context.Context, in *DeleteTektonPipelineRequest, opts ...grpc.CallOption) (*DeleteTektonPipelineResponse, error) {
-	out := new(DeleteTektonPipelineResponse)
-	err := c.cc.Invoke(ctx, CaptenPlugins_DeleteTektonPipeline_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -419,10 +375,6 @@ type CaptenPluginsServer interface {
 	DeleteGitProject(context.Context, *DeleteGitProjectRequest) (*DeleteGitProjectResponse, error)
 	GetGitProjects(context.Context, *GetGitProjectsRequest) (*GetGitProjectsResponse, error)
 	GetGitProjectsForLabels(context.Context, *GetGitProjectsForLabelsRequest) (*GetGitProjectsForLabelsResponse, error)
-	GetTektonPipelines(context.Context, *GetTektonPipelinesRequest) (*GetTektonPipelinesResponse, error)
-	CreateTektonPipeline(context.Context, *CreateTektonPipelineRequest) (*CreateTektonPipelineResponse, error)
-	UpdateTektonPipeline(context.Context, *UpdateTektonPipelineRequest) (*UpdateTektonPipelineResponse, error)
-	DeleteTektonPipeline(context.Context, *DeleteTektonPipelineRequest) (*DeleteTektonPipelineResponse, error)
 	AddContainerRegistry(context.Context, *AddContainerRegistryRequest) (*AddContainerRegistryResponse, error)
 	UpdateContainerRegistry(context.Context, *UpdateContainerRegistryRequest) (*UpdateContainerRegistryResponse, error)
 	DeleteContainerRegistry(context.Context, *DeleteContainerRegistryRequest) (*DeleteContainerRegistryResponse, error)
@@ -471,18 +423,6 @@ func (UnimplementedCaptenPluginsServer) GetGitProjects(context.Context, *GetGitP
 }
 func (UnimplementedCaptenPluginsServer) GetGitProjectsForLabels(context.Context, *GetGitProjectsForLabelsRequest) (*GetGitProjectsForLabelsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetGitProjectsForLabels not implemented")
-}
-func (UnimplementedCaptenPluginsServer) GetTektonPipelines(context.Context, *GetTektonPipelinesRequest) (*GetTektonPipelinesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTektonPipelines not implemented")
-}
-func (UnimplementedCaptenPluginsServer) CreateTektonPipeline(context.Context, *CreateTektonPipelineRequest) (*CreateTektonPipelineResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateTektonPipeline not implemented")
-}
-func (UnimplementedCaptenPluginsServer) UpdateTektonPipeline(context.Context, *UpdateTektonPipelineRequest) (*UpdateTektonPipelineResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateTektonPipeline not implemented")
-}
-func (UnimplementedCaptenPluginsServer) DeleteTektonPipeline(context.Context, *DeleteTektonPipelineRequest) (*DeleteTektonPipelineResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteTektonPipeline not implemented")
 }
 func (UnimplementedCaptenPluginsServer) AddContainerRegistry(context.Context, *AddContainerRegistryRequest) (*AddContainerRegistryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddContainerRegistry not implemented")
@@ -673,78 +613,6 @@ func _CaptenPlugins_GetGitProjectsForLabels_Handler(srv interface{}, ctx context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CaptenPluginsServer).GetGitProjectsForLabels(ctx, req.(*GetGitProjectsForLabelsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CaptenPlugins_GetTektonPipelines_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTektonPipelinesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CaptenPluginsServer).GetTektonPipelines(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CaptenPlugins_GetTektonPipelines_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).GetTektonPipelines(ctx, req.(*GetTektonPipelinesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CaptenPlugins_CreateTektonPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTektonPipelineRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CaptenPluginsServer).CreateTektonPipeline(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CaptenPlugins_CreateTektonPipeline_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).CreateTektonPipeline(ctx, req.(*CreateTektonPipelineRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CaptenPlugins_UpdateTektonPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTektonPipelineRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CaptenPluginsServer).UpdateTektonPipeline(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CaptenPlugins_UpdateTektonPipeline_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).UpdateTektonPipeline(ctx, req.(*UpdateTektonPipelineRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _CaptenPlugins_DeleteTektonPipeline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTektonPipelineRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(CaptenPluginsServer).DeleteTektonPipeline(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: CaptenPlugins_DeleteTektonPipeline_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CaptenPluginsServer).DeleteTektonPipeline(ctx, req.(*DeleteTektonPipelineRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1211,22 +1079,6 @@ var CaptenPlugins_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetGitProjectsForLabels",
 			Handler:    _CaptenPlugins_GetGitProjectsForLabels_Handler,
-		},
-		{
-			MethodName: "GetTektonPipelines",
-			Handler:    _CaptenPlugins_GetTektonPipelines_Handler,
-		},
-		{
-			MethodName: "CreateTektonPipeline",
-			Handler:    _CaptenPlugins_CreateTektonPipeline_Handler,
-		},
-		{
-			MethodName: "UpdateTektonPipeline",
-			Handler:    _CaptenPlugins_UpdateTektonPipeline_Handler,
-		},
-		{
-			MethodName: "DeleteTektonPipeline",
-			Handler:    _CaptenPlugins_DeleteTektonPipeline_Handler,
 		},
 		{
 			MethodName: "AddContainerRegistry",

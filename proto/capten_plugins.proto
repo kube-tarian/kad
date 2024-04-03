@@ -13,11 +13,6 @@ service capten_plugins {
     rpc GetGitProjects(GetGitProjectsRequest) returns (GetGitProjectsResponse) {}
     rpc GetGitProjectsForLabels(GetGitProjectsForLabelsRequest) returns (GetGitProjectsForLabelsResponse) {}
 
-    rpc GetTektonPipelines(GetTektonPipelinesRequest) returns (GetTektonPipelinesResponse) {}
-    rpc CreateTektonPipeline(CreateTektonPipelineRequest) returns (CreateTektonPipelineResponse) {}
-    rpc UpdateTektonPipeline(UpdateTektonPipelineRequest) returns (UpdateTektonPipelineResponse) {}
-    rpc DeleteTektonPipeline(DeleteTektonPipelineRequest) returns(DeleteTektonPipelineResponse) {}
-
     rpc AddContainerRegistry(AddContainerRegistryRequest) returns (AddContainerRegistryResponse) {}
     rpc UpdateContainerRegistry(UpdateContainerRegistryRequest) returns (UpdateContainerRegistryResponse) {}
     rpc DeleteContainerRegistry(DeleteContainerRegistryRequest) returns (DeleteContainerRegistryResponse) {}
@@ -433,63 +428,4 @@ message GetContainerRegistryResponse {
     repeated ContainerRegistry registries = 1;
     StatusCode status = 2;
     string statusMessage = 3;
-}
-
-message TektonPipelines {
-    string id = 1;
-    string pipelineName = 2;
-    string webhookURL = 3;
-    string status = 4;
-    string gitOrgId = 5;
-    repeated string containerRegistryIds = 6;
-    string managedClusterId = 7;
-    string crossPlaneGitProjectId = 8;
-    string lastUpdateTime = 9;
-}
-
-message GetTektonPipelinesRequest {
-}
-
-
-message GetTektonPipelinesResponse {
-    repeated TektonPipelines pipelines = 1;
-    StatusCode status = 2;
-    string statusMessage = 3;
-}
-
-message CreateTektonPipelineRequest {
-    string pipelineName = 1;
-    string gitOrgId = 2;
-    repeated string containerRegistryIds = 3;
-    string managedClusterId = 4;
-    string crossPlaneGitProjectId = 5;
-}
-
-message CreateTektonPipelineResponse {
-    string id = 1;
-    StatusCode status = 2;
-    string statusMessage = 3;
-}
-
-message UpdateTektonPipelineRequest {
-    string id = 1;
-    string gitOrgId = 2;
-    repeated string containerRegistryIds = 3;
-    string managedClusterId = 4;
-    string crossPlaneGitProjectId = 5;
-}
-
-message UpdateTektonPipelineResponse {
-    string id = 1;
-    StatusCode status = 2;
-    string statusMessage = 3;
-}
-
-message DeleteTektonPipelineRequest {
-    string id = 1;
-}
-
-message DeleteTektonPipelineResponse {
-    StatusCode status = 1;
-    string statusMessage = 2;
 }
