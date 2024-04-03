@@ -112,6 +112,7 @@ func (k *K8SClient) CreateOrUpdateSecretStore(ctx context.Context, secretStoreNa
 	}
 
 	secretStoreData, err := yaml.Marshal(&secretStore)
+
 	if err != nil {
 		return
 	}
@@ -134,6 +135,7 @@ func (k *K8SClient) CreateOrUpdateExternalSecret(ctx context.Context, externalSe
 				Property: key,
 			},
 		}
+
 		secretKeysData = append(secretKeysData, secretKeyData)
 	}
 	externalSecret := ExternalSecret{

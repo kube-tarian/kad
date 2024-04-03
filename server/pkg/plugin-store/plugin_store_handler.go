@@ -313,10 +313,12 @@ func (p *PluginStore) DeployPlugin(orgId, clusterId string, storeType pluginstor
 	}
 
 	if isUISSOCapabilitySupported(validCapabilities) {
-		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, pluginConfig.UIEndpoint)
+
+		clientId, clientSecret, err := p.registerPluginSSO(orgId, clusterId, pluginName, uiEndpoint)
 		if err != nil {
 			return err
 		}
+
 		overrideValuesMapping[oAuthBaseURLName] = p.cfg.CaptenOAuthURL
 		overrideValuesMapping[oAuthClientIdName] = clientId
 		overrideValuesMapping[oAuthClientSecretName] = clientSecret
@@ -472,7 +474,9 @@ func (p *PluginStore) getOverrideTemplateValues(orgId, clusterID string) (map[st
 	overrideValues := map[string]string{}
 	for key, val := range clusterGlobalValues {
 		overrideValues[key] = fmt.Sprintf("%v", val)
+
 	}
+
 	return overrideValues, nil
 }
 
@@ -532,6 +536,7 @@ func replaceTemplateValuesInString(data string, values map[string]string) (trans
 	}
 
 	transformedData = string(buf.Bytes())
+
 	return
 }
 
