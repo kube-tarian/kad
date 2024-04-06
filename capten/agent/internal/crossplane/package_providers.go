@@ -35,18 +35,12 @@ func NewProvidersSyncHandler(log logging.Logger, dbStore *captenstore.Store) (*P
 	if err != nil {
 		return nil, err
 	}
-
 	return &ProvidersSyncHandler{log: log, dbStore: dbStore, tc: tc, activeProviders: map[string]bool{}}, nil
 }
 
-func registerK8SProviderWatcher(log logging.Logger, dbStore *captenstore.Store, k8sClient *k8s.K8SClient) error {
-	provider, err := NewProvidersSyncHandler(log, dbStore)
-	if err != nil {
-		return err
-	}
-
+func registerK8SProviderWatcher(log logging.Logger, provider *ProvidersSyncHandler, k8sClient *k8s.K8SClient) error {
 	log.Debugf("Registering resource %s wather", pgvk.String())
-	_, err = k8sClient.Clientset.Discovery().ServerResourcesForGroupVersion(pgvk.GroupVersion().String())
+	_, err := k8sClient.Clientset.Discovery().ServerResourcesForGroupVersion(pgvk.GroupVersion().String())
 	if err != nil {
 		log.Debugf("Resource %s not found: %v\n", pgvk.String(), err)
 		return fmt.Errorf("resource not found")
