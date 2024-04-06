@@ -407,6 +407,10 @@ func (p *PluginActivities) createUpdateConfigmap(ctx context.Context, namespace,
 			return fmt.Errorf("failed to create configmap %v", cmName)
 		}
 	}
+	// configmap found but data is empty/nil
+	if cm == nil {
+		cm = map[string]string{}
+	}
 	for k, v := range data {
 		cm[k] = v
 	}
