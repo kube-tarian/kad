@@ -53,20 +53,15 @@ func NewClusterClaimSyncHandler(log logging.Logger, dbStore *captenstore.Store) 
 	return &ClusterClaimSyncHandler{log: log, dbStore: dbStore, tc: tc}, nil
 }
 
-func registerK8SClusterClaimWatcher(log logging.Logger, dbStore *captenstore.Store, k8sClient *k8s.K8SClient) error {
-	obj, err := NewClusterClaimSyncHandler(log, dbStore)
-	if err != nil {
-		return err
-	}
-
+func registerK8SClusterClaimWatcher(log logging.Logger, handler *ClusterClaimSyncHandler, k8sClient *k8s.K8SClient) error {
 	log.Debugf("Registering resource %s wather", cgvk.String())
-	_, err = k8sClient.Clientset.Discovery().ServerResourcesForGroupVersion(cgvk.GroupVersion().String())
+	_, err := k8sClient.Clientset.Discovery().ServerResourcesForGroupVersion(cgvk.GroupVersion().String())
 	if err != nil {
 		log.Debugf("Resource %s not found: %v", cgvk.String(), err)
 		return fmt.Errorf("resource not found")
 	}
 
-	err = k8s.RegisterDynamicInformers(obj, k8sClient.DynamicClientInterface, cgvk)
+	err = k8s.RegisterDynamicInformers(handler, k8sClient.DynamicClientInterface, cgvk)
 	if err != nil {
 		return err
 	}

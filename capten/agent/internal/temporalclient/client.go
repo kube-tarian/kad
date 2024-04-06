@@ -2,7 +2,6 @@ package temporalclient
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/intelops/go-common/logging"
@@ -50,7 +49,7 @@ func (c *Client) newTemporalClient() (err error) {
 		Logger:    c.log,
 	}
 
-	if err := createNamespace(opts); err != nil {
+	if err := createNamespace(opts, c.log); err != nil {
 		return err
 	}
 
@@ -68,21 +67,21 @@ func (c *Client) newTemporalClient() (err error) {
 	return
 }
 
-func createNamespace(opts client.Options) error {
+func createNamespace(opts client.Options, log logging.Logger) error {
 	namespaceClient, err := client.NewNamespaceClient(opts)
 	if err != nil {
-		log.Println("failed to create the namespace client", err)
+		log.Errorf("failed to create the namespace client", err)
 		return err
 	}
 
 	response, err := namespaceClient.Describe(context.Background(), "default")
 	if err != nil {
-		log.Println("failed to get the namespace", err)
+		log.Errorf("failed to get the namespace", err)
 		return err
 	}
 
 	if response.NamespaceInfo.Name == opts.Namespace {
-		log.Printf("namespace %s exists, skipping namespace creation", opts.Namespace)
+		log.Debugf("namespace %s exists, skipping namespace creation", opts.Namespace)
 		return nil
 	}
 
@@ -93,10 +92,9 @@ func createNamespace(opts client.Options) error {
 	})
 
 	if err != nil {
-		log.Println("failed to create the namespace", err)
+		log.Errorf("failed to create the namespace", err)
 		return err
 	}
-
 	return nil
 }
 

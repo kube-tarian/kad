@@ -15,8 +15,18 @@ func RegisterK8SWatcher(log logging.Logger, dbStore *captenstore.Store) error {
 		return fmt.Errorf("failed to initalize k8s client: %v", err)
 	}
 
+	clusterHandler, err := NewClusterClaimSyncHandler(log, dbStore)
+	if err != nil {
+		return err
+	}
+
+	provider, err := NewProvidersSyncHandler(log, dbStore)
+	if err != nil {
+		return err
+	}
+
 	go retryForEver(60*time.Second, func() (err error) {
-		err = registerK8SClusterClaimWatcher(log, dbStore, k8sclient)
+		err = registerK8SClusterClaimWatcher(log, clusterHandler, k8sclient)
 		if err != nil {
 			return fmt.Errorf("failed to RegisterK8SClusterClaimWatcher: %v", err)
 		}
@@ -24,7 +34,7 @@ func RegisterK8SWatcher(log logging.Logger, dbStore *captenstore.Store) error {
 	})
 
 	go retryForEver(60*time.Second, func() (err error) {
-		err = registerK8SProviderWatcher(log, dbStore, k8sclient)
+		err = registerK8SProviderWatcher(log, provider, k8sclient)
 		if err != nil {
 			return fmt.Errorf("failed to RegisterK8SProviderWatcher: %v", err)
 		}
