@@ -145,7 +145,7 @@ func (a *Agent) GetCloudProviders(ctx context.Context, request *captenpluginspb.
 	}
 
 	for _, r := range res {
-		cloudAttributes, err := a.getCloudProviderCredential(ctx, r.Id)
+		cloudAttributes, secretPath, secretKeys, err := a.getCloudProviderCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetCloudProvidersResponse{
@@ -154,6 +154,8 @@ func (a *Agent) GetCloudProviders(ctx context.Context, request *captenpluginspb.
 			}, nil
 		}
 		r.CloudAttributes = cloudAttributes
+		r.SecretePath = secretPath
+		r.SecreteKeys = secretKeys
 	}
 
 	a.log.Infof("Found %d cloud providers", len(res))
@@ -186,7 +188,7 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 	}
 
 	for _, r := range res {
-		cloudAttributes, err := a.getCloudProviderCredential(ctx, r.Id)
+		cloudAttributes, secretPath, secretKeys, err := a.getCloudProviderCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetCloudProvidersWithFilterResponse{
@@ -195,6 +197,8 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 			}, nil
 		}
 		r.CloudAttributes = cloudAttributes
+		r.SecretePath = secretPath
+		r.SecreteKeys = secretKeys
 	}
 
 	a.log.Infof("Found %d cloud providers for lables %v and cloud type %v", len(res), request.Labels, request.CloudType)
@@ -205,21 +209,26 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 	}, nil
 }
 
-func (a *Agent) getCloudProviderCredential(ctx context.Context, id string) (map[string]string, error) {
+func (a *Agent) getCloudProviderCredential(ctx context.Context, id string) (map[string]string, string, []string, error) {
 	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, cloudProviderEntityName, id)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
 		a.log.Errorf("failed to get crendential for %s, %v", credPath, err)
-		return nil, err
+		return nil, "", nil, err
 	}
 
 	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, cloudProviderEntityName, id)
 	if err != nil {
 		a.log.Errorf("failed to get credential for %s, %v", credPath, err)
-		return nil, err
+		return nil, "", nil, err
 	}
-	return cred, nil
+
+	secretKeys := []string{}
+	for key := range cred {
+		secretKeys = append(secretKeys, key)
+	}
+	return cred, credPath, secretKeys, nil
 }
 
 func (a *Agent) storeCloudProviderCredential(ctx context.Context, id string, credentialMap map[string]string) error {

@@ -27,6 +27,7 @@ func mapAgentAppsToServerResp(appDataList []*agentpb.AppData) []*serverpb.Cluste
 		clusterAppConfig.DefualtApp = appConfig.Config.DefualtApp
 		clusterAppConfig.PluginName = appConfig.Config.PluginName
 		clusterAppConfig.PluginStoreType = serverpb.PluginStoreType(appConfig.Config.PluginStoreType)
+		clusterAppConfig.ApiEndpoint = appConfig.Config.ApiEndpoint
 		clusterAppConfigs[index] = &clusterAppConfig
 	}
 	return clusterAppConfigs

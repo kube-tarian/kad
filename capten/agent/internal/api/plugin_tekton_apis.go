@@ -48,7 +48,7 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 	}
 
 	if ok, err := a.isProjectRegisteredWithArgoCD(ctx, project.GitProjectUrl); !ok && err == nil {
-		accessToken, userID, err := a.getGitProjectCredential(ctx, project.GitProjectId)
+		accessToken, userID, _, _, err := a.getGitProjectCredential(ctx, project.GitProjectId)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.RegisterTektonProjectResponse{

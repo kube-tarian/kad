@@ -147,6 +147,8 @@ message GitProject {
     string lastUpdateTime = 4;
     string accessToken = 5;
     string userID = 6;
+    string secretePath = 7;
+    repeated string secreteKeys  = 8;
 }
 
 message GetGitProjectsResponse {
@@ -207,6 +209,8 @@ message CloudProvider {
     repeated string labels = 3;
     string lastUpdateTime = 4;
     map<string, string> cloudAttributes = 5;
+    string secretePath = 6;
+    repeated string secreteKeys  = 7;
 }
 
 message GetCloudProvidersResponse {
@@ -356,6 +360,8 @@ message ManagedCluster {
     string clusterDeployStatus = 4;
     string appDeployStatus = 5;
     string lastUpdateTime = 6;
+    string secretePath = 7;
+    repeated string secreteKeys  = 8;
 }
 
 message GetManagedClustersRequest {
@@ -422,6 +428,8 @@ message ContainerRegistry {
     string lastUpdateTime = 4;
     map<string, string> registryAttributes = 5;
     string registryType = 6;
+    string secretePath = 7;
+    repeated string secreteKeys  = 8;
 }
 
 message GetContainerRegistryResponse {

@@ -149,7 +149,7 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 	}
 
 	for _, r := range res {
-		cred, err := a.getContainerRegCredential(ctx, r.Id)
+		cred, secretPath, secretKeys, err := a.getContainerRegCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetContainerRegistryResponse{
@@ -157,8 +157,9 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 				StatusMessage: "failed to fetch container registry",
 			}, err
 		}
-
 		r.RegistryAttributes = cred
+		r.SecretePath = secretPath
+		r.SecreteKeys = secretKeys
 	}
 
 	a.log.Infof("Found %d container registry", len(res))
@@ -170,21 +171,26 @@ func (a *Agent) GetContainerRegistry(ctx context.Context, request *captenplugins
 
 }
 
-func (a *Agent) getContainerRegCredential(ctx context.Context, id string) (map[string]string, error) {
+func (a *Agent) getContainerRegCredential(ctx context.Context, id string) (map[string]string, string, []string, error) {
 	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, containerRegEntityName, id)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
 		a.log.Errorf("failed to get crendential for %s, %v", credPath, err)
-		return nil, err
+		return nil, "", nil, err
 	}
 
 	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, containerRegEntityName, id)
 	if err != nil {
 		a.log.Errorf("failed to get credential for %s, %v", credPath, err)
-		return nil, err
+		return nil, "", nil, err
 	}
-	return cred, nil
+
+	secretKeys := []string{}
+	for key := range cred {
+		secretKeys = append(secretKeys, key)
+	}
+	return cred, credPath, secretKeys, nil
 }
 
 func (a *Agent) storeContainerRegCredential(ctx context.Context, id string, credentialMap map[string]string) error {
