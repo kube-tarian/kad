@@ -23,6 +23,19 @@ func (a *Agent) GetManagedClusters(ctx context.Context, request *captenpluginspb
 		}, nil
 	}
 
+	for _, r := range managedClusters {
+		_, secretPath, secretKeys, err := a.getContainerRegCredential(ctx, r.Id)
+		if err != nil {
+			a.log.Errorf("failed to get credential, %v", err)
+			return &captenpluginspb.GetManagedClustersResponse{
+				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+				StatusMessage: "failed to fetch managed clusters",
+			}, err
+		}
+		r.SecretePath = secretPath
+		r.SecreteKeys = secretKeys
+	}
+
 	a.log.Infof("Fetched %d Managed Clusters", len(managedClusters))
 	return &captenpluginspb.GetManagedClustersResponse{
 		Status:        captenpluginspb.StatusCode_OK,
@@ -43,7 +56,7 @@ func (a *Agent) GetManagedClusterKubeconfig(ctx context.Context, request *capten
 
 	a.log.Infof("Get Managed Cluster %s kubeconfig request recieved", request.Id)
 
-	creds, err := a.getManagedClusterCredential(ctx, request.GetId())
+	creds, _, _, err := a.getManagedClusterCredential(ctx, request.GetId())
 	if err != nil {
 		a.log.Errorf("failed to get managedClusters kubeconfig from vault, %v", err)
 		return &captenpluginspb.GetManagedClusterKubeconfigResponse{
@@ -60,21 +73,26 @@ func (a *Agent) GetManagedClusterKubeconfig(ctx context.Context, request *capten
 	}, nil
 }
 
-func (a *Agent) getManagedClusterCredential(ctx context.Context, id string) (map[string]string, error) {
+func (a *Agent) getManagedClusterCredential(ctx context.Context, id string) (map[string]string, string, []string, error) {
 	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, ManagedClusterEntityName, id)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
 		a.log.Errorf("failed to get crendential for %s, %v", credPath, err)
-		return nil, err
+		return nil, "", nil, err
 	}
 
 	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, ManagedClusterEntityName, id)
 	if err != nil {
 		a.log.Errorf("failed to get credential for %s, %v", credPath, err)
-		return nil, err
+		return nil, "", nil, err
 	}
-	return cred, nil
+
+	secretKeys := []string{}
+	for key := range cred {
+		secretKeys = append(secretKeys, key)
+	}
+	return cred, credPath, secretKeys, nil
 }
 
 // store managed cluster kubeconfig and endpoint in vault

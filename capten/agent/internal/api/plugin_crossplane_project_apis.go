@@ -54,7 +54,7 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 	}
 
 	if ok, err := a.isProjectRegisteredWithArgoCD(ctx, crossplaneProject.GitProjectUrl); !ok && err == nil {
-		accessToken, userID, err := a.getGitProjectCredential(ctx, crossplaneProject.GitProjectId)
+		accessToken, userID, _, _, err := a.getGitProjectCredential(ctx, crossplaneProject.GitProjectId)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.RegisterCrossplaneProjectResponse{

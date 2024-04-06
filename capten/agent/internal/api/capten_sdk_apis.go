@@ -28,7 +28,7 @@ func (a *Agent) GetGitProjectById(ctx context.Context, request *captensdkpb.GetG
 		}, nil
 	}
 
-	accessToken, _, err := a.getGitProjectCredential(ctx, res.Id)
+	accessToken, _, _, _, err := a.getGitProjectCredential(ctx, res.Id)
 	if err != nil {
 		a.log.Errorf("failed to get git credential for project Id: %s, %v", request.Id, err)
 		return &captensdkpb.GetGitProjectByIdResponse{
@@ -84,7 +84,7 @@ func (a *Agent) GetContainerRegistryById(ctx context.Context, request *captensdk
 		RegistryType:   res.RegistryType,
 	}
 
-	cred, err := a.getContainerRegCredential(ctx, res.Id)
+	cred, _, _, err := a.getContainerRegCredential(ctx, res.Id)
 	if err != nil {
 		a.log.Errorf("failed to get container registry credential for %s, %v", request.Id, err)
 		return &captensdkpb.GetContainerRegistryByIdResponse{

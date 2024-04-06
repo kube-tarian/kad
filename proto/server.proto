@@ -184,6 +184,7 @@ message ClusterAppConfig {
   bool defualtApp = 17;
   string pluginName = 18;
   PluginStoreType pluginStoreType = 19;
+  string apiEndpoint = 20;
 }
 
 message AddStoreAppRequest {

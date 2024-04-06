@@ -37,7 +37,7 @@ func (a *Agent) RegisterArgoCDProject(ctx context.Context, request *captenplugin
 		}, nil
 	}
 
-	accessToken, userID, err := a.getGitProjectCredential(ctx, argoCDProject.GitProjectId)
+	accessToken, userID, _, _, err := a.getGitProjectCredential(ctx, argoCDProject.GitProjectId)
 	if err != nil {
 		a.log.Errorf("failed to get credential, %v", err)
 		return &captenpluginspb.RegisterArgoCDProjectResponse{

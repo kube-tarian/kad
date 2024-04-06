@@ -167,7 +167,7 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 	}
 
 	for _, r := range res {
-		accessToken, userID, err := a.getGitProjectCredential(ctx, r.Id)
+		accessToken, userID, secretPath, secretKeys, err := a.getGitProjectCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetGitProjectsResponse{
@@ -177,6 +177,8 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 		}
 		r.AccessToken = accessToken
 		r.UserID = userID
+		r.SecretePath = secretPath
+		r.SecreteKeys = secretKeys
 	}
 
 	a.log.Infof("Found %d git projects", len(res))
@@ -209,7 +211,7 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 	}
 
 	for _, r := range res {
-		accessToken, userID, err := a.getGitProjectCredential(ctx, r.Id)
+		accessToken, userID, secretPath, secretKeys, err := a.getGitProjectCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetGitProjectsForLabelsResponse{
@@ -219,6 +221,8 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 		}
 		r.AccessToken = accessToken
 		r.UserID = userID
+		r.SecretePath = secretPath
+		r.SecreteKeys = secretKeys
 	}
 
 	a.log.Infof("Found %d git projects for lables %v", len(res), request.Labels)
@@ -229,21 +233,26 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 	}, nil
 }
 
-func (a *Agent) getGitProjectCredential(ctx context.Context, id string) (string, string, error) {
+func (a *Agent) getGitProjectCredential(ctx context.Context, id string) (string, string, string, []string, error) {
 	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProjectEntityName, id)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {
 		a.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
 		a.log.Errorf("failed to get crendential for %s, %v", credPath, err)
-		return "", "", err
+		return "", "", "", nil, err
 	}
 
 	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, gitProjectEntityName, id)
 	if err != nil {
 		a.log.Errorf("failed to get credential for %s, %v", credPath, err)
-		return "", "", err
+		return "", "", "", nil, err
 	}
-	return cred["accessToken"], cred["userID"], nil
+
+	secretKeys := []string{}
+	for key := range cred {
+		secretKeys = append(secretKeys, key)
+	}
+	return cred["accessToken"], cred["userID"], credPath, secretKeys, nil
 }
 
 func (a *Agent) storeGitProjectCredential(ctx context.Context, id string, userID string, accessToken string) error {
