@@ -78,6 +78,7 @@ func NewPluginActivities() (*PluginActivities, error) {
 }
 
 func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
+	logger.Infof("Deploy postgres store started")
 	err := p.updateStatus(req.PluginName, postgresStoreInitializingStatus)
 	if err != nil {
 		return &model.ResponsePayload{
