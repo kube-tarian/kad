@@ -3,14 +3,13 @@ package helm
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	helmclient "github.com/kube-tarian/kad/capten/common-pkg/plugins/helm/go-helm-client"
 	"github.com/kube-tarian/kad/capten/model"
 )
 
 func (h *HelmCLient) Delete(req *model.DeleteRequestPayload) (json.RawMessage, error) {
-	h.logger.Infof("Helm client Install invoke started")
+	h.logger.Infof("Helm client Delete invoke started")
 
 	helmClient, err := h.getHelmClient(req.Namespace)
 	if err != nil {
@@ -23,7 +22,6 @@ func (h *HelmCLient) Delete(req *model.DeleteRequestPayload) (json.RawMessage, e
 		ReleaseName: req.ReleaseName,
 		Namespace:   req.Namespace,
 		Wait:        true,
-		Timeout:     time.Duration(req.Timeout) * time.Minute,
 	}
 
 	// Uninstall the chart release.
@@ -35,6 +33,6 @@ func (h *HelmCLient) Delete(req *model.DeleteRequestPayload) (json.RawMessage, e
 	}
 
 	h.logger.Infof("helm uninstall of app %s successful in namespace: %v", req.ReleaseName, req.Namespace)
-	h.logger.Infof("Helm client Install invoke finished")
+	h.logger.Infof("Helm client Delete invoke finished")
 	return json.RawMessage(fmt.Sprintf("{\"status\": \"Application %s successful with helm client\"}", req.ReleaseName)), nil
 }
