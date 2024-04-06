@@ -68,8 +68,10 @@ func DeleteAppRole(appRoleName string) error {
 	resp, err := vcClient.DeleteAppRole(context.Background(), &vaultcredpb.DeleteAppRoleRequest{
 		RoleName: appRoleName,
 	})
+	fmt.Printf("ganesh ____________________ error: %v\n", err)
+	fmt.Printf("ganesh -------------------- resp: %+v\n", resp)
 	if err != nil || resp.Status != vaultcredpb.StatusCode_OK {
-		return fmt.Errorf("failed to delete app role %s, reason %v-%v", appRoleName, err, resp)
+		return fmt.Errorf("failed to delete app role %s, stauts %v, message: %v", appRoleName, err, resp.Status, resp.StatusMessage)
 	}
 	return nil
 }

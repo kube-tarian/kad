@@ -234,7 +234,7 @@ func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
 	// Delete App role
 	err = vaultcred.DeleteAppRole(req.PluginName)
 	if err != nil {
-		logger.Errorf("failed to get vault token for the path, %v", err)
+		logger.Errorf("failed to delete vault app role, %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"vault token status: %s\"}", err.Error())),
