@@ -231,6 +231,16 @@ func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
 		logger.Errorf("failed to update undeploy status to vaultstore-uninitializing, %v", err)
 	}
 
+	// Delete App role
+	err = vaultcred.DeleteAppRole(req.PluginName)
+	if err != nil {
+		logger.Errorf("failed to get vault token for the path, %v", err)
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"vault token status: %s\"}", err.Error())),
+		}, err
+	}
+
 	// Delete a secret with token data
 	err = p.k8sClient.DeleteSecret(ctx, req.DefaultNamespace, req.PluginName+"-vault-token")
 	if err != nil {
