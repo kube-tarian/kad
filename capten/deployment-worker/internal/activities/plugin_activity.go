@@ -16,22 +16,28 @@ import (
 )
 
 const (
-	postgresStoreInitializingStatus   = "postgres-" + "initializing"
-	postgresStoreInitializedStatus    = "postgres-" + "initialized"
-	postgresStoreUninitializingStatus = "postgres-" + "uninitializing"
-	postgresStoreUninitializedStatus  = "postgres-" + "uninitialized"
-	vaultStoreInitializingStatus      = "vaultstore-" + "initializing"
-	vaultStoreInitializedStatus       = "vaultstore-" + "initialized"
-	vaultStoreUnitializingStatus      = "vaultstore-" + "uninitializing"
-	vaultStoreUninitializedStatus     = "vaultstore-" + "uninitialized"
-	mtlsInitializingStatus            = "mtls-" + "initializing"
-	mtlsInitializedStatus             = "mtls-" + "initialized"
-	mtlsUnitializingStatus            = "mtls-" + "uninitializing"
-	mtlsUnitializedStatus             = "mtls-" + "uninitialized"
-	deleteUnitiazedStatus             = "delete-" + "uninitialized"
-	deleteSuccessStatus               = "delete-" + "success"
-	deleteFailedStatus                = "delete-" + "failed"
-	deployedStatus                    = "deployed"
+	postgresStoreInitializingStatus       = "postgres-" + "initializing"
+	postgresStoreInitializedStatus        = "postgres-" + "initialized"
+	postgresStoreInitializeFailedStatus   = "postgres-" + "initialize-faield"
+	postgresStoreUninitializingStatus     = "postgres-" + "uninitializing"
+	postgresStoreUninitializedStatus      = "postgres-" + "uninitialized"
+	postgresStoreUninitializeFailedStatus = "postgres-" + "uninitialize-failed"
+	vaultStoreInitializingStatus          = "vaultstore-" + "initializing"
+	vaultStoreInitializedStatus           = "vaultstore-" + "initialized"
+	vaultStoreInitializeFailedStatus      = "vaultstore-" + "initialize-failed"
+	vaultStoreUnitializingStatus          = "vaultstore-" + "uninitializing"
+	vaultStoreUninitializedStatus         = "vaultstore-" + "uninitialized"
+	vaultStoreUninitializeFailedStatus    = "vaultstore-" + "uninitialize-failed"
+	mtlsInitializingStatus                = "mtls-" + "initializing"
+	mtlsInitializedStatus                 = "mtls-" + "initialized"
+	mtlsInitializeFailedStatus            = "mtls-" + "initialize-failed"
+	mtlsUnitializingStatus                = "mtls-" + "uninitializing"
+	mtlsUnitializedStatus                 = "mtls-" + "uninitialized"
+	mtlsUnitializeFailedStatus            = "mtls-" + "uninitialize-failed"
+	deleteUnitiazingStatus                = "delete-" + "uninitializing"
+	deleteSuccessStatus                   = "delete-" + "success"
+	deleteFailedStatus                    = "delete-" + "failed"
+	deployedStatus                        = "deployed"
 
 	pluginConfigmapNameTemplate = "-init-config"
 )
@@ -350,7 +356,7 @@ func (p *PluginActivities) PluginUndeployPostActionActivity(ctx context.Context,
 }
 
 func (p *PluginActivities) PluginUndeployActivity(ctx context.Context, req *model.DeployerDeleteRequest) (*model.ResponsePayload, error) {
-	err := p.updateStatus(req.ReleaseName, deleteUnitiazedStatus)
+	err := p.updateStatus(req.ReleaseName, deleteUnitiazingStatus)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -396,7 +402,7 @@ func (p *PluginActivities) createUpdateConfigmap(ctx context.Context, namespace,
 	cm, err := p.k8sClient.GetConfigmap(ctx, namespace, cmName)
 	if err != nil {
 		logger.Infof("plugin configmap %s not found", cmName)
-		err = p.k8sClient.CreateConfigmap(ctx, namespace, cmName, data, nil)
+		err = p.k8sClient.CreateConfigmap(ctx, namespace, cmName, data, map[string]string{})
 		if err != nil {
 			return fmt.Errorf("failed to create configmap %v", cmName)
 		}
