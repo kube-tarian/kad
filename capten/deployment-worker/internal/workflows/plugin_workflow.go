@@ -73,7 +73,6 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log log
 		}, err
 	}
 
-	log.Infof("Started plugin workflow for %s", req.PluginName)
 	log.Infof("Started plugin workflow for %s with capabilities: %v", req.PluginName, req.Capabilities)
 	for _, capability := range req.Capabilities {
 		switch capability {

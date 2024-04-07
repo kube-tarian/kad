@@ -237,7 +237,7 @@ func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
 		logger.Errorf("failed to delete vault app role, %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"vault token status: %s\"}", err.Error())),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
 		}, err
 	}
 
