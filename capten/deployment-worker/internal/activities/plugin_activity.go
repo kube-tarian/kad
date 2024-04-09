@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/db"
@@ -175,7 +176,8 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 	}
 
 	// Get vault token to access vault secret path
-	token, err := vaultcred.GetAppRoleToken(req.PluginName, []string{"plugin/" + req.PluginName + "/*"})
+	vaultPaths := []string{"plugin/" + req.PluginName + "/*", "generic/" + req.PluginName + "/*"}
+	token, err := vaultcred.GetAppRoleToken(req.PluginName, vaultPaths)
 	if err != nil {
 		logger.Errorf("failed to get vault token for the path, %v", err)
 		return &model.ResponsePayload{
@@ -187,7 +189,7 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 	// Create a secret with token data
 	err = p.k8sClient.CreateOrUpdateSecret(ctx, req.DefaultNamespace, req.PluginName+"-vault-token", v1.SecretTypeOpaque, map[string][]byte{
 		"token":       []byte(token),
-		"secret-path": []byte("plugin/" + req.PluginName + "/*"),
+		"secret-path": []byte(strings.Join(vaultPaths, ",")),
 	}, nil)
 	if err != nil {
 		logger.Errorf("failed to create secret %s with vault token, %v", req.PluginName+"-vault-token", err)
