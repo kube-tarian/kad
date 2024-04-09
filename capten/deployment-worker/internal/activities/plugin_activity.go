@@ -235,10 +235,11 @@ func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
 	err = vaultcred.DeleteAppRole(req.PluginName)
 	if err != nil {
 		logger.Errorf("failed to delete vault app role, %v", err)
-		return &model.ResponsePayload{
-			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
-		}, err
+		// TODO: Not yet implemented in vault-cred service. Currently we are going ahead with success
+		// return &model.ResponsePayload{
+		// 	Status:  "FAILED",
+		// 	Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		// }, err
 	}
 
 	// Delete a secret with token data
