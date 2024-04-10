@@ -177,7 +177,7 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 	}
 
 	// Get vault token to access vault secret path
-	vaultPaths := []string{"plugin/" + req.PluginName + "/*", "generic/" + req.PluginName + "/*"}
+	vaultPaths := []string{"plugin/" + req.PluginName + "/*", "generic/*"}
 	token, err := vaultcred.GetAppRoleToken(req.PluginName, vaultPaths)
 	if err != nil {
 		logger.Errorf("failed to get vault token for the path, %v", err)
