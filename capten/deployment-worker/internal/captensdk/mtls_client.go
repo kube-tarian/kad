@@ -7,11 +7,10 @@ import (
 	v1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
-	"github.com/kube-tarian/kad/integrator/common-pkg/logging"
+	"github.com/intelops/go-common/logging"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 type MTLSClient struct {
@@ -22,7 +21,7 @@ func NewMTLSClient(log logging.Logger) (*MTLSClient, error) {
 	return &MTLSClient{log: log}, nil
 }
 
-func (m *MTLSClient) CreateCertificate(name, namespace, issuerRefName string) error {
+func (m *MTLSClient) CreateCertificates(name, namespace, issuerRefName string) error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.WithMessage(err, "error while building kubeconfig")
@@ -67,6 +66,11 @@ func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace
 				SecretName: certName,
 				CommonName: name,
 				Usages:     usages,
+				PrivateKey: &v1.CertificatePrivateKey{
+					Algorithm: v1.RSAKeyAlgorithm,
+					Size:      2048,
+					Encoding:  v1.PKCS1,
+				},
 			},
 		},
 		metav1.CreateOptions{},
@@ -81,8 +85,7 @@ func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace
 }
 
 func (m *MTLSClient) DeleteCertificate(name, namespace string) error {
-	kubeconfigPath := m.PrepareFilePath("captenConfig.ConfigDirPath", "captenConfig.KubeConfigFileName")
-	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
+	config, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.WithMessage(err, "error while building kubeconfig")
 	}
