@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -10,6 +12,21 @@ import (
 )
 
 const containerRegEntityName = "container-registry"
+
+type DockerConfigEntry struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty" datapolicy:"password"`
+	Email    string `json:"email,omitempty"`
+	Auth     string `json:"auth,omitempty" datapolicy:"token"`
+}
+
+type DockerConfig map[string]DockerConfigEntry
+
+type DockerConfigJSON struct {
+	Auths DockerConfig `json:"auths" datapolicy:"token"`
+	// +optional
+	HttpHeaders map[string]string `json:"HttpHeaders,omitempty" datapolicy:"token"`
+}
 
 func (a *Agent) AddContainerRegistry(ctx context.Context, request *captenpluginspb.AddContainerRegistryRequest) (
 	*captenpluginspb.AddContainerRegistryResponse, error) {
@@ -24,6 +41,14 @@ func (a *Agent) AddContainerRegistry(ctx context.Context, request *captenplugins
 	a.log.Infof("Add Container registry %s request received", request.RegistryUrl)
 
 	id := uuid.New()
+	configData, err := parseAndPrepareDockerConfigJSONContent(request.RegistryAttributes, request.RegistryUrl)
+	if err != nil {
+		return &captenpluginspb.AddContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add ContainerRegistry credential in vault",
+		}, err
+	}
+	request.RegistryAttributes["config.json"] = string(configData)
 
 	if err := a.storeContainerRegCredential(ctx, id.String(), request.RegistryAttributes); err != nil {
 		return &captenpluginspb.AddContainerRegistryResponse{
@@ -73,6 +98,15 @@ func (a *Agent) UpdateContainerRegistry(ctx context.Context, request *captenplug
 			StatusMessage: fmt.Sprintf("invalid uuid: %s", request.Id),
 		}, err
 	}
+
+	configData, err := parseAndPrepareDockerConfigJSONContent(request.RegistryAttributes, request.RegistryUrl)
+	if err != nil {
+		return &captenpluginspb.UpdateContainerRegistryResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "failed to add ContainerRegistry credential in vault",
+		}, err
+	}
+	request.RegistryAttributes["config.json"] = string(configData)
 
 	if err := a.storeContainerRegCredential(ctx, request.Id, request.RegistryAttributes); err != nil {
 		return &captenpluginspb.UpdateContainerRegistryResponse{
@@ -233,4 +267,28 @@ func (a *Agent) deleteContainerRegCredential(ctx context.Context, id string) err
 	a.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
 	a.log.Infof("deleted credential for entity %s", credPath)
 	return nil
+}
+
+func parseAndPrepareDockerConfigJSONContent(credMap map[string]string, server string) ([]byte, error) {
+	userName := credMap["username"]
+	password := credMap["password"]
+	return prepareDockerConfigJSONContent(userName, password, server)
+}
+
+func prepareDockerConfigJSONContent(username, password, server string) ([]byte, error) {
+	dockerConfigAuth := DockerConfigEntry{
+		Username: username,
+		Password: password,
+		Auth:     encodeDockerConfigFieldAuth(username, password),
+	}
+	dockerConfigJSON := DockerConfigJSON{
+		Auths: map[string]DockerConfigEntry{server: dockerConfigAuth},
+	}
+
+	return json.Marshal(dockerConfigJSON)
+}
+
+func encodeDockerConfigFieldAuth(username, password string) string {
+	fieldValue := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(fieldValue))
 }
