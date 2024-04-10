@@ -8,7 +8,10 @@ import (
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	"github.com/intelops/go-common/logging"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
+	"github.com/kube-tarian/kad/capten/deployment-worker/internal/k8sops"
 	"github.com/pkg/errors"
+	k8serror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
 )
@@ -21,7 +24,7 @@ func NewMTLSClient(log logging.Logger) (*MTLSClient, error) {
 	return &MTLSClient{log: log}, nil
 }
 
-func (m *MTLSClient) CreateCertificates(name, namespace, issuerRefName string) error {
+func (m *MTLSClient) CreateCertificates(certName, namespace, issuerRefName, cmName string, k8sClient *k8s.K8SClient) error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.WithMessage(err, "error while building kubeconfig")
@@ -33,17 +36,21 @@ func (m *MTLSClient) CreateCertificates(name, namespace, issuerRefName string) e
 
 	// Create cert-manager certificate for client and server
 	for _, isClient := range []bool{true, false} {
-		err = m.generateCertificate(cmClient, namespace, name, issuerRefName, isClient)
+		err = m.generateCertificate(cmClient, namespace, certName, issuerRefName, isClient)
 		if err != nil {
 			return err
 		}
 	}
+
+	data := map[string]string{}
+	data["client-certificate"] = certName + "-client-mtls-capten-sdk"
+	data["server-certificate"] = certName + "-server-mtls-capten-sdk"
+	k8sops.CreateUpdateConfigmap(context.TODO(), m.log, namespace, cmName, data, k8sClient)
 	return nil
 }
 
-func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace string, name string, issuerRefName string, isClient bool) error {
+func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace string, certName string, issuerRefName string, isClient bool) error {
 	var usages []v1.KeyUsage
-	certName := name
 	if isClient {
 		usages = []v1.KeyUsage{v1.UsageDigitalSignature, v1.UsageKeyEncipherment, v1.UsageClientAuth}
 		certName = certName + "-client-mtls-capten-sdk"
@@ -64,7 +71,7 @@ func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace
 					Kind: v1.ClusterIssuerKind,
 				},
 				SecretName: certName,
-				CommonName: name,
+				CommonName: certName,
 				Usages:     usages,
 				PrivateKey: &v1.CertificatePrivateKey{
 					Algorithm: v1.RSAKeyAlgorithm,
@@ -75,6 +82,9 @@ func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace
 		},
 		metav1.CreateOptions{},
 	)
+	if !k8serror.IsAlreadyExists(err) {
+		m.log.Infof("%v Certificate already exists", certName)
+	}
 	if err != nil {
 		m.log.Infof("%v Certificate generation failed, reason: %v", certName, err)
 	} else {
@@ -96,6 +106,10 @@ func (m *MTLSClient) DeleteCertificate(name, namespace string) error {
 
 	// Create cert-manager certificate request
 	err = cmClient.CertmanagerV1().Certificates(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+	if k8serror.IsNotFound(err) {
+		m.log.Infof("%v Certificate not found", name)
+		return nil
+	}
 	return err
 }
 
