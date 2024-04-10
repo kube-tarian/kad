@@ -12,6 +12,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
+	"github.com/kube-tarian/kad/capten/deployment-worker/internal/captensdk"
 	"github.com/kube-tarian/kad/capten/model"
 	v1 "k8s.io/api/core/v1"
 )
