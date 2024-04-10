@@ -84,6 +84,7 @@ func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace
 	)
 	if !k8serror.IsAlreadyExists(err) {
 		m.log.Infof("%v Certificate already exists", certName)
+		return nil
 	}
 	if err != nil {
 		m.log.Infof("%v Certificate generation failed, reason: %v", certName, err)
