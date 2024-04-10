@@ -82,7 +82,7 @@ func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace
 		},
 		metav1.CreateOptions{},
 	)
-	if !k8serror.IsAlreadyExists(err) {
+	if k8serror.IsAlreadyExists(err) {
 		m.log.Infof("%v Certificate already exists", certName)
 		return nil
 	}
