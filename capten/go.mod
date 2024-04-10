@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/intelops/go-common v1.0.22
+	github.com/intelops/go-common v1.0.23
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kube-tarian/kad/integrator v0.0.0-20230520105805-73f03d9dcfcc
 	github.com/ory/client-go v1.1.49
