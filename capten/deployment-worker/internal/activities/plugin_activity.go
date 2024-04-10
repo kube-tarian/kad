@@ -276,21 +276,13 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
 		}, err
 	}
-	err = captenSDKClient.CreateCertificates(req.PluginName, req.DefaultNamespace, "capten-issuer")
+
+	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
+	err = captenSDKClient.CreateCertificates(req.PluginName, req.DefaultNamespace, "capten-issuer", pluginInitConfigmapName, p.k8sClient)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
-		}, err
-	}
-
-	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
-	err = p.createUpdateConfigmap(ctx, req.DefaultNamespace, pluginInitConfigmapName, map[string]string{})
-	if err != nil {
-		logger.Errorf("createupdate configmap failed: %v", err)
-		return &model.ResponsePayload{
-			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap failed, %s\"}", pluginInitConfigmapName)),
 		}, err
 	}
 
