@@ -15,7 +15,6 @@ const (
 	oauthClientSecretKey         = "CLIENT_SECRET"
 	captenConfigEntityName       = "capten-config"
 	globalValuesCredIdentifier   = "global-values"
-	PluginCredentialType         = "plugin"
 )
 
 func GetServiceUserCredential(ctx context.Context, svcEntity, userName string) (cred credentials.ServiceCredential, err error) {
@@ -202,7 +201,7 @@ func PutPluginCredential(ctx context.Context, pluginName, svcEntity string, cred
 		return errors.WithMessage(err, "error in initializing credential admin")
 	}
 
-	err = credAdmin.PutCredential(context.Background(), PluginCredentialType,
+	err = credAdmin.PutCredential(context.Background(), credentials.PluginCredentialType,
 		pluginName, svcEntity, cred)
 	if err != nil {
 		return errors.WithMessagef(err, "error in put generic cred for %s/%s", pluginName, svcEntity)
@@ -217,7 +216,7 @@ func GetPluginCredential(ctx context.Context, pluginName, svcEntity string) (cre
 		return
 	}
 
-	data, err := credReader.GetCredential(ctx, PluginCredentialType, pluginName, svcEntity)
+	data, err := credReader.GetCredential(ctx, credentials.PluginCredentialType, pluginName, svcEntity)
 	if err != nil {
 		err = errors.WithMessagef(err, "error while reading cluster global values %s/%s from the vault",
 			captenConfigEntityName, globalValuesCredIdentifier)

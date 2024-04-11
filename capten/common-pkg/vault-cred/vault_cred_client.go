@@ -47,6 +47,35 @@ func GetAppRoleToken(appRoleName string, credentialPaths []string) (string, erro
 	return tokenData.Token, nil
 }
 
+func DeleteAppRole(appRoleName string) error {
+	conf := &config{}
+	if err := envconfig.Process("", conf); err != nil {
+		return fmt.Errorf("vault cred config read failed, %v", err)
+	}
+
+	vc, err := grpc.Dial(conf.VaultCredAddress,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(timeout.UnaryClientInterceptor(60*time.Second)),
+		grpc.WithKeepaliveParams(keepalive.ClientParameters{
+			Time:    30, // seconds
+			Timeout: 10, // seconds
+		}))
+	if err != nil {
+		return fmt.Errorf("failed to connect vauld-cred server, %v", err)
+	}
+	vcClient := vaultcredpb.NewVaultCredClient(vc)
+
+	resp, err := vcClient.DeleteAppRole(context.Background(), &vaultcredpb.DeleteAppRoleRequest{
+		RoleName: appRoleName,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete app role %s, reason %v", appRoleName, err)
+	} else if resp.Status != vaultcredpb.StatusCode_OK {
+		return fmt.Errorf("failed to delete app role %s, stauts %v, message: %v", appRoleName, resp.Status, resp.StatusMessage)
+	}
+	return nil
+}
+
 func RegisterClusterVaultAuth(clusterID, clusterName string) error {
 	conf := &config{}
 	if err := envconfig.Process("", conf); err != nil {

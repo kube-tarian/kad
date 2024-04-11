@@ -908,4 +908,5 @@ func mergeUpgradeOptions(chartSpec *ChartSpec, upgradeOptions *action.Upgrade) {
 func mergeUninstallReleaseOptions(chartSpec *ChartSpec, uninstallReleaseOptions *action.Uninstall) {
 	uninstallReleaseOptions.DisableHooks = chartSpec.DisableHooks
 	uninstallReleaseOptions.Timeout = chartSpec.Timeout
+	uninstallReleaseOptions.Wait = chartSpec.Wait
 }

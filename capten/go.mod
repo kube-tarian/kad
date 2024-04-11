@@ -10,15 +10,13 @@ require (
 	github.com/google/uuid v1.3.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/intelops/go-common v1.0.22
+	github.com/intelops/go-common v1.0.23
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kube-tarian/kad/integrator v0.0.0-20230520105805-73f03d9dcfcc
 	github.com/ory/client-go v1.1.49
 	github.com/pkg/errors v0.9.1
-	github.com/sigstore/sigstore v1.8.2
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.4
-	github.com/theupdateframework/go-tuf v0.7.0
 	go.temporal.io/api v1.13.0
 	go.temporal.io/sdk v1.19.0
 	go.uber.org/atomic v1.9.0
@@ -44,6 +42,7 @@ require (
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/coreos/go-oidc/v3 v3.9.0 // indirect
 	github.com/go-redis/cache/v9 v9.0.0 // indirect
+	github.com/go-test/deep v1.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-github/v53 v53.0.0 // indirect
@@ -58,19 +57,16 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/letsencrypt/boulder v0.0.0-20230907030200-6d76a0f91e1e // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
+	github.com/poy/onpar v1.1.2 // indirect
 	github.com/redis/go-redis/v9 v9.1.0 // indirect
-	github.com/secure-systems-lab/go-securesystemslib v0.8.0 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
-	github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399 // indirect
 	go.opentelemetry.io/otel/metric v1.17.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
-	gopkg.in/go-jose/go-jose.v2 v2.6.1 // indirect
 	oras.land/oras-go/v2 v2.2.0 // indirect
 )
 

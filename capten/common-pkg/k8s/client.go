@@ -113,9 +113,9 @@ func (k *K8SClient) ListPods(namespace string) ([]corev1.Pod, error) {
 	return pods.Items, nil
 }
 
-func (k *K8SClient) CreateConfigmap(namespace, cmName string, data map[string]string, annotation map[string]string) error {
+func (k *K8SClient) CreateConfigmap(ctx context.Context, namespace, cmName string, data map[string]string, annotation map[string]string) error {
 	_, err := k.Clientset.CoreV1().ConfigMaps(namespace).Create(
-		context.TODO(),
+		ctx,
 		&v1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{Name: cmName, Annotations: annotation},
 			Data:       data,
@@ -124,9 +124,9 @@ func (k *K8SClient) CreateConfigmap(namespace, cmName string, data map[string]st
 	return err
 }
 
-func (k *K8SClient) UpdateConfigmap(namespace, cmName string, data map[string]string) error {
+func (k *K8SClient) UpdateConfigmap(ctx context.Context, namespace, cmName string, data map[string]string) error {
 	_, err := k.Clientset.CoreV1().ConfigMaps(namespace).Update(
-		context.TODO(),
+		ctx,
 		&v1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{Name: cmName},
 			Data:       data,
@@ -135,16 +135,16 @@ func (k *K8SClient) UpdateConfigmap(namespace, cmName string, data map[string]st
 	return err
 }
 
-func (k *K8SClient) DeleteConfigmap(namespace, cmName string) error {
-	cm, _ := k.Clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), cmName, metav1.GetOptions{})
+func (k *K8SClient) DeleteConfigmap(ctx context.Context, namespace, cmName string) error {
+	cm, _ := k.Clientset.CoreV1().ConfigMaps(namespace).Get(ctx, cmName, metav1.GetOptions{})
 	if cm != nil {
-		return k.Clientset.CoreV1().ConfigMaps(namespace).Delete(context.TODO(), cmName, metav1.DeleteOptions{})
+		return k.Clientset.CoreV1().ConfigMaps(namespace).Delete(ctx, cmName, metav1.DeleteOptions{})
 	}
 	return nil
 }
 
-func (k *K8SClient) GetConfigmap(namespace, cmName string) (map[string]string, error) {
-	cm, err := k.Clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), cmName, metav1.GetOptions{})
+func (k *K8SClient) GetConfigmap(ctx context.Context, namespace, cmName string) (map[string]string, error) {
+	cm, err := k.Clientset.CoreV1().ConfigMaps(namespace).Get(ctx, cmName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -222,8 +222,8 @@ func (k *K8SClient) GetServiceData(namespace, serviceName string) (*ServiceData,
 	}, nil
 }
 
-func (k *K8SClient) CreateNamespace(namespace string) error {
-	_, err := k.Clientset.CoreV1().Namespaces().Create(context.TODO(), &v1.Namespace{
+func (k *K8SClient) CreateNamespace(ctx context.Context, namespace string) error {
+	_, err := k.Clientset.CoreV1().Namespaces().Create(ctx, &v1.Namespace{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Namespace",
 			APIVersion: "v1",
@@ -237,4 +237,8 @@ func (k *K8SClient) CreateNamespace(namespace string) error {
 		return err
 	}
 	return nil
+}
+
+func (k *K8SClient) DeleteNamespace(ctx context.Context, namespace string) error {
+	return k.Clientset.CoreV1().Namespaces().Delete(ctx, namespace, metav1.DeleteOptions{})
 }
