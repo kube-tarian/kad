@@ -24,7 +24,7 @@ func (a *Agent) GetManagedClusters(ctx context.Context, request *captenpluginspb
 	}
 
 	for _, r := range managedClusters {
-		_, secretPath, secretKeys, err := a.getContainerRegCredential(ctx, r.Id)
+		_, secretPath, secretKeys, err := a.getManagedClusterCredential(ctx, r.Id)
 		if err != nil {
 			a.log.Errorf("failed to get credential, %v", err)
 			return &captenpluginspb.GetManagedClustersResponse{
