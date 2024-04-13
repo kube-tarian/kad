@@ -12,6 +12,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
+	"github.com/kube-tarian/kad/capten/deployment-worker/internal/captensdk"
 	"github.com/kube-tarian/kad/capten/model"
 	v1 "k8s.io/api/core/v1"
 )
@@ -266,17 +267,22 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
 		}, err
 	}
-	// TODO: Call MTLS creation
-	// Write the mtls in the vault/conigmap
-	logger.Infof("MTLS activity Not implemented yet")
 
-	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
-	err = p.createUpdateConfigmap(ctx, req.DefaultNamespace, pluginInitConfigmapName, map[string]string{})
+	// Write the mtls in the vault/conigmap
+	captenSDKClient, err := captensdk.NewMTLSClient(logger)
 	if err != nil {
-		logger.Errorf("createupdate configmap failed: %v", err)
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap failed, %s\"}", pluginInitConfigmapName)),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
+
+	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
+	err = captenSDKClient.CreateCertificates(req.PluginName, req.DefaultNamespace, "capten-issuer", pluginInitConfigmapName, p.k8sClient)
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
 		}, err
 	}
 
@@ -287,6 +293,8 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
 		}, err
 	}
+
+	logger.Infof("MTLS certificate creation finished")
 	return &model.ResponsePayload{
 		Status: "SUCCESS",
 	}, nil
@@ -300,9 +308,22 @@ func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Conte
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
 		}, err
 	}
-	// TODO: Call MTLS creation
+
 	// Write the mtls in the vault/conigmap
-	logger.Infof("MTLS activity Not implemented yet")
+	captenSDKClient, err := captensdk.NewMTLSClient(logger)
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
+	err = captenSDKClient.DeleteCertificate(req.PluginName, req.DefaultNamespace)
+	if err != nil {
+		return &model.ResponsePayload{
+			Status:  "FAILED",
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
+		}, err
+	}
 
 	err = p.updateStatus(req.PluginName, mtlsUnitializedStatus)
 	if err != nil {
@@ -311,6 +332,7 @@ func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Conte
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"%s\"}", err.Error())),
 		}, err
 	}
+	logger.Infof("MTLS certificate deletion finished")
 	return &model.ResponsePayload{
 		Status: "SUCCESS",
 	}, nil
