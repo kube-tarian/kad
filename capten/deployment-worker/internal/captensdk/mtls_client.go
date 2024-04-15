@@ -51,7 +51,6 @@ func (m *MTLSClient) CreateCertificates(certName, namespace, issuerRefName, cmNa
 
 func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace string, certName string, issuerRefName string, isClient bool) error {
 
-	//err := cmClient.RESTClient().Post().Namespace(namespace).Do(context.Background())
 	k8sclient, err := k8s.NewK8SClient(m.log)
 	if err != nil {
 		return fmt.Errorf("failed to initalize k8s client: %v", err)
