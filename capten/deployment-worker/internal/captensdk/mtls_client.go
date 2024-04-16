@@ -34,6 +34,11 @@ func (m *MTLSClient) CreateCertificates(certName, namespace, issuerRefName, cmNa
 		return err
 	}
 
+	err = k8sClient.CreateNamespace(context.Background(), namespace)
+	if err != nil {
+		return fmt.Errorf("failed to create namespace: %v", err)
+	}
+
 	// Create cert-manager certificate for client and server
 	for _, isClient := range []bool{true, false} {
 		err = m.generateCertificate(cmClient, namespace, certName, issuerRefName, isClient)
@@ -51,15 +56,6 @@ func (m *MTLSClient) CreateCertificates(certName, namespace, issuerRefName, cmNa
 
 func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace string, certName string, issuerRefName string, isClient bool) error {
 
-	k8sclient, err := k8s.NewK8SClient(m.log)
-	if err != nil {
-		return fmt.Errorf("failed to initalize k8s client: %v", err)
-	}
-	err = k8sclient.CreateNamespace(context.Background(), namespace)
-	if err != nil {
-		return fmt.Errorf("failed to create namespace: %v", err)
-	}
-
 	var usages []v1.KeyUsage
 	if isClient {
 		usages = []v1.KeyUsage{v1.UsageDigitalSignature, v1.UsageKeyEncipherment, v1.UsageClientAuth}
@@ -69,7 +65,7 @@ func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace
 		certName = certName + "-server-mtls-capten-sdk"
 	}
 
-	_, err = cmClient.CertmanagerV1().Certificates(namespace).Create(
+	_, err := cmClient.CertmanagerV1().Certificates(namespace).Create(
 		context.TODO(),
 		&v1.Certificate{
 			ObjectMeta: metav1.ObjectMeta{
