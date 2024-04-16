@@ -34,6 +34,11 @@ func (m *MTLSClient) CreateCertificates(certName, namespace, issuerRefName, cmNa
 		return err
 	}
 
+	err = k8sClient.CreateNamespace(context.Background(), namespace)
+	if err != nil {
+		return fmt.Errorf("failed to create namespace: %v", err)
+	}
+
 	// Create cert-manager certificate for client and server
 	for _, isClient := range []bool{true, false} {
 		err = m.generateCertificate(cmClient, namespace, certName, issuerRefName, isClient)
@@ -50,6 +55,7 @@ func (m *MTLSClient) CreateCertificates(certName, namespace, issuerRefName, cmNa
 }
 
 func (m *MTLSClient) generateCertificate(cmClient *cmclient.Clientset, namespace string, certName string, issuerRefName string, isClient bool) error {
+
 	var usages []v1.KeyUsage
 	if isClient {
 		usages = []v1.KeyUsage{v1.UsageDigitalSignature, v1.UsageKeyEncipherment, v1.UsageClientAuth}
