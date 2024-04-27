@@ -21,7 +21,7 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 		return &captenpluginspb.AddGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 	if len(request.UserID) == 0 {
 		request.UserID = "default"
@@ -34,7 +34,7 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 		return &captenpluginspb.AddGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "whilelisted label validation failed, label already present",
-		}, nil
+		}, err
 	}
 
 	id := uuid.New()
@@ -42,7 +42,7 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 		return &captenpluginspb.AddGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add gitProject credential in vault",
-		}, nil
+		}, err
 	}
 
 	gitProject := captenpluginspb.GitProject{
@@ -55,7 +55,7 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 		return &captenpluginspb.AddGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add gitProject in db",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Git project %s added with id %s", request.ProjectUrl, id.String())
@@ -73,7 +73,7 @@ func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.U
 		return &captenpluginspb.UpdateGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 	a.log.Infof("Update Git project %s, %s request recieved", request.ProjectUrl, request.Id)
 
@@ -82,7 +82,7 @@ func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.U
 		return &captenpluginspb.UpdateGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "whilelisted label validation failed, label already present",
-		}, nil
+		}, err
 	}
 
 	id, err := uuid.Parse(request.Id)
@@ -91,14 +91,14 @@ func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.U
 		return &captenpluginspb.UpdateGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: fmt.Sprintf("invalid uuid: %s", request.Id),
-		}, nil
+		}, err
 	}
 
 	if err := a.storeGitProjectCredential(ctx, request.Id, request.UserID, request.AccessToken); err != nil {
 		return &captenpluginspb.UpdateGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add gitProject credential in vault",
-		}, nil
+		}, err
 	}
 
 	gitProject := captenpluginspb.GitProject{
@@ -111,7 +111,7 @@ func (a *Agent) UpdateGitProject(ctx context.Context, request *captenpluginspb.U
 		return &captenpluginspb.UpdateGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to update gitProject in db",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Git project %s, %s updated", request.ProjectUrl, request.Id)
@@ -128,7 +128,7 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 		return &captenpluginspb.DeleteGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 	a.log.Infof("Delete Git project %s request recieved", request.Id)
 
@@ -136,7 +136,7 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 		return &captenpluginspb.DeleteGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to delete gitProject credential in vault",
-		}, nil
+		}, err
 	}
 
 	if err := a.as.DeleteGitProjectById(request.Id); err != nil {
@@ -144,7 +144,7 @@ func (a *Agent) DeleteGitProject(ctx context.Context, request *captenpluginspb.D
 		return &captenpluginspb.DeleteGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to delete gitProject from db",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Git project %s deleted", request.Id)
@@ -163,7 +163,7 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 		return &captenpluginspb.GetGitProjectsResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch git projects",
-		}, nil
+		}, err
 	}
 
 	for _, r := range res {
@@ -173,7 +173,7 @@ func (a *Agent) GetGitProjects(ctx context.Context, request *captenpluginspb.Get
 			return &captenpluginspb.GetGitProjectsResponse{
 				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 				StatusMessage: "failed to fetch git projects",
-			}, nil
+			}, err
 		}
 		r.AccessToken = accessToken
 		r.UserID = userID
@@ -197,7 +197,7 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 		return &captenpluginspb.GetGitProjectsForLabelsResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, fmt.Errorf("request validation failed")
 	}
 	a.log.Infof("Get Git projects with labels %v request recieved", request.Labels)
 
@@ -207,7 +207,7 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 		return &captenpluginspb.GetGitProjectsForLabelsResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch git projects",
-		}, nil
+		}, err
 	}
 
 	for _, r := range res {
@@ -217,7 +217,7 @@ func (a *Agent) GetGitProjectsForLabels(ctx context.Context, request *captenplug
 			return &captenpluginspb.GetGitProjectsForLabelsResponse{
 				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 				StatusMessage: "failed to fetch git projects",
-			}, nil
+			}, err
 		}
 		r.AccessToken = accessToken
 		r.UserID = userID
