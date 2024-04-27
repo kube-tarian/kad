@@ -13,6 +13,11 @@
     "defaultAppListFile": "default-apps-templates/app_list.yaml",
     "defaultAppValuesPath": "default-apps-templates/values",
     "clusterDefaultAppValuesPath": "infra/clusters/app-configs",
+    "appRoleTokenVaultPaths":[
+      "generic/cosign/signer",
+      "generic/nats/auth-token",
+      "generic/container-registry/*"
+    ],
     "externalSecrets": [
       {
       "namespace": "observability",
@@ -33,8 +38,7 @@
           "secretPath": "generic/cosign/signer"
       }
       ]
-      },
-      
+      },      
       {
       "namespace": "ml-server",
       "secretName": "regcred-ghcr",

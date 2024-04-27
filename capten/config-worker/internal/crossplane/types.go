@@ -12,6 +12,7 @@ type clusterUpdateConfig struct {
 	DefaultAppListFile          string                  `json:"defaultAppListFile"`
 	DefaultAppValuesPath        string                  `json:"defaultAppValuesPath"`
 	ClusterDefaultAppValuesPath string                  `json:"clusterDefaultAppValuesPath"`
+	AppRoleTokenVaultPaths      []string                `json:"appRoleTokenVaultPaths"`
 	ExternalSecrets             []clusterExternalSecret `json:"externalSecrets"`
 }
 
