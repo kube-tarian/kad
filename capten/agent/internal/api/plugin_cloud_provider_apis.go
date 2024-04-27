@@ -18,7 +18,7 @@ func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.A
 		return &captenpluginspb.AddCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Add Cloud Provider %s request received", request.CloudType)
@@ -28,7 +28,7 @@ func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.A
 		return &captenpluginspb.AddCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add cloud provider credential in vault",
-		}, nil
+		}, err
 	}
 
 	CloudProvider := captenpluginspb.CloudProvider{
@@ -41,7 +41,7 @@ func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.A
 		return &captenpluginspb.AddCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add CloudProvider in db",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Cloud Provider %s added with id %s", request.GetCloudType(), id.String())
@@ -59,7 +59,7 @@ func (a *Agent) UpdateCloudProvider(ctx context.Context, request *captenpluginsp
 		return &captenpluginspb.UpdateCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 	a.log.Infof("Update Cloud Provider %s, %s request received", request.CloudType, request.Id)
 
@@ -69,14 +69,14 @@ func (a *Agent) UpdateCloudProvider(ctx context.Context, request *captenpluginsp
 		return &captenpluginspb.UpdateCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: fmt.Sprintf("invalid uuid: %s", request.Id),
-		}, nil
+		}, err
 	}
 
 	if err := a.storeCloudProviderCredential(ctx, request.Id, request.GetCloudAttributes()); err != nil {
 		return &captenpluginspb.UpdateCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to add CloudProvider credential in vault",
-		}, nil
+		}, err
 	}
 
 	CloudProvider := captenpluginspb.CloudProvider{
@@ -89,7 +89,7 @@ func (a *Agent) UpdateCloudProvider(ctx context.Context, request *captenpluginsp
 		return &captenpluginspb.UpdateCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to update CloudProvider in db",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Cloud Provider %s, %s updated", request.CloudType, request.Id)
@@ -106,7 +106,7 @@ func (a *Agent) DeleteCloudProvider(ctx context.Context, request *captenpluginsp
 		return &captenpluginspb.DeleteCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, err
 	}
 	a.log.Infof("Delete Cloud Provider %s request recieved", request.Id)
 
@@ -114,7 +114,7 @@ func (a *Agent) DeleteCloudProvider(ctx context.Context, request *captenpluginsp
 		return &captenpluginspb.DeleteCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to delete cloud provider credential in vault",
-		}, nil
+		}, err
 	}
 
 	if err := a.as.DeleteCloudProviderById(request.Id); err != nil {
@@ -122,7 +122,7 @@ func (a *Agent) DeleteCloudProvider(ctx context.Context, request *captenpluginsp
 		return &captenpluginspb.DeleteCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to delete CloudProvider from db",
-		}, nil
+		}, err
 	}
 
 	a.log.Infof("Cloud Provider %s deleted", request.Id)
@@ -141,7 +141,7 @@ func (a *Agent) GetCloudProviders(ctx context.Context, request *captenpluginspb.
 		return &captenpluginspb.GetCloudProvidersResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch cloud providers",
-		}, nil
+		}, err
 	}
 
 	for _, r := range res {
@@ -151,7 +151,7 @@ func (a *Agent) GetCloudProviders(ctx context.Context, request *captenpluginspb.
 			return &captenpluginspb.GetCloudProvidersResponse{
 				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 				StatusMessage: "failed to fetch cloud providers",
-			}, nil
+			}, err
 		}
 		r.CloudAttributes = cloudAttributes
 		r.SecretePath = secretPath
@@ -174,7 +174,7 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
-		}, nil
+		}, fmt.Errorf("labels cannot be empty")
 	}
 	a.log.Infof("Get Cloud providers with labels %v request recieved", request.Labels)
 
@@ -184,7 +184,7 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 		return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch cloud providers",
-		}, nil
+		}, err
 	}
 
 	for _, r := range res {
@@ -194,7 +194,7 @@ func (a *Agent) GetCloudProvidersWithFilter(ctx context.Context, request *capten
 			return &captenpluginspb.GetCloudProvidersWithFilterResponse{
 				Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 				StatusMessage: "failed to fetch cloud providers",
-			}, nil
+			}, err
 		}
 		r.CloudAttributes = cloudAttributes
 		r.SecretePath = secretPath

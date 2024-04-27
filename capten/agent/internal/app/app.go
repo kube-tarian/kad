@@ -46,24 +46,26 @@ func Start() {
 
 	as, err := captenstore.NewStore(log)
 	if err != nil {
-		// ignoring store failure until DB user creation working
-		// return nil, err
 		log.Errorf("failed to initialize store, %v", err)
+		return
 	}
 
 	pas, err := pluginconfigtore.NewStore(log)
 	if err != nil {
 		log.Errorf("failed to initialize plugin app store, %v", err)
+		return
 	}
 
 	rpcapi, err := agentapi.NewAgent(log, cfg, as, pas)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
+		return
 	}
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", cfg.Host, cfg.Port))
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
+		return
 	}
 
 	var grpcServer *grpc.Server
@@ -92,11 +94,13 @@ func Start() {
 	err = registerK8SWatcher(as)
 	if err != nil {
 		log.Fatalf("Failed to initialize k8s watchers %v", err)
+		return
 	}
 
 	jobScheduler, err := initializeJobScheduler(cfg, as)
 	if err != nil {
 		log.Fatalf("Failed to create cron job: %v", err)
+		return
 	}
 
 	jobScheduler.Start()
