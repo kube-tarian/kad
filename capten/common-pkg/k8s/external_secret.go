@@ -57,8 +57,9 @@ type SecretStoreSpec struct {
 }
 
 type SecretKeySelector struct {
-	Name string `yaml:"name,omitempty"`
-	Key  string `yaml:"key,omitempty"`
+	Namespace string `yaml:"namespace,omitempty"`
+	Name      string `yaml:"name,omitempty"`
+	Key       string `yaml:"key,omitempty"`
 }
 
 type VaultAuth struct {
@@ -88,10 +89,9 @@ func (k *K8SClient) CreateOrUpdateSecretStore(ctx context.Context, secretStoreNa
 	tokenSecretName, tokenSecretKey string) (err error) {
 	secretStore := SecretStore{
 		APIVersion: "external-secrets.io/v1beta1",
-		Kind:       "SecretStore",
+		Kind:       "ClusterSecretStore",
 		Metadata: ObjectMeta{
-			Name:      secretStoreName,
-			Namespace: namespace,
+			Name: secretStoreName,
 		},
 		Spec: SecretStoreSpec{
 			RefreshInterval: 10,
@@ -102,8 +102,9 @@ func (k *K8SClient) CreateOrUpdateSecretStore(ctx context.Context, secretStoreNa
 					Version: "v2",
 					Auth: VaultAuth{
 						TokenSecretRef: &SecretKeySelector{
-							Key:  tokenSecretKey,
-							Name: tokenSecretName,
+							Key:       tokenSecretKey,
+							Name:      tokenSecretName,
+							Namespace: namespace,
 						},
 					},
 				},
@@ -152,7 +153,7 @@ func (k *K8SClient) CreateOrUpdateExternalSecret(ctx context.Context, externalSe
 				Template: ExternalSecretTargetTemplate{Type: secretType}},
 			SecretStoreRef: SecretStoreRef{
 				Name: secretStoreRefName,
-				Kind: "SecretStore",
+				Kind: "ClusterSecretStore",
 			},
 			Data: secretKeysData,
 		},
