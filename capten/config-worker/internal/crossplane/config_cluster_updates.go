@@ -123,6 +123,7 @@ func (cp *CrossPlaneApp) configureClusterUpdate(ctx context.Context, req *model.
 	}
 
 	err = cp.configureExternalSecretsOnCluster(ctx, req.ManagedClusterName, req.ManagedClusterId,
+		cp.pluginConfig.ClusterEndpointUpdates.AppRoleTokenVaultPaths,
 		cp.pluginConfig.ClusterEndpointUpdates.ExternalSecrets)
 	if err != nil {
 		logger.Errorf("%v", errors.WithMessage(err, "failed to create cluster secrets"))
