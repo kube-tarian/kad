@@ -29,6 +29,9 @@ service Agent {
 
   rpc UpgradeApp (UpgradeAppRequest) returns (UpgradeAppResponse) {}
   rpc UpdateAppValues (UpdateAppValuesRequest) returns (UpdateAppValuesResponse) {}
+
+  rpc DeployDefaultApps (DeployDefaultAppsRequest) returns (DeployDefaultAppsResponse) {}
+  rpc GetDefaultAppsStatus (GetDefaultAppsStatusRequest) returns (GetDefaultAppsStatusResponse) {}
 }
 
 enum StatusCode {
@@ -315,4 +318,30 @@ message DeleteVaultRoleRequest {
 message DeleteVaultRoleResponse { 
   StatusCode status = 1;
   string statusMessage = 2;
+}
+
+message DeployDefaultAppsRequest {
+  bool upgrade = 1;
+}
+
+message DeployDefaultAppsResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message ApplicationStatus {  
+  string appName = 1;
+  string version = 2;
+  string category = 3;
+  string installStatus = 4;
+  string runtimeStatus = 5;
+}
+
+message GetDefaultAppsStatusRequest {  
+}
+
+message GetDefaultAppsStatusResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+  repeated ApplicationStatus defaultAppsStatus = 3;
 }
