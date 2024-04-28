@@ -10,12 +10,18 @@ ${OPEN_API_CODEGEN}:
 
 tools: ${OPEN_API_CODEGEN}
 
-OPEN_API_DIR = ./api
+OPEN_API_DIR = ./gin-api-server/api/
 
 oapi-gen: tools oapi-gen-deployment-worker
 
 oapi-gen-deployment-worker:
 	$(eval APP_NAME=deployment-worker)
+	@echo Generating server for ${APP_NAME}
+	@mkdir -p ${APP_NAME}/${OPEN_API_DIR}
+	${GOBIN}/oapi-codegen -config ./${APP_NAME}/cfg.yaml ./${APP_NAME}/openapi.yaml
+
+oapi-gen-agent: tools
+	$(eval APP_NAME=agent)
 	@echo Generating server for ${APP_NAME}
 	@mkdir -p ${APP_NAME}/${OPEN_API_DIR}
 	${GOBIN}/oapi-codegen -config ./${APP_NAME}/cfg.yaml ./${APP_NAME}/openapi.yaml

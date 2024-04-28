@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/intelops/go-common/logging"
+	ginapiserver "github.com/kube-tarian/kad/capten/agent/gin-api-server"
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
@@ -18,7 +19,6 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/util"
 	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
-	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
 	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
@@ -76,7 +76,6 @@ func Start() {
 	}
 	agentpb.RegisterAgentServer(grpcServer, rpcapi)
 	captenpluginspb.RegisterCaptenPluginsServer(grpcServer, rpcapi)
-	captensdkpb.RegisterCaptenSdkServer(grpcServer, rpcapi)
 	clusterpluginspb.RegisterClusterPluginsServer(grpcServer, rpcapi)
 
 	log.Infof("Agent listening at %v", listener.Addr())
@@ -87,6 +86,8 @@ func Start() {
 			log.Errorf("Failed to start agent : %v", err)
 		}
 	}()
+
+	go ginapiserver.StartRestServer(rpcapi, cfg)
 
 	err = registerK8SWatcher(as)
 	if err != nil {

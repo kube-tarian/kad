@@ -3,8 +3,10 @@ package api
 import (
 	"context"
 	"fmt"
+	"net/http"
 
-	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/captensdkpb"
+	"github.com/gin-gonic/gin"
+	api "github.com/kube-tarian/kad/capten/agent/gin-api-server/api"
 	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/db"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/postgres/db-init"
@@ -14,31 +16,37 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-func (a *Agent) SetupDatabase(ctx context.Context, req *captensdkpb.DBSetupRequest) (*captensdkpb.DBSetupResponse, error) {
+func (a *Agent) PostSetupdatabase(c *gin.Context) {
 	a.log.Info("Creating new db for configuration")
-	var vaultPath string
-	var err error
-	// Setup the database in postgres
+
+	req := &api.SetupDatabaseRequest{}
+	err := c.BindJSON(req)
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+	}
+
+	vaultPath, err := a.setupDatabase(req)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.IndentedJSON(http.StatusCreated, api.SetupDatabaseResponse{
+		Status:        api.OK,
+		StatusMessage: "Database setup in postgres succesful",
+		VaultPath:     vaultPath,
+	})
+
+}
+
+func (a *Agent) setupDatabase(req *api.SetupDatabaseRequest) (vaultPath string, err error) {
 	switch req.DbOemName {
 	case db.POSTGRES.String():
 		vaultPath, err = setupPostgresDatabase(a.log, req)
 	default:
 		err = fmt.Errorf("unsupported Database OEM %s", req.DbOemName)
 	}
-	if err != nil {
-		a.log.Error(err.Error())
-		return &captensdkpb.DBSetupResponse{
-			Status:        captensdkpb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: err.Error(),
-		}, nil
-	}
-	a.log.Infof("Setup of new db %s is Done", req.DbName)
-
-	return &captensdkpb.DBSetupResponse{
-		Status:        captensdkpb.StatusCode_OK,
-		StatusMessage: "Database setup in postgres succesful",
-		VaultPath:     vaultPath,
-	}, nil
+	return vaultPath, err
 }
 
 // Read the Postgres DB configuration
@@ -52,7 +60,7 @@ func readConfig() (*dbinit.Config, error) {
 	}, nil
 }
 
-func setupPostgresDatabase(log logging.Logger, req *captensdkpb.DBSetupRequest) (vaultPath string, err error) {
+func setupPostgresDatabase(log logging.Logger, req *api.SetupDatabaseRequest) (vaultPath string, err error) {
 	conf, err := readConfig()
 	if err != nil {
 		log.Error(err.Error())
