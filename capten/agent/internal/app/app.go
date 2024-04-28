@@ -88,6 +88,11 @@ func Start() {
 		}
 	}()
 
+	err = setupCACertIssuser()
+	if err != nil {
+		log.Fatalf("Failed to setupt CA Cert Issuer in cert-manager %v", err)
+	}
+
 	err = registerK8SWatcher(as)
 	if err != nil {
 		log.Fatalf("Failed to initialize k8s watchers %v", err)
