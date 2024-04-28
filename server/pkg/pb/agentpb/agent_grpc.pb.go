@@ -36,6 +36,8 @@ const (
 	Agent_UnInstallApp_FullMethodName           = "/agentpb.Agent/UnInstallApp"
 	Agent_UpgradeApp_FullMethodName             = "/agentpb.Agent/UpgradeApp"
 	Agent_UpdateAppValues_FullMethodName        = "/agentpb.Agent/UpdateAppValues"
+	Agent_DeployDefaultApps_FullMethodName      = "/agentpb.Agent/DeployDefaultApps"
+	Agent_GetDefaultAppsStatus_FullMethodName   = "/agentpb.Agent/GetDefaultAppsStatus"
 )
 
 // AgentClient is the client API for Agent service.
@@ -59,6 +61,8 @@ type AgentClient interface {
 	UnInstallApp(ctx context.Context, in *UnInstallAppRequest, opts ...grpc.CallOption) (*UnInstallAppResponse, error)
 	UpgradeApp(ctx context.Context, in *UpgradeAppRequest, opts ...grpc.CallOption) (*UpgradeAppResponse, error)
 	UpdateAppValues(ctx context.Context, in *UpdateAppValuesRequest, opts ...grpc.CallOption) (*UpdateAppValuesResponse, error)
+	DeployDefaultApps(ctx context.Context, in *DeployDefaultAppsRequest, opts ...grpc.CallOption) (*DeployDefaultAppsResponse, error)
+	GetDefaultAppsStatus(ctx context.Context, in *GetDefaultAppsStatusRequest, opts ...grpc.CallOption) (*GetDefaultAppsStatusResponse, error)
 }
 
 type agentClient struct {
@@ -222,6 +226,24 @@ func (c *agentClient) UpdateAppValues(ctx context.Context, in *UpdateAppValuesRe
 	return out, nil
 }
 
+func (c *agentClient) DeployDefaultApps(ctx context.Context, in *DeployDefaultAppsRequest, opts ...grpc.CallOption) (*DeployDefaultAppsResponse, error) {
+	out := new(DeployDefaultAppsResponse)
+	err := c.cc.Invoke(ctx, Agent_DeployDefaultApps_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *agentClient) GetDefaultAppsStatus(ctx context.Context, in *GetDefaultAppsStatusRequest, opts ...grpc.CallOption) (*GetDefaultAppsStatusResponse, error) {
+	out := new(GetDefaultAppsStatusResponse)
+	err := c.cc.Invoke(ctx, Agent_GetDefaultAppsStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AgentServer is the server API for Agent service.
 // All implementations must embed UnimplementedAgentServer
 // for forward compatibility
@@ -243,6 +265,8 @@ type AgentServer interface {
 	UnInstallApp(context.Context, *UnInstallAppRequest) (*UnInstallAppResponse, error)
 	UpgradeApp(context.Context, *UpgradeAppRequest) (*UpgradeAppResponse, error)
 	UpdateAppValues(context.Context, *UpdateAppValuesRequest) (*UpdateAppValuesResponse, error)
+	DeployDefaultApps(context.Context, *DeployDefaultAppsRequest) (*DeployDefaultAppsResponse, error)
+	GetDefaultAppsStatus(context.Context, *GetDefaultAppsStatusRequest) (*GetDefaultAppsStatusResponse, error)
 	mustEmbedUnimplementedAgentServer()
 }
 
@@ -300,6 +324,12 @@ func (UnimplementedAgentServer) UpgradeApp(context.Context, *UpgradeAppRequest) 
 }
 func (UnimplementedAgentServer) UpdateAppValues(context.Context, *UpdateAppValuesRequest) (*UpdateAppValuesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateAppValues not implemented")
+}
+func (UnimplementedAgentServer) DeployDefaultApps(context.Context, *DeployDefaultAppsRequest) (*DeployDefaultAppsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeployDefaultApps not implemented")
+}
+func (UnimplementedAgentServer) GetDefaultAppsStatus(context.Context, *GetDefaultAppsStatusRequest) (*GetDefaultAppsStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDefaultAppsStatus not implemented")
 }
 func (UnimplementedAgentServer) mustEmbedUnimplementedAgentServer() {}
 
@@ -620,6 +650,42 @@ func _Agent_UpdateAppValues_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Agent_DeployDefaultApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeployDefaultAppsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).DeployDefaultApps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_DeployDefaultApps_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).DeployDefaultApps(ctx, req.(*DeployDefaultAppsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Agent_GetDefaultAppsStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDefaultAppsStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AgentServer).GetDefaultAppsStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Agent_GetDefaultAppsStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AgentServer).GetDefaultAppsStatus(ctx, req.(*GetDefaultAppsStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Agent_ServiceDesc is the grpc.ServiceDesc for Agent service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -694,6 +760,14 @@ var Agent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateAppValues",
 			Handler:    _Agent_UpdateAppValues_Handler,
+		},
+		{
+			MethodName: "DeployDefaultApps",
+			Handler:    _Agent_DeployDefaultApps_Handler,
+		},
+		{
+			MethodName: "GetDefaultAppsStatus",
+			Handler:    _Agent_GetDefaultAppsStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
