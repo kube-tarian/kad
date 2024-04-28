@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/kube-tarian/kad/agent/pkg/logging"
+	"github.com/intelops/go-common/logging"
 	rpcapi "github.com/kube-tarian/kad/server/pkg/api"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"
