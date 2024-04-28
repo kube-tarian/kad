@@ -278,7 +278,7 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 	}
 
 	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
-	err = captenSDKClient.CreateCertificates(req.PluginName, req.DefaultNamespace, "capten-issuer", pluginInitConfigmapName, p.k8sClient)
+	err = captenSDKClient.CreateCertificates(req.PluginName, req.DefaultNamespace, "agent-ca-issuer", pluginInitConfigmapName, p.k8sClient)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",

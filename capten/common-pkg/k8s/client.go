@@ -6,7 +6,6 @@ import (
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	k8serror "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -105,7 +104,7 @@ func GetK8SConfig(log logging.Logger) (*rest.Config, error) {
 	return k8sConfig, nil
 }
 
-func (k *K8SClient) ListPods(namespace string) ([]corev1.Pod, error) {
+func (k *K8SClient) ListPods(namespace string) ([]v1.Pod, error) {
 	pods, err := k.Clientset.CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
@@ -173,8 +172,13 @@ func (k *K8SClient) GetSecretData(namespace, secretName string) (*SecretData, er
 	}, nil
 }
 
-func (k *K8SClient) CreateOrUpdateSecret(ctx context.Context, namespace, secretName string, secretType v1.SecretType,
-	data map[string][]byte, annotation map[string]string) error {
+func (k *K8SClient) CreateOrUpdateSecret(
+	ctx context.Context,
+	namespace, secretName string,
+	secretType v1.SecretType,
+	data map[string][]byte,
+	annotation map[string]string,
+) error {
 	_, err := k.Clientset.CoreV1().Secrets(namespace).Create(ctx,
 		&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secretName,
 			Annotations: annotation},
@@ -185,6 +189,19 @@ func (k *K8SClient) CreateOrUpdateSecret(ctx context.Context, namespace, secretN
 			&v1.Secret{ObjectMeta: metav1.ObjectMeta{Name: secretName, Annotations: annotation},
 				Type: secretType, Data: data},
 			metav1.UpdateOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to update k8s secret, %v", err)
+		}
+	} else if err != nil {
+		return fmt.Errorf("failed to create k8s secret, %v", err)
+	}
+	return nil
+}
+
+func (k *K8SClient) CreateOrUpdateSecretObject(ctx context.Context, secret *v1.Secret) error {
+	_, err := k.Clientset.CoreV1().Secrets(secret.Namespace).Create(ctx, secret, metav1.CreateOptions{})
+	if k8serror.IsAlreadyExists(err) {
+		_, err := k.Clientset.CoreV1().Secrets(secret.Namespace).Update(ctx, secret, metav1.UpdateOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to update k8s secret, %v", err)
 		}

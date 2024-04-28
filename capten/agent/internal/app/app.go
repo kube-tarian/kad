@@ -89,6 +89,10 @@ func Start() {
 		}
 	}()
 
+	err = setupCACertIssuser()
+	if err != nil {
+		log.Fatalf("Failed to setupt CA Cert Issuer in cert-manager %v", err)
+	}
 	go ginapiserver.StartRestServer(rpcapi, cfg)
 
 	err = registerK8SWatcher(as)
