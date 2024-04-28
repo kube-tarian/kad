@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 )
@@ -146,4 +147,14 @@ func (a *Agent) GetClusterAppValues(ctx context.Context, request *agentpb.GetClu
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: agentpb.StatusCode_name[int32(agentpb.StatusCode_OK)],
 	}, nil
+}
+
+func (a *Agent) DeployDefaultApps(ctx context.Context, request *agentpb.DeployDefaultAppsRequest) (
+	*agentpb.DeployDefaultAppsResponse, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (a *Agent) GetClusterDefaultApps(ctx context.Context, request *agentpb.GetDefaultAppsStatusRequest) (
+	*agentpb.GetDefaultAppsStatusResponse, error) {
+	return nil, fmt.Errorf("not implemented")
 }
