@@ -103,6 +103,7 @@ func main() {
 	var grpcServer *grpc.Server
 	if (cfg.OptelEnabled) && (cfg.AuthEnabled) {
 
+		log.Info("OPtel Enabled", cfg.OptelEnabled)
 		log.Info("Server Authentication and opentelemetry is enabled")
 
 		interceptor := CombineInterceptors(rpcServer.AuthInterceptor, otelgrpc.UnaryServerInterceptor())
@@ -113,18 +114,18 @@ func main() {
 
 		// grpcServer = grpc.NewServer()
 	} else if cfg.OptelEnabled {
-
+		log.Info("OPtel Enabled", cfg.OptelEnabled)
 		log.Info("Opentelemetry is enabled")
 
 		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()))
 
 	} else if cfg.AuthEnabled {
-
+		log.Info("OPtel Enabled", cfg.OptelEnabled)
 		log.Info("Server Authentication enabled")
 
 		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(rpcServer.AuthInterceptor))
 	} else {
-
+		log.Info("OPtel Enabled", cfg.OptelEnabled)
 		log.Info("Server Authentication disabled")
 
 		grpcServer = grpc.NewServer()

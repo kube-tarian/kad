@@ -37,6 +37,7 @@ func getConfigurations() (opteConfig *Configurations, err error) {
 
 func InitTracer() (func(context.Context) error, error) {
 	config, err := getConfigurations()
+	logger.Info("Getting optel config", config.CollectorURL, config.IsEnabled)
 	if err != nil {
 		logger.Errorf("Unable to read open telemetry configurations")
 		return nil, err
