@@ -24,12 +24,6 @@ service Agent {
 
   rpc GetClusterGlobalValues (GetClusterGlobalValuesRequest) returns (GetClusterGlobalValuesResponse) {}
 
-  rpc InstallApp (InstallAppRequest) returns (InstallAppResponse) {}
-  rpc UnInstallApp (UnInstallAppRequest) returns (UnInstallAppResponse) {}
-
-  rpc UpgradeApp (UpgradeAppRequest) returns (UpgradeAppResponse) {}
-  rpc UpdateAppValues (UpdateAppValuesRequest) returns (UpdateAppValuesResponse) {}
-
   rpc DeployDefaultApps (DeployDefaultAppsRequest) returns (DeployDefaultAppsResponse) {}
   rpc GetDefaultAppsStatus (GetDefaultAppsStatusRequest) returns (GetDefaultAppsStatusResponse) {}
 }
@@ -158,25 +152,6 @@ message GetClusterGlobalValuesResponse {
   bytes globalValues = 3;
 }
 
-message InstallAppRequest {
-  AppConfig appConfig =1;
-  AppValues appValues = 2;
-}
-
-message InstallAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message UnInstallAppRequest {
-  string releaseName = 2;
-}
-
-message UnInstallAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
 message SyncAppData {
   AppConfig config = 1;
   AppValues values = 2;
@@ -237,27 +212,6 @@ message AppLaunchConfig {
   string launchUIDescription = 6;
   bool ssoSupported = 7;
 }
-
-message UpgradeAppRequest {
-  AppConfig appConfig =1;
-  AppValues appValues = 2;
-}
-
-message UpgradeAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message UpdateAppValuesRequest {
-  string releaseName = 1;
-  bytes overrideValues = 3;
-}
-
-message UpdateAppValuesResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
 
 enum SecretAccess {
   READ = 0;
