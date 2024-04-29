@@ -21,8 +21,8 @@ import (
 
 type Configurations struct {
 	ServiceName  string `envconfig:"APPLICATION_NAME" default:"Applications"`
-	CollectorURL string `envconfig:"OPTE_URL" default:"otelcollector.dev.optimizor.app:80"`
-	IsInsecure   bool   `envconfig:"IS_OPTE_INSECURE" default:"true"`
+	CollectorURL string `envconfig:"OPTE_URL" default:"otelcollector.awsagent.optimizor.app:80"`
+	IsInsecure   bool   `envconfig:"IS_OPTEL_INSECURE" default:"true"`
 	IsEnabled    bool   `envconfig:"IS_OPTEL_ENABLED" default:"true"`
 }
 
