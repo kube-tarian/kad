@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 
+	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/model"
@@ -80,4 +81,25 @@ func (a *Agent) ConfigureAppSSO(ctx context.Context,
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Triggerred app upgrade",
 	}, nil
+}
+
+func (a *Agent) upgradeAppWithWorkflow(req *model.ApplicationInstallRequest,
+	appConfig *agentpb.SyncAppData) {
+	wd := workers.NewDeployment(a.tc, a.log)
+	_, err := wd.SendEvent(context.TODO(), wd.GetWorkflowName(), string(model.AppUpgradeAction), req)
+	if err != nil {
+		appConfig.Config.InstallStatus = string(model.AppUpgradeFaileddStatus)
+		if err := a.as.UpsertAppConfig(appConfig); err != nil {
+			a.log.Errorf("failed to update app config for app %s, %v", appConfig.Config.ReleaseName, err)
+			return
+		}
+		a.log.Errorf("failed to send event to workflow for app %s, %v", appConfig.Config.ReleaseName, err)
+		return
+	}
+
+	appConfig.Config.InstallStatus = string(model.AppUpgradedStatus)
+	if err := a.as.UpsertAppConfig(appConfig); err != nil {
+		a.log.Errorf("failed to update app config for app %s, %v", appConfig.Config.ReleaseName, err)
+		return
+	}
 }
