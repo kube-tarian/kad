@@ -35,11 +35,10 @@ func (a *Agent) GetGitProjectById(c *gin.Context, projectID string) {
 
 	c.IndentedJSON(http.StatusOK, &api.GitProjectResponse{
 		Project: api.GitProject{
-			AccessToken:    accessToken,
-			Id:             res.Id,
-			Labels:         res.Labels,
-			LastUpdateTime: res.LastUpdateTime,
-			ProjectUrl:     res.ProjectUrl,
+			Username:    res.UserID,
+			AccessToken: accessToken,
+			Id:          res.Id,
+			ProjectUrl:  res.ProjectUrl,
 		},
 		Status:        api.OK,
 		StatusMessage: "successfully fetched git project for " + projectID,
@@ -74,8 +73,6 @@ func (a *Agent) GetContainerRegistryById(c *gin.Context, id string) {
 			Registry: &api.ContainerRegistry{
 				Id:                 res.Id,
 				RegistryUrl:        res.RegistryUrl,
-				Labels:             res.Labels,
-				LastUpdateTime:     res.LastUpdateTime,
 				RegistryType:       res.RegistryType,
 				RegistryAttributes: cred,
 			},

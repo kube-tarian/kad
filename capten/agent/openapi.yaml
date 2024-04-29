@@ -9,13 +9,6 @@ servers:
   - url: /
 
 paths:
-  /status:
-    get:
-      summary: Kubernetes readiness and liveness probe endpoint
-      responses:
-        '200':
-          description: successful operation
-
   /api-docs:
     get:
       summary: List of APIs provided by the service
@@ -59,22 +52,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContainerRegistryResponse'
-  /setupdatabase:
-    post:
-      summary: Setup the database
-      description: Setup the database
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SetupDatabaseRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SetupDatabaseResponse'
 
 components:
   schemas:
@@ -106,20 +83,15 @@ components:
           type: string
         projectUrl:
           type: string
-        accessToken:
+        username:
           type: string
-        labels:
-          type: array
-          items:
-            type: string
-        lastUpdateTime:
+        accessToken:
           type: string
       required:
         - id
         - projectUrl
         - accessToken
-        - labels
-        - lastUpdateTime
+        - username
     ContainerRegistryResponse:
       type: object
       properties:
@@ -140,12 +112,6 @@ components:
           type: string
         registryUrl:
           type: string
-        labels:
-          type: array
-          items:
-            type: string
-        lastUpdateTime:
-          type: string
         registryAttributes:
           $ref: '#/components/schemas/Attributes'
         registryType:
@@ -161,33 +127,3 @@ components:
       type: object
       additionalProperties:
         type: string
-    SetupDatabaseRequest:
-      type: object
-      properties:
-        pluginName:
-          type: string
-        dbOemName:
-          type: string
-        dbName:
-          type: string
-        serviceUserName:
-          type: string
-      required:
-        - pluginName
-        - dbOemName
-        - dbName
-        - serviceUserName
-    SetupDatabaseResponse:
-      type: object
-      properties:
-        status:
-          $ref: '#/components/schemas/Status'
-        statusMessage:
-          type: string
-        vaultPath:
-          type: string
-      required:
-        - status
-        - statusMessage
-        - vaultPath
-
