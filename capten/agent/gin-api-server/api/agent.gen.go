@@ -32,8 +32,6 @@ type Attributes map[string]string
 // ContainerRegistry defines model for ContainerRegistry.
 type ContainerRegistry struct {
 	Id                 string     `json:"id"`
-	Labels             []string   `json:"labels"`
-	LastUpdateTime     string     `json:"lastUpdateTime"`
 	RegistryAttributes Attributes `json:"registryAttributes"`
 	RegistryType       string     `json:"registryType"`
 	RegistryUrl        string     `json:"registryUrl"`
@@ -48,11 +46,10 @@ type ContainerRegistryResponse struct {
 
 // GitProject defines model for GitProject.
 type GitProject struct {
-	AccessToken    string   `json:"accessToken"`
-	Id             string   `json:"id"`
-	Labels         []string `json:"labels"`
-	LastUpdateTime string   `json:"lastUpdateTime"`
-	ProjectUrl     string   `json:"projectUrl"`
+	AccessToken string `json:"accessToken"`
+	Id          string `json:"id"`
+	ProjectUrl  string `json:"projectUrl"`
+	Username    string `json:"username"`
 }
 
 // GitProjectResponse defines model for GitProjectResponse.
@@ -62,26 +59,8 @@ type GitProjectResponse struct {
 	StatusMessage string     `json:"statusMessage"`
 }
 
-// SetupDatabaseRequest defines model for SetupDatabaseRequest.
-type SetupDatabaseRequest struct {
-	DbName          string `json:"dbName"`
-	DbOemName       string `json:"dbOemName"`
-	PluginName      string `json:"pluginName"`
-	ServiceUserName string `json:"serviceUserName"`
-}
-
-// SetupDatabaseResponse defines model for SetupDatabaseResponse.
-type SetupDatabaseResponse struct {
-	Status        Status `json:"status"`
-	StatusMessage string `json:"statusMessage"`
-	VaultPath     string `json:"vaultPath"`
-}
-
 // Status defines model for Status.
 type Status string
-
-// PostSetupdatabaseJSONRequestBody defines body for PostSetupdatabase for application/json ContentType.
-type PostSetupdatabaseJSONRequestBody = SetupDatabaseRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -94,12 +73,6 @@ type ServerInterface interface {
 	// Get git project details by ID
 	// (GET /gitproject/{id})
 	GetGitProjectById(c *gin.Context, id string)
-	// Setup the database
-	// (POST /setupdatabase)
-	PostSetupdatabase(c *gin.Context)
-	// Kubernetes readiness and liveness probe endpoint
-	// (GET /status)
-	GetStatus(c *gin.Context)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -172,32 +145,6 @@ func (siw *ServerInterfaceWrapper) GetGitProjectById(c *gin.Context) {
 	siw.Handler.GetGitProjectById(c, id)
 }
 
-// PostSetupdatabase operation middleware
-func (siw *ServerInterfaceWrapper) PostSetupdatabase(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.PostSetupdatabase(c)
-}
-
-// GetStatus operation middleware
-func (siw *ServerInterfaceWrapper) GetStatus(c *gin.Context) {
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.GetStatus(c)
-}
-
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -228,28 +175,22 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/api-docs", wrapper.GetApiDocs)
 	router.GET(options.BaseURL+"/containerregistry/:id", wrapper.GetContainerRegistryById)
 	router.GET(options.BaseURL+"/gitproject/:id", wrapper.GetGitProjectById)
-	router.POST(options.BaseURL+"/setupdatabase", wrapper.PostSetupdatabase)
-	router.GET(options.BaseURL+"/status", wrapper.GetStatus)
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9RW34/iNhD+Vyy3j+mx177xxi3bFdo9QAH6clqtnHhgfU1sn2eChFb875WdHwRIgErb",
-	"qn0DZ3593zee8TtPTW6NBk3Ih+8c0zfIRfg5InIqKQjCPyGlImW0yObOWHCkynPaWeBDjuSU3vB9VB+Y",
-	"5Duk5A/ujSahNLgYNgrJ7bybPQqiZGeoTCSQlQYE+cV0wjmxK32QVlYKgqXKodPFVXUcA/zZwZoP+U+D",
-	"AyGDio1By7LlvwyBLyRYuazjezD4USgHkg+/eezHHg3uMzCdpZ/U83KLAjGgNRrhXAnX0ugSI+ei7iOO",
-	"JKi4SuaitGrsvwKi2MB1pqwzAVGT6DRCF/ZHRfPK7wysSFNAXJo/QXfq+O+2ZQXv9qZpOURHWPo76DJD",
-	"/W1hDxRekrZF9n+0HRZAhR0LEolAiOFHAdjRGDKZih6VZDKDvPerzYqN0r2fEdxWpbBCcD02pxgP8dqp",
-	"o7rC85A3gO4T+aP1ivhWFBnNBb1dR9qjYTtGJ7SmZtBF7gPNnnjEJ9PlQzwdPb8+xPEsDgd/jJ4n49dR",
-	"/Lj6+jBd8ohPZ8vX32er6bgVuCnO3369NqEZAFOnrF9+fMjvhSXQbLQBTWxmQbP4YbFko/mEoYVUrVUq",
-	"gmnESVEGl10WJy5bcFjm+fzp7tOdR2gsaGEVH/LfwlHEraC3AHkgrPpFmjT82UBoZC9oiDaRfMgfgUZW",
-	"jb2Jp7tUPpj/end3Dm72FHTBIs+F3wH8WSExs/a1IrPObJUEyZIdozdgVesFl0FaL4R6gwzeldy3CjvO",
-	"9AjEGhdWLxEfeTLm0TmKs33zZTcJM1A4kQOBQz789s6Vj+354RHX4YbV+7XuNHIFRNUzp6srX7p58rWC",
-	"DkCEtVml2OA7Gn14Nv3tpdncxdBwV7S4SFnQYKOoGorXyd8oYpUxk0BCZdjP/mGu/x9p71hwt/Ldz1Ig",
-	"HP1gldVgDQPVYAffYf6GK9PYnpI8N0iLo2gle4D0xcjdh3HRuf/2+3IaH/H/+Z/K2S/BvQNBIE906GCv",
-	"JL8Z/X2jb1HvlOuTD4vwfloXGWvCnNTxVCTgNBAgcyCk0oDIhJYsU1sIf6wzCTDQ0hqlqUToh2R9TQr/",
-	"tOMDvn/Z/xUAAP//5pdQ4XgNAAA=",
+	"H4sIAAAAAAAC/9RVQW/iOhD+K9a8d8xreO/dcssWFqG2UIWwl6qqTDKk7ia2155UQoj/vrJJIJQA3dvu",
+	"LXFmPn/zfTOTDWSq0kqiJAvRBmz2ihX3jzGREcua0L/xPBcklOTlo1EaDYndOa01QgSWjJAFbIP2QC3f",
+	"MCN3cKskcSHRJFgIS2bt0vQRiMh7oUyTcMzkb4MriOCv8MA8bGiHnchOfuqBL1ywMGXPdx/woxYGc4ie",
+	"HMnjjABKvsTS+gdLC51zwlRUCL3UP/B5/oxUCVqtpMVTyUxHzEuKnKq/DcASp/qqmPNd1D7+Aa3lBV5X",
+	"ShvlK9pf9BGhr/axoMcm76RYnmVobaq+o+z18Uz/NDz63Q2gtmgkr/CT1nfQgiNGHaTLhZ13Ux8qv+RI",
+	"R6Pf1MX5nhPKunIwszsIYDJNR8k0vn8ZJcks8Qff4vvJ8CVOxouH0TSFAKaz9OXrbDEddoD31JzJcqUc",
+	"cI42M0K7ZQQR3HJNKFlcoCQ20yhZMpqnLH6cMKsxEyuRcR8aAAkq8XLK/EPKOxq7u+ffm8HNwFWoNEqu",
+	"BUTwvz8KQHN69SWHXIt/cpX5lwK9nc5ljzbJIYIxUqzF0IU4sXft4MP/GwxOi5vdeVdsXVXcjTrcC0tM",
+	"rRxXy7RR7yLHnC3XjF6RWTTvIkOfEmbt3LeLItyIfNshdnzTGIntU1i7KxzyZAjBaRUna+XLeuKHhBte",
+	"IaGxED1tQDhspw8EsBu1do22fUamxqD57fT15HO/To4rSl8I17psHAvfrJKH39gv78b9gPqGu+LFRcm8",
+	"B4WgZoiui18IYk0wy5G4KO159Q974E+UvWchflbv8yp5BDcBrQa12/oQwvZ5+zMAAP//LKL3o+UIAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
