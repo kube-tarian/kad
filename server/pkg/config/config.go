@@ -13,6 +13,7 @@ type ServiceConfig struct {
 	Database                 string `envconfig:"DATABASE" default:"astra"`
 	CleanupDatabase          bool   `envconfig:"CLEANUP_DATABASE" default:"false"`
 	AuthEnabled              bool   `envconfig:"AUTH_ENABLED" default:"false"`
+	OptelEnabled             bool   `envconfig:"IS_OPTEL_ENABLED" default:"true"`
 	RegisterLaunchAppsConifg bool   `envconfig:"REGISTER_LAUNCH_APPS_CONFIG" default:"true"`
 	CaptenOAuthURL           string `envconfig:"CAPTEN_OAUTH_URL" default:"https://alpha.optimizor.app/api/.ory"`
 }

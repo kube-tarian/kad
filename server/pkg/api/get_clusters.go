@@ -3,12 +3,19 @@ package api
 import (
 	"context"
 
+	"github.com/kube-tarian/kad/server/pkg/opentelemetry"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 )
 
 func (s *Server) GetClusters(ctx context.Context, request *serverpb.GetClustersRequest) (
 	*serverpb.GetClustersResponse, error) {
+
+	_, span := opentelemetry.GetTracer("Get Clusters").
+		Start(opentelemetry.BuildContext(ctx), "CaptenServer")
+	defer span.End()
+
 	orgId, err := validateOrgWithArgs(ctx)
+
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.GetClustersResponse{

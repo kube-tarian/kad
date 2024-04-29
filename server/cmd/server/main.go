@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/kube-tarian/kad/server/pkg/opentelemetry"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -30,7 +33,15 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to load service congfig", err)
 	}
-
+	cleanup, err := opentelemetry.InitTracer()
+	if err != nil {
+		log.Errorf("unable to set the open telemetry , error: %v", err)
+	}
+	defer func() {
+		if cleanup != nil {
+			cleanup(context.Background())
+		}
+	}()
 	err = iamclient.RegisterService(log)
 	if err != nil {
 		log.Fatalf("%v", err)
@@ -84,12 +95,38 @@ func main() {
 		log.Fatal("failed to listen: ", err)
 	}
 
+	//grpc.NewServer(
+	//	grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
+	//	grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()))
+	// authInterceptor := grpc.UnaryInterceptor(rpcServer.AuthInterceptor)
+
 	var grpcServer *grpc.Server
-	if cfg.AuthEnabled {
+	if (cfg.OptelEnabled) && (cfg.AuthEnabled) {
+
+		log.Info("Server Authentication and opentelemetry is enabled")
+
+		interceptor := CombineInterceptors(rpcServer.AuthInterceptor, otelgrpc.UnaryServerInterceptor())
+
+		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(interceptor))
+
+		// log.Info("Server Authentication disabled but opentelemetry instrumented")
+
+		// grpcServer = grpc.NewServer()
+	} else if cfg.OptelEnabled {
+
+		log.Info("Opentelemetry is enabled")
+
+		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()))
+
+	} else if cfg.AuthEnabled {
+
 		log.Info("Server Authentication enabled")
+
 		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(rpcServer.AuthInterceptor))
 	} else {
+
 		log.Info("Server Authentication disabled")
+
 		grpcServer = grpc.NewServer()
 	}
 
@@ -110,3 +147,45 @@ func main() {
 	<-signals
 	log.Info("interrupt received, exiting")
 }
+
+// CombineInterceptors combines multiple unary interceptors into one
+func CombineInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		// Chain the interceptors
+		chained := handler
+		for i := len(interceptors) - 1; i >= 0; i-- {
+			chained = chainedInterceptor(interceptors[i], chained)
+		}
+		// Call the combined interceptors
+		return chained(ctx, req)
+	}
+}
+
+// chainedInterceptor chains two unary interceptors together
+func chainedInterceptor(a grpc.UnaryServerInterceptor, b grpc.UnaryHandler) grpc.UnaryHandler {
+	return func(ctx context.Context, req interface{}) (interface{}, error) {
+		// Call the first interceptor, passing the next handler as the next interceptor
+		return a(ctx, req, nil, b)
+	}
+}
+
+// CombineInterceptors combines multiple unary interceptors into one
+// func CombineInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
+// 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+// 		// Chain the interceptors
+// 		chained := handler
+// 		for i := len(interceptors) - 1; i >= 0; i-- {
+// 			chained = chainedInterceptor(interceptors[i], info, chained)
+// 		}
+// 		// Call the combined interceptors
+// 		return chained(ctx, req)
+// 	}
+// }
+
+// // chainedInterceptor chains two unary interceptors together
+// func chainedInterceptor(a grpc.UnaryServerInterceptor, info *grpc.UnaryServerInfo, b grpc.UnaryHandler) grpc.UnaryHandler {
+// 	return func(ctx context.Context, req interface{}) (interface{}, error) {
+// 		// Call the first interceptor, passing the next handler as the next interceptor
+// 		return a(ctx, req, info, b)
+// 	}
+// }
