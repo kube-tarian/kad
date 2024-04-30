@@ -38,7 +38,7 @@
           "secretPath": "generic/cosign/signer"
       }
       ]
-      },      
+      },
       {
       "namespace": "ml-server",
       "secretName": "regcred-ghcr",

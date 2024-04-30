@@ -55,7 +55,7 @@ message PluginData {
 }
 
 message ConfigurePluginStoreRequest {
-  PluginStoreConfig config = 1;  
+  PluginStoreConfig config = 1;
 }
 
 message ConfigurePluginStoreResponse {

@@ -97,7 +97,7 @@ git clone https://github.com/temporalio/helm-charts.git
 helm dependencies update
 
 # Install temporal
-helm install     --set server.replicaCount=1     --set cassandra.config.cluster_size=1     --set prometheus.enabled=false     --set grafana.enabled=false     --set elasticsearch.enabled=false     temporal . --timeout 8m 
+helm install     --set server.replicaCount=1     --set cassandra.config.cluster_size=1     --set prometheus.enabled=false     --set grafana.enabled=false     --set elasticsearch.enabled=false     temporal . --timeout 8m
 ```
 
 ### Delete temporal
@@ -150,7 +150,7 @@ kubectl -n default get secret argocd-initial-admin-secret -o jsonpath="{.data.pa
 ### Add below env parameters to kad-deployment-worker deployment according to argocd deployment
 
 ```
-kubectl edit deployments.apps kad-deployment-worker 
+kubectl edit deployments.apps kad-deployment-worker
 
             - name: ARGOCD_SERVICE_URL
               value: {{ .Values.argocd.serviceURL }}
@@ -161,13 +161,13 @@ kubectl edit deployments.apps kad-deployment-worker
 ### Create helloworld app
 
 ```
-curl -X POST http://127.0.0.1:9091/deploy -H "content-type: application/json" -d @tests/hello-world-argocd-plugin.json 
+curl -X POST http://127.0.0.1:9091/deploy -H "content-type: application/json" -d @tests/hello-world-argocd-plugin.json
 ```
 
 ### Delete helloworld app
 
 ```
-curl -X POST http://127.0.0.1:9091/deploy -H "content-type: application/json" -d @tests/hello-world-argocd-plugin-delete.json 
+curl -X POST http://127.0.0.1:9091/deploy -H "content-type: application/json" -d @tests/hello-world-argocd-plugin-delete.json
 
 ```
 

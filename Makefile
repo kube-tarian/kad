@@ -24,7 +24,7 @@ gen-protoc:
 	cd proto && protoc --go_out=../server/pkg/pb/agentpb --go_opt=paths=source_relative \
     		--go-grpc_out=../server/pkg/pb/agentpb --go-grpc_opt=paths=source_relative \
     		./agent.proto
-	
+
 	cd proto && protoc --go_out=../capten/common-pkg/agentpb --go_opt=paths=source_relative \
     		--go-grpc_out=../capten/common-pkg/agentpb --go-grpc_opt=paths=source_relative \
     		./agent.proto
