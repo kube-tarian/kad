@@ -63,10 +63,9 @@ message DBSetupRequest {
     string dbName = 3;
     string serviceUserName = 4;
   }
-  
+
   message DBSetupResponse {
     StatusCode status = 1;
     string statusMessage = 2;
     string vaultPath = 3;
   }
-  

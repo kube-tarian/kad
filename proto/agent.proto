@@ -35,7 +35,7 @@ enum StatusCode {
   NOT_FOUND = 3;
 }
 
-message PingRequest {  
+message PingRequest {
 }
 
 message PingResponse {
@@ -46,7 +46,7 @@ message StoreCredentialRequest {
   string credentialType = 1;
   string credEntityName = 2;
   string credIdentifier = 3;
-  map<string, string>  credential = 4;  
+  map<string, string>  credential = 4;
 }
 
 message StoreCredentialResponse {
@@ -112,7 +112,7 @@ message GetClusterAppLaunchesResponse {
 }
 
 message ConfigureAppSSORequest {
-  string releaseName = 1;  
+  string releaseName = 1;
   string clientId = 2;
   string clientSecret = 3;
   string oAuthBaseURL = 4;
@@ -120,7 +120,7 @@ message ConfigureAppSSORequest {
 
 message ConfigureAppSSOResponse {
   StatusCode status = 1;
-  string statusMessage = 2;  
+  string statusMessage = 2;
 }
 
 message GetClusterAppConfigRequest {
@@ -143,10 +143,10 @@ message GetClusterAppValuesResponse {
   AppValues values = 3;
 }
 
-message GetClusterGlobalValuesRequest {  
+message GetClusterGlobalValuesRequest {
 }
 
-message GetClusterGlobalValuesResponse {  
+message GetClusterGlobalValuesResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   bytes globalValues = 3;
@@ -215,7 +215,7 @@ message AppLaunchConfig {
 
 enum SecretAccess {
   READ = 0;
-  WRITE = 1;  
+  WRITE = 1;
 }
 
 message SecretPathRef {
@@ -223,13 +223,13 @@ message SecretPathRef {
   string SecretKey = 2;
 }
 
-message ConfigureVaultSecretRequest {  
+message ConfigureVaultSecretRequest {
   string secretName = 1;
   string namespace = 2;
   repeated SecretPathRef SecretPathData = 3;
 }
 
-message SecretPolicy { 
+message SecretPolicy {
   string secretPath = 1;
   SecretAccess access = 2;
 }
@@ -239,20 +239,7 @@ message ConfigureVaultSecretResponse {
   string statusMessage = 2;
 }
 
-message CreateVaultRoleRequest { 
-  string managedClusterName = 1;
-  string roleName = 2;
-  repeated SecretPolicy secretPolicy = 3;
-  repeated string namespaces = 4;
-  repeated string serviceAccounts = 5;  
-}
-
-message CreateVaultRoleResponse { 
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message UpdateVaultRoleRequest { 
+message CreateVaultRoleRequest {
   string managedClusterName = 1;
   string roleName = 2;
   repeated SecretPolicy secretPolicy = 3;
@@ -260,16 +247,29 @@ message UpdateVaultRoleRequest {
   repeated string serviceAccounts = 5;
 }
 
-message UpdateVaultRoleResponse { 
+message CreateVaultRoleResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }
 
-message DeleteVaultRoleRequest { 
+message UpdateVaultRoleRequest {
+  string managedClusterName = 1;
+  string roleName = 2;
+  repeated SecretPolicy secretPolicy = 3;
+  repeated string namespaces = 4;
+  repeated string serviceAccounts = 5;
+}
+
+message UpdateVaultRoleResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
+}
+
+message DeleteVaultRoleRequest {
   string roleName = 1;
 }
 
-message DeleteVaultRoleResponse { 
+message DeleteVaultRoleResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }
@@ -283,7 +283,7 @@ message DeployDefaultAppsResponse {
   string statusMessage = 2;
 }
 
-message ApplicationStatus {  
+message ApplicationStatus {
   string appName = 1;
   string version = 2;
   string category = 3;
@@ -291,7 +291,7 @@ message ApplicationStatus {
   string runtimeStatus = 5;
 }
 
-message GetDefaultAppsStatusRequest {  
+message GetDefaultAppsStatusRequest {
 }
 
 message GetDefaultAppsStatusResponse {
