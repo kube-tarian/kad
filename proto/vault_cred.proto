@@ -16,7 +16,7 @@ service VaultCred {
   rpc DeleteAppRole(DeleteAppRoleRequest) returns (DeleteAppRoleResponse) {};
   rpc GetCredentialWithAppRoleToken(GetCredentialWithAppRoleTokenRequest) returns (GetCredentialWithAppRoleTokenResponse) {};
   rpc AddClusterK8SAuth(AddClusterK8SAuthRequest) returns (AddClusterK8SAuthResponse) {};
-  rpc DeleteClusterK8SAuth(DeleteClusterK8SAuthRequest) returns (DeleteClusterK8SAuthResponse) {};  
+  rpc DeleteClusterK8SAuth(DeleteClusterK8SAuthRequest) returns (DeleteClusterK8SAuthResponse) {};
   rpc CreateK8SAuthRole(CreateK8SAuthRoleRequest) returns (CreateK8SAuthRoleResponse) {};
   rpc UpdateK8SAuthRole(UpdateK8SAuthRoleRequest) returns (UpdateK8SAuthRoleResponse) {};
   rpc DeleteK8SAuthRole(DeleteK8SAuthRoleRequest) returns (DeleteK8SAuthRoleResponse) {};
@@ -92,44 +92,44 @@ message GetCredentialWithAppRoleTokenResponse {
 
 enum SecretAccess {
    READ = 0;
-   WRITE = 1;  
+   WRITE = 1;
 }
 
-message secretPolicy { 
+message secretPolicy {
    string secretPath = 1;
    SecretAccess access = 2;
 }
 
-message CreateK8SAuthRoleRequest { 
+message CreateK8SAuthRoleRequest {
    string roleName = 1;
    repeated secretPolicy secretPolicy = 2;
    string clusterName = 3;
    repeated string namespaces = 4;
    repeated string serviceAccounts = 5;
 }
- 
-message CreateK8SAuthRoleResponse { 
+
+message CreateK8SAuthRoleResponse {
    StatusCode status = 1;
    string statusMessage = 2;
 }
- 
-message UpdateK8SAuthRoleRequest { 
+
+message UpdateK8SAuthRoleRequest {
    string roleName = 1;
    repeated secretPolicy secretPolicy = 2;
    string clusterName = 3;
 }
- 
-message UpdateK8SAuthRoleResponse { 
+
+message UpdateK8SAuthRoleResponse {
    StatusCode status = 1;
    string statusMessage = 2;
 }
- 
-message DeleteK8SAuthRoleRequest { 
+
+message DeleteK8SAuthRoleRequest {
    string roleName = 1;
    string clusterName = 3;
 }
- 
-message DeleteK8SAuthRoleResponse { 
+
+message DeleteK8SAuthRoleResponse {
    StatusCode status = 1;
    string statusMessage = 2;
 }
