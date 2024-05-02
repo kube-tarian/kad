@@ -98,7 +98,10 @@ func (w *Worker) createWorker(taskQueueName string) (err error) {
 		return fmt.Errorf("default namespace create verification failed, %v", err)
 	}
 
-	w.temporalWorker = worker.New(w.temporalClient.TemporalClient, taskQueueName, worker.Options{})
+	w.temporalWorker = worker.New(w.temporalClient.TemporalClient, taskQueueName, worker.Options{
+		MaxConcurrentWorkflowTaskExecutionSize: 2,
+		MaxConcurrentActivityExecutionSize:     4,
+	})
 	return nil
 }
 
