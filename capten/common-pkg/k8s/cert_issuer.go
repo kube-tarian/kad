@@ -61,7 +61,7 @@ func CreateOrUpdateClusterIssuer(clusterCAIssuer string) error {
 	return nil
 }
 
-func CreateOrUpdateClusterCAIssuerSecret(k8sClient *K8SClient, interCACertData, interCAKeyData, caCertChainData []byte) error {
+func CreateOrUpdateClusterCAIssuerSecret(k8sClient *K8SClient, caCertData, caKeyData, caCertChainData []byte) error {
 	// Create the Secret object
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -69,8 +69,8 @@ func CreateOrUpdateClusterCAIssuerSecret(k8sClient *K8SClient, interCACertData, 
 			Namespace: cert.CertManagerNamespace,
 		},
 		Data: map[string][]byte{
-			corev1.TLSCertKey:       interCACertData,
-			corev1.TLSPrivateKeyKey: interCAKeyData,
+			corev1.TLSCertKey:       caCertData,
+			corev1.TLSPrivateKeyKey: caKeyData,
 			"ca.crt":                caCertChainData,
 		},
 		Type: corev1.SecretTypeTLS,

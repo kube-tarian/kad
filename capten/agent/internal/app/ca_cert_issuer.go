@@ -51,7 +51,7 @@ func setupCACertIssuser() error {
 
 // Setup agent certificate issuer
 func setupCertificateIssuer(k8sclient *k8s.K8SClient) (*cert.CertificatesData, error) {
-	// TODO: Check certificates exist in Vault
+	// TODO: Check certificates exist in Vault and control plan cluster
 	// If exist skip
 	// Else
 	// 1. generate root certificates
@@ -62,7 +62,7 @@ func setupCertificateIssuer(k8sclient *k8s.K8SClient) (*cert.CertificatesData, e
 		return nil, err
 	}
 
-	err = k8s.CreateOrUpdateClusterCAIssuerSecret(k8sclient, certsData.InterCert.CertData, certsData.InterKey.KeyData, certsData.CaChainCertData)
+	err = k8s.CreateOrUpdateClusterCAIssuerSecret(k8sclient, certsData.RootCert.CertData, certsData.RootKey.KeyData, certsData.CaChainCertData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create/update CA Issuer Secret: %v", err)
 	}
