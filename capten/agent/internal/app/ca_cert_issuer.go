@@ -10,6 +10,7 @@ import (
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	"github.com/kube-tarian/kad/capten/common-pkg/cert"
+	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/pkg/errors"
 	k8serror "k8s.io/apimachinery/pkg/api/errors"
@@ -31,7 +32,7 @@ func setupCACertIssuser(clusterIssuerName string) error {
 		return err
 	}
 
-	_, err = setupCertificateIssuer(k8sclient, clusterIssuerName)
+	err = setupCertificateIssuer(k8sclient, clusterIssuerName)
 	if err != nil {
 		log.Errorf("Setup Certificates Issuer failed, %v", err)
 		return err
@@ -49,29 +50,20 @@ func setupCACertIssuser(clusterIssuerName string) error {
 }
 
 // Setup agent certificate issuer
-func setupCertificateIssuer(k8sclient *k8s.K8SClient, clusterIssuerName string) (*cert.CertificatesData, error) {
-	// TODO: Check certificates exist in Vault and control plan cluster
-	// If exist skip
-	// Else
-	// 1. generate root certificates
-	// 2. Create Certificate Issuer
-	// 3. Store in Vault
-	certsData, err := cert.GenerateRootCerts()
+func setupCertificateIssuer(k8sclient *k8s.K8SClient, clusterIssuerName string) error {
+	// Create Agent Cluster Issuer
+	certsData, err := k8s.CreateOrUpdateClusterIssuer(clusterIssuerName, k8sclient, false)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to create/update CA Issuer %s in cert-manager: %v", clusterIssuerName, err)
 	}
 
-	err = k8s.CreateOrUpdateClusterCAIssuerSecret(k8sclient, certsData.RootCert.CertData, certsData.RootKey.KeyData, certsData.CaChainCertData)
+	// Update Vault
+	err = credential.PutClusterCerts(context.TODO(), "kad-agent", "kad-agent", string(certsData.CaChainCertData), string(certsData.RootKey.KeyData), string(certsData.RootCert.CertData))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create/update CA Issuer Secret: %v", err)
+		log.Errorf("Failed to write to vault, %v", err)
+		log.Infof("Continued to start the agent as these certs from vault are not used...")
 	}
-
-	err = k8s.CreateOrUpdateClusterIssuer(clusterIssuerName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create/update CA Issuer %s in cert-manager: %v", clusterIssuerName, err)
-	}
-
-	return certsData, nil
+	return nil
 }
 
 func generateServerCertificates(k8sClient *k8s.K8SClient, clusterIssuerName string) error {
