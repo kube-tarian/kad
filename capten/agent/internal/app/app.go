@@ -7,8 +7,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"google.golang.org/grpc"
-
 	"github.com/intelops/go-common/logging"
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
@@ -24,6 +22,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	pluginconfigtore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -89,6 +88,11 @@ func Start() {
 			log.Errorf("Failed to start agent : %v", err)
 		}
 	}()
+
+	err = setupCACertIssuser(cfg.ClusterCAIssuerName)
+	if err != nil {
+		log.Fatalf("Failed to setupt CA Cert Issuer in cert-manager %v", err)
+	}
 
 	err = registerK8SWatcher(as)
 	if err != nil {

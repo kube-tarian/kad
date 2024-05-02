@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
@@ -277,8 +278,13 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 		}, err
 	}
 
+	agentClusterCAIssuerName := os.Getenv("AGENT_CLUSTER_CA_ISSUER_NAME")
+	if len(agentClusterCAIssuerName) == 0 {
+		agentClusterCAIssuerName = "agent-ca-issuer"
+	}
+
 	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
-	err = captenSDKClient.CreateCertificates(req.PluginName, req.DefaultNamespace, "capten-issuer", pluginInitConfigmapName, p.k8sClient)
+	err = captenSDKClient.CreateCertificates(req.PluginName, req.DefaultNamespace, agentClusterCAIssuerName, pluginInitConfigmapName, p.k8sClient)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
