@@ -29,8 +29,9 @@ func (a *Agent) GetCaptenPlugins(ctx context.Context, request *captenpluginspb.G
 		plugins = append(plugins, &captenpluginspb.CaptenPlugin{
 			PluginName:        r.GetConfig().GetPluginName(),
 			PluginDescription: r.GetConfig().GetPluginDescription(),
-			LaunchIcon:        r.GetConfig().GetIcon(),
-			LaunchURL:         r.GetConfig().GetLaunchURL(),
+			Icon:              r.GetConfig().GetIcon(),
+			UiEndpoint:        r.GetConfig().GetUiEndpoint(),
+			UiModuleEndpoint:  r.GetConfig().GetUiModuleEndpoint(),
 			ApiEndpoint:       r.GetConfig().GetApiEndpoint(),
 			InstallStatus:     r.GetConfig().GetInstallStatus(),
 			RuntimeStatus:     r.GetConfig().GetRuntimeStatus(),

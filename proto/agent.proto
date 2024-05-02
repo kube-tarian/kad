@@ -185,8 +185,8 @@ message AppConfig {
   bool createNamespace = 10;
   bool privilegedNamespace = 11;
   bytes icon = 12;
-  string launchURL = 13;
-  string launchUIDescription = 14;
+  string uiEndpoint = 13;
+  string uiModuleEndpoint = 14;
   string installStatus = 15;
   string runtimeStatus = 16;
   bool defualtApp = 17;
@@ -208,9 +208,8 @@ message AppLaunchConfig {
   string category = 2;
   string description = 3;
   bytes icon = 4;
-  string launchURL = 5;
-  string launchUIDescription = 6;
-  bool ssoSupported = 7;
+  string uiEndpoint = 5;
+  bool ssoSupported = 6;
 }
 
 enum SecretAccess {

@@ -2,7 +2,7 @@ CREATE TABLE ClusterAppConfig(
     app_name TEXT, description TEXT, category TEXT,
     chart_name TEXT, repo_name TEXT, repo_url TEXT,
     namespace TEXT, release_name TEXT, version TEXT,
-    launch_url TEXT, launch_redirect_url TEXT,
+    ui_endpoint TEXT, ui_module_endpoint TEXT,
     create_namespace BOOLEAN, privileged_namespace BOOLEAN,
     override_values TEXT, launch_ui_values TEXT,
     template_values TEXT, default_app BOOLEAN,
