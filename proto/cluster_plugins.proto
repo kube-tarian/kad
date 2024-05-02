@@ -37,11 +37,12 @@ message Plugin {
 	bool privilegedNamespace = 10;
   string apiEndpoint = 11;
   string uiEndpoint = 12;
-	repeated string capabilities = 13;
-  bytes values = 14;
-  bytes overrideValues = 15;
-  string installStatus = 16;
-  string lastUpdateTime = 17;
+  string uiModuleEndpoint = 13;
+	repeated string capabilities = 14;
+  bytes values = 15;
+  bytes overrideValues = 16;
+  string installStatus = 17;
+  string lastUpdateTime = 18;
 }
 
 message DeployClusterPluginRequest {

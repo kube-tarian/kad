@@ -30,6 +30,7 @@ const (
 	VaultCred_CreateK8SAuthRole_FullMethodName             = "/vaultcredpb.VaultCred/CreateK8SAuthRole"
 	VaultCred_UpdateK8SAuthRole_FullMethodName             = "/vaultcredpb.VaultCred/UpdateK8SAuthRole"
 	VaultCred_DeleteK8SAuthRole_FullMethodName             = "/vaultcredpb.VaultCred/DeleteK8SAuthRole"
+	VaultCred_ConfigureVaultSecret_FullMethodName          = "/vaultcredpb.VaultCred/ConfigureVaultSecret"
 )
 
 // VaultCredClient is the client API for VaultCred service.
@@ -52,6 +53,7 @@ type VaultCredClient interface {
 	CreateK8SAuthRole(ctx context.Context, in *CreateK8SAuthRoleRequest, opts ...grpc.CallOption) (*CreateK8SAuthRoleResponse, error)
 	UpdateK8SAuthRole(ctx context.Context, in *UpdateK8SAuthRoleRequest, opts ...grpc.CallOption) (*UpdateK8SAuthRoleResponse, error)
 	DeleteK8SAuthRole(ctx context.Context, in *DeleteK8SAuthRoleRequest, opts ...grpc.CallOption) (*DeleteK8SAuthRoleResponse, error)
+	ConfigureVaultSecret(ctx context.Context, in *ConfigureVaultSecretRequest, opts ...grpc.CallOption) (*ConfigureVaultSecretResponse, error)
 }
 
 type vaultCredClient struct {
@@ -161,6 +163,15 @@ func (c *vaultCredClient) DeleteK8SAuthRole(ctx context.Context, in *DeleteK8SAu
 	return out, nil
 }
 
+func (c *vaultCredClient) ConfigureVaultSecret(ctx context.Context, in *ConfigureVaultSecretRequest, opts ...grpc.CallOption) (*ConfigureVaultSecretResponse, error) {
+	out := new(ConfigureVaultSecretResponse)
+	err := c.cc.Invoke(ctx, VaultCred_ConfigureVaultSecret_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VaultCredServer is the server API for VaultCred service.
 // All implementations must embed UnimplementedVaultCredServer
 // for forward compatibility
@@ -181,6 +192,7 @@ type VaultCredServer interface {
 	CreateK8SAuthRole(context.Context, *CreateK8SAuthRoleRequest) (*CreateK8SAuthRoleResponse, error)
 	UpdateK8SAuthRole(context.Context, *UpdateK8SAuthRoleRequest) (*UpdateK8SAuthRoleResponse, error)
 	DeleteK8SAuthRole(context.Context, *DeleteK8SAuthRoleRequest) (*DeleteK8SAuthRoleResponse, error)
+	ConfigureVaultSecret(context.Context, *ConfigureVaultSecretRequest) (*ConfigureVaultSecretResponse, error)
 	mustEmbedUnimplementedVaultCredServer()
 }
 
@@ -220,6 +232,9 @@ func (UnimplementedVaultCredServer) UpdateK8SAuthRole(context.Context, *UpdateK8
 }
 func (UnimplementedVaultCredServer) DeleteK8SAuthRole(context.Context, *DeleteK8SAuthRoleRequest) (*DeleteK8SAuthRoleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteK8SAuthRole not implemented")
+}
+func (UnimplementedVaultCredServer) ConfigureVaultSecret(context.Context, *ConfigureVaultSecretRequest) (*ConfigureVaultSecretResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ConfigureVaultSecret not implemented")
 }
 func (UnimplementedVaultCredServer) mustEmbedUnimplementedVaultCredServer() {}
 
@@ -432,6 +447,24 @@ func _VaultCred_DeleteK8SAuthRole_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VaultCred_ConfigureVaultSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConfigureVaultSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VaultCredServer).ConfigureVaultSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: VaultCred_ConfigureVaultSecret_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VaultCredServer).ConfigureVaultSecret(ctx, req.(*ConfigureVaultSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VaultCred_ServiceDesc is the grpc.ServiceDesc for VaultCred service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -482,6 +515,10 @@ var VaultCred_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteK8SAuthRole",
 			Handler:    _VaultCred_DeleteK8SAuthRole_Handler,
+		},
+		{
+			MethodName: "ConfigureVaultSecret",
+			Handler:    _VaultCred_ConfigureVaultSecret_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

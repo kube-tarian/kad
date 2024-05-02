@@ -76,16 +76,16 @@ func (a *Agent) GetClusterAppLaunches(ctx context.Context, request *agentpb.GetC
 		}
 
 		appConfig := r.GetConfig()
-		if len(appConfig.LaunchURL) == 0 {
+		if len(appConfig.UiEndpoint) == 0 {
 			continue
 		}
 
 		cfgs = append(cfgs, &agentpb.AppLaunchConfig{
 			ReleaseName:  r.GetConfig().GetReleaseName(),
 			Category:     r.GetConfig().GetCategory(),
-			Description:  r.GetConfig().GetLaunchUIDescription(),
+			Description:  r.GetConfig().GetDescription(),
 			Icon:         r.GetConfig().GetIcon(),
-			LaunchURL:    r.GetConfig().GetLaunchURL(),
+			UiEndpoint:   r.GetConfig().GetUiEndpoint(),
 			SsoSupported: ssoSupported,
 		})
 	}
