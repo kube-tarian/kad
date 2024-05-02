@@ -7,8 +7,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"google.golang.org/grpc"
-
 	"github.com/intelops/go-common/logging"
 	ginapiserver "github.com/kube-tarian/kad/capten/agent/gin-api-server"
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
@@ -24,6 +22,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	pluginconfigtore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
