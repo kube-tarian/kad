@@ -17,13 +17,6 @@ service Server {
   rpc GetClusterApp (GetClusterAppRequest) returns (GetClusterAppResponse) {}
   rpc GetClusterDetails (GetClusterDetailsRequest) returns (GetClusterDetailsResponse) {}
 
-  rpc AddStoreApp (AddStoreAppRequest) returns (AddStoreAppResponse) {}
-  rpc UpdateStoreApp (UpdateStoreAppRequest) returns (UpdateStoreAppRsponse){}
-  rpc DeleteStoreApp (DeleteStoreAppRequest) returns (DeleteStoreAppResponse){}
-  rpc GetStoreApp (GetStoreAppRequest) returns (GetStoreAppResponse) {}
-  rpc GetStoreApps (GetStoreAppsRequest) returns (GetStoreAppsResponse) {}
-  rpc GetStoreAppValues(GetStoreAppValuesRequest) returns (GetStoreAppValuesResponse) {}
-
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
 }
 
@@ -143,9 +136,9 @@ message GetClusterResponse{
 message AppLaunchConfig {
   string releaseName = 1;
   string category = 2;
-  string launchUIDescription = 3;
+  string description = 3;
   bytes icon = 4;
-  string launchURL = 5;
+  string uiEndpoint = 5;
 }
 
 message ClusterAttribute {
@@ -172,108 +165,14 @@ message ClusterAppConfig {
   bool createNamespace = 10;
   bool privilegedNamespace = 11;
   bytes icon = 12;
-  string launchURL = 13;
-  string launchUIDescription = 14;
+  string uiEndpoint = 13;
+  string uiModuleEndpoint = 14;
   string installStatus = 15;
   string runtimeStatus = 16;
   bool defualtApp = 17;
   string pluginName = 18;
   PluginStoreType pluginStoreType = 19;
   string apiEndpoint = 20;
-}
-
-message AddStoreAppRequest {
-  StoreAppConfig appConfig = 1;
-  StoreAppAllValues appValues = 2;
-}
-
-message AddStoreAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message UpdateStoreAppRequest {
-  StoreAppConfig appConfig = 1;
-  StoreAppAllValues appValues = 2;
-}
-
-message UpdateStoreAppRsponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message DeleteStoreAppRequest {
-  string appName = 1;
-  string version = 2;
-}
-
-message DeleteStoreAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message GetStoreAppRequest {
-  string appName = 1;
-  string version = 2;
-}
-
-message GetStoreAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-  StoreAppConfig appConfig = 3;
-}
-
-message GetStoreAppsRequest {
-}
-
-message GetStoreAppsResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-  repeated StoreAppsData data = 3;
-}
-
-message StoreAppsData {
-  StoreAppConfig appConfigs = 1;
-  bytes overrideValues = 2;
-}
-
-message GetStoreAppValuesRequest {
-  string appName = 1;
-  string version = 2;
-  string clusterID = 3;
-}
-
-message GetStoreAppValuesResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-  bytes overrideValues = 3;
-}
-
-message StoreAppConfig {
-  string releaseName = 1;
-  string appName = 2;
-  string version = 3;
-  string category = 4;
-  string description = 5;
-  string chartName = 6;
-  string repoName = 7;
-  string repoURL = 8;
-  string namespace = 9;
-  bool createNamespace = 10;
-  bool privilegedNamespace = 11;
-  bytes icon = 12;
-  string launchURL = 13;
-  string launchUIDescription = 14;
-  bool defualtApp = 15;
-  string pluginName = 16;
-  string pluginDescription = 17;
-  string apiEndpoint = 18;
-}
-
-message StoreAppAllValues {
-  bytes overrideValues = 1;
-  bytes launchUIValues = 2;
-  bytes templateValues = 3;
 }
 
 message StoreCredentialRequest {

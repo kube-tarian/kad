@@ -301,11 +301,12 @@ message GetTektonProjectResponse {
 message CaptenPlugin {
     string pluginName = 1;
     string pluginDescription = 2;
-    string launchURL = 3;
+    string uiEndpoint = 3;
     string apiEndpoint = 4;
-    bytes launchIcon = 5;
-    string installStatus = 6;
-    string runtimeStatus = 7;
+    string uiModuleEndpoint = 5;
+    bytes icon = 6;
+    string installStatus = 7;
+    string runtimeStatus = 8;
 }
 
 message GetCaptenPluginsRequest {
