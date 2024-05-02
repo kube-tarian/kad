@@ -88,7 +88,7 @@ func Start() {
 		}
 	}()
 
-	err = setupCACertIssuser()
+	err = setupCACertIssuser(cfg.ClusterCAIssuerName)
 	if err != nil {
 		log.Fatalf("Failed to setupt CA Cert Issuer in cert-manager %v", err)
 	}

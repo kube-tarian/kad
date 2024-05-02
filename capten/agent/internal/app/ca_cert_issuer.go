@@ -20,25 +20,24 @@ import (
 const (
 	certFileName         = "server.cert"
 	keyFileName          = "server.key"
-	agentIssuerName      = "agent-ca-issuer"
 	namespace            = "capten"
 	serverCertSecretName = "agent-server-mtls"
 )
 
-func setupCACertIssuser() error {
+func setupCACertIssuser(clusterIssuerName string) error {
 	k8sclient, err := k8s.NewK8SClient(log)
 	if err != nil {
 		log.Errorf("failed to initalize k8s client, %v", err)
 		return err
 	}
 
-	_, err = setupCertificateIssuer(k8sclient)
+	_, err = setupCertificateIssuer(k8sclient, clusterIssuerName)
 	if err != nil {
 		log.Errorf("Setup Certificates Issuer failed, %v", err)
 		return err
 	}
 
-	err = generateServerCertificates(k8sclient)
+	err = generateServerCertificates(k8sclient, clusterIssuerName)
 	if err != nil {
 		log.Errorf("Server certificates generation failed, %v", err)
 		return err
@@ -50,7 +49,7 @@ func setupCACertIssuser() error {
 }
 
 // Setup agent certificate issuer
-func setupCertificateIssuer(k8sclient *k8s.K8SClient) (*cert.CertificatesData, error) {
+func setupCertificateIssuer(k8sclient *k8s.K8SClient, clusterIssuerName string) (*cert.CertificatesData, error) {
 	// TODO: Check certificates exist in Vault and control plan cluster
 	// If exist skip
 	// Else
@@ -67,15 +66,15 @@ func setupCertificateIssuer(k8sclient *k8s.K8SClient) (*cert.CertificatesData, e
 		return nil, fmt.Errorf("failed to create/update CA Issuer Secret: %v", err)
 	}
 
-	err = k8s.CreateOrUpdateClusterIssuer(agentIssuerName)
+	err = k8s.CreateOrUpdateClusterIssuer(clusterIssuerName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create/update CA Issuer %s in cert-manager: %v", agentIssuerName, err)
+		return nil, fmt.Errorf("failed to create/update CA Issuer %s in cert-manager: %v", clusterIssuerName, err)
 	}
 
 	return certsData, nil
 }
 
-func generateServerCertificates(k8sClient *k8s.K8SClient) error {
+func generateServerCertificates(k8sClient *k8s.K8SClient, clusterIssuerName string) error {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.WithMessage(err, "error while building kubeconfig")
@@ -90,7 +89,7 @@ func generateServerCertificates(k8sClient *k8s.K8SClient) error {
 		return fmt.Errorf("failed to create namespace: %v", err)
 	}
 
-	err = generateCertManagerServerCertificate(cmClient, namespace, serverCertSecretName, agentIssuerName)
+	err = generateCertManagerServerCertificate(cmClient, namespace, serverCertSecretName, clusterIssuerName)
 	if err != nil {
 		return fmt.Errorf("failed to genereate server certificate: %v", err)
 	}

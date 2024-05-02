@@ -15,6 +15,7 @@ type SericeConfig struct {
 	TektonSyncJobEnabled      bool   `envconfig:"TEKTON_SYNC_JOB_ENABLED" default:"true"`
 	TektonSyncJobInterval     string `envconfig:"TEKTON_SYNC_JOB_INTERVAL" default:"@every 1h"`
 	DomainName                string `envconfig:"DOMAIN_NAME" default:"example.com"`
+	ClusterCAIssuerName       string `envconfig:"AGENT_CLUSTER_CA_ISSUER_NAME" default:"agent-ca-issuer"`
 }
 
 func GetServiceConfig() (*SericeConfig, error) {
