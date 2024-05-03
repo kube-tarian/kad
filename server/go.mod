@@ -9,7 +9,6 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/intelops/go-common v1.0.20
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/kube-tarian/kad/agent v0.0.0-20221228201013-ed4f78e4b887
 	github.com/ory/client-go v1.1.49
 	github.com/pkg/errors v0.9.1
 	github.com/stargate/stargate-grpc-go-client v0.0.0-20220822130422-9a1c6261d4fa
