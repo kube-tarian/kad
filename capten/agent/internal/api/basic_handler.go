@@ -15,8 +15,3 @@ func (a *Agent) GetApiDocs(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusOK, apiDocs)
 }
-
-// readiness and liveness probe health status endpoint
-func (a *Agent) GetStatus(c *gin.Context) {
-	c.String(http.StatusOK, "OK\n")
-}
