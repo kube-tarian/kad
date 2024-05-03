@@ -135,7 +135,7 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&config.AppName, &config.Description, &config.Category,
 		&config.ChartName, &config.RepoName, &config.RepoURL,
 		&config.Namespace, &config.ReleaseName, &config.Version,
-		&config.UiEndpoint, &config.UiEndpoint,
+		&config.UiEndpoint, &config.UiModuleEndpoint,
 		&config.CreateNamespace, &config.PrivilegedNamespace,
 		&overrideValues, &launchUiValues,
 		&templateValues, &config.DefualtApp,
