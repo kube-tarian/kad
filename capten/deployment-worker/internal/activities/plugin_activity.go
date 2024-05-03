@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/db"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
@@ -120,15 +119,6 @@ func (p *PluginActivities) PluginUndeployPreActionPostgresStoreActivity(ctx cont
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update status: %s\"}", err.Error())),
 		}, err
 	}
-
-	// Call capten-sdk DB setup
-	db.NewDBClientWithConfig(&db.DBConfig{
-		DbOemName:         db.POSTGRES,
-		PluginName:        req.PluginName,
-		DbName:            req.DefaultNamespace + "-" + req.PluginName,
-		DbServiceUserName: req.PluginName,
-	})
-	// TODO: Invoke  captensdk DBDestroy
 
 	err = p.pas.DeletePluginConfigByPluginName(req.PluginName)
 	if err != nil {
