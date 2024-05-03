@@ -1,4 +1,4 @@
-package app
+package clusterissuer
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	v1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
 	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
 	cmclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/common-pkg/cert"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
@@ -19,38 +20,31 @@ import (
 )
 
 const (
-	certFileName         = "/tmp/server.cert"
-	keyFileName          = "/tmp/server.key"
+	CertFileName         = "server.cert"
+	KeyFileName          = "server.key"
 	namespace            = "capten"
 	serverCertSecretName = "agent-server-mtls"
 )
 
-func setupCACertIssuser(clusterIssuerName string) error {
+func SetupCACertIssuser(clusterIssuerName string, log logging.Logger) error {
 	k8sclient, err := k8s.NewK8SClient(log)
 	if err != nil {
 		log.Errorf("failed to initalize k8s client, %v", err)
 		return err
 	}
 
-	err = setupCertificateIssuer(k8sclient, clusterIssuerName)
+	err = setupCertificateIssuer(k8sclient, clusterIssuerName, log)
 	if err != nil {
 		log.Errorf("Setup Certificates Issuer failed, %v", err)
 		return err
 	}
-
-	err = generateServerCertificates(k8sclient, clusterIssuerName)
-	if err != nil {
-		log.Errorf("Server certificates generation failed, %v", err)
-		return err
-	}
-
 	return nil
 }
 
 // Setup agent certificate issuer
-func setupCertificateIssuer(k8sclient *k8s.K8SClient, clusterIssuerName string) error {
+func setupCertificateIssuer(k8sClient *k8s.K8SClient, clusterIssuerName string, log logging.Logger) error {
 	// Create Agent Cluster Issuer
-	certsData, err := k8s.CreateOrUpdateClusterIssuer(clusterIssuerName, k8sclient, false)
+	certsData, err := k8s.CreateOrUpdateClusterIssuer(clusterIssuerName, k8sClient, false)
 	if err != nil {
 		return fmt.Errorf("failed to create/update CA Issuer %s in cert-manager: %v", clusterIssuerName, err)
 	}
@@ -64,7 +58,13 @@ func setupCertificateIssuer(k8sclient *k8s.K8SClient, clusterIssuerName string) 
 	return nil
 }
 
-func generateServerCertificates(k8sClient *k8s.K8SClient, clusterIssuerName string) error {
+func GenerateServerCertificates(clusterIssuerName string, log logging.Logger) error {
+	k8sClient, err := k8s.NewK8SClient(log)
+	if err != nil {
+		log.Errorf("failed to initalize k8s client, %v", err)
+		return err
+	}
+
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return errors.WithMessage(err, "error while building kubeconfig")
@@ -81,7 +81,7 @@ func generateServerCertificates(k8sClient *k8s.K8SClient, clusterIssuerName stri
 	}
 	log.Infof("Created namesapce: %v", namespace)
 
-	err = generateCertManagerServerCertificate(cmClient, namespace, serverCertSecretName, clusterIssuerName)
+	err = generateCertManagerServerCertificate(cmClient, namespace, serverCertSecretName, clusterIssuerName, log)
 	if err != nil {
 		return fmt.Errorf("failed to genereate server certificate: %v", err)
 	}
@@ -95,18 +95,25 @@ func generateServerCertificates(k8sClient *k8s.K8SClient, clusterIssuerName stri
 	}
 
 	// Write certificates to files
-	err = os.WriteFile(certFileName, []byte(secretData.Data["cert"]), cert.FilePermission)
+	err = os.WriteFile(CertFileName, []byte(secretData.Data["tls.crt"]), cert.FilePermission)
 	if err != nil {
 		return fmt.Errorf("failed to create cert file, %v", err)
 	}
-	err = os.WriteFile(keyFileName, []byte(secretData.Data["key"]), cert.FilePermission)
+	err = os.WriteFile(KeyFileName, []byte(secretData.Data["tls.key"]), cert.FilePermission)
 	if err != nil {
 		return fmt.Errorf("failed to create key file, %v", err)
 	}
+
 	return nil
 }
 
-func generateCertManagerServerCertificate(cmClient *cmclient.Clientset, namespace string, certName string, issuerRefName string) error {
+func generateCertManagerServerCertificate(
+	cmClient *cmclient.Clientset,
+	namespace string,
+	certName string,
+	issuerRefName string,
+	log logging.Logger,
+) error {
 	usages := []v1.KeyUsage{v1.UsageDigitalSignature, v1.UsageKeyEncipherment, v1.UsageServerAuth}
 
 	_, err := cmClient.CertmanagerV1().Certificates(namespace).Create(

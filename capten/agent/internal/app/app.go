@@ -10,6 +10,7 @@ import (
 	"github.com/intelops/go-common/logging"
 	ginapiserver "github.com/kube-tarian/kad/capten/agent/gin-api-server"
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
+	"github.com/kube-tarian/kad/capten/agent/internal/clusterissuer"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
 	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
@@ -81,13 +82,13 @@ func Start() {
 		}
 	}()
 
-	err = setupCACertIssuser(cfg.ClusterCAIssuerName)
+	err = clusterissuer.SetupCACertIssuser(cfg.ClusterCAIssuerName, log)
 	if err != nil {
 		log.Fatalf("Failed to setupt CA Cert Issuer in cert-manager %v", err)
 	}
 
 	go func() {
-		err := ginapiserver.StartRestServer(rpcapi, cfg, certFileName, keyFileName)
+		err := ginapiserver.StartRestServer(rpcapi, cfg, log)
 		if err != nil {
 			log.Errorf("Failed to start REST server, %v", err)
 		}

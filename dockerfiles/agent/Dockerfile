@@ -5,8 +5,11 @@ RUN rm -rf vendor
 
 RUN go mod download
 RUN CGO_ENABLED=0 go build -o ./build/agent agent/cmd/main.go
+
 RUN touch ./server.cert
 RUN touch ./server.key
+RUN chown 65532 ./server.cert
+RUN chown 65532 ./server.key
 
 FROM scratch
 COPY --from=builder ./build/agent agent

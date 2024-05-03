@@ -7,7 +7,7 @@ import (
 type SericeConfig struct {
 	Host                      string `envconfig:"HOST" default:"0.0.0.0"`
 	Port                      int    `envconfig:"PORT" default:"9091"`
-	RestPort                  int    `envconfig:"REST_PORT" default:"9092"`
+	RestPort                  int    `envconfig:"REST_PORT" default:"8443"`
 	Mode                      string `envconfig:"MODE" default:"production"`
 	AuthEnabled               bool   `envconfig:"AUTH_ENABLED" default:"false"`
 	CrossplaneSyncJobEnabled  bool   `envconfig:"CROSSPLANE_SYNC_JOB_ENABLED" default:"true"`
