@@ -1,0 +1,128 @@
+openapi: "3.0.0"
+
+info:
+  title: Capten Agent Open REST API Specification
+  description: Capten Agent Open REST API specification
+  version: 1.0.0
+
+servers:
+  - url: /
+
+paths:
+  /api-docs:
+    get:
+      summary: List of APIs provided by the service
+      responses:
+        '200':
+          description: OK
+
+  /gitproject/{id}:
+    get:
+      operationId: GetGitProjectById
+      summary: Get git project details by ID
+      description: Get git project details by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GitProjectResponse'
+
+  /containerregistry/{id}:
+    get:
+      operationId: GetContainerRegistryById
+      summary: Get container Registry by ID
+      description: Get container Registry by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContainerRegistryResponse'
+
+components:
+  schemas:
+    Status:
+      type: string
+      enum:
+        - OK
+        - INTERNAL_ERROR
+        - INVALID_ARGUMENT
+        - NOT_FOUND
+
+    GitProjectResponse:
+      type: object
+      properties:
+        project:
+            $ref: '#/components/schemas/GitProject'
+        status:
+            $ref: '#/components/schemas/Status'
+        statusMessage:
+          type: string
+      required:
+        - project
+        - status
+        - statusMessage
+    GitProject:
+      type: object
+      properties:
+        id:
+          type: string
+        projectUrl:
+          type: string
+        username:
+          type: string
+        accessToken:
+          type: string
+      required:
+        - id
+        - projectUrl
+        - accessToken
+        - username
+    ContainerRegistryResponse:
+      type: object
+      properties:
+        registry:
+          $ref: '#/components/schemas/ContainerRegistry'
+        status:
+          $ref: '#/components/schemas/Status'
+        statusMessage:
+          type: string
+      required:
+        - project
+        - status
+        - statusMessage
+    ContainerRegistry:
+      type: object
+      properties:
+        id:
+          type: string
+        registryUrl:
+          type: string
+        registryAttributes:
+          $ref: '#/components/schemas/Attributes'
+        registryType:
+          type: string
+      required:
+        - id
+        - registryUrl
+        - registryAttributes
+        - registryType
+    Attributes:
+      type: object
+      additionalProperties:
+        type: string
