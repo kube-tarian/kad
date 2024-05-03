@@ -44,8 +44,6 @@ func setupCACertIssuser(clusterIssuerName string) error {
 		return err
 	}
 
-	// r.RunTLS(fmt.Sprintf("%s:%d", cfg.Host, cfg.RestPort), certFileName, keyFileName)
-	// r.Run(fmt.Sprintf("%s:%d", cfg.Host, cfg.RestPort))
 	return nil
 }
 
