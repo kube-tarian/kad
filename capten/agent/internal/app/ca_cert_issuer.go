@@ -69,6 +69,7 @@ func generateServerCertificates(k8sClient *k8s.K8SClient, clusterIssuerName stri
 	if err != nil {
 		return errors.WithMessage(err, "error while building kubeconfig")
 	}
+
 	cmClient, err := cmclient.NewForConfig(config)
 	if err != nil {
 		return err
@@ -76,8 +77,9 @@ func generateServerCertificates(k8sClient *k8s.K8SClient, clusterIssuerName stri
 
 	err = k8sClient.CreateNamespace(context.Background(), namespace)
 	if err != nil {
-		return fmt.Errorf("failed to create namespace: %v", err)
+		return fmt.Errorf("failed to create namespace %v, reason: %v", namespace, err)
 	}
+	log.Infof("Created namesapce: %v", namespace)
 
 	err = generateCertManagerServerCertificate(cmClient, namespace, serverCertSecretName, clusterIssuerName)
 	if err != nil {
@@ -93,8 +95,14 @@ func generateServerCertificates(k8sClient *k8s.K8SClient, clusterIssuerName stri
 	}
 
 	// Write certificates to files
-	os.WriteFile(certFileName, []byte(secretData.Data["cert"]), cert.FilePermission)
-	os.WriteFile(keyFileName, []byte(secretData.Data["key"]), cert.FilePermission)
+	err = os.WriteFile(certFileName, []byte(secretData.Data["cert"]), cert.FilePermission)
+	if err != nil {
+		return fmt.Errorf("failed to create cert file, %v", err)
+	}
+	err = os.WriteFile(keyFileName, []byte(secretData.Data["key"]), cert.FilePermission)
+	if err != nil {
+		return fmt.Errorf("failed to create key file, %v", err)
+	}
 	return nil
 }
 
