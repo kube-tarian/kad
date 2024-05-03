@@ -8,9 +8,9 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
 )
 
-func StartRestServer(rpcapi api.ServerInterface, cfg *config.SericeConfig, certFileName, keyFileName string) {
+func StartRestServer(rpcapi api.ServerInterface, cfg *config.SericeConfig, certFileName, keyFileName string) error {
 	r := gin.Default()
 	api.RegisterHandlers(r, rpcapi)
 
-	r.RunTLS(fmt.Sprintf("%s:%d", cfg.Host, cfg.RestPort), certFileName, keyFileName)
+	return r.RunTLS(fmt.Sprintf("%s:%d", cfg.Host, cfg.RestPort), certFileName, keyFileName)
 }

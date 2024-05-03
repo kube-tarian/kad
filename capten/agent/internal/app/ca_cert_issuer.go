@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	certFileName         = "server.cert"
-	keyFileName          = "server.key"
+	certFileName         = "/tmp/server.cert"
+	keyFileName          = "/tmp/server.key"
 	namespace            = "capten"
 	serverCertSecretName = "agent-server-mtls"
 )
