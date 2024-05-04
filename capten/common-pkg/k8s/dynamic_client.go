@@ -50,17 +50,18 @@ func (dc *DynamicClientSet) GetNameNamespace(jsonByte []byte) (string, string, e
 
 	metadataObj, convCheck := keyValue["metadata"].(map[string]interface{})
 	if !convCheck {
-		return "", "", fmt.Errorf("failed to convert the metadata togo struct type")
+		return "", "", fmt.Errorf("failed to convert the metadata to go struct type")
 	}
 
-	namespaceName, convCheck := metadataObj["namespace"].(string)
+	var namespaceName string
+	namespaceName, convCheck = metadataObj["namespace"].(string)
 	if !convCheck {
-		return "", "", fmt.Errorf("failed to convert the metadata togo struct type")
+		fmt.Println("namespace not found")
 	}
 
 	resourceName, convCheck := metadataObj["name"].(string)
 	if !convCheck {
-		return "", "", fmt.Errorf("failed to convert the metadata togo struct type")
+		return "", "", fmt.Errorf("failed to convert the name to go struct type")
 	}
 
 	return namespaceName, resourceName, nil
@@ -91,10 +92,10 @@ func (dc *DynamicClientSet) CreateResourceFromFile(ctx context.Context, filename
 		return "", "", err
 	}
 
-	return dc.CreateResource(ctx, data)
+	return dc.CreateResource(ctx, data, false)
 }
 
-func (dc *DynamicClientSet) CreateResource(ctx context.Context, data []byte) (string, string, error) {
+func (dc *DynamicClientSet) CreateResource(ctx context.Context, data []byte, clusterResource bool) (string, string, error) {
 	jsonData, err := ConvertYamlToJson(data)
 	if err != nil {
 		return "", "", err
@@ -110,16 +111,30 @@ func (dc *DynamicClientSet) CreateResource(ctx context.Context, data []byte) (st
 		return "", "", err
 	}
 
-	_, err = dc.client.Resource(resourceID).Namespace(namespaceName).Get(ctx, resourceName, metav1.GetOptions{})
-	if err != nil {
-		if k8serrors.IsNotFound(err) {
-			_, err := dc.client.Resource(resourceID).Namespace(namespaceName).Create(ctx, obj, metav1.CreateOptions{})
-			if err != nil {
-				return "", "", fmt.Errorf("error in creating resource %s/%s, %v", namespaceName, resourceName, err)
+	if !clusterResource {
+		_, err = dc.client.Resource(resourceID).Namespace(namespaceName).Get(ctx, resourceName, metav1.GetOptions{})
+		if err != nil {
+			if k8serrors.IsNotFound(err) {
+				_, err := dc.client.Resource(resourceID).Namespace(namespaceName).Create(ctx, obj, metav1.CreateOptions{})
+				if err != nil {
+					return "", "", fmt.Errorf("error in creating resource %s/%s, %v", namespaceName, resourceName, err)
+				}
+				return namespaceName, resourceName, nil
 			}
-			return namespaceName, resourceName, nil
+			return "", "", err
 		}
-		return "", "", err
+	} else {
+		_, err = dc.client.Resource(resourceID).Get(ctx, resourceName, metav1.GetOptions{})
+		if err != nil {
+			if k8serrors.IsNotFound(err) {
+				_, err := dc.client.Resource(resourceID).Create(ctx, obj, metav1.CreateOptions{})
+				if err != nil {
+					return "", "", fmt.Errorf("error in creating resource %s/%s, %v", namespaceName, resourceName, err)
+				}
+				return namespaceName, resourceName, nil
+			}
+			return "", "", err
+		}
 	}
 	return namespaceName, resourceName, nil
 }
