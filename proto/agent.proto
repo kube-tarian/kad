@@ -293,8 +293,15 @@ message ApplicationStatus {
 message GetDefaultAppsStatusRequest {
 }
 
+enum DeploymentStatus {
+  SUCCESS = 0;
+  FAILED = 1;
+  ONGOING = 2;
+}
+
 message GetDefaultAppsStatusResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  repeated ApplicationStatus defaultAppsStatus = 3;
+  DeploymentStatus deploymentStatus = 3;
+  repeated ApplicationStatus defaultAppsStatus = 4;
 }
