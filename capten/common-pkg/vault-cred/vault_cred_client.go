@@ -8,7 +8,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
 	"github.com/kelseyhightower/envconfig"
 	managedcluster "github.com/kube-tarian/kad/capten/common-pkg/managed-cluster"
-	"github.com/kube-tarian/kad/capten/common-pkg/vault-cred/vaultcredpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/vaultcredpb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"

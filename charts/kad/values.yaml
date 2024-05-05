@@ -52,12 +52,13 @@ vault:
 vaultCred:
   address: http://vault-cred:8080
 
-cassandra:
-  addresses: capten-cass-capten-cass-service:9042
-  userName: kadagent
-  entityName: cassandra
-  keyspace: capten
-  secretName: capten-cass-superuser
+postgres:
+  host: postgres
+  port: 9042
+  userName: capten
+  entityName: postgres
+  dbName: capten
+  adminCredIdentifer: postgres-admin
 
 ingressroute:
   enabled: true

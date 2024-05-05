@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
 	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
 	v1 "k8s.io/api/core/v1"
 

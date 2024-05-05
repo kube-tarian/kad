@@ -1,1 +1,0 @@
-ALTER TABLE ClusterAppConfig DROP COLUMN api_endpoint;

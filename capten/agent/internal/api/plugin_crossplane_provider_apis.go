@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/model"
 )
 
@@ -47,7 +47,7 @@ func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenplugins
 		Status:          string(model.CrossPlaneProviderOutofSynch),
 	}
 
-	if err := a.as.InsertCrossplaneProvider(&provider); err != nil {
+	if err := a.as.UpsertCrossplaneProvider(&provider); err != nil {
 		a.log.Errorf("failed to store crossplane provider to DB, %v", err)
 		return &captenpluginspb.AddCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,

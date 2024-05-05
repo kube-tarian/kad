@@ -117,9 +117,9 @@ func (k *K8SClient) CreateOrUpdateSecretStore(ctx context.Context, secretStoreNa
 	if err != nil {
 		return
 	}
-	_, _, err = k.DynamicClient.CreateResource(ctx, []byte(secretStoreData))
+	_, _, err = k.DynamicClient.CreateResource(ctx, []byte(secretStoreData), true)
 	if err != nil {
-		err = fmt.Errorf("failed to create cluter vault token secret %s/%s, %v", namespace, secretStoreName, err)
+		err = fmt.Errorf("failed to create cluter secret store %s/%s, %v", namespace, secretStoreName, err)
 		return
 	}
 	return
@@ -164,7 +164,7 @@ func (k *K8SClient) CreateOrUpdateExternalSecret(ctx context.Context, externalSe
 		return
 	}
 
-	_, _, err = k.DynamicClient.CreateResource(ctx, []byte(externalSecretData))
+	_, _, err = k.DynamicClient.CreateResource(ctx, []byte(externalSecretData), false)
 	if err != nil {
 		err = fmt.Errorf("failed to create vault external secret %s/%s, %v", namespace, externalSecretName, err)
 		return

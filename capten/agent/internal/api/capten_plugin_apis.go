@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 )
 
 func (a *Agent) GetCaptenPlugins(ctx context.Context, request *captenpluginspb.GetCaptenPluginsRequest) (

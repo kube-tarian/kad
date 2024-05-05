@@ -9,7 +9,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
-	dbinit "github.com/kube-tarian/kad/capten/common-pkg/postgres/db-init"
+	postgresdbinit "github.com/kube-tarian/kad/capten/common-pkg/postgres/db-init"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/k8sops"
 )
 
@@ -28,9 +28,9 @@ func SetupPostgresDatabase(log logging.Logger, pluginName, namespace, cmName str
 
 	conf.DBName = fmt.Sprintf(dbNameTemplate, pluginName)
 	conf.DBServiceUsername = pluginName
-	conf.Password = dbinit.GenerateRandomPassword(12)
+	conf.Password = postgresdbinit.GenerateRandomPassword(12)
 
-	err = dbinit.CreatedDatabaseWithConfig(log, conf)
+	err = postgresdbinit.CreatedDatabaseWithConfig(log, conf)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -41,7 +41,7 @@ func SetupPostgresDatabase(log logging.Logger, pluginName, namespace, cmName str
 		UserName: conf.DBServiceUsername,
 		Password: conf.Password,
 		AdditionalData: map[string]string{
-			"db-url":       conf.DBAddress,
+			"db-url":       conf.DBHost + ":" + conf.DBPort,
 			"db-name":      conf.DBName,
 			"service-user": pluginName,
 		},
@@ -58,12 +58,12 @@ func SetupPostgresDatabase(log logging.Logger, pluginName, namespace, cmName str
 }
 
 // Read the Postgres DB configuration
-func readConfig() (*dbinit.Config, error) {
-	var baseConfig dbinit.BaseConfig
+func readConfig() (*postgresdbinit.Config, error) {
+	var baseConfig postgresdbinit.BaseConfig
 	if err := envconfig.Process("", &baseConfig); err != nil {
 		return nil, err
 	}
-	return &dbinit.Config{
+	return &postgresdbinit.Config{
 		BaseConfig: baseConfig,
 	}, nil
 }

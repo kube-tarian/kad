@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
 )
 
 func (a *Agent) SyncApp(ctx context.Context, request *agentpb.SyncAppRequest) (

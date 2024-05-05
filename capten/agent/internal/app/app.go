@@ -10,17 +10,14 @@ import (
 	"github.com/intelops/go-common/logging"
 	ginapiserver "github.com/kube-tarian/kad/capten/agent/gin-api-server"
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
-	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
 	"github.com/kube-tarian/kad/capten/agent/internal/crossplane"
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
-	"github.com/kube-tarian/kad/capten/agent/internal/util"
-	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
-	dbinit "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-init"
-	dbmigrate "github.com/kube-tarian/kad/capten/common-pkg/cassandra/db-migrate"
-	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
-	pluginconfigtore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
+	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
+	dbinit "github.com/kube-tarian/kad/capten/common-pkg/postgres/db-init"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -39,7 +36,7 @@ func Start() {
 		log.Fatalf("service config reading failed, %v", err)
 	}
 
-	if err := configureDB(); err != nil {
+	if err := configurePostgresDB(); err != nil {
 		log.Fatalf("%v", err)
 	}
 
@@ -49,13 +46,7 @@ func Start() {
 		return
 	}
 
-	pas, err := pluginconfigtore.NewStore(log)
-	if err != nil {
-		log.Errorf("failed to initialize plugin app store, %v", err)
-		return
-	}
-
-	rpcapi, err := agentapi.NewAgent(log, cfg, as, pas)
+	rpcapi, err := agentapi.NewAgent(log, cfg, as)
 	if err != nil {
 		log.Fatalf("Agent initialization failed, %v", err)
 		return
@@ -116,17 +107,13 @@ func Start() {
 	log.Debugf("Exiting Agent")
 }
 
-func configureDB() error {
-	if err := util.SyncCassandraAdminSecret(log); err != nil {
-		return errors.WithMessage(err, "error in update cassandra secret to vault")
-	}
-
+func configurePostgresDB() error {
 	if err := dbinit.CreatedDatabase(log); err != nil {
-		return errors.WithMessage(err, "error creating database")
+		return errors.WithMessage(err, "error in creating postgres database")
 	}
 
-	if err := dbmigrate.RunMigrations(log, dbmigrate.UP); err != nil {
-		return errors.WithMessage(err, "error in migrating cassandra DB")
+	if err := dbinit.RunMigrations(dbinit.UP); err != nil {
+		return errors.WithMessage(err, "error in migrating postgres database")
 	}
 	return nil
 }

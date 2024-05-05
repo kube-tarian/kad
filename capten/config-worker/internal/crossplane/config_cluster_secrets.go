@@ -48,7 +48,7 @@ func (cp *CrossPlaneApp) configureExternalSecretsOnCluster(ctx context.Context,
 	err = k8sclient.CreateOrUpdateSecretStore(ctx, secretStoreName, namespace,
 		vaultAddressStr, vaultAppRoleTokenSecret, "token")
 	if err != nil {
-		return fmt.Errorf("failed to create cluter vault token secret, %v", err)
+		return fmt.Errorf("failed to create secret store %s, %v", secretStoreName, err)
 	}
 
 	logger.Infof("created %s on cluster cluster %s", secretStoreName, secretStoreName, clusterName)
