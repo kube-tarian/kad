@@ -21,7 +21,8 @@ func mapAgentAppsToServerResp(appDataList []*agentpb.AppData) []*serverpb.Cluste
 		clusterAppConfig.CreateNamespace = appConfig.Config.CreateNamespace
 		clusterAppConfig.PrivilegedNamespace = appConfig.Config.PrivilegedNamespace
 		clusterAppConfig.Icon = appConfig.Config.Icon
-		clusterAppConfig.LaunchURL = appConfig.Config.LaunchURL
+		clusterAppConfig.UiEndpoint = appConfig.Config.UiEndpoint
+		clusterAppConfig.UiModuleEndpoint = appConfig.Config.UiModuleEndpoint
 		clusterAppConfig.InstallStatus = appConfig.Config.InstallStatus
 		clusterAppConfig.RuntimeStatus = ""
 		clusterAppConfig.DefualtApp = appConfig.Config.DefualtApp
@@ -39,9 +40,9 @@ func mapAgentAppLaunchConfigsToServer(appLaunchCfgs []*agentpb.AppLaunchConfig) 
 		var launchCfg serverpb.AppLaunchConfig
 		launchCfg.ReleaseName = cfg.ReleaseName
 		launchCfg.Category = cfg.Category
-		launchCfg.LaunchUIDescription = cfg.Description
+		launchCfg.Description = cfg.Description
 		launchCfg.Icon = cfg.Icon
-		launchCfg.LaunchURL = cfg.LaunchURL
+		launchCfg.UiEndpoint = cfg.UiEndpoint
 		svrAppLaunchCfg[index] = &launchCfg
 	}
 	return svrAppLaunchCfg

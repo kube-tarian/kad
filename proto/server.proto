@@ -6,28 +6,16 @@ option go_package = "/serverpb";
 package serverpb;
 
 service Server {
-  rpc NewClusterRegistration (NewClusterRegistrationRequest) returns (NewClusterRegistrationResponse) {}  
-  rpc UpdateClusterRegistration (UpdateClusterRegistrationRequest) returns (UpdateClusterRegistrationResponse) {} 
+  rpc NewClusterRegistration (NewClusterRegistrationRequest) returns (NewClusterRegistrationResponse) {}
+  rpc UpdateClusterRegistration (UpdateClusterRegistrationRequest) returns (UpdateClusterRegistrationResponse) {}
   rpc DeleteClusterRegistration (DeleteClusterRegistrationRequest) returns (DeleteClusterRegistrationResponse) {}
-  
+
   rpc GetClusters (GetClustersRequest) returns (GetClustersResponse) {}
-  rpc GetCluster (GetClusterRequest) returns (GetClusterResponse) {}  
+  rpc GetCluster (GetClusterRequest) returns (GetClusterResponse) {}
   rpc GetClusterApps (GetClusterAppsRequest) returns (GetClusterAppsResponse) {}
   rpc GetClusterAppLaunchConfigs (GetClusterAppLaunchConfigsRequest) returns (GetClusterAppLaunchConfigsResponse) {}
   rpc GetClusterApp (GetClusterAppRequest) returns (GetClusterAppResponse) {}
-  rpc GetClusterDetails (GetClusterDetailsRequest) returns (GetClusterDetailsResponse) {}  
-
-  rpc AddStoreApp (AddStoreAppRequest) returns (AddStoreAppResponse) {}
-  rpc UpdateStoreApp (UpdateStoreAppRequest) returns (UpdateStoreAppRsponse){}
-  rpc DeleteStoreApp (DeleteStoreAppRequest) returns (DeleteStoreAppResponse){}
-  rpc GetStoreApp (GetStoreAppRequest) returns (GetStoreAppResponse) {}
-  rpc GetStoreApps (GetStoreAppsRequest) returns (GetStoreAppsResponse) {}
-  rpc GetStoreAppValues(GetStoreAppValuesRequest) returns (GetStoreAppValuesResponse) {}
-
-  rpc DeployStoreApp(DeployStoreAppRequest) returns (DeployStoreAppResponse) {}
-  rpc UnDeployStoreApp(UnDeployStoreAppRequest) returns (UnDeployStoreAppResponse) {}
-
-  rpc UpgradeStoreApp(UpgradeStoreAppRequest) returns (UpgradeStoreAppResponse) {}
+  rpc GetClusterDetails (GetClusterDetailsRequest) returns (GetClusterDetailsResponse) {}
 
   rpc StoreCredential (StoreCredentialRequest) returns (StoreCredentialResponse) {}
 }
@@ -68,7 +56,7 @@ message UpdateClusterRegistrationResponse {
 }
 
 message DeleteClusterRegistrationRequest {
-  string clusterID = 1;  
+  string clusterID = 1;
 }
 
 message DeleteClusterRegistrationResponse {
@@ -82,7 +70,7 @@ message GetClustersRequest {
 message GetClustersResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  repeated ClusterInfo data = 3; 
+  repeated ClusterInfo data = 3;
 }
 
 message GetClusterDetailsRequest {
@@ -91,12 +79,12 @@ message GetClusterDetailsRequest {
 message GetClusterDetailsResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  ClusterInfo data = 3; 
+  ClusterInfo data = 3;
 }
 
 
 message GetClusterAppsRequest {
-  string clusterID = 1; 
+  string clusterID = 1;
 }
 
 message GetClusterAppsResponse {
@@ -113,7 +101,7 @@ message GetClusterAppRequest {
 message GetClusterAppResponse {
   StatusCode status = 1;
   string statusMessage = 2;
-  ClusterAppConfig appConfig = 3; 
+  ClusterAppConfig appConfig = 3;
 }
 
 message GetClusterAppLaunchConfigsRequest {
@@ -148,14 +136,14 @@ message GetClusterResponse{
 message AppLaunchConfig {
   string releaseName = 1;
   string category = 2;
-  string launchUIDescription = 3;
+  string description = 3;
   bytes icon = 4;
-  string launchURL = 5;
+  string uiEndpoint = 5;
 }
 
 message ClusterAttribute {
   string key = 1;
-  string value = 2;  
+  string value = 2;
 }
 
 enum PluginStoreType {
@@ -177,8 +165,8 @@ message ClusterAppConfig {
   bool createNamespace = 10;
   bool privilegedNamespace = 11;
   bytes icon = 12;
-  string launchURL = 13;
-  string launchUIDescription = 14;
+  string uiEndpoint = 13;
+  string uiModuleEndpoint = 14;
   string installStatus = 15;
   string runtimeStatus = 16;
   bool defualtApp = 17;
@@ -187,129 +175,11 @@ message ClusterAppConfig {
   string apiEndpoint = 20;
 }
 
-message AddStoreAppRequest {
-  StoreAppConfig appConfig = 1;
-  StoreAppAllValues appValues = 2;
-}
-
-message AddStoreAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message UpdateStoreAppRequest {
-  StoreAppConfig appConfig = 1;
-  StoreAppAllValues appValues = 2;
-}
-
-message UpdateStoreAppRsponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message DeleteStoreAppRequest {
-  string appName = 1;
-  string version = 2;
-}
-
-message DeleteStoreAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message GetStoreAppRequest {
-  string appName = 1;
-  string version = 2;
-}
-
-message GetStoreAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-  StoreAppConfig appConfig = 3;
-}
-
-message GetStoreAppsRequest {
-}
-
-message GetStoreAppsResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-  repeated StoreAppsData data = 3;
-}
-
-message StoreAppsData {
-  StoreAppConfig appConfigs = 1;
-  bytes overrideValues = 2;
-}
-
-message GetStoreAppValuesRequest {
-  string appName = 1;
-  string version = 2;
-  string clusterID = 3;
-}
-
-message GetStoreAppValuesResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-  bytes overrideValues = 3;
-}
-
-message UpgradeStoreAppRequest {
-  string appName = 1;
-  string version = 2;
-  string clusterID = 3;
-  bytes overrideValues = 4;
-}
-
-message UpgradeStoreAppResponse {
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message DeployStoreAppRequest {
-  string appName = 1;
-  string version = 2;
-  string clusterID = 3;
-  bytes overrideValues = 4;
-}
-
-message DeployStoreAppResponse{
-  StatusCode status = 1;
-  string statusMessage = 2;
-}
-
-message StoreAppConfig {
-  string releaseName = 1;
-  string appName = 2;
-  string version = 3;
-  string category = 4;
-  string description = 5;
-  string chartName = 6;
-  string repoName = 7;
-  string repoURL = 8;
-  string namespace = 9;
-  bool createNamespace = 10;
-  bool privilegedNamespace = 11;
-  bytes icon = 12;
-  string launchURL = 13;
-  string launchUIDescription = 14;
-  bool defualtApp = 15;
-  string pluginName = 16;
-  string pluginDescription = 17;
-  string apiEndpoint = 18;
-}
-
-message StoreAppAllValues {
-  bytes overrideValues = 1;
-  bytes launchUIValues = 2;
-  bytes templateValues = 3;
-}
-
 message StoreCredentialRequest {
   string clusterID = 1;
   string credentialIdentifier = 2;
   string credentialEntiryName=3;
-  map<string, string>  credential = 4;  
+  map<string, string>  credential = 4;
 }
 
 message StoreCredentialResponse {
@@ -317,12 +187,3 @@ message StoreCredentialResponse {
   string statusMessage = 2;
 }
 
-message UnDeployStoreAppRequest {
-  string clusterID = 1;
-  string releaseName = 5;
-}
-
-message UnDeployStoreAppResponse{
-  StatusCode status = 1;
-  string statusMessage = 2;
-}

@@ -43,7 +43,7 @@ Sec-Fetch-Site: same-origin
 {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"name":"demo"},"spec":{"destination":{"name":"","namespace":"default","server":"https://kubernetes.default.svc"},"source":{"path":"./simple-app","repoURL":"https://github.com/Jasmine-Harit/gitops-certification-examples.git","targetRevision":"HEAD"},"project":"default"}}
 ```
 
-$ curl $ARGOCD_SERVER/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN" 
+$ curl $ARGOCD_SERVER/api/v1/applications -H "Authorization: Bearer $ARGOCD_TOKEN"
 {"metadata":{"selfLink":"/apis/argoproj.io/v1alpha1/namespaces/argocd/applications","resourceVersion":"37755"},"items":...}
 
 

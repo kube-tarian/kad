@@ -206,7 +206,7 @@ func executeAppDeployment(
 		}, nil
 	}
 
-	launchURL, err := executeStringTemplateValues(req.UiEndpoint, req.OverrideValues)
+	uiEndpoint, err := executeStringTemplateValues(req.UiEndpoint, req.OverrideValues)
 	if err != nil {
 		log.Errorf("failed to derive template launch URL for app %s, %v", req.PluginName, err)
 		return &model.ResponsePayload{
@@ -238,8 +238,8 @@ func executeAppDeployment(
 			CreateNamespace:     true,
 			PrivilegedNamespace: req.PrivilegedNamespace,
 			Icon:                req.Icon,
-			LaunchURL:           launchURL,
-			LaunchUIDescription: req.UiEndpoint,
+			UiEndpoint:          uiEndpoint,
+			UiModuleEndpoint:    req.UiModuleEndpoint,
 			InstallStatus:       string(model.AppIntallingStatus),
 			DefualtApp:          false,
 			PluginName:          req.PluginName,

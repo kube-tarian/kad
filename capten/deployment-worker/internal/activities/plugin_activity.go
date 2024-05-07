@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/capten/common-pkg/capten-sdk/db"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
 	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/captensdk"
+	"github.com/kube-tarian/kad/capten/deployment-worker/internal/dbstorepreactions/postgresstore"
 	"github.com/kube-tarian/kad/capten/model"
 	v1 "k8s.io/api/core/v1"
 )
@@ -89,30 +90,12 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 		}, err
 	}
 
-	// Call capten-sdk DB setup
-	sdkDBClient := db.NewDBClientWithConfig(&db.DBConfig{
-		DbOemName:         db.POSTGRES,
-		PluginName:        req.PluginName,
-		DbName:            req.DefaultNamespace + "-" + req.PluginName,
-		DbServiceUserName: req.PluginName,
-	})
-
-	vaultPath, err := sdkDBClient.SetupDatabase()
-	if err != nil {
-		return &model.ResponsePayload{
-			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"setup database: %s\"}", err.Error())),
-		}, err
-	}
-
 	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
-	err = p.createUpdateConfigmap(ctx, req.DefaultNamespace, pluginInitConfigmapName, map[string]string{
-		"vault-path": vaultPath,
-	})
+	err = postgresstore.SetupPostgresDatabase(logger, req.PluginName, req.DefaultNamespace, pluginInitConfigmapName, p.k8sClient)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
-			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update configmap: %s\"}", err.Error())),
+			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \" %s\"}", err.Error())),
 		}, err
 	}
 
@@ -136,15 +119,6 @@ func (p *PluginActivities) PluginUndeployPreActionPostgresStoreActivity(ctx cont
 			Message: json.RawMessage(fmt.Sprintf("{ \"reason\": \"update status: %s\"}", err.Error())),
 		}, err
 	}
-
-	// Call capten-sdk DB setup
-	db.NewDBClientWithConfig(&db.DBConfig{
-		DbOemName:         db.POSTGRES,
-		PluginName:        req.PluginName,
-		DbName:            req.DefaultNamespace + "-" + req.PluginName,
-		DbServiceUserName: req.PluginName,
-	})
-	// TODO: Invoke  captensdk DBDestroy
 
 	err = p.pas.DeletePluginConfigByPluginName(req.PluginName)
 	if err != nil {
@@ -277,8 +251,13 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 		}, err
 	}
 
+	agentClusterCAIssuerName := os.Getenv("AGENT_CLUSTER_CA_ISSUER_NAME")
+	if len(agentClusterCAIssuerName) == 0 {
+		agentClusterCAIssuerName = "agent-ca-issuer"
+	}
+
 	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
-	err = captenSDKClient.CreateCertificates(req.PluginName, req.DefaultNamespace, "capten-issuer", pluginInitConfigmapName, p.k8sClient)
+	err = captenSDKClient.CreateCertificates(req.PluginName, req.DefaultNamespace, agentClusterCAIssuerName, pluginInitConfigmapName, p.k8sClient)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",

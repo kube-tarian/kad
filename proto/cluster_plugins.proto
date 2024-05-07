@@ -21,7 +21,7 @@ enum StatusCode {
 
 enum StoreType {
   CENTRAL_CAPTEN_STORE = 0;
-  LOCAL_CAPTEN_STORE = 1;  
+  LOCAL_CAPTEN_STORE = 1;
 }
 
 message Plugin {
@@ -37,18 +37,19 @@ message Plugin {
 	bool privilegedNamespace = 10;
   string apiEndpoint = 11;
   string uiEndpoint = 12;
-	repeated string capabilities = 13;
-  bytes values = 14;
-  bytes overrideValues = 15;
-  string installStatus = 16;
-  string lastUpdateTime = 17;
+  string uiModuleEndpoint = 13;
+	repeated string capabilities = 14;
+  bytes values = 15;
+  bytes overrideValues = 16;
+  string installStatus = 17;
+  string lastUpdateTime = 18;
 }
 
 message DeployClusterPluginRequest {
   Plugin plugin = 1;
 }
 
-message DeployClusterPluginResponse {  
+message DeployClusterPluginResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }
@@ -58,7 +59,7 @@ message UnDeployClusterPluginRequest {
   string pluginName = 2;
 }
 
-message UnDeployClusterPluginResponse {  
+message UnDeployClusterPluginResponse {
   StatusCode status = 1;
   string statusMessage = 2;
 }
@@ -76,7 +77,7 @@ message ClusterPlugin {
 message GetClusterPluginsRequest {
 }
 
-message GetClusterPluginsResponse {  
+message GetClusterPluginsResponse {
   StatusCode status = 1;
   string statusMessage = 2;
   repeated ClusterPlugin plugins = 3;

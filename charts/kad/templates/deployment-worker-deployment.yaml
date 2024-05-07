@@ -69,6 +69,11 @@ spec:
               value: {{ .Values.cassandra.secretName }}
             - name: AGENT_ADDRESSES
               value: {{ include "kad.fullname" . }}-agent
+            - name: AGENT_CLUSTER_CA_ISSUER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: kad-agent-config
+                  key: clusterIssuerName
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:

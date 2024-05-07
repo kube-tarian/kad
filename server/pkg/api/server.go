@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"sync"
 
-	"github.com/kube-tarian/kad/agent/pkg/logging"
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/config"
 	iamclient "github.com/kube-tarian/kad/server/pkg/iam-client"

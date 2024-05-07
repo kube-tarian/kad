@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kube-tarian/kad/agent/pkg/logging"
+	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/server/pkg/pb/clusterpluginspb"

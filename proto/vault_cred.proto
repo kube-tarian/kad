@@ -20,6 +20,8 @@ service VaultCred {
   rpc CreateK8SAuthRole(CreateK8SAuthRoleRequest) returns (CreateK8SAuthRoleResponse) {};
   rpc UpdateK8SAuthRole(UpdateK8SAuthRoleRequest) returns (UpdateK8SAuthRoleResponse) {};
   rpc DeleteK8SAuthRole(DeleteK8SAuthRoleRequest) returns (DeleteK8SAuthRoleResponse) {};
+  rpc ConfigureVaultSecret(ConfigureVaultSecretRequest) returns (ConfigureVaultSecretResponse) {};
+
 }
 
 enum StatusCode {
@@ -27,6 +29,32 @@ enum StatusCode {
    INTERNRAL_ERROR = 1;
    INVALID_ARGUMENT = 2;
    NOT_FOUND = 3;
+}
+
+
+message PingRequest {
+   string SampInput = 1;
+}
+
+message PingResponse {
+  StatusCode status = 1;
+}
+
+message SecretPathRef {
+  string SecretPath = 1;
+  string SecretKey = 2;
+}
+
+message ConfigureVaultSecretRequest {  
+  string secretName = 1;
+  string namespace = 2;
+  repeated SecretPathRef SecretPathData = 3;
+  string domainName = 4;
+}
+
+message ConfigureVaultSecretResponse {
+  StatusCode status = 1;
+  string statusMessage = 2;
 }
 
 message GetCredentialRequest {
@@ -154,3 +182,6 @@ message DeleteClusterK8SAuthResponse {
    StatusCode status = 1;
    string statusMessage = 2;
 }
+
+
+

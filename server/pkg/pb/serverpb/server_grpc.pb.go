@@ -28,15 +28,6 @@ const (
 	Server_GetClusterAppLaunchConfigs_FullMethodName = "/serverpb.Server/GetClusterAppLaunchConfigs"
 	Server_GetClusterApp_FullMethodName              = "/serverpb.Server/GetClusterApp"
 	Server_GetClusterDetails_FullMethodName          = "/serverpb.Server/GetClusterDetails"
-	Server_AddStoreApp_FullMethodName                = "/serverpb.Server/AddStoreApp"
-	Server_UpdateStoreApp_FullMethodName             = "/serverpb.Server/UpdateStoreApp"
-	Server_DeleteStoreApp_FullMethodName             = "/serverpb.Server/DeleteStoreApp"
-	Server_GetStoreApp_FullMethodName                = "/serverpb.Server/GetStoreApp"
-	Server_GetStoreApps_FullMethodName               = "/serverpb.Server/GetStoreApps"
-	Server_GetStoreAppValues_FullMethodName          = "/serverpb.Server/GetStoreAppValues"
-	Server_DeployStoreApp_FullMethodName             = "/serverpb.Server/DeployStoreApp"
-	Server_UnDeployStoreApp_FullMethodName           = "/serverpb.Server/UnDeployStoreApp"
-	Server_UpgradeStoreApp_FullMethodName            = "/serverpb.Server/UpgradeStoreApp"
 	Server_StoreCredential_FullMethodName            = "/serverpb.Server/StoreCredential"
 )
 
@@ -53,15 +44,6 @@ type ServerClient interface {
 	GetClusterAppLaunchConfigs(ctx context.Context, in *GetClusterAppLaunchConfigsRequest, opts ...grpc.CallOption) (*GetClusterAppLaunchConfigsResponse, error)
 	GetClusterApp(ctx context.Context, in *GetClusterAppRequest, opts ...grpc.CallOption) (*GetClusterAppResponse, error)
 	GetClusterDetails(ctx context.Context, in *GetClusterDetailsRequest, opts ...grpc.CallOption) (*GetClusterDetailsResponse, error)
-	AddStoreApp(ctx context.Context, in *AddStoreAppRequest, opts ...grpc.CallOption) (*AddStoreAppResponse, error)
-	UpdateStoreApp(ctx context.Context, in *UpdateStoreAppRequest, opts ...grpc.CallOption) (*UpdateStoreAppRsponse, error)
-	DeleteStoreApp(ctx context.Context, in *DeleteStoreAppRequest, opts ...grpc.CallOption) (*DeleteStoreAppResponse, error)
-	GetStoreApp(ctx context.Context, in *GetStoreAppRequest, opts ...grpc.CallOption) (*GetStoreAppResponse, error)
-	GetStoreApps(ctx context.Context, in *GetStoreAppsRequest, opts ...grpc.CallOption) (*GetStoreAppsResponse, error)
-	GetStoreAppValues(ctx context.Context, in *GetStoreAppValuesRequest, opts ...grpc.CallOption) (*GetStoreAppValuesResponse, error)
-	DeployStoreApp(ctx context.Context, in *DeployStoreAppRequest, opts ...grpc.CallOption) (*DeployStoreAppResponse, error)
-	UnDeployStoreApp(ctx context.Context, in *UnDeployStoreAppRequest, opts ...grpc.CallOption) (*UnDeployStoreAppResponse, error)
-	UpgradeStoreApp(ctx context.Context, in *UpgradeStoreAppRequest, opts ...grpc.CallOption) (*UpgradeStoreAppResponse, error)
 	StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error)
 }
 
@@ -154,87 +136,6 @@ func (c *serverClient) GetClusterDetails(ctx context.Context, in *GetClusterDeta
 	return out, nil
 }
 
-func (c *serverClient) AddStoreApp(ctx context.Context, in *AddStoreAppRequest, opts ...grpc.CallOption) (*AddStoreAppResponse, error) {
-	out := new(AddStoreAppResponse)
-	err := c.cc.Invoke(ctx, Server_AddStoreApp_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) UpdateStoreApp(ctx context.Context, in *UpdateStoreAppRequest, opts ...grpc.CallOption) (*UpdateStoreAppRsponse, error) {
-	out := new(UpdateStoreAppRsponse)
-	err := c.cc.Invoke(ctx, Server_UpdateStoreApp_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) DeleteStoreApp(ctx context.Context, in *DeleteStoreAppRequest, opts ...grpc.CallOption) (*DeleteStoreAppResponse, error) {
-	out := new(DeleteStoreAppResponse)
-	err := c.cc.Invoke(ctx, Server_DeleteStoreApp_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) GetStoreApp(ctx context.Context, in *GetStoreAppRequest, opts ...grpc.CallOption) (*GetStoreAppResponse, error) {
-	out := new(GetStoreAppResponse)
-	err := c.cc.Invoke(ctx, Server_GetStoreApp_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) GetStoreApps(ctx context.Context, in *GetStoreAppsRequest, opts ...grpc.CallOption) (*GetStoreAppsResponse, error) {
-	out := new(GetStoreAppsResponse)
-	err := c.cc.Invoke(ctx, Server_GetStoreApps_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) GetStoreAppValues(ctx context.Context, in *GetStoreAppValuesRequest, opts ...grpc.CallOption) (*GetStoreAppValuesResponse, error) {
-	out := new(GetStoreAppValuesResponse)
-	err := c.cc.Invoke(ctx, Server_GetStoreAppValues_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) DeployStoreApp(ctx context.Context, in *DeployStoreAppRequest, opts ...grpc.CallOption) (*DeployStoreAppResponse, error) {
-	out := new(DeployStoreAppResponse)
-	err := c.cc.Invoke(ctx, Server_DeployStoreApp_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) UnDeployStoreApp(ctx context.Context, in *UnDeployStoreAppRequest, opts ...grpc.CallOption) (*UnDeployStoreAppResponse, error) {
-	out := new(UnDeployStoreAppResponse)
-	err := c.cc.Invoke(ctx, Server_UnDeployStoreApp_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *serverClient) UpgradeStoreApp(ctx context.Context, in *UpgradeStoreAppRequest, opts ...grpc.CallOption) (*UpgradeStoreAppResponse, error) {
-	out := new(UpgradeStoreAppResponse)
-	err := c.cc.Invoke(ctx, Server_UpgradeStoreApp_FullMethodName, in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *serverClient) StoreCredential(ctx context.Context, in *StoreCredentialRequest, opts ...grpc.CallOption) (*StoreCredentialResponse, error) {
 	out := new(StoreCredentialResponse)
 	err := c.cc.Invoke(ctx, Server_StoreCredential_FullMethodName, in, out, opts...)
@@ -257,15 +158,6 @@ type ServerServer interface {
 	GetClusterAppLaunchConfigs(context.Context, *GetClusterAppLaunchConfigsRequest) (*GetClusterAppLaunchConfigsResponse, error)
 	GetClusterApp(context.Context, *GetClusterAppRequest) (*GetClusterAppResponse, error)
 	GetClusterDetails(context.Context, *GetClusterDetailsRequest) (*GetClusterDetailsResponse, error)
-	AddStoreApp(context.Context, *AddStoreAppRequest) (*AddStoreAppResponse, error)
-	UpdateStoreApp(context.Context, *UpdateStoreAppRequest) (*UpdateStoreAppRsponse, error)
-	DeleteStoreApp(context.Context, *DeleteStoreAppRequest) (*DeleteStoreAppResponse, error)
-	GetStoreApp(context.Context, *GetStoreAppRequest) (*GetStoreAppResponse, error)
-	GetStoreApps(context.Context, *GetStoreAppsRequest) (*GetStoreAppsResponse, error)
-	GetStoreAppValues(context.Context, *GetStoreAppValuesRequest) (*GetStoreAppValuesResponse, error)
-	DeployStoreApp(context.Context, *DeployStoreAppRequest) (*DeployStoreAppResponse, error)
-	UnDeployStoreApp(context.Context, *UnDeployStoreAppRequest) (*UnDeployStoreAppResponse, error)
-	UpgradeStoreApp(context.Context, *UpgradeStoreAppRequest) (*UpgradeStoreAppResponse, error)
 	StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error)
 	mustEmbedUnimplementedServerServer()
 }
@@ -300,33 +192,6 @@ func (UnimplementedServerServer) GetClusterApp(context.Context, *GetClusterAppRe
 }
 func (UnimplementedServerServer) GetClusterDetails(context.Context, *GetClusterDetailsRequest) (*GetClusterDetailsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClusterDetails not implemented")
-}
-func (UnimplementedServerServer) AddStoreApp(context.Context, *AddStoreAppRequest) (*AddStoreAppResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddStoreApp not implemented")
-}
-func (UnimplementedServerServer) UpdateStoreApp(context.Context, *UpdateStoreAppRequest) (*UpdateStoreAppRsponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateStoreApp not implemented")
-}
-func (UnimplementedServerServer) DeleteStoreApp(context.Context, *DeleteStoreAppRequest) (*DeleteStoreAppResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteStoreApp not implemented")
-}
-func (UnimplementedServerServer) GetStoreApp(context.Context, *GetStoreAppRequest) (*GetStoreAppResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetStoreApp not implemented")
-}
-func (UnimplementedServerServer) GetStoreApps(context.Context, *GetStoreAppsRequest) (*GetStoreAppsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetStoreApps not implemented")
-}
-func (UnimplementedServerServer) GetStoreAppValues(context.Context, *GetStoreAppValuesRequest) (*GetStoreAppValuesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetStoreAppValues not implemented")
-}
-func (UnimplementedServerServer) DeployStoreApp(context.Context, *DeployStoreAppRequest) (*DeployStoreAppResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeployStoreApp not implemented")
-}
-func (UnimplementedServerServer) UnDeployStoreApp(context.Context, *UnDeployStoreAppRequest) (*UnDeployStoreAppResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnDeployStoreApp not implemented")
-}
-func (UnimplementedServerServer) UpgradeStoreApp(context.Context, *UpgradeStoreAppRequest) (*UpgradeStoreAppResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpgradeStoreApp not implemented")
 }
 func (UnimplementedServerServer) StoreCredential(context.Context, *StoreCredentialRequest) (*StoreCredentialResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method StoreCredential not implemented")
@@ -506,168 +371,6 @@ func _Server_GetClusterDetails_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Server_AddStoreApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AddStoreAppRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).AddStoreApp(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_AddStoreApp_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).AddStoreApp(ctx, req.(*AddStoreAppRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_UpdateStoreApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateStoreAppRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).UpdateStoreApp(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_UpdateStoreApp_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).UpdateStoreApp(ctx, req.(*UpdateStoreAppRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_DeleteStoreApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteStoreAppRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).DeleteStoreApp(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_DeleteStoreApp_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).DeleteStoreApp(ctx, req.(*DeleteStoreAppRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_GetStoreApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetStoreAppRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).GetStoreApp(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_GetStoreApp_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).GetStoreApp(ctx, req.(*GetStoreAppRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_GetStoreApps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetStoreAppsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).GetStoreApps(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_GetStoreApps_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).GetStoreApps(ctx, req.(*GetStoreAppsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_GetStoreAppValues_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetStoreAppValuesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).GetStoreAppValues(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_GetStoreAppValues_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).GetStoreAppValues(ctx, req.(*GetStoreAppValuesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_DeployStoreApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeployStoreAppRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).DeployStoreApp(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_DeployStoreApp_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).DeployStoreApp(ctx, req.(*DeployStoreAppRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_UnDeployStoreApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UnDeployStoreAppRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).UnDeployStoreApp(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_UnDeployStoreApp_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).UnDeployStoreApp(ctx, req.(*UnDeployStoreAppRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Server_UpgradeStoreApp_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpgradeStoreAppRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ServerServer).UpgradeStoreApp(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Server_UpgradeStoreApp_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ServerServer).UpgradeStoreApp(ctx, req.(*UpgradeStoreAppRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Server_StoreCredential_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StoreCredentialRequest)
 	if err := dec(in); err != nil {
@@ -728,42 +431,6 @@ var Server_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetClusterDetails",
 			Handler:    _Server_GetClusterDetails_Handler,
-		},
-		{
-			MethodName: "AddStoreApp",
-			Handler:    _Server_AddStoreApp_Handler,
-		},
-		{
-			MethodName: "UpdateStoreApp",
-			Handler:    _Server_UpdateStoreApp_Handler,
-		},
-		{
-			MethodName: "DeleteStoreApp",
-			Handler:    _Server_DeleteStoreApp_Handler,
-		},
-		{
-			MethodName: "GetStoreApp",
-			Handler:    _Server_GetStoreApp_Handler,
-		},
-		{
-			MethodName: "GetStoreApps",
-			Handler:    _Server_GetStoreApps_Handler,
-		},
-		{
-			MethodName: "GetStoreAppValues",
-			Handler:    _Server_GetStoreAppValues_Handler,
-		},
-		{
-			MethodName: "DeployStoreApp",
-			Handler:    _Server_DeployStoreApp_Handler,
-		},
-		{
-			MethodName: "UnDeployStoreApp",
-			Handler:    _Server_UnDeployStoreApp_Handler,
-		},
-		{
-			MethodName: "UpgradeStoreApp",
-			Handler:    _Server_UpgradeStoreApp_Handler,
 		},
 		{
 			MethodName: "StoreCredential",

@@ -35,7 +35,7 @@ const (
 	appName, description, category       = "app_name", "description", "category"
 	chartName, repoName, repoUrl         = "chart_name", "repo_name", "repo_url"
 	namespace, releaseName, version      = "namespace", "release_name", "version"
-	launchUrl, launchUIDesc              = "launch_url", "launch_redirect_url"
+	appUiEndpoint, uiModuleEndpoint      = "ui_endpoint", "ui_module_endpoint"
 	createNamespace, privilegedNamespace = "create_namespace", "privileged_namespace"
 	overrideValues, launchUiValues       = "override_values", "launch_ui_values"
 	templateValues, defaultApp           = "template_values", "default_app"
@@ -51,7 +51,7 @@ var (
 		appName, description, category,
 		chartName, repoName, repoUrl,
 		namespace, releaseName, version,
-		launchUrl, launchUIDesc,
+		appUiEndpoint, uiModuleEndpoint,
 		createNamespace, privilegedNamespace,
 		overrideValues, launchUiValues,
 		templateValues, defaultApp,
@@ -97,7 +97,7 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 		&config.AppName, &config.Description, &config.Category,
 		&config.ChartName, &config.RepoName, &config.RepoURL,
 		&config.Namespace, &config.ReleaseName, &config.Version,
-		&config.LaunchURL, &config.LaunchUIDescription,
+		&config.UiEndpoint, &config.UiModuleEndpoint,
 		&config.CreateNamespace, &config.PrivilegedNamespace,
 		&overrideValues, &launchUiValues,
 		&templateValues, &config.DefualtApp,
@@ -134,7 +134,7 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		&config.AppName, &config.Description, &config.Category,
 		&config.ChartName, &config.RepoName, &config.RepoURL,
 		&config.Namespace, &config.ReleaseName, &config.Version,
-		&config.LaunchURL, &config.LaunchUIDescription,
+		&config.UiEndpoint, &config.UiModuleEndpoint,
 		&config.CreateNamespace, &config.PrivilegedNamespace,
 		&overrideValues, &launchUiValues,
 		&templateValues, &config.DefualtApp,
@@ -195,14 +195,14 @@ func formUpdateKvPairs(config *agentpb.SyncAppData) (string, bool) {
 			fmt.Sprintf("%s = true", privilegedNamespace))
 	}
 
-	if config.Config.LaunchURL != "" {
+	if config.Config.UiEndpoint != "" {
 		params = append(params,
-			fmt.Sprintf("%s = '%s'", launchUrl, config.Config.LaunchURL))
+			fmt.Sprintf("%s = '%s'", appUiEndpoint, config.Config.UiEndpoint))
 	}
 
-	if config.Config.LaunchUIDescription != "" {
+	if config.Config.UiModuleEndpoint != "" {
 		params = append(params,
-			fmt.Sprintf("%s = '%s'", launchUIDesc, config.Config.LaunchUIDescription))
+			fmt.Sprintf("%s = '%s'", uiModuleEndpoint, config.Config.UiModuleEndpoint))
 	}
 
 	if config.Config.AppName != "" {
