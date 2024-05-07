@@ -4,11 +4,19 @@ import (
 	"context"
 	"encoding/hex"
 
+	"github.com/kube-tarian/kad/server/pkg/opentelemetry"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func (s *Server) GetStoreApp(ctx context.Context, request *serverpb.GetStoreAppRequest) (
 	*serverpb.GetStoreAppResponse, error) {
+	_, span := opentelemetry.GetTracer(request.AppName).
+		Start(opentelemetry.BuildContext(ctx), "CaptenServer")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("App Name", request.AppName))
+
 	orgId, err := validateOrgWithArgs(ctx, request.AppName, request.Version)
 	if err != nil {
 		s.log.Infof("request validation failed", err)

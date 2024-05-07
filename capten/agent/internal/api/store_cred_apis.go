@@ -7,6 +7,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
+	
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
@@ -20,6 +21,8 @@ var (
 )
 
 func (a *Agent) StoreCredential(ctx context.Context, request *agentpb.StoreCredentialRequest) (*agentpb.StoreCredentialResponse, error) {
+
+	
 	credPath := fmt.Sprintf("%s/%s/%s", request.CredentialType, request.CredEntityName, request.CredIdentifier)
 	credAdmin, err := credentials.NewCredentialAdmin(ctx)
 	if err != nil {

@@ -5,12 +5,22 @@ import (
 
 	"github.com/kube-tarian/kad/server/pkg/agent"
 	"github.com/kube-tarian/kad/server/pkg/credential"
+	"github.com/kube-tarian/kad/server/pkg/opentelemetry"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func (s *Server) UpdateClusterRegistration(ctx context.Context, request *serverpb.UpdateClusterRegistrationRequest) (
 	*serverpb.UpdateClusterRegistrationResponse, error) {
+
 	orgId, err := validateOrgWithArgs(ctx, request.ClusterID)
+
+	_, span := opentelemetry.GetTracer(request.GetClusterName()).
+		Start(opentelemetry.BuildContext(ctx), "CaptenServer")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("Cluster Name", request.ClusterName))
+	span.SetAttributes(attribute.String("Agent EndPoint", request.AgentEndpoint))
 	if err != nil {
 		s.log.Infof("request validation failed", err)
 		return &serverpb.UpdateClusterRegistrationResponse{

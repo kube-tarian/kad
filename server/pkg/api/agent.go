@@ -4,12 +4,21 @@ import (
 	"context"
 
 	"github.com/intelops/go-common/credentials"
+	"github.com/kube-tarian/kad/server/pkg/opentelemetry"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func (s *Server) StoreCredential(ctx context.Context, request *serverpb.StoreCredentialRequest) (
 	*serverpb.StoreCredentialResponse, error) {
+
+	_, span := opentelemetry.GetTracer(request.ClusterID).
+		Start(opentelemetry.BuildContext(ctx), "CaptenServer")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("Cluster ID", request.ClusterID))
+
 	metadataMap := metadataContextToMap(ctx)
 	orgId := metadataMap[organizationIDAttribute]
 	if orgId == "" {

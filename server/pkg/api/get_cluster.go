@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/kube-tarian/kad/server/pkg/opentelemetry"
 	"github.com/kube-tarian/kad/server/pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
 )
@@ -15,6 +16,11 @@ const (
 
 func (s *Server) GetClusterDetails(ctx context.Context, request *serverpb.GetClusterDetailsRequest) (
 	*serverpb.GetClusterDetailsResponse, error) {
+
+	_, span := opentelemetry.GetTracer("GetClusterDetails").
+		Start(opentelemetry.BuildContext(ctx), "CaptenServer")
+	defer span.End()
+
 	orgId, err := validateOrgWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
