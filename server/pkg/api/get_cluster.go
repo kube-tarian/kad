@@ -71,6 +71,10 @@ func (s *Server) GetClusterDetails(ctx context.Context, request *serverpb.GetClu
 
 func (s *Server) GetCluster(ctx context.Context, request *serverpb.GetClusterRequest) (
 	*serverpb.GetClusterResponse, error) {
+	_, span := opentelemetry.GetTracer("Get Cluster").
+		Start(opentelemetry.BuildContext(ctx), "CaptenServer")
+	defer span.End()
+
 	orgId, err := validateOrgWithArgs(ctx)
 	if err != nil {
 		s.log.Infof("request validation failed", err)
