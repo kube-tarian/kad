@@ -45,15 +45,8 @@ type Agent struct {
 }
 
 func NewAgent(log logging.Logger, cfg *config.SericeConfig,
-	as *captenstore.Store) (*Agent, error) {
-	var tc *temporalclient.Client
-	var err error
-
-	tc, err = temporalclient.NewClient(log)
-	if err != nil {
-		return nil, err
-	}
-
+	as *captenstore.Store,
+	tc *temporalclient.Client) (*Agent, error) {
 	agent := &Agent{
 		tc:  tc,
 		as:  as,

@@ -48,11 +48,19 @@ func Start() {
 		return
 	}
 
-	rpcapi, err := agentapi.NewAgent(log, cfg, as)
+	tc, err := temporalclient.NewClient(log)
 	if err != nil {
-		log.Fatalf("Agent initialization failed, %v", err)
+		log.Errorf("failed to initialize temporal client, %v", err)
 		return
 	}
+
+	rpcapi, err := agentapi.NewAgent(log, cfg, as, tc)
+	if err != nil {
+		log.Errorf("failed to initialize temporal client, %v", err)
+		return
+	}
+
+	rpcapi := agentapi.NewAgent(log, cfg, as, pas, tc)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", cfg.Host, cfg.Port))
 	if err != nil {
@@ -99,7 +107,7 @@ func Start() {
 		log.Fatalf("Failed to initialize k8s watchers %v", err)
 	}
 
-	jobScheduler, err := initializeJobScheduler(cfg, as)
+	jobScheduler, err := initializeJobScheduler(cfg, as, pas, tc)
 	if err != nil {
 		log.Fatalf("Failed to create cron job: %v", err)
 		return
@@ -127,7 +135,11 @@ func configurePostgresDB() error {
 	return nil
 }
 
-func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*job.Scheduler, error) {
+func initializeJobScheduler(
+	cfg *config.SericeConfig,
+	as *captenstore.Store,
+	tc *temporalclient.Client,
+) (*job.Scheduler, error) {
 	s := job.NewScheduler(log)
 	if cfg.CrossplaneSyncJobEnabled {
 		cs, err := job.NewCrossplaneResourcesSync(log, cfg.CrossplaneSyncJobInterval, as)
@@ -140,8 +152,26 @@ func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*j
 		}
 	}
 
+	// Add Default plugin deployer job
+	addDefualtPluginsDeployerJob(s, as, tc)
+
 	log.Info("successfully initialized job scheduler")
 	return s, nil
+}
+
+func addDefualtPluginsDeployerJob(
+	s *job.Scheduler,
+	as *captenstore.Store,
+	tc *temporalclient.Client,
+) {
+	dpd, err := defaultplugindeployer.NewDefaultPluginsDeployer(log, "@every 10m", as, tc)
+	if err != nil {
+		log.Fatal("failed to init default plugins deployer job", err)
+	}
+	err = s.AddJob("default-plugsin-deployer", dpd)
+	if err != nil {
+		log.Fatal("failed to add defualt plugins deployer job", err)
+	}
 }
 
 func registerK8SWatcher(dbStore *captenstore.Store) error {
