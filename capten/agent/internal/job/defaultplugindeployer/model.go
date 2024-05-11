@@ -15,17 +15,16 @@ var (
 )
 
 type Config struct {
-	PluginsStoreProjectMount string `envconfig:"PLUGIN_STORE_PROJECT_MOUNT" default:"/plugin-store-clone"`
-	PluginsStorePath         string `envconfig:"PLUGIN_STORE_PATH" default:"/plugin-store"`
-	PluginsFileName          string `envconfig:"PLUGIN_LIST_FILE" default:"default-plugin-list.yaml"`
-	PluginFileName           string `envconfig:"PLUGIN_FILE" default:"plugin.yaml"`
-	PluginConfigFileName     string `envconfig:"PLUGIN_CONFIG_FILE" default:"plugin-config.yaml"`
-	PluginStoreProjectURL    string `envconfig:"PLUGIN_STORE_PROJECT_URL" default:"https://github.com/intelops/capten-plugins"`
-	PluginStoreProjectAccess string `envconfig:"PLUGIN_STORE_PROJECT_ACCESS" default:""`
-	PluginStoreProjectID     string `envconfig:"PLUGIN_STORE_PROJECT_ID" default:"1cf5201d-5f35-4d5b-afe0-4b9d0e0d4cd2"`
-	GitVaultEntityName       string `envconfig:"GIT_VAULT_ENTITY_NAME" default:"git-project"`
-	CaptenOAuthURL           string `envconfig:"CAPTEN_OAUTH_URL" default:"https://alpha.optimizor.app/api/.ory"`
-	GitAccessToken           string `envconfig:"CAPTEN_OAUTH_URL" required:"true"`
+	PluginsStoreProjectMount     string `envconfig:"PLUGIN_STORE_PROJECT_MOUNT" default:"/plugin-store-clone"`
+	PluginsStorePath             string `envconfig:"PLUGIN_STORE_PATH" default:"/plugin-store"`
+	PluginsFileName              string `envconfig:"PLUGIN_LIST_FILE" default:"default-plugin-list.yaml"`
+	PluginFileName               string `envconfig:"PLUGIN_FILE" default:"plugin.yaml"`
+	PluginConfigFileName         string `envconfig:"PLUGIN_CONFIG_FILE" default:"plugin-config.yaml"`
+	PluginStoreProjectURL        string `envconfig:"PLUGIN_STORE_PROJECT_URL" default:"https://github.com/intelops/capten-plugins"`
+	PluginStoreProjectAccess     string `envconfig:"PLUGIN_STORE_PROJECT_ACCESS" default:""`
+	PluginStoreProjectID         string `envconfig:"PLUGIN_STORE_PROJECT_ID" default:"1cf5201d-5f35-4d5b-afe0-4b9d0e0d4cd2"`
+	GitVaultEntityName           string `envconfig:"GIT_VAULT_ENTITY_NAME" default:"git-project"`
+	DefaultPluginsGitAccessToken string `envconfig:"DEFAULT_PLUGINS_GIT_ACCESS_TOKEN" required:"true"`
 }
 
 type PluginListData struct {

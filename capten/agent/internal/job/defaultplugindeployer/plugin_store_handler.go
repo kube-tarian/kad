@@ -9,11 +9,9 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
 	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
@@ -114,15 +112,9 @@ func (p *PluginStore) clonePluginStoreProject() (pluginStoreDir string, err erro
 		return
 	}
 
-	accessToken, err := p.getGitProjectAccessToken(p.cfg.PluginStoreProjectID)
-	if err != nil {
-		err = fmt.Errorf("failed to get git project credentias, %v", err)
-		return
-	}
-
 	p.log.Infof("cloning plugin store project %s to %s", p.cfg.PluginStoreProjectURL, pluginStoreDir)
 	gitClient := gitclient.NewGitClient()
-	if err = gitClient.Clone(pluginStoreDir, p.cfg.PluginStoreProjectURL, accessToken); err != nil {
+	if err = gitClient.Clone(pluginStoreDir, p.cfg.PluginStoreProjectURL, p.cfg.DefaultPluginsGitAccessToken); err != nil {
 		os.RemoveAll(pluginStoreDir)
 		err = fmt.Errorf("failed to Clone plugin store project, err: %v", err)
 		return
@@ -346,95 +338,6 @@ func (p *PluginStore) deployPlugin(pluginData *captenstore.PluginData) error {
 	// Write a periodic scheduler which will go through all apps not in installed status and check the status till either success or failed.
 	// Make SendEventV2 asynchrounous so that periodic scheduler will take care of monitoring.
 
-	return nil
-}
-
-func (p *PluginStore) getGitProjectAccessToken(projectId string) (string, error) {
-	projects, err := p.getGitProjects()
-	if err != nil {
-		return "", err
-	}
-
-	var accessToken string
-	for _, project := range projects {
-		if project.Id == projectId {
-			accessToken = project.AccessToken
-			break
-		}
-	}
-
-	if len(accessToken) == 0 {
-		return "", fmt.Errorf("project not found")
-	}
-
-	return accessToken, nil
-}
-
-func (p *PluginStore) getGitProjects() ([]*captenpluginspb.GitProject, error) {
-	res, err := p.dbStore.GetGitProjects()
-	if err != nil {
-		p.log.Errorf("failed to get gitProjects from db, %v", err)
-		return nil, err
-	}
-	for _, r := range res {
-		accessToken, userID, secretPath, secretKeys, err := p.getGitProjectCredential(context.TODO(), r.Id)
-		if err != nil {
-			p.log.Errorf("failed to get credential, %v", err)
-			return nil, err
-		}
-		r.AccessToken = accessToken
-		r.UserID = userID
-		r.SecretePath = secretPath
-		r.SecreteKeys = secretKeys
-	}
-	return res, nil
-}
-
-func (p *PluginStore) getGitProjectCredential(ctx context.Context, id string) (string, string, string, []string, error) {
-	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProjectEntityName, id)
-	credAdmin, err := credentials.NewCredentialAdmin(ctx)
-	if err != nil {
-		p.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
-		p.log.Errorf("failed to get crendential for %s, %v", credPath, err)
-		return "", "", "", nil, err
-	}
-
-	cred, err := credAdmin.GetCredential(ctx, credentials.GenericCredentialType, gitProjectEntityName, id)
-	if err != nil {
-		p.log.Errorf("failed to get credential for %s, %v", credPath, err)
-		return "", "", "", nil, err
-	}
-
-	secretKeys := []string{}
-	for key := range cred {
-		secretKeys = append(secretKeys, key)
-	}
-	return cred["accessToken"], cred["userID"], credPath, secretKeys, nil
-}
-
-func (p *PluginStore) StoreGitProjectCredential(ctx context.Context, id string, userID string, accessToken string) error {
-	credPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, gitProjectEntityName, id)
-	credAdmin, err := credentials.NewCredentialAdmin(ctx)
-	if err != nil {
-		p.log.Audit("security", "storecred", "failed", "system", "failed to intialize credentials client for %s", credPath)
-		p.log.Errorf("failed to store credential for %s, %v", credPath, err)
-		return err
-	}
-
-	credentialMap := map[string]string{
-		"accessToken": accessToken,
-		"userID":      userID,
-	}
-	err = credAdmin.PutCredential(ctx, credentials.GenericCredentialType, gitProjectEntityName,
-		id, credentialMap)
-
-	if err != nil {
-		p.log.Audit("security", "storecred", "failed", "system", "failed to store crendential for %s", credPath)
-		p.log.Errorf("failed to store credential for %s, %v", credPath, err)
-		return err
-	}
-	p.log.Audit("security", "storecred", "success", "system", "credential stored for %s", credPath)
-	p.log.Infof("stored credential for entity %s", credPath)
 	return nil
 }
 
