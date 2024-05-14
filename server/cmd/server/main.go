@@ -95,38 +95,29 @@ func main() {
 		log.Fatal("failed to listen: ", err)
 	}
 
-	//grpc.NewServer(
-	//	grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
-	//	grpc.StreamInterceptor(otelgrpc.StreamServerInterceptor()))
-	// authInterceptor := grpc.UnaryInterceptor(rpcServer.AuthInterceptor)
-
 	var grpcServer *grpc.Server
 	if (cfg.OptelEnabled) && (cfg.AuthEnabled) {
 
-		log.Info("OPtel Enabled", cfg.OptelEnabled)
 		log.Info("Server Authentication and opentelemetry is enabled")
 
 		interceptor := CombineInterceptors(rpcServer.AuthInterceptor, otelgrpc.UnaryServerInterceptor())
 
 		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(interceptor))
 
-		// log.Info("Server Authentication disabled but opentelemetry instrumented")
-
-		// grpcServer = grpc.NewServer()
 	} else if cfg.OptelEnabled {
-		log.Info("OPtel Enabled", cfg.OptelEnabled)
-		log.Info("Opentelemetry is enabled")
+
+		log.Info("Opentelemetry is enabled and Server Authentication disabled")
 
 		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()))
 
 	} else if cfg.AuthEnabled {
-		log.Info("OPtel Enabled", cfg.OptelEnabled)
-		log.Info("Server Authentication enabled")
+
+		log.Info("Server Authentication enabled and opentelemetry disabled")
 
 		grpcServer = grpc.NewServer(grpc.UnaryInterceptor(rpcServer.AuthInterceptor))
 	} else {
-		log.Info("OPtel Enabled", cfg.OptelEnabled)
-		log.Info("Server Authentication disabled")
+
+		log.Info("Server Authentication and opentelemetry instrumentation disabled")
 
 		grpcServer = grpc.NewServer()
 	}
@@ -169,24 +160,3 @@ func chainedInterceptor(a grpc.UnaryServerInterceptor, b grpc.UnaryHandler) grpc
 		return a(ctx, req, nil, b)
 	}
 }
-
-// CombineInterceptors combines multiple unary interceptors into one
-// func CombineInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
-// 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-// 		// Chain the interceptors
-// 		chained := handler
-// 		for i := len(interceptors) - 1; i >= 0; i-- {
-// 			chained = chainedInterceptor(interceptors[i], info, chained)
-// 		}
-// 		// Call the combined interceptors
-// 		return chained(ctx, req)
-// 	}
-// }
-
-// // chainedInterceptor chains two unary interceptors together
-// func chainedInterceptor(a grpc.UnaryServerInterceptor, info *grpc.UnaryServerInfo, b grpc.UnaryHandler) grpc.UnaryHandler {
-// 	return func(ctx context.Context, req interface{}) (interface{}, error) {
-// 		// Call the first interceptor, passing the next handler as the next interceptor
-// 		return a(ctx, req, info, b)
-// 	}
-// }
