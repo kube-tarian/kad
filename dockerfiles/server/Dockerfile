@@ -7,7 +7,7 @@ RUN go mod download
 RUN CGO_ENABLED=0 go build -o ./build/server cmd/server/main.go
 
 FROM cgr.dev/chainguard/wolfi-base
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache glibc
 COPY --from=builder ./data /data
 COPY --from=builder ./build/server server
 
