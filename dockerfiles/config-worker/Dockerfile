@@ -1,4 +1,4 @@
-FROM golang:1.21.3 AS builder
+FROM cgr.dev/chainguard/go:latest AS builder
 WORKDIR /
 COPY ./capten ./
 RUN rm -rf vendor
