@@ -4,11 +4,21 @@ import (
 	"context"
 
 	"github.com/kube-tarian/kad/server/pkg/credential"
+	"github.com/kube-tarian/kad/server/pkg/opentelemetry"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func (s *Server) DeleteClusterRegistration(ctx context.Context, request *serverpb.DeleteClusterRegistrationRequest) (
 	*serverpb.DeleteClusterRegistrationResponse, error) {
+
+	_, span := opentelemetry.GetTracer(request.ClusterID).
+		Start(opentelemetry.BuildContext(ctx), "CaptenServer")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("Cluster Name", request.ClusterID))
+	
+
 	orgId, err := validateOrgWithArgs(ctx, request.ClusterID)
 	if err != nil {
 		s.log.Infof("request validation failed", err)

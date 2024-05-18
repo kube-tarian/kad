@@ -3,11 +3,20 @@ package api
 import (
 	"context"
 
+	"github.com/kube-tarian/kad/server/pkg/opentelemetry"
 	"github.com/kube-tarian/kad/server/pkg/pb/serverpb"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 func (s *Server) GetClusterAppLaunchConfigs(ctx context.Context, request *serverpb.GetClusterAppLaunchConfigsRequest) (
 	*serverpb.GetClusterAppLaunchConfigsResponse, error) {
+
+	_, span := opentelemetry.GetTracer(request.ClusterID).
+		Start(opentelemetry.BuildContext(ctx), "CaptenServer")
+	defer span.End()
+
+	span.SetAttributes(attribute.String("Cluster Id", request.ClusterID))
+
 	orgId, err := validateOrgWithArgs(ctx, request.ClusterID)
 	if err != nil {
 		s.log.Infof("request validation failed", err)

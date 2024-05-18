@@ -119,6 +119,7 @@ func (a *ArgoCDClient) DeleteCluster(ctx context.Context, clusterURL string) (*c
 }
 
 func (a *ArgoCDClient) GetCluster(ctx context.Context, clusterURL string) (*v1alpha1.Cluster, error) {
+
 	conn, appClient, err := a.client.NewClusterClient()
 	if err != nil {
 		return nil, err
