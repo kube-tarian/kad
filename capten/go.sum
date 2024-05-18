@@ -486,8 +486,8 @@ github.com/apache/arrow/go/arrow v0.0.0-20210818145353-234c94e4ce64/go.mod h1:2q
 github.com/apache/arrow/go/arrow v0.0.0-20211013220434-5962184e7a30/go.mod h1:Q7yQnSMnLvcXlZ8RV+jwz/6y1rQTqbX6C82SndT52Zs=
 github.com/apapsch/go-jsonmerge/v2 v2.0.0 h1:axGnT1gRIfimI7gJifB699GoE/oq+F2MU7Dml6nw9rQ=
 github.com/apapsch/go-jsonmerge/v2 v2.0.0/go.mod h1:lvDnEdqiQrp0O42VQGgmlKpxL1AP2+08jFMw88y4klk=
-github.com/argoproj/argo-cd/v2 v2.8.9 h1:DN1lzyrH8ilpiSQP2gHtFFfI6vqBtf660qMabIugYV8=
-github.com/argoproj/argo-cd/v2 v2.8.9/go.mod h1:3CwkG1Grwn5WPNnkPFmHhwpH1j3LIK64j4TUqFxzq+4=
+github.com/argoproj/argo-cd/v2 v2.8.17 h1:PPAGPj37RBoxWfplu2HSjLJ6bZY75FPgy9h4mcKyxqQ=
+github.com/argoproj/argo-cd/v2 v2.8.17/go.mod h1:qdkZvAPT+uurfySoFIlptZ402k/h1ZWuEJ511yd8GOE=
 github.com/argoproj/gitops-engine v0.7.1-0.20230607163028-425d65e07695 h1:w8OPbqHyhWxLyC4LZgs5JBUe7AOkJpNZqFa92yy7Kmc=
 github.com/argoproj/gitops-engine v0.7.1-0.20230607163028-425d65e07695/go.mod h1:WpA/B7tgwfz+sdNE3LqrTrb7ArEY1FOPI2pAGI0hfPc=
 github.com/argoproj/pkg v0.13.7-0.20230626144333-d56162821bd1 h1:qsHwwOJ21K2Ao0xPju1sNuqphyMnMYkyB3ZLoLtxWpo=

@@ -3,7 +3,7 @@ module github.com/kube-tarian/kad/capten
 go 1.21
 
 require (
-	github.com/argoproj/argo-cd/v2 v2.8.9
+	github.com/argoproj/argo-cd/v2 v2.8.17
 	github.com/cert-manager/cert-manager v1.14.4
 	github.com/getkin/kin-openapi v0.107.0
 	github.com/gin-gonic/gin v1.9.1
