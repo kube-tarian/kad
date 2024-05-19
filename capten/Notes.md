@@ -10,8 +10,6 @@ $ make start-kind
 # Reference: https://github.com/temporalio/helm-charts
 
 $ cd ~/go/src/github.com/temporalio/helm-charts
-$ helm install     --set server.replicaCount=1     --set cassandra.config.cluster_size=1     --set prometheus.enabled=false     --set grafana.enabled=false     --set elasticsearch.enabled=false     temporal . --timeout 8m
-```
 
 ## Expose temporal
 
@@ -28,9 +26,6 @@ image:
   repository: kad-server
   pullPolicy: IfNotPresent
   tag: "0.1.1"
-
-cassandra:
-  host: temporal-cassandra.default.svc.cluster.local
 
 $ cd charts/server/
 $ helm install server . -f /tmp/server-values.yaml

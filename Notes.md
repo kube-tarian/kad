@@ -13,9 +13,8 @@
 
 ## IntelOps Market Place
 
-- Climon
 - Temporal
-- Cassandra
+- Postgres
 
 # Installation using kind
 
@@ -97,8 +96,6 @@ git clone https://github.com/temporalio/helm-charts.git
 helm dependencies update
 
 # Install temporal
-helm install     --set server.replicaCount=1     --set cassandra.config.cluster_size=1     --set prometheus.enabled=false     --set grafana.enabled=false     --set elasticsearch.enabled=false     temporal . --timeout 8m
-```
 
 ### Delete temporal
 

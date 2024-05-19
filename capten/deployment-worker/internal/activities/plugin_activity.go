@@ -58,7 +58,7 @@ type PluginActivities struct {
 func NewPluginActivities() (*PluginActivities, error) {
 	conf := &Configuration{}
 	if err := envconfig.Process("", conf); err != nil {
-		return nil, fmt.Errorf("cassandra config read faile, %v", err)
+		return nil, fmt.Errorf("agent config read faile, %v", err)
 	}
 
 	as, err := captenstore.NewStore(logger)

@@ -37,11 +37,6 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VaultCredClient interface {
-	// single RPC for all credential types like user/password, certificates etc.
-	// vault secret path  prepated based on <credentialType>/<credEntityName>/<credIdentifier>
-	// for example, client-certs path will be certs/client/clientA
-	// for example, cassandra root user path will be service-cred/cassandra/root
-	// pass authentication token with service account token to authenticate & authorize the request with vault
 	GetCredential(ctx context.Context, in *GetCredentialRequest, opts ...grpc.CallOption) (*GetCredentialResponse, error)
 	PutCredential(ctx context.Context, in *PutCredentialRequest, opts ...grpc.CallOption) (*PutCredentialResponse, error)
 	DeleteCredential(ctx context.Context, in *DeleteCredentialRequest, opts ...grpc.CallOption) (*DeleteCredentialResponse, error)
@@ -176,11 +171,6 @@ func (c *vaultCredClient) ConfigureVaultSecret(ctx context.Context, in *Configur
 // All implementations must embed UnimplementedVaultCredServer
 // for forward compatibility
 type VaultCredServer interface {
-	// single RPC for all credential types like user/password, certificates etc.
-	// vault secret path  prepated based on <credentialType>/<credEntityName>/<credIdentifier>
-	// for example, client-certs path will be certs/client/clientA
-	// for example, cassandra root user path will be service-cred/cassandra/root
-	// pass authentication token with service account token to authenticate & authorize the request with vault
 	GetCredential(context.Context, *GetCredentialRequest) (*GetCredentialResponse, error)
 	PutCredential(context.Context, *PutCredentialRequest) (*PutCredentialResponse, error)
 	DeleteCredential(context.Context, *DeleteCredentialRequest) (*DeleteCredentialResponse, error)

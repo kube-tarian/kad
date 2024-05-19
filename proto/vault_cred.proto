@@ -4,11 +4,6 @@ option go_package = "/vaultcredpb";
 package vaultcredpb;
 
 service VaultCred {
-  // single RPC for all credential types like user/password, certificates etc.
-  // vault secret path  prepated based on <credentialType>/<credEntityName>/<credIdentifier>
-  // for example, client-certs path will be certs/client/clientA
-  // for example, cassandra root user path will be service-cred/cassandra/root
-  // pass authentication token with service account token to authenticate & authorize the request with vault
   rpc GetCredential (GetCredentialRequest) returns (GetCredentialResponse) {};
   rpc PutCredential (PutCredentialRequest) returns (PutCredentialResponse) {};
   rpc DeleteCredential (DeleteCredentialRequest) returns (DeleteCredentialResponse) {};

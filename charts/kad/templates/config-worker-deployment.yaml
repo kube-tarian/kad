@@ -80,7 +80,7 @@ spec:
             - name: PG_DB_ENTITY_NAME
               value: {{ .Values.postgres.entityName }}
             - name: PG_DB_NAME
-              value: {{ .Values.cassandra.dbName }}
+              value: {{ .Values.postgres.dbName }}
             - name: TEKTON_PLUGIN_CONFIG_FILE
               value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.tektonPluginConfigFile }}"
             - name: CROSSPLANE_PLUGIN_CONFIG_FILE

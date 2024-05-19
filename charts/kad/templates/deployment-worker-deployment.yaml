@@ -66,7 +66,7 @@ spec:
             - name: PG_DB_ENTITY_NAME
               value: {{ .Values.postgres.entityName }}
             - name: PG_DB_NAME
-              value: {{ .Values.cassandra.dbName }}
+              value: {{ .Values.postgres.dbName }}
             - name: AGENT_ADDRESSES
               value: {{ include "kad.fullname" . }}-agent
             - name: AGENT_CLUSTER_CA_ISSUER_NAME
