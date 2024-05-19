@@ -815,12 +815,8 @@ func TestPluginStoreConfig(t *testing.T) {
 		return
 	}
 
-	config, err = store.GetPluginStoreConfig(pluginstorepb.StoreType_CENTRAL_STORE)
-	if !assert.Nil(t, err) {
-		t.Logf("get plugin store config error, %v", err)
-		return
-	}
-	assert.Equal(t, config.GitProjectURL, "")
+	_, err = store.GetPluginStoreConfig(pluginstorepb.StoreType_CENTRAL_STORE)
+	assert.Error(t, err)
 }
 
 func TestPluginStoreData(t *testing.T) {

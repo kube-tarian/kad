@@ -5,9 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
-	postgresdb "github.com/kube-tarian/kad/capten/common-pkg/postgres"
 )
 
 func (a *Store) UpsertContainerRegistry(config *captenpluginspb.ContainerRegistry) error {
@@ -32,7 +30,7 @@ func (a *Store) UpsertContainerRegistry(config *captenpluginspb.ContainerRegistr
 
 func (a *Store) GetContainerRegistryForID(id string) (*captenpluginspb.ContainerRegistry, error) {
 	registry := ContainerRegistry{}
-	err := a.dbClient.Find(&registry, ContainerRegistry{ID: uuid.MustParse(id)})
+	err := a.dbClient.FindFirst(&registry, ContainerRegistry{ID: uuid.MustParse(id)})
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +48,7 @@ func (a *Store) GetContainerRegistryForID(id string) (*captenpluginspb.Container
 func (a *Store) GetContainerRegistries() ([]*captenpluginspb.ContainerRegistry, error) {
 	registries := []ContainerRegistry{}
 	err := a.dbClient.Find(&registries, nil)
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch registries: %v", err.Error())
 	}
 
@@ -70,7 +68,7 @@ func (a *Store) GetContainerRegistries() ([]*captenpluginspb.ContainerRegistry, 
 func (a *Store) GetContainerRegistriesByLabels(searchLabels []string) ([]*captenpluginspb.ContainerRegistry, error) {
 	registries := []ContainerRegistry{}
 	err := a.dbClient.Find(&registries, "labels @> ?", fmt.Sprintf("{%s}", searchLabels[0]))
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch registries: %v", err.Error())
 	}
 

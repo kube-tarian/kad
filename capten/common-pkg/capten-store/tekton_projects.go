@@ -8,8 +8,6 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 	postgresdb "github.com/kube-tarian/kad/capten/common-pkg/postgres"
 	"github.com/kube-tarian/kad/capten/model"
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 func (a *Store) UpsertTektonProject(tektonProject *model.TektonProject) error {
@@ -46,11 +44,9 @@ func (a *Store) DeleteTektonProject(id string) error {
 
 func (a *Store) GetTektonProjectForID(id string) (*model.TektonProject, error) {
 	project := TektonProject{}
-	err := a.dbClient.Find(&project, TektonProject{ID: 1})
+	err := a.dbClient.FindFirst(&project, TektonProject{ID: 1})
 	if err != nil {
 		return nil, err
-	} else if project.ID == 0 {
-		return nil, gorm.ErrRecordNotFound
 	}
 
 	tektonProject := &model.TektonProject{
@@ -69,7 +65,7 @@ func (a *Store) GetTektonProject() (*model.TektonProject, error) {
 
 func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 	allTektonGitProjects, err := a.GetGitProjectsByLabels([]string{"tekton"})
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch projects: %v", err.Error())
 	}
 
@@ -84,7 +80,7 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 
 	tektonProject, err := a.GetTektonProjectForID("1")
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if gerrors.GetErrorType(err) == postgresdb.ObjectNotExist {
 			project := TektonProject{
 				ID:             1,
 				GitProjectID:   gitProjectUUID,

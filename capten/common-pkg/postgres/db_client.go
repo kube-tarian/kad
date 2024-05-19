@@ -134,6 +134,23 @@ func (db *DBClient) Delete(value interface{}, where interface{}) (err error) {
 	return
 }
 
+func (db *DBClient) FindFirst(value interface{}, where interface{}, args ...interface{}) (err error) {
+	err = db.session.Where(where, args).First(value).Error
+	if err == nil {
+		return
+	}
+
+	if gorm.ErrRecordNotFound == err {
+		err = gerrors.New(ObjectNotExist, "")
+	}
+
+	if err != nil {
+		err = db.checkError(err)
+		return
+	}
+	return
+}
+
 // Find find records that match given conditions
 func (db *DBClient) Find(value interface{}, where interface{}, args ...interface{}) (err error) {
 	if where != nil {

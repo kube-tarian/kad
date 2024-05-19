@@ -5,9 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
-	postgresdb "github.com/kube-tarian/kad/capten/common-pkg/postgres"
 )
 
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
@@ -38,7 +36,7 @@ func (a *Store) DeleteGitProjectById(id string) error {
 
 func (a *Store) GetGitProjectForID(id string) (*captenpluginspb.GitProject, error) {
 	project := GitProject{}
-	err := a.dbClient.Find(&project, GitProject{ID: uuid.MustParse(id)})
+	err := a.dbClient.FindFirst(&project, GitProject{ID: uuid.MustParse(id)})
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +53,7 @@ func (a *Store) GetGitProjectForID(id string) (*captenpluginspb.GitProject, erro
 func (a *Store) GetGitProjects() ([]*captenpluginspb.GitProject, error) {
 	projects := []GitProject{}
 	err := a.dbClient.Find(&projects, nil)
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch projects: %v", err.Error())
 	}
 
@@ -74,7 +72,7 @@ func (a *Store) GetGitProjects() ([]*captenpluginspb.GitProject, error) {
 func (a *Store) GetGitProjectsByLabels(searchLabels []string) ([]*captenpluginspb.GitProject, error) {
 	projects := []GitProject{}
 	err := a.dbClient.Find(&projects, "labels @> ?", fmt.Sprintf("{%s}", searchLabels[0]))
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch projects: %v", err.Error())
 	}
 

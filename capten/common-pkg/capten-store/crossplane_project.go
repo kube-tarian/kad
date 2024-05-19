@@ -8,8 +8,6 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 	postgresdb "github.com/kube-tarian/kad/capten/common-pkg/postgres"
 	"github.com/kube-tarian/kad/capten/model"
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 func (a *Store) UpsertCrossplaneProject(crossplaneProject *model.CrossplaneProject) error {
@@ -47,11 +45,9 @@ func (a *Store) DeleteCrossplaneProject(id string) error {
 
 func (a *Store) GetCrossplaneProjectForID(id string) (*model.CrossplaneProject, error) {
 	project := CrossplaneProject{}
-	err := a.dbClient.Find(&project, CrossplaneProject{ID: 1})
+	err := a.dbClient.FindFirst(&project, CrossplaneProject{ID: 1})
 	if err != nil {
 		return nil, err
-	} else if project.ID == 0 {
-		return nil, gorm.ErrRecordNotFound
 	}
 
 	crossplaneProject := &model.CrossplaneProject{
@@ -70,7 +66,7 @@ func (a *Store) GetCrossplaneProject() (*model.CrossplaneProject, error) {
 
 func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 	allCrossplaneGitProjects, err := a.GetGitProjectsByLabels([]string{"crossplane"})
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch projects: %v", err.Error())
 	}
 
@@ -85,7 +81,7 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 
 	crossplaneProject, err := a.GetCrossplaneProjectForID("0")
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		if gerrors.GetErrorType(err) == postgresdb.ObjectNotExist {
 			project := CrossplaneProject{
 				ID:             1,
 				GitProjectID:   gitProjectUUID,

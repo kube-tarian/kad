@@ -40,7 +40,7 @@ func (a *Store) DeleteCrossplaneProviderById(id string) error {
 func (a *Store) GetCrossplaneProviders() ([]*captenpluginspb.CrossplaneProvider, error) {
 	providers := []CrossplaneProvider{}
 	err := a.dbClient.Find(&providers, nil)
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch providers: %v", err.Error())
 	}
 
@@ -68,7 +68,7 @@ func (a *Store) UpdateCrossplaneProvider(provider *model.CrossplaneProvider) err
 func (a *Store) GetCrossplanProviderByCloudType(cloudType string) (*captenpluginspb.CrossplaneProvider, error) {
 	providers := []CrossplaneProvider{}
 	err := a.dbClient.Find(&providers, "cloud_type = ?", cloudType)
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch providers: %v", err.Error())
 	}
 
@@ -88,7 +88,7 @@ func (a *Store) GetCrossplanProviderByCloudType(cloudType string) (*captenplugin
 
 func (a *Store) GetCrossplanProviderById(id string) (*captenpluginspb.CrossplaneProvider, error) {
 	provider := CrossplaneProvider{}
-	err := a.dbClient.Find(&provider, CrossplaneProvider{ID: uuid.MustParse(id)})
+	err := a.dbClient.FindFirst(&provider, CrossplaneProvider{ID: uuid.MustParse(id)})
 	if err != nil {
 		return nil, err
 	}
