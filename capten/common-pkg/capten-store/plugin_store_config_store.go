@@ -13,14 +13,12 @@ import (
 func (a *Store) UpsertPluginStoreConfig(config *pluginstorepb.PluginStoreConfig) error {
 	pluginStoreConfig := &PluginStoreConfig{}
 	recordFound := true
-	err := a.dbClient.Find(pluginStoreConfig, PluginStoreConfig{StoreType: int(config.StoreType)})
+	err := a.dbClient.FindFirst(pluginStoreConfig, PluginStoreConfig{StoreType: int(config.StoreType)})
 	if err != nil {
 		if gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
 			return prepareError(err, fmt.Sprintf("%d", config.StoreType), "Fetch")
 		}
 		err = nil
-		recordFound = false
-	} else if pluginStoreConfig.StoreType == 0 {
 		recordFound = false
 	}
 
@@ -39,9 +37,9 @@ func (a *Store) UpsertPluginStoreConfig(config *pluginstorepb.PluginStoreConfig)
 
 func (a *Store) GetPluginStoreConfig(storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error) {
 	pluginStoreConfig := &PluginStoreConfig{}
-	err := a.dbClient.Find(pluginStoreConfig, PluginStoreConfig{StoreType: int(storeType)})
+	err := a.dbClient.FindFirst(pluginStoreConfig, PluginStoreConfig{StoreType: int(storeType)})
 	if err != nil {
-		return nil, prepareError(err, fmt.Sprintf("%d", storeType), "Fetch")
+		return nil, err
 	}
 
 	return &pluginstorepb.PluginStoreConfig{

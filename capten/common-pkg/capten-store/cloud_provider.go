@@ -5,10 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
-	postgresdb "github.com/kube-tarian/kad/capten/common-pkg/postgres"
-	"gorm.io/gorm"
 )
 
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
@@ -33,7 +30,7 @@ func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error
 
 func (a *Store) GetCloudProviderForID(id string) (*captenpluginspb.CloudProvider, error) {
 	provider := CloudProvider{}
-	err := a.dbClient.Find(&provider, CloudProvider{ID: uuid.MustParse(id)})
+	err := a.dbClient.FindFirst(&provider, CloudProvider{ID: uuid.MustParse(id)})
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +48,7 @@ func (a *Store) GetCloudProviderForID(id string) (*captenpluginspb.CloudProvider
 func (a *Store) GetCloudProviders() ([]*captenpluginspb.CloudProvider, error) {
 	providers := []CloudProvider{}
 	err := a.dbClient.Find(&providers, nil)
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch providers: %v", err.Error())
 	}
 
@@ -70,11 +67,8 @@ func (a *Store) GetCloudProviders() ([]*captenpluginspb.CloudProvider, error) {
 func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, cloudType string) ([]*captenpluginspb.CloudProvider, error) {
 	providers := []CloudProvider{}
 	err := a.dbClient.Session().Where("cloud_type = ?", cloudType).Where("labels @> ?", fmt.Sprintf("{%s}", searchLabels[0])).Find(&providers).Error
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
-		if gorm.ErrRecordNotFound != err {
-			return nil, fmt.Errorf("failed to fetch providers: %v", err.Error())
-		}
-		err = nil
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch providers: %v", err.Error())
 	}
 
 	cloudProviders := make([]*captenpluginspb.CloudProvider, 0)
@@ -92,7 +86,7 @@ func (a *Store) GetCloudProvidersByLabelsAndCloudType(searchLabels []string, clo
 func (a *Store) GetCloudProvidersByLabels(searchLabels []string) ([]*captenpluginspb.CloudProvider, error) {
 	providers := []CloudProvider{}
 	err := a.dbClient.Find(&providers, "labels @> ?", fmt.Sprintf("{%s}", searchLabels[0]))
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch providers: %v", err.Error())
 	}
 

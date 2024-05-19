@@ -8,13 +8,12 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/pluginstorepb"
 	postgresdb "github.com/kube-tarian/kad/capten/common-pkg/postgres"
-	"gorm.io/gorm"
 )
 
 func (a *Store) UpsertPluginStoreData(gitProjectID string, pluginData *pluginstorepb.PluginData) error {
 	pluginStoreData := &PluginStoreData{}
 	recordFound := true
-	err := a.dbClient.Find(pluginStoreData, PluginStoreData{
+	err := a.dbClient.FindFirst(pluginStoreData, PluginStoreData{
 		StoreType:    int(pluginData.StoreType),
 		GitProjectID: uuid.MustParse(gitProjectID),
 		PluginName:   pluginData.PluginName})
@@ -24,8 +23,6 @@ func (a *Store) UpsertPluginStoreData(gitProjectID string, pluginData *pluginsto
 				pluginData.StoreType, gitProjectID, pluginData.PluginName), "Fetch")
 		}
 		err = nil
-		recordFound = false
-	} else if pluginStoreData.StoreType == 0 {
 		recordFound = false
 	}
 
@@ -51,15 +48,13 @@ func (a *Store) UpsertPluginStoreData(gitProjectID string, pluginData *pluginsto
 
 func (a *Store) GetPluginStoreData(storeType pluginstorepb.StoreType, gitProjectId, pluginName string) (*pluginstorepb.PluginData, error) {
 	pluginStoreData := &PluginStoreData{}
-	err := a.dbClient.Find(pluginStoreData, PluginStoreData{
+	err := a.dbClient.FindFirst(pluginStoreData, PluginStoreData{
 		StoreType:    int(storeType),
 		GitProjectID: uuid.MustParse(gitProjectId),
 		PluginName:   pluginName,
 	})
 	if err != nil {
-		return nil, prepareError(err, fmt.Sprintf("%s/%s/%s", gitProjectId, gitProjectId, pluginName), "Fetch")
-	} else if pluginStoreData.StoreType == 0 {
-		return nil, gorm.ErrRecordNotFound
+		return nil, err
 	}
 
 	pluginData := &pluginstorepb.PluginData{

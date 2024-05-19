@@ -8,8 +8,6 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
 	postgresdb "github.com/kube-tarian/kad/capten/common-pkg/postgres"
-	"github.com/pkg/errors"
-	"gorm.io/gorm"
 )
 
 func (a *Store) UpsertClusterPluginConfig(pluginConfig *clusterpluginspb.Plugin) error {
@@ -67,11 +65,8 @@ func (a *Store) DeleteClusterPluginConfig(pluginName string) error {
 
 func (a *Store) GetClusterPluginConfig(pluginName string) (*clusterpluginspb.Plugin, error) {
 	var pluginConfig ClusterPluginConfig
-	err := a.dbClient.Find(&pluginConfig, "plugin_name = ?", pluginName)
+	err := a.dbClient.FindFirst(&pluginConfig, ClusterPluginConfig{PluginName: pluginName})
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
 		return nil, err
 	}
 
@@ -103,7 +98,7 @@ func (a *Store) GetClusterPluginConfig(pluginName string) (*clusterpluginspb.Plu
 func (a *Store) GetAllClusterPluginConfigs() ([]*clusterpluginspb.Plugin, error) {
 	var plugins []ClusterPluginConfig
 	err := a.dbClient.Find(&plugins, nil)
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch plugins: %v", err.Error())
 	}
 

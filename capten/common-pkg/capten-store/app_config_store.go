@@ -17,7 +17,7 @@ func (a *Store) UpsertAppConfig(appData *agentpb.SyncAppData) error {
 
 	appConfig := &ClusterAppConfig{}
 	recordFound := true
-	err := a.dbClient.Find(appConfig, ClusterAppConfig{ReleaseName: appData.Config.ReleaseName})
+	err := a.dbClient.FindFirst(appConfig, ClusterAppConfig{ReleaseName: appData.Config.ReleaseName})
 	if err != nil {
 		if gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
 			return prepareError(err, appData.Config.ReleaseName, "Fetch")
@@ -59,9 +59,8 @@ func (a *Store) UpsertAppConfig(appData *agentpb.SyncAppData) error {
 
 func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error) {
 	appConfig := &ClusterAppConfig{}
-	err := a.dbClient.Find(appConfig, ClusterAppConfig{ReleaseName: appReleaseName})
+	err := a.dbClient.FindFirst(appConfig, ClusterAppConfig{ReleaseName: appReleaseName})
 	if err != nil {
-		err = prepareError(err, appReleaseName, "Fetch")
 		return nil, err
 	}
 
@@ -109,8 +108,8 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 	var appConfigs []ClusterAppConfig
 	err := a.dbClient.Find(&appConfigs, nil)
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
-		return nil, fmt.Errorf("Unable to fetch apps: %v", err.Error())
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch apps: %v", err.Error())
 	}
 
 	var appData []*agentpb.SyncAppData

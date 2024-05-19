@@ -5,10 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
-	postgresdb "github.com/kube-tarian/kad/capten/common-pkg/postgres"
-	"gorm.io/gorm"
 )
 
 func (a *Store) UpsertManagedCluster(managedCluster *captenpluginspb.ManagedCluster) error {
@@ -42,11 +39,9 @@ func (a *Store) DeleteManagedClusterById(id string) error {
 
 func (a *Store) GetManagedClusterForID(id string) (*captenpluginspb.ManagedCluster, error) {
 	cluster := ManagedCluster{}
-	err := a.dbClient.Find(&cluster, ManagedCluster{ID: uuid.MustParse(id)})
+	err := a.dbClient.FindFirst(&cluster, ManagedCluster{ID: uuid.MustParse(id)})
 	if err != nil {
 		return nil, err
-	} else if cluster.ID == uuid.Nil {
-		return nil, gorm.ErrRecordNotFound
 	}
 
 	result := &captenpluginspb.ManagedCluster{
@@ -63,7 +58,7 @@ func (a *Store) GetManagedClusterForID(id string) (*captenpluginspb.ManagedClust
 func (a *Store) GetManagedClusters() ([]*captenpluginspb.ManagedCluster, error) {
 	clusters := []ManagedCluster{}
 	err := a.dbClient.Find(&clusters, nil)
-	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
+	if err != nil {
 		return nil, fmt.Errorf("failed to fetch clusters: %v", err.Error())
 	}
 
