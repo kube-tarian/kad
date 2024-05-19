@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/model"
 )
 
@@ -168,7 +168,6 @@ func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, provide
 		&model.ConfigureParameters{Resource: crossplaneConfigUseCase, Action: model.CrossPlaneProjectSync}, ci)
 	if err != nil {
 		req.Status = string(model.CrossplaneProjectConfigurationFailed)
-		req.WorkflowId = "NA"
 		if err := a.as.UpsertCrossplaneProject(req); err != nil {
 			return fmt.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		}
@@ -178,8 +177,6 @@ func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, provide
 	a.log.Infof("Crossplane Git project %s config workflow %s created", req.GitProjectUrl, wkfId)
 
 	req.Status = string(model.CrossplaneProjectConfigured)
-	req.WorkflowId = wkfId
-	req.WorkflowStatus = string(model.WorkFlowStatusStarted)
 	if err := a.as.UpsertCrossplaneProject(req); err != nil {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		return nil
@@ -193,10 +190,9 @@ func (a *Agent) configureCrossplaneGitRepo(req *model.CrossplaneProject, provide
 func (a *Agent) monitorCrossplaneWorkflow(req *model.CrossplaneProject, wkfId string) {
 	// during system reboot start monitoring, add it in map or somewhere.
 	wd := workers.NewConfig(a.tc, a.log)
-	wkfResp, err := wd.GetWorkflowInformation(context.TODO(), wkfId)
+	_, err := wd.GetWorkflowInformation(context.TODO(), wkfId)
 	if err != nil {
 		req.Status = string(model.CrossplaneProjectConfigurationFailed)
-		req.WorkflowStatus = string(model.WorkFlowStatusFailed)
 		if err := a.as.UpsertCrossplaneProject(req); err != nil {
 			a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 			return
@@ -206,7 +202,6 @@ func (a *Agent) monitorCrossplaneWorkflow(req *model.CrossplaneProject, wkfId st
 	}
 
 	req.Status = string(model.CrossplaneProjectConfigured)
-	req.WorkflowStatus = wkfResp.Status
 	if err := a.as.UpsertCrossplaneProject(req); err != nil {
 		a.log.Errorf("failed to update Cluster Gitopts Project, %v", err)
 		return

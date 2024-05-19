@@ -1,1 +1,0 @@
-ALTER TABLE GitProjects DROP COLUMN used_plugins;

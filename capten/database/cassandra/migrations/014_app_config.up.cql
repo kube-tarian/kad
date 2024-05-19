@@ -1,1 +1,0 @@
-ALTER TABLE ClusterAppConfig ADD plugin_store_type INT;

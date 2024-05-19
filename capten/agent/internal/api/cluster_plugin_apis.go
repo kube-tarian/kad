@@ -6,15 +6,14 @@ import (
 	"html/template"
 
 	"github.com/kube-tarian/kad/capten/agent/internal/workers"
-	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
-	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/model"
 	"gopkg.in/yaml.v2"
 )
 
 func (a *Agent) GetClusterPlugins(ctx context.Context, request *clusterpluginspb.GetClusterPluginsRequest) (
 	*clusterpluginspb.GetClusterPluginsResponse, error) {
-	pluginConfigList, err := a.pas.GetAllPlugins()
+	pluginConfigList, err := a.as.GetAllClusterPluginConfigs()
 	if err != nil {
 		return &clusterpluginspb.GetClusterPluginsResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
@@ -44,31 +43,26 @@ func (a *Agent) DeployClusterPlugin(ctx context.Context, request *clusterplugins
 	*clusterpluginspb.DeployClusterPluginResponse, error) {
 	a.log.Infof("Recieved Plugin Deploy request for plugin %s, version %+v", request.Plugin.PluginName, request.Plugin.Version)
 
-	pluginConfig := &pluginconfigstore.PluginConfig{
-		Plugin: *request.Plugin,
-	}
-
-	values, err := replaceTemplateValuesInByteData(pluginConfig.Plugin.Values, pluginConfig.Plugin.OverrideValues)
+	values, err := replaceTemplateValuesInByteData(request.Plugin.Values, request.Plugin.OverrideValues)
 	if err != nil {
-		a.log.Errorf("failed to derive template values for plugin %s, %v", pluginConfig.PluginName, err)
+		a.log.Errorf("failed to derive template values for plugin %s, %v", request.Plugin.PluginName, err)
 		return &clusterpluginspb.DeployClusterPluginResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to prepare plugin values",
 		}, nil
 	}
 
-	pluginConfig.Plugin.Values = values
-	pluginConfig.InstallStatus = string(model.AppIntallingStatus)
-	if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
-		a.log.Errorf("failed to update plugin config data for plugin %s, %v", pluginConfig.PluginName, err)
+	request.Plugin.Values = values
+	request.Plugin.InstallStatus = string(model.AppIntallingStatus)
+	if err := a.as.UpsertClusterPluginConfig(request.Plugin); err != nil {
+		a.log.Errorf("failed to update plugin config data for plugin %s, %v", request.Plugin.PluginName, err)
 		return &clusterpluginspb.DeployClusterPluginResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
 			StatusMessage: "failed to update plugin config data",
 		}, nil
 	}
 
-	// deployReq := prepareAppDeployRequestFromPlugin(plugin)
-	go a.deployPluginWithWorkflow(request.Plugin, pluginConfig)
+	go a.deployPluginWithWorkflow(request.Plugin)
 
 	a.log.Infof("Triggerred plugin [%s] install", request.Plugin.PluginName)
 	return &clusterpluginspb.DeployClusterPluginResponse{
@@ -89,7 +83,7 @@ func (a *Agent) UnDeployClusterPlugin(ctx context.Context, request *clusterplugi
 		}, nil
 	}
 
-	pluginConfigdata, err := a.pas.GetPluginConfig(request.PluginName)
+	pluginConfigdata, err := a.as.GetClusterPluginConfig(request.PluginName)
 	if err != nil {
 		a.log.Errorf("failed to fetch plugin config record %s, %v", request.PluginName, err)
 		return &clusterpluginspb.UnDeployClusterPluginResponse{
@@ -99,7 +93,7 @@ func (a *Agent) UnDeployClusterPlugin(ctx context.Context, request *clusterplugi
 	}
 
 	pluginConfigdata.InstallStatus = string(model.AppUnInstallingStatus)
-	if err := a.pas.UpsertPluginConfig(pluginConfigdata); err != nil {
+	if err := a.as.UpsertClusterPluginConfig(pluginConfigdata); err != nil {
 		a.log.Errorf("failed to update plugin config status with UnInstalling for plugin %s, %v", pluginConfigdata.PluginName, err)
 		return &clusterpluginspb.UnDeployClusterPluginResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
@@ -116,7 +110,7 @@ func (a *Agent) UnDeployClusterPlugin(ctx context.Context, request *clusterplugi
 	}, nil
 }
 
-func (a *Agent) deployPluginWithWorkflow(plugin *clusterpluginspb.Plugin, pluginConfig *pluginconfigstore.PluginConfig) {
+func (a *Agent) deployPluginWithWorkflow(plugin *clusterpluginspb.Plugin) {
 	wd := workers.NewDeployment(a.tc, a.log)
 	_, err := wd.SendEventV2(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppInstallAction), plugin)
 	if err != nil {
@@ -125,7 +119,7 @@ func (a *Agent) deployPluginWithWorkflow(plugin *clusterpluginspb.Plugin, plugin
 		// 	a.log.Errorf("failed to update plugin config for plugin %s, %v", pluginConfig.PluginName, err)
 		// 	return
 		// }
-		a.log.Errorf("sendEventV2 failed, plugin: %s, reason: %v", pluginConfig.PluginName, err)
+		a.log.Errorf("sendEventV2 failed, plugin: %s, reason: %v", plugin.PluginName, err)
 		return
 	}
 	// TODO: workflow will update the final status
@@ -133,15 +127,15 @@ func (a *Agent) deployPluginWithWorkflow(plugin *clusterpluginspb.Plugin, plugin
 	// Make SendEventV2 asynchrounous so that periodic scheduler will take care of monitoring.
 }
 
-func (a *Agent) unInstallPluginWithWorkflow(request *clusterpluginspb.UnDeployClusterPluginRequest, pluginConfig *pluginconfigstore.PluginConfig) {
+func (a *Agent) unInstallPluginWithWorkflow(request *clusterpluginspb.UnDeployClusterPluginRequest, plugin *clusterpluginspb.Plugin) {
 	wd := workers.NewDeployment(a.tc, a.log)
 	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppUnInstallAction), request)
 	if err != nil {
-		a.log.Errorf("failed to send delete event to workflow for plugin %s, %v", pluginConfig.PluginName, err)
+		a.log.Errorf("failed to send delete event to workflow for plugin %s, %v", request.PluginName, err)
 
-		pluginConfig.InstallStatus = string(model.AppUnUninstallFailedStatus)
-		if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
-			a.log.Errorf("failed to update plugin config status with Installed for plugin %s, %v", pluginConfig.PluginName, err)
+		plugin.InstallStatus = string(model.AppUnUninstallFailedStatus)
+		if err := a.as.UpsertClusterPluginConfig(plugin); err != nil {
+			a.log.Errorf("failed to update plugin config status with Installed for plugin %s, %v", request.PluginName, err)
 		}
 	}
 }

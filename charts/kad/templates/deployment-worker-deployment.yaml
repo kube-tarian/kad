@@ -57,16 +57,16 @@ spec:
               value: {{ .Values.DomainName }}
             - name: VAULT_ROLE
               value: {{ .Values.vault.role }}
-            - name: DB_ADDRESSES
-              value: {{ .Values.cassandra.addresses }}
-            - name: DB_SERVICE_USERNAME
-              value: {{ .Values.cassandra.userName }}
-            - name: DB_ENTITY_NAME
-              value: {{ .Values.cassandra.entityName }}
-            - name: DB_NAME
-              value: {{ .Values.cassandra.keyspace }}
-            - name: CASSANDRA_SECRET_NAME
-              value: {{ .Values.cassandra.secretName }}
+            - name: PG_DB_HOST
+              value: {{ .Values.postgres.host }}
+            - name: PG_DB_PORT
+              value: {{ .Values.postgres.port }}
+            - name: PG_DB_SERVICE_USERNAME
+              value: {{ .Values.postgres.userName }}
+            - name: PG_DB_ENTITY_NAME
+              value: {{ .Values.postgres.entityName }}
+            - name: PG_DB_NAME
+              value: {{ .Values.cassandra.dbName }}
             - name: AGENT_ADDRESSES
               value: {{ include "kad.fullname" . }}-agent
             - name: AGENT_CLUSTER_CA_ISSUER_NAME

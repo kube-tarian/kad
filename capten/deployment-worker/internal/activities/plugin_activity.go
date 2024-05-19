@@ -8,9 +8,9 @@ import (
 	"strings"
 
 	"github.com/kelseyhightower/envconfig"
-	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
+	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
-	pluginconfigstore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
 	vaultcred "github.com/kube-tarian/kad/capten/common-pkg/vault-cred"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/captensdk"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/dbstorepreactions/postgresstore"
@@ -51,7 +51,7 @@ type Configuration struct {
 
 type PluginActivities struct {
 	config    *Configuration
-	pas       *pluginconfigstore.Store
+	as        *captenstore.Store
 	k8sClient *k8s.K8SClient
 }
 
@@ -61,7 +61,7 @@ func NewPluginActivities() (*PluginActivities, error) {
 		return nil, fmt.Errorf("cassandra config read faile, %v", err)
 	}
 
-	pas, err := pluginconfigstore.NewStore(logger)
+	as, err := captenstore.NewStore(logger)
 	if err != nil {
 		logger.Errorf("failed to initialize plugin app store, %v", err)
 		return nil, err
@@ -75,7 +75,7 @@ func NewPluginActivities() (*PluginActivities, error) {
 
 	return &PluginActivities{
 		config:    conf,
-		pas:       pas,
+		as:        as,
 		k8sClient: k8sclient,
 	}, nil
 }
@@ -111,7 +111,7 @@ func (p *PluginActivities) PluginDeployPreActionPostgresStoreActivity(ctx contex
 	}, nil
 }
 
-func (p *PluginActivities) PluginUndeployPreActionPostgresStoreActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (*model.ResponsePayload, error) {
+func (p *PluginActivities) PluginUndeployPreActionPostgresStoreActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
 	err := p.updateStatus(req.PluginName, postgresStoreUninitializingStatus)
 	if err != nil {
 		return &model.ResponsePayload{
@@ -120,7 +120,7 @@ func (p *PluginActivities) PluginUndeployPreActionPostgresStoreActivity(ctx cont
 		}, err
 	}
 
-	err = p.pas.DeletePluginConfigByPluginName(req.PluginName)
+	err = p.as.DeleteClusterPluginConfig(req.PluginName)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -200,7 +200,7 @@ func (p *PluginActivities) PluginDeployPreActionVaultStoreActivity(
 
 func (p *PluginActivities) PluginUndeployPreActionVaultStoreActivity(
 	ctx context.Context,
-	req *pluginconfigstore.PluginConfig,
+	req *clusterpluginspb.Plugin,
 ) (*model.ResponsePayload, error) {
 	// If any failure log error and should not return error
 	err := p.updateStatus(req.PluginName, vaultStoreUnitializingStatus)
@@ -279,7 +279,7 @@ func (p *PluginActivities) PluginDeployPreActionMTLSActivity(ctx context.Context
 	}, nil
 }
 
-func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (*model.ResponsePayload, error) {
+func (p *PluginActivities) PluginUndeployPreActionMTLSActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
 	err := p.updateStatus(req.PluginName, mtlsUnitializingStatus)
 	if err != nil {
 		return &model.ResponsePayload{
@@ -344,7 +344,7 @@ func (p *PluginActivities) PluginDeployPostActionActivity(ctx context.Context, r
 }
 
 // PluginDeployPostActionActivity... Updates the plugin deployment as "installed"
-func (p *PluginActivities) PluginUndeployPostActionActivity(ctx context.Context, req *pluginconfigstore.PluginConfig) (*model.ResponsePayload, error) {
+func (p *PluginActivities) PluginUndeployPostActionActivity(ctx context.Context, req *clusterpluginspb.Plugin) (*model.ResponsePayload, error) {
 	pluginInitConfigmapName := req.PluginName + pluginConfigmapNameTemplate
 	err := p.k8sClient.DeleteConfigmap(ctx, req.DefaultNamespace, pluginInitConfigmapName)
 	if err != nil {
@@ -354,7 +354,7 @@ func (p *PluginActivities) PluginUndeployPostActionActivity(ctx context.Context,
 		}, err
 	}
 
-	err = p.pas.DeletePluginConfigByPluginName(req.PluginName)
+	err = p.as.DeleteClusterPluginConfig(req.PluginName)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -398,12 +398,12 @@ func (p *PluginActivities) PluginUndeployActivity(ctx context.Context, req *mode
 }
 
 func (p *PluginActivities) updateStatus(releaseName, status string) error {
-	plugin, err := p.pas.GetPluginConfig(releaseName)
+	plugin, err := p.as.GetClusterPluginConfig(releaseName)
 	if err != nil {
 		return fmt.Errorf("plugin application %s not found in database", releaseName)
 	}
 	plugin.InstallStatus = status
-	p.pas.UpsertPluginConfig(plugin)
+	p.as.UpsertClusterPluginConfig(plugin)
 	return nil
 }
 

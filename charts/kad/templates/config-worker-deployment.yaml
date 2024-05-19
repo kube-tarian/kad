@@ -71,27 +71,20 @@ spec:
               value: {{ .Values.configWorker.configWorkerGitCloneDir }}
             - name: VAULT_ROLE
               value: {{ .Values.vault.role }}
-            - name: CASSANDRA_SERVICE_URL
-              value: "{{ .Values.cassandra.serviceURL }}"
-            - name: CASSANDRA_KEYSPACE_NAME
-              value: "{{ .Values.cassandra.keyspaceName }}"
-            - name: CASSANDRA_TABLE_NAME
-              value: "{{ .Values.cassandra.name }}"
+            - name: PG_DB_HOST
+              value: {{ .Values.postgres.host }}
+            - name: PG_DB_PORT
+              value: {{ .Values.postgres.port }}
+            - name: PG_DB_SERVICE_USERNAME
+              value: {{ .Values.postgres.userName }}
+            - name: PG_DB_ENTITY_NAME
+              value: {{ .Values.postgres.entityName }}
+            - name: PG_DB_NAME
+              value: {{ .Values.cassandra.dbName }}
             - name: TEKTON_PLUGIN_CONFIG_FILE
               value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.tektonPluginConfigFile }}"
             - name: CROSSPLANE_PLUGIN_CONFIG_FILE
               value: "{{ .Values.configWorker.pluginConfigDir }}/{{ .Values.configWorker.crossplanePluginConfigFile }}"
-            - name: CASSANDRA_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Values.cassandra.secretName }}"
-                  key: "username"
-            - name: CASSANDRA_PASSWORD
-              #value: "{{ .Values.cassandra.password }}"
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ .Values.cassandra.secretName }}"
-                  key: "password"
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

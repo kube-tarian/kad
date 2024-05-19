@@ -50,8 +50,6 @@ type CrossplaneProject struct {
 	GitProjectUrl  string `json:"git_project_url,omitempty"`
 	Status         string `json:"status,omitempty"`
 	LastUpdateTime string `json:"last_update_time,omitempty"`
-	WorkflowId     string `json:"workflow_id,omitempty"`
-	WorkflowStatus string `json:"workflow_status,omitempty"`
 }
 
 func PrepareCrossplaneProviderName(providerType string) string {

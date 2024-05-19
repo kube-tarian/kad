@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/plugins/argocd"
 )
 

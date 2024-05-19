@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/intelops/go-common/credentials"
-	"github.com/kube-tarian/kad/capten/agent/internal/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 )
 
 const containerRegEntityName = "container-registry"

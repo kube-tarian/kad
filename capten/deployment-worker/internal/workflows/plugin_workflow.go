@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/common-pkg/agentpb"
-	"github.com/kube-tarian/kad/capten/common-pkg/cluster-plugins/clusterpluginspb"
-	pluginconfigtore "github.com/kube-tarian/kad/capten/common-pkg/pluginconfig-store"
+	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/deployment-worker/internal/activities"
 	"github.com/kube-tarian/kad/capten/model"
 	"github.com/pkg/errors"
@@ -24,16 +24,16 @@ func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage
 	result := &model.ResponsePayload{}
 	logger := logging.NewLogger()
 
-	pas, err := pluginconfigtore.NewStore(logger)
+	as, err := captenstore.NewStore(logger)
 	if err != nil {
 		logger.Errorf("failed to initialize plugin app store, %v", err)
 	}
 
 	switch action {
 	case string(model.AppInstallAction), string(model.AppUpdateAction), string(model.AppUpgradeAction):
-		result, err = hanldeDeployWorkflow(ctx, payload, logger, pas)
+		result, err = hanldeDeployWorkflow(ctx, payload, logger, as)
 	case string(model.AppUnInstallAction):
-		result, err = hanldeUndeployWorkflow(ctx, payload, logger, pas)
+		result, err = hanldeUndeployWorkflow(ctx, payload, logger, as)
 	default:
 		err = fmt.Errorf("unknown action %v", action)
 	}
@@ -59,7 +59,7 @@ func setContext(ctx workflow.Context, timeInSeconds int, log logging.Logger) wor
 	return ctx
 }
 
-func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger, pas *pluginconfigtore.Store) (*model.ResponsePayload, error) {
+func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger, pas *captenstore.Store) (*model.ResponsePayload, error) {
 	var a *activities.PluginActivities
 	result := &model.ResponsePayload{}
 	ctx = setContext(ctx, 600, log)
@@ -117,7 +117,7 @@ func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log log
 	return result, err
 }
 
-func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger, pas *pluginconfigtore.Store) (*model.ResponsePayload, error) {
+func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger, pas *captenstore.Store) (*model.ResponsePayload, error) {
 	var a *activities.PluginActivities
 	result := &model.ResponsePayload{}
 	ctx = setContext(ctx, 600, log)
@@ -133,7 +133,7 @@ func hanldeUndeployWorkflow(ctx workflow.Context, payload json.RawMessage, log l
 	}
 	log.Infof("undeployclusterplugin request: %+v", req)
 
-	pluginConfig, err := pas.GetPluginConfig(req.PluginName)
+	pluginConfig, err := pas.GetClusterPluginConfig(req.PluginName)
 	if err != nil {
 		return &model.ResponsePayload{
 			Status:  "FAILED",
@@ -184,7 +184,7 @@ func executeAppDeployment(
 	req *clusterpluginspb.Plugin,
 	a *activities.PluginActivities,
 	log logging.Logger,
-	pas *pluginconfigtore.Store,
+	pas *captenstore.Store,
 ) (result *model.ResponsePayload, err error) {
 	result = &model.ResponsePayload{}
 	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-installing").Get(ctx, result)
@@ -301,10 +301,10 @@ func executeAppDeployment(
 
 func executeAppUndeployment(
 	ctx workflow.Context,
-	req *pluginconfigtore.PluginConfig,
+	req *clusterpluginspb.Plugin,
 	a *activities.PluginActivities,
 	log logging.Logger,
-	pas *pluginconfigtore.Store,
+	pas *captenstore.Store,
 ) (result *model.ResponsePayload, err error) {
 	result = &model.ResponsePayload{}
 	err = workflow.ExecuteActivity(ctx, a.PluginDeployUpdateStatusActivity, req.PluginName, "plugin-app-undeploying").Get(ctx, result)

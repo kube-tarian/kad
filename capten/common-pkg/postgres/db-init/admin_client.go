@@ -16,8 +16,8 @@ const (
 	alterUserQuery               = "ALTER USER %s WITH PASSWORD '%s' NOSUPERUSER;"
 	grantPermissionDatabaseQuery = "GRANT ALL privileges ON database %s TO %s ;"
 	grantSchemaPublicQuery       = "GRANT ALL ON SCHEMA public TO %s;"
-	dsnTemplate                  = "postgres://%s:%s@%s:5432/"
-	dsnDBTemplate                = "postgres://%s:%s@%s:5432/%s"
+	dsnTemplate                  = "postgres://%s:%s@%s/"
+	dsnDBTemplate                = "postgres://%s:%s@%s/%s"
 )
 
 type PostgresAdmin struct {
@@ -83,8 +83,9 @@ func (p *PostgresAdmin) GrantPermission(serviceUsername string, dbAddr, dbAdminU
 func (p *PostgresAdmin) CreateDb(dbName string) (err error) {
 	result := p.session.Exec(fmt.Sprintf(createDatabaseQuery, dbName))
 	if result.Error != nil {
-		err = errors.WithMessage(err, "failed to create the Database")
-		return
+		if !strings.Contains(result.Error.Error(), "already exists") {
+			err = errors.WithMessage(err, "failed to create the Database")
+		}
 	}
 	return
 }
@@ -92,8 +93,12 @@ func (p *PostgresAdmin) CreateDb(dbName string) (err error) {
 func (c *PostgresAdmin) updateDbUser(serviceUsername string, servicePassword string) (err error) {
 	result := c.session.Exec(fmt.Sprintf(alterUserQuery, serviceUsername, servicePassword))
 	if result.Error != nil {
-		err = errors.WithMessage(result.Error, "failed to update service user")
-		return
+		if strings.Contains(result.Error.Error(), "already exists") {
+			return c.updateDbUser(serviceUsername, servicePassword)
+		} else {
+			err = errors.WithMessage(err, "failed to create service user")
+			return
+		}
 	}
 	return
 }

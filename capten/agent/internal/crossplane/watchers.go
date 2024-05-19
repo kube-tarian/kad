@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/intelops/go-common/logging"
-	captenstore "github.com/kube-tarian/kad/capten/agent/internal/capten-store"
+	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 )
 
