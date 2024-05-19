@@ -11,22 +11,38 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/pluginstorepb"
+	pluginstore "github.com/kube-tarian/kad/capten/common-pkg/plugin-store"
 )
 
 var _ agentpb.AgentServer = &Agent{}
+
+type pluginStore interface {
+	ConfigureStore(config *pluginstorepb.PluginStoreConfig) error
+	GetStoreConfig(storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error)
+	SyncPlugins(storeType pluginstorepb.StoreType) error
+	GetPlugins(storeType pluginstorepb.StoreType) ([]*pluginstorepb.Plugin, error)
+	GetPluginData(storeType pluginstorepb.StoreType, pluginName string) (*pluginstorepb.PluginData, error)
+	GetPluginValues(storeType pluginstorepb.StoreType, pluginName, version string) ([]byte, error)
+	DeployPlugin(storeType pluginstorepb.StoreType, pluginName, version string, values []byte) error
+	UnDeployPlugin(storeType pluginstorepb.StoreType, pluginName string) error
+}
 
 type Agent struct {
 	agentpb.UnimplementedAgentServer
 	captenpluginspb.UnimplementedCaptenPluginsServer
 	clusterpluginspb.UnimplementedClusterPluginsServer
+	pluginstorepb.UnimplementedPluginStoreServer
 	tc       *temporalclient.Client
 	as       *captenstore.Store
 	log      logging.Logger
 	cfg      *config.SericeConfig
+	plugin   pluginStore
 	createPr bool
 }
 
-func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store) (*Agent, error) {
+func NewAgent(log logging.Logger, cfg *config.SericeConfig,
+	as *captenstore.Store) (*Agent, error) {
 	var tc *temporalclient.Client
 	var err error
 
@@ -40,6 +56,11 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Stor
 		as:  as,
 		cfg: cfg,
 		log: log,
+	}
+
+	agent.plugin, err = pluginstore.NewPluginStore(log, as, agent)
+	if err != nil {
+		return nil, err
 	}
 	return agent, nil
 }

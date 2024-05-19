@@ -16,6 +16,7 @@ gen-protoc:
 	mkdir -p capten/common-pkg/pb/agentpb
 	mkdir -p capten/common-pkg/pb/clusterpluginspb
 	mkdir -p server/pkg/pb/clusterpluginspb
+	mkdir -p capten/common-pkg/pb/pluginstorepb
 
 	cd proto && protoc --go_out=../server/pkg/pb/serverpb/ --go_opt=paths=source_relative \
     		--go-grpc_out=../server/pkg/pb/serverpb  --go-grpc_opt=paths=source_relative \
@@ -45,6 +46,9 @@ gen-protoc:
     		--go-grpc_out=../server/pkg/pb/pluginstorepb --go-grpc_opt=paths=source_relative \
     		./plugin_store.proto
 
+	cd proto && protoc --go_out=../capten/common-pkg/pb/pluginstorepb --go_opt=paths=source_relative \
+    		--go-grpc_out=../capten/common-pkg/pb/pluginstorepb --go-grpc_opt=paths=source_relative \
+    		./plugin_store.proto
 	cd proto && protoc --go_out=../capten/common-pkg/pb/clusterpluginspb --go_opt=paths=source_relative \
     		--go-grpc_out=../capten/common-pkg/pb/clusterpluginspb --go-grpc_opt=paths=source_relative \
     		./cluster_plugins.proto

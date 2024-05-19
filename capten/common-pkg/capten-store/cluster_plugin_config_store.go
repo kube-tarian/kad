@@ -26,7 +26,6 @@ func (a *Store) UpsertClusterPluginConfig(pluginConfig *clusterpluginspb.Plugin)
 		}
 		err = nil
 		recordFound = false
-		fmt.Println("not found")
 	} else if plugin.PluginName == "" {
 		recordFound = false
 	}
@@ -52,10 +51,8 @@ func (a *Store) UpsertClusterPluginConfig(pluginConfig *clusterpluginspb.Plugin)
 
 	if !recordFound {
 		err = a.dbClient.Create(plugin)
-		fmt.Println("created")
 	} else {
 		err = a.dbClient.Update(plugin, ClusterPluginConfig{PluginName: pluginConfig.PluginName})
-		fmt.Println("updated")
 	}
 	return err
 }
