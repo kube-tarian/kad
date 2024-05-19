@@ -46,7 +46,6 @@ func (a *Store) GetManagedClusterForID(id string) (*captenpluginspb.ManagedClust
 	if err != nil {
 		return nil, err
 	} else if cluster.ID == uuid.Nil {
-		fmt.Printf("cluster %s, %v", id, cluster)
 		return nil, gorm.ErrRecordNotFound
 	}
 

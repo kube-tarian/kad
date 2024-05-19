@@ -112,7 +112,6 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 		GitProjectURL:  crosplaneGitProject.ProjectUrl,
 		Status:         crossplaneProject.Status,
 		LastUpdateTime: time.Now()}
-
 	err = a.dbClient.Update(&project, CrossplaneProject{ID: 1})
 	if err != nil {
 		return nil, err

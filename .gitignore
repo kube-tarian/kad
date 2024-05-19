@@ -3,3 +3,4 @@ vendor
 .idea
 info.txt
 Dockerfile
+.vscode

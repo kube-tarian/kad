@@ -45,7 +45,6 @@ func populateTemplateValues(appConfig *agentpb.SyncAppData, newOverrideValues, l
 	newAppConfig.Values.OverrideValues = finalOverrideMappingBytes
 
 	// replace template with new override values from the request
-	//fmt.Printf("template: %s\n", string(appConfig.Values.TemplateValues))
 	log.Debugf("finalOverrideMapping: %s\n", string(finalOverrideMappingBytes))
 	populatedTemplateValuesMapping, err := deriveTemplateValuesMapping(finalOverrideMappingBytes, appConfig.Values.TemplateValues)
 	if err != nil {

@@ -17,6 +17,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/pluginstorepb"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/postgres/db-init"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -69,6 +70,7 @@ func Start() {
 	agentpb.RegisterAgentServer(grpcServer, rpcapi)
 	captenpluginspb.RegisterCaptenPluginsServer(grpcServer, rpcapi)
 	clusterpluginspb.RegisterClusterPluginsServer(grpcServer, rpcapi)
+	pluginstorepb.RegisterPluginStoreServer(grpcServer, rpcapi)
 
 	log.Infof("Agent listening at %v", listener.Addr())
 	reflection.Register(grpcServer)

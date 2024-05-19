@@ -24,10 +24,11 @@ enum StatusCode {
   NOT_FOUND = 3;
 }
 
-enum StoreType {
-  DEFAULT_STORE = 0;
+enum StoreType {  
+  NONE = 0;
   CENTRAL_STORE = 1;
   LOCAL_STORE = 2;
+  DEFAULT_STORE = 3;
 }
 
 message PluginStoreConfig {

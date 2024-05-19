@@ -148,7 +148,7 @@ type ManagedCluster struct {
 }
 
 func (ManagedCluster) TableName() string {
-	return "managed_clusters"
+	return "managed_cluster"
 }
 
 type TektonProject struct {
@@ -177,13 +177,40 @@ func (CrossplaneProvider) TableName() string {
 }
 
 type CrossplaneProject struct {
-	ID             int       `json:"id"`
-	GitProjectID   uuid.UUID `json:"git_project_id"`
-	GitProjectURL  string    `json:"git_project_url"`
-	Status         string    `json:"status"`
-	LastUpdateTime time.Time `json:"last_update_time"`
+	ID             int       `json:"id" gorm:"column:id;primaryKey"`
+	GitProjectID   uuid.UUID `json:"git_project_id" gorm:"column:git_project_id"`
+	GitProjectURL  string    `json:"git_project_url" gorm:"column:git_project_url"`
+	Status         string    `json:"status" gorm:"column:status"`
+	LastUpdateTime time.Time `json:"last_update_time" gorm:"column:last_update_time"`
 }
 
 func (CrossplaneProject) TableName() string {
 	return "crossplane_project"
+}
+
+type PluginStoreConfig struct {
+	StoreType      int       `json:"id" gorm:"column:store_type;primaryKey"`
+	GitProjectID   uuid.UUID `json:"git_project_id" gorm:"column:git_project_id"`
+	GitProjectURL  string    `json:"git_project_url" gorm:"column:git_project_url"`
+	Status         string    `json:"status" gorm:"column:status"`
+	LastUpdateTime time.Time `json:"last_update_time" gorm:"column:last_update_time"`
+}
+
+func (PluginStoreConfig) TableName() string {
+	return "plugin_store_config"
+}
+
+type PluginStoreData struct {
+	StoreType      int         `json:"id" gorm:"column:store_type;primaryKey"`
+	GitProjectID   uuid.UUID   `json:"git_project_id" gorm:"column:git_project_id"`
+	PluginName     string      `json:"plugin_name" gorm:"column:plugin_name"`
+	Category       string      `json:"category" gorm:"column:category"`
+	Versions       StringArray `json:"versions" gorm:"column:versions;type:text[]"`
+	Icon           []byte      `json:"icon" gorm:"column:icon"`
+	Description    string      `json:"description" gorm:"column:description"`
+	LastUpdateTime time.Time   `json:"last_update_time" gorm:"column:last_update_time"`
+}
+
+func (PluginStoreData) TableName() string {
+	return "plugin_store_data"
 }
