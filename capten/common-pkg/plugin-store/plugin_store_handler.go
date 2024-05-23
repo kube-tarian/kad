@@ -15,6 +15,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/pluginstorepb"
+	"github.com/kube-tarian/kad/capten/common-pkg/temporalclient"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -29,31 +30,29 @@ type captenStore interface {
 	DeletePluginStoreData(storeType pluginstorepb.StoreType, gitProjectId, pluginName string) error
 	UpsertPluginStoreData(gitProjectId string, plugin *pluginstorepb.PluginData) error
 	GetPluginStoreData(storeType pluginstorepb.StoreType, gitProjectId, pluginName string) (*pluginstorepb.PluginData, error)
-}
 
-type pluginDeployHandler interface {
-	DeployClusterPlugin(context.Context, *clusterpluginspb.DeployClusterPluginRequest) (*clusterpluginspb.DeployClusterPluginResponse, error)
-	UnDeployClusterPlugin(context.Context, *clusterpluginspb.UnDeployClusterPluginRequest) (*clusterpluginspb.UnDeployClusterPluginResponse, error)
+	UpsertClusterPluginConfig(plugin *clusterpluginspb.Plugin) error
+	GetClusterPluginConfig(pluginName string) (*clusterpluginspb.Plugin, error)
 }
 
 type PluginStore struct {
-	log           logging.Logger
-	cfg           *Config
-	dbStore       captenStore
-	pluginHandler pluginDeployHandler
+	log     logging.Logger
+	cfg     *Config
+	dbStore captenStore
+	tc      *temporalclient.Client
 }
 
-func NewPluginStore(log logging.Logger, dbStore captenStore, pluginHandler pluginDeployHandler) (*PluginStore, error) {
+func NewPluginStore(log logging.Logger, dbStore captenStore, tc *temporalclient.Client) (*PluginStore, error) {
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return nil, err
 	}
 
 	return &PluginStore{
-		log:           log,
-		cfg:           cfg,
-		dbStore:       dbStore,
-		pluginHandler: pluginHandler,
+		log:     log,
+		cfg:     cfg,
+		dbStore: dbStore,
+		tc:      tc,
 	}, nil
 }
 
@@ -346,7 +345,7 @@ func (p *PluginStore) DeployPlugin(storeType pluginstorepb.StoreType,
 	}
 
 	p.log.Infof("Sending plugin %s deploy request", pluginName)
-	_, err = p.pluginHandler.DeployClusterPlugin(context.Background(), &clusterpluginspb.DeployClusterPluginRequest{Plugin: plugin})
+	err = p.DeployClusterPlugin(context.Background(), plugin)
 	if err != nil {
 		return err
 	}
@@ -354,7 +353,7 @@ func (p *PluginStore) DeployPlugin(storeType pluginstorepb.StoreType,
 }
 
 func (p *PluginStore) UnDeployPlugin(storeType pluginstorepb.StoreType, pluginName string) error {
-	_, err := p.pluginHandler.UnDeployClusterPlugin(context.Background(),
+	err := p.UnDeployClusterPlugin(context.Background(),
 		&clusterpluginspb.UnDeployClusterPluginRequest{StoreType: clusterpluginspb.StoreType(storeType), PluginName: pluginName})
 	if err != nil {
 		return err
@@ -408,15 +407,6 @@ func filterSupporttedCapabilties(pluginCapabilties []string) (validCapabilties, 
 		}
 	}
 	return
-}
-
-func isUISSOCapabilitySupported(pluginCapabilties []string) bool {
-	for _, pluginCapability := range pluginCapabilties {
-		if pluginCapability == uiSSOCapabilityName {
-			return true
-		}
-	}
-	return false
 }
 
 func (p *PluginStore) getPluginDataAPIValues(pluginConfig *PluginConfig, overrideValues map[string]string) (string, string, error) {

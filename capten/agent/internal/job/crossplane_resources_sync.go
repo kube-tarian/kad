@@ -2,8 +2,8 @@ package job
 
 import (
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/agent/internal/crossplane"
 	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
+	"github.com/kube-tarian/kad/capten/common-pkg/crossplane"
 )
 
 type CrossplaneResourcesSync struct {

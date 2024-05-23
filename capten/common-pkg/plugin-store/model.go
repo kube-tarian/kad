@@ -4,11 +4,6 @@ const (
 	tmpGitProjectCloneStr          = "clone*"
 	gitProjectAccessTokenAttribute = "accessToken"
 	gitProjectUserId               = "userID"
-
-	uiSSOCapabilityName   = "ui-sso-oauth"
-	oAuthBaseURLName      = "oAuthBaseURL"
-	oAuthClientIdName     = "oAuthClientId"
-	oAuthClientSecretName = "oAuthClientSecret"
 )
 
 var (

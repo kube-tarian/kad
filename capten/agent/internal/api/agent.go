@@ -6,13 +6,13 @@ import (
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
-	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
 	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/pluginstorepb"
 	pluginstore "github.com/kube-tarian/kad/capten/common-pkg/plugin-store"
+	"github.com/kube-tarian/kad/capten/common-pkg/temporalclient"
 )
 
 var _ agentpb.AgentServer = &Agent{}
@@ -26,6 +26,9 @@ type pluginStore interface {
 	GetPluginValues(storeType pluginstorepb.StoreType, pluginName, version string) ([]byte, error)
 	DeployPlugin(storeType pluginstorepb.StoreType, pluginName, version string, values []byte) error
 	UnDeployPlugin(storeType pluginstorepb.StoreType, pluginName string) error
+
+	DeployClusterPlugin(ctx context.Context, pluginData *clusterpluginspb.Plugin) error
+	UnDeployClusterPlugin(ctx context.Context, request *clusterpluginspb.UnDeployClusterPluginRequest) error
 }
 
 type Agent struct {
@@ -58,7 +61,7 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig,
 		log: log,
 	}
 
-	agent.plugin, err = pluginstore.NewPluginStore(log, as, agent)
+	agent.plugin, err = pluginstore.NewPluginStore(log, as, tc)
 	if err != nil {
 		return nil, err
 	}

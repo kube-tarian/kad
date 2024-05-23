@@ -1,14 +1,9 @@
 package api
 
 import (
-	"bytes"
 	"context"
-	"html/template"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
-	"github.com/kube-tarian/kad/capten/model"
-	"gopkg.in/yaml.v2"
 )
 
 func (a *Agent) GetClusterPlugins(ctx context.Context, request *clusterpluginspb.GetClusterPluginsRequest) (
@@ -43,26 +38,14 @@ func (a *Agent) DeployClusterPlugin(ctx context.Context, request *clusterplugins
 	*clusterpluginspb.DeployClusterPluginResponse, error) {
 	a.log.Infof("Recieved Plugin Deploy request for plugin %s, version %+v", request.Plugin.PluginName, request.Plugin.Version)
 
-	values, err := replaceTemplateValuesInByteData(request.Plugin.Values, request.Plugin.OverrideValues)
+	err := a.plugin.DeployClusterPlugin(ctx, request.Plugin)
 	if err != nil {
-		a.log.Errorf("failed to derive template values for plugin %s, %v", request.Plugin.PluginName, err)
+		a.log.Errorf("failed to deploy plugin [%s], %v", request.Plugin.PluginName, err)
 		return &clusterpluginspb.DeployClusterPluginResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to prepare plugin values",
-		}, nil
+			StatusMessage: "failed to deploy plugin",
+		}, err
 	}
-
-	request.Plugin.Values = values
-	request.Plugin.InstallStatus = string(model.AppIntallingStatus)
-	if err := a.as.UpsertClusterPluginConfig(request.Plugin); err != nil {
-		a.log.Errorf("failed to update plugin config data for plugin %s, %v", request.Plugin.PluginName, err)
-		return &clusterpluginspb.DeployClusterPluginResponse{
-			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to update plugin config data",
-		}, nil
-	}
-
-	go a.deployPluginWithWorkflow(request.Plugin)
 
 	a.log.Infof("Triggerred plugin [%s] install", request.Plugin.PluginName)
 	return &clusterpluginspb.DeployClusterPluginResponse{
@@ -75,89 +58,18 @@ func (a *Agent) UnDeployClusterPlugin(ctx context.Context, request *clusterplugi
 	*clusterpluginspb.UnDeployClusterPluginResponse, error) {
 	a.log.Infof("Recieved Plugin UnInstall request %+v", request)
 
-	if request.PluginName == "" {
-		a.log.Errorf("release name is empty")
-		return &clusterpluginspb.UnDeployClusterPluginResponse{
-			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "release name is missing in request",
-		}, nil
-	}
-
-	pluginConfigdata, err := a.as.GetClusterPluginConfig(request.PluginName)
+	err := a.plugin.UnDeployClusterPlugin(ctx, request)
 	if err != nil {
-		a.log.Errorf("failed to fetch plugin config record %s, %v", request.PluginName, err)
+		a.log.Errorf("failed to undeploy plugin [%s], %v", request.PluginName, err)
 		return &clusterpluginspb.UnDeployClusterPluginResponse{
 			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to fetch plugin config",
-		}, nil
+			StatusMessage: "failed to undeploy plugin",
+		}, err
 	}
-
-	pluginConfigdata.InstallStatus = string(model.AppUnInstallingStatus)
-	if err := a.as.UpsertClusterPluginConfig(pluginConfigdata); err != nil {
-		a.log.Errorf("failed to update plugin config status with UnInstalling for plugin %s, %v", pluginConfigdata.PluginName, err)
-		return &clusterpluginspb.UnDeployClusterPluginResponse{
-			Status:        clusterpluginspb.StatusCode_INTERNRAL_ERROR,
-			StatusMessage: "failed to undeploy the plugin",
-		}, nil
-	}
-
-	go a.unInstallPluginWithWorkflow(request, pluginConfigdata)
 
 	a.log.Infof("Triggerred plugin [%s] un install", request.PluginName)
 	return &clusterpluginspb.UnDeployClusterPluginResponse{
 		Status:        clusterpluginspb.StatusCode_OK,
 		StatusMessage: "plugin is successfully undeployed",
 	}, nil
-}
-
-func (a *Agent) deployPluginWithWorkflow(plugin *clusterpluginspb.Plugin) {
-	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendEventV2(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppInstallAction), plugin)
-	if err != nil {
-		// pluginConfig.InstallStatus = string(model.AppIntallFailedStatus)
-		// if err := a.pas.UpsertPluginConfig(pluginConfig); err != nil {
-		// 	a.log.Errorf("failed to update plugin config for plugin %s, %v", pluginConfig.PluginName, err)
-		// 	return
-		// }
-		a.log.Errorf("sendEventV2 failed, plugin: %s, reason: %v", plugin.PluginName, err)
-		return
-	}
-	// TODO: workflow will update the final status
-	// Write a periodic scheduler which will go through all apps not in installed status and check the status till either success or failed.
-	// Make SendEventV2 asynchrounous so that periodic scheduler will take care of monitoring.
-}
-
-func (a *Agent) unInstallPluginWithWorkflow(request *clusterpluginspb.UnDeployClusterPluginRequest, plugin *clusterpluginspb.Plugin) {
-	wd := workers.NewDeployment(a.tc, a.log)
-	_, err := wd.SendDeleteEvent(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppUnInstallAction), request)
-	if err != nil {
-		a.log.Errorf("failed to send delete event to workflow for plugin %s, %v", request.PluginName, err)
-
-		plugin.InstallStatus = string(model.AppUnUninstallFailedStatus)
-		if err := a.as.UpsertClusterPluginConfig(plugin); err != nil {
-			a.log.Errorf("failed to update plugin config status with Installed for plugin %s, %v", request.PluginName, err)
-		}
-	}
-}
-
-func replaceTemplateValuesInByteData(data []byte,
-	values []byte) (transformedData []byte, err error) {
-	tmpl, err := template.New("templateVal").Parse(string(data))
-	if err != nil {
-		return
-	}
-
-	mapValues := map[string]any{}
-	if err = yaml.Unmarshal(values, &mapValues); err != nil {
-		return
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, mapValues)
-	if err != nil {
-		return
-	}
-
-	transformedData = buf.Bytes()
-	return
 }

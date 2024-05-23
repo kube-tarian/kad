@@ -8,9 +8,9 @@ import (
 	"sync"
 
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
-	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
+	"github.com/kube-tarian/kad/capten/common-pkg/temporalclient"
+	"github.com/kube-tarian/kad/capten/common-pkg/workers"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
