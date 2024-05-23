@@ -18,7 +18,7 @@ func (a *Agent) AuthInterceptor(ctx context.Context, req interface{}, info *grpc
 		a.log.Errorf("error occured while extracting oauth token, oryurl, and ory pat token error: %v", err.Error())
 		return nil, status.Error(codes.Unauthenticated, "invalid or missing token")
 	}
-	oryApiClient := newOryAPIClient(a.log, oryUrl)
+	oryApiClient := newOryAPIClient(oryUrl)
 	isValid, err := verifyToken(a.log, oryPat, tk, oryApiClient)
 	if err != nil || !isValid {
 		return nil, status.Error(codes.Unauthenticated, "invalid or missing token")
@@ -27,7 +27,7 @@ func (a *Agent) AuthInterceptor(ctx context.Context, req interface{}, info *grpc
 	return handler(ctx, req)
 }
 
-func newOryAPIClient(log logging.Logger, oryURL string) *ory.APIClient {
+func newOryAPIClient(oryURL string) *ory.APIClient {
 	config := ory.NewConfiguration()
 	config.Servers = ory.ServerConfigurations{{
 		URL: oryURL,

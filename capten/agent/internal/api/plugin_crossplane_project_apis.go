@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kube-tarian/kad/capten/agent/internal/workers"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
+	"github.com/kube-tarian/kad/capten/common-pkg/workers"
 	"github.com/kube-tarian/kad/capten/model"
 )
 

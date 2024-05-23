@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/intelops/go-common/logging"
-	"github.com/kube-tarian/kad/capten/agent/internal/temporalclient"
+	"github.com/kube-tarian/kad/capten/common-pkg/temporalclient"
 	"github.com/kube-tarian/kad/capten/model"
 	"go.temporal.io/sdk/client"
 )
