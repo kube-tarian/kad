@@ -2,6 +2,7 @@ package defaultplugindeployer
 
 import (
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/pluginstorepb"
 	pluginstore "github.com/kube-tarian/kad/capten/common-pkg/plugin-store"
@@ -19,10 +20,27 @@ func NewDefaultPluginsDeployer(
 	dbStore *captenstore.Store,
 	handler pluginstore.PluginDeployHandler,
 ) (*DefaultPluginsDeployer, error) {
-	pluginStore, err := pluginstore.NewPluginStore(log, dbStore, handler)
+	cfg := &pluginstore.Config{}
+	if err := envconfig.Process("", cfg); err != nil {
+		return nil, err
+	}
+	cfg.PluginFileName = "default-plugin-list.yaml"
+
+	pluginStore, err := pluginstore.NewPluginStoreWithConfig(log, cfg, dbStore, handler)
 	if err != nil {
 		return nil, err
 	}
+
+	// add default plugins configuration to plugin store
+	err = pluginStore.ConfigureStore(&pluginstorepb.PluginStoreConfig{
+		StoreType:     pluginstorepb.StoreType_DEFAULT_STORE,
+		GitProjectId:  "1cf5201d-5f35-4d5b-afe0-4b9d0e0d4cd2",
+		GitProjectURL: "https://github.com/intelops/capten-plugins",
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	return &DefaultPluginsDeployer{
 		log:         log,
 		frequency:   frequency,

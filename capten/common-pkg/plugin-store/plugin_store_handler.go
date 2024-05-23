@@ -69,29 +69,41 @@ func NewPluginStore(log logging.Logger, dbStore captenStore, pluginHandler Plugi
 	}, nil
 }
 
+func NewPluginStoreWithConfig(log logging.Logger, cfg *Config, dbStore captenStore, pluginHandler PluginDeployHandler) (*PluginStore, error) {
+	return &PluginStore{
+		log:           log,
+		cfg:           cfg,
+		dbStore:       dbStore,
+		pluginHandler: pluginHandler,
+	}, nil
+}
+
 func (p *PluginStore) ConfigureStore(config *pluginstorepb.PluginStoreConfig) error {
 	return p.dbStore.UpsertPluginStoreConfig(config)
 }
 
 func (p *PluginStore) GetStoreConfig(storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error) {
-	if storeType == pluginstorepb.StoreType_LOCAL_STORE {
+	switch storeType {
+	case pluginstorepb.StoreType_DEFAULT_STORE, pluginstorepb.StoreType_LOCAL_STORE:
 		config, err := p.dbStore.GetPluginStoreConfig(storeType)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
 				return &pluginstorepb.PluginStoreConfig{
-					StoreType: pluginstorepb.StoreType_LOCAL_STORE,
+					StoreType: storeType,
 				}, nil
 			}
 			return nil, err
 		}
 		return config, nil
-	} else if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
+
+	case pluginstorepb.StoreType_CENTRAL_STORE:
 		return &pluginstorepb.PluginStoreConfig{
 			StoreType:     pluginstorepb.StoreType_CENTRAL_STORE,
 			GitProjectId:  p.cfg.PluginStoreProjectID,
 			GitProjectURL: p.cfg.PluginStoreProjectURL,
 		}, nil
-	} else {
+
+	default:
 		return nil, fmt.Errorf("not supported store type")
 	}
 }
@@ -385,7 +397,7 @@ func stringContains(arr []string, target string) bool {
 }
 
 func (p *PluginStore) getGitProjectAccessToken(projectId string, storeType pluginstorepb.StoreType) (string, error) {
-	if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
+	if storeType == pluginstorepb.StoreType_CENTRAL_STORE || storeType == pluginstorepb.StoreType_DEFAULT_STORE {
 		return p.cfg.PluginStoreProjectAccess, nil
 	}
 
