@@ -12,6 +12,7 @@ import (
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
+	"github.com/kube-tarian/kad/capten/agent/internal/job/defaultplugindeployer"
 	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/common-pkg/crossplane"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
@@ -19,6 +20,7 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/pluginstorepb"
+	pluginstore "github.com/kube-tarian/kad/capten/common-pkg/plugin-store"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/postgres/db-init"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -48,19 +50,11 @@ func Start() {
 		return
 	}
 
-	tc, err := temporalclient.NewClient(log)
+	rpcapi, err := agentapi.NewAgent(log, cfg, as)
 	if err != nil {
-		log.Errorf("failed to initialize temporal client, %v", err)
+		log.Fatalf("Agent initialization failed, %v", err)
 		return
 	}
-
-	rpcapi, err := agentapi.NewAgent(log, cfg, as, tc)
-	if err != nil {
-		log.Errorf("failed to initialize temporal client, %v", err)
-		return
-	}
-
-	rpcapi := agentapi.NewAgent(log, cfg, as, pas, tc)
 
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", cfg.Host, cfg.Port))
 	if err != nil {
@@ -107,7 +101,7 @@ func Start() {
 		log.Fatalf("Failed to initialize k8s watchers %v", err)
 	}
 
-	jobScheduler, err := initializeJobScheduler(cfg, as, pas, tc)
+	jobScheduler, err := initializeJobScheduler(cfg, as, rpcapi)
 	if err != nil {
 		log.Fatalf("Failed to create cron job: %v", err)
 		return
@@ -138,7 +132,7 @@ func configurePostgresDB() error {
 func initializeJobScheduler(
 	cfg *config.SericeConfig,
 	as *captenstore.Store,
-	tc *temporalclient.Client,
+	handler pluginstore.PluginDeployHandler,
 ) (*job.Scheduler, error) {
 	s := job.NewScheduler(log)
 	if cfg.CrossplaneSyncJobEnabled {
@@ -153,7 +147,7 @@ func initializeJobScheduler(
 	}
 
 	// Add Default plugin deployer job
-	addDefualtPluginsDeployerJob(s, as, tc)
+	addDefualtPluginsDeployerJob(s, as, handler)
 
 	log.Info("successfully initialized job scheduler")
 	return s, nil
@@ -162,9 +156,9 @@ func initializeJobScheduler(
 func addDefualtPluginsDeployerJob(
 	s *job.Scheduler,
 	as *captenstore.Store,
-	tc *temporalclient.Client,
+	handler pluginstore.PluginDeployHandler,
 ) {
-	dpd, err := defaultplugindeployer.NewDefaultPluginsDeployer(log, "@every 10m", as, tc)
+	dpd, err := defaultplugindeployer.NewDefaultPluginsDeployer(log, "@every 10m", as, handler)
 	if err != nil {
 		log.Fatal("failed to init default plugins deployer job", err)
 	}

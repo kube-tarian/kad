@@ -17,20 +17,6 @@ import (
 
 var _ agentpb.AgentServer = &Agent{}
 
-type pluginStore interface {
-	ConfigureStore(config *pluginstorepb.PluginStoreConfig) error
-	GetStoreConfig(storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error)
-	SyncPlugins(storeType pluginstorepb.StoreType) error
-	GetPlugins(storeType pluginstorepb.StoreType) ([]*pluginstorepb.Plugin, error)
-	GetPluginData(storeType pluginstorepb.StoreType, pluginName string) (*pluginstorepb.PluginData, error)
-	GetPluginValues(storeType pluginstorepb.StoreType, pluginName, version string) ([]byte, error)
-	DeployPlugin(storeType pluginstorepb.StoreType, pluginName, version string, values []byte) error
-	UnDeployPlugin(storeType pluginstorepb.StoreType, pluginName string) error
-
-	DeployClusterPlugin(ctx context.Context, pluginData *clusterpluginspb.Plugin) error
-	UnDeployClusterPlugin(ctx context.Context, request *clusterpluginspb.UnDeployClusterPluginRequest) error
-}
-
 type Agent struct {
 	agentpb.UnimplementedAgentServer
 	captenpluginspb.UnimplementedCaptenPluginsServer
@@ -40,14 +26,18 @@ type Agent struct {
 	as       *captenstore.Store
 	log      logging.Logger
 	cfg      *config.SericeConfig
-	plugin   pluginStore
+	plugin   pluginstore.PluginStoreInterface
 	createPr bool
 }
 
-func NewAgent(log logging.Logger, cfg *config.SericeConfig,
-	as *captenstore.Store,
-	tc *temporalclient.Client) (*Agent, error) {
-	agent := &Agent{
+func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store) (agent *Agent, err error) {
+	tc, err := temporalclient.NewClient(log)
+	if err != nil {
+		log.Errorf("failed to initialize temporal client, %v", err)
+		return
+	}
+
+	agent = &Agent{
 		tc:  tc,
 		as:  as,
 		cfg: cfg,

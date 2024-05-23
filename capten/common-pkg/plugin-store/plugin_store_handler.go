@@ -30,19 +30,32 @@ type captenStore interface {
 	DeletePluginStoreData(storeType pluginstorepb.StoreType, gitProjectId, pluginName string) error
 	UpsertPluginStoreData(gitProjectId string, plugin *pluginstorepb.PluginData) error
 	GetPluginStoreData(storeType pluginstorepb.StoreType, gitProjectId, pluginName string) (*pluginstorepb.PluginData, error)
+}
 
-	UpsertClusterPluginConfig(plugin *clusterpluginspb.Plugin) error
-	GetClusterPluginConfig(pluginName string) (*clusterpluginspb.Plugin, error)
+type PluginDeployHandler interface {
+	DeployClusterPlugin(context.Context, *clusterpluginspb.DeployClusterPluginRequest) (*clusterpluginspb.DeployClusterPluginResponse, error)
+	UnDeployClusterPlugin(context.Context, *clusterpluginspb.UnDeployClusterPluginRequest) (*clusterpluginspb.UnDeployClusterPluginResponse, error)
+}
+
+type PluginStoreInterface interface {
+	ConfigureStore(config *pluginstorepb.PluginStoreConfig) error
+	GetStoreConfig(storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error)
+	SyncPlugins(storeType pluginstorepb.StoreType) error
+	GetPlugins(storeType pluginstorepb.StoreType) ([]*pluginstorepb.Plugin, error)
+	GetPluginData(storeType pluginstorepb.StoreType, pluginName string) (*pluginstorepb.PluginData, error)
+	GetPluginValues(storeType pluginstorepb.StoreType, pluginName, version string) ([]byte, error)
+	DeployPlugin(storeType pluginstorepb.StoreType, pluginName, version string, values []byte) error
+	UnDeployPlugin(storeType pluginstorepb.StoreType, pluginName string) error
 }
 
 type PluginStore struct {
-	log     logging.Logger
-	cfg     *Config
-	dbStore captenStore
-	tc      *temporalclient.Client
+	log           logging.Logger
+	cfg           *Config
+	dbStore       captenStore
+	pluginHandler PluginDeployHandler
 }
 
-func NewPluginStore(log logging.Logger, dbStore captenStore, tc *temporalclient.Client) (*PluginStore, error) {
+func NewPluginStore(log logging.Logger, dbStore captenStore, pluginHandler PluginDeployHandler) (*PluginStore, error) {
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return nil, err
