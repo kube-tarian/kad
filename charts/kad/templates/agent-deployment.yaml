@@ -74,7 +74,7 @@ spec:
             - name: PG_DB_HOST
               value: {{ .Values.postgres.host }}
             - name: PG_DB_PORT
-              value: {{ .Values.postgres.port }}
+              value: "{{ .Values.postgres.port }}"
             - name: PG_DB_SERVICE_USERNAME
               value: {{ .Values.postgres.userName }}
             - name: PG_DB_ENTITY_NAME
@@ -86,7 +86,6 @@ spec:
                 configMapKeyRef:
                   name: kad-agent-config
                   key: clusterIssuerName
-              value: {{ .Values.postgres.dbName }}
             - name: PG_DB_ADMIN_CRED_IDENTIFIER 
               value: {{ .Values.postgres.adminCredIdentifer }}
           resources:
