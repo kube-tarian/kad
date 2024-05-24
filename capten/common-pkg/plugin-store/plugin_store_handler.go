@@ -21,6 +21,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	defaultPluginListFileName = "default-plugin-list.yaml"
+)
+
 type captenStore interface {
 	GetGitProjects() ([]*captenpluginspb.GitProject, error)
 
@@ -30,32 +34,19 @@ type captenStore interface {
 	DeletePluginStoreData(storeType pluginstorepb.StoreType, gitProjectId, pluginName string) error
 	UpsertPluginStoreData(gitProjectId string, plugin *pluginstorepb.PluginData) error
 	GetPluginStoreData(storeType pluginstorepb.StoreType, gitProjectId, pluginName string) (*pluginstorepb.PluginData, error)
-}
 
-type PluginDeployHandler interface {
-	DeployClusterPlugin(context.Context, *clusterpluginspb.DeployClusterPluginRequest) (*clusterpluginspb.DeployClusterPluginResponse, error)
-	UnDeployClusterPlugin(context.Context, *clusterpluginspb.UnDeployClusterPluginRequest) (*clusterpluginspb.UnDeployClusterPluginResponse, error)
-}
-
-type PluginStoreInterface interface {
-	ConfigureStore(config *pluginstorepb.PluginStoreConfig) error
-	GetStoreConfig(storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error)
-	SyncPlugins(storeType pluginstorepb.StoreType) error
-	GetPlugins(storeType pluginstorepb.StoreType) ([]*pluginstorepb.Plugin, error)
-	GetPluginData(storeType pluginstorepb.StoreType, pluginName string) (*pluginstorepb.PluginData, error)
-	GetPluginValues(storeType pluginstorepb.StoreType, pluginName, version string) ([]byte, error)
-	DeployPlugin(storeType pluginstorepb.StoreType, pluginName, version string, values []byte) error
-	UnDeployPlugin(storeType pluginstorepb.StoreType, pluginName string) error
+	UpsertClusterPluginConfig(plugin *clusterpluginspb.Plugin) error
+	GetClusterPluginConfig(pluginName string) (*clusterpluginspb.Plugin, error)
 }
 
 type PluginStore struct {
-	log           logging.Logger
-	cfg           *Config
-	dbStore       captenStore
-	pluginHandler PluginDeployHandler
+	log     logging.Logger
+	cfg     *Config
+	dbStore captenStore
+	tc      *temporalclient.Client
 }
 
-func NewPluginStore(log logging.Logger, dbStore captenStore, pluginHandler PluginDeployHandler) (*PluginStore, error) {
+func NewPluginStore(log logging.Logger, dbStore captenStore, tc *temporalclient.Client) (*PluginStore, error) {
 	cfg := &Config{}
 	if err := envconfig.Process("", cfg); err != nil {
 		return nil, err
@@ -66,15 +57,6 @@ func NewPluginStore(log logging.Logger, dbStore captenStore, pluginHandler Plugi
 		cfg:     cfg,
 		dbStore: dbStore,
 		tc:      tc,
-	}, nil
-}
-
-func NewPluginStoreWithConfig(log logging.Logger, cfg *Config, dbStore captenStore, pluginHandler PluginDeployHandler) (*PluginStore, error) {
-	return &PluginStore{
-		log:           log,
-		cfg:           cfg,
-		dbStore:       dbStore,
-		pluginHandler: pluginHandler,
 	}, nil
 }
 
@@ -119,6 +101,14 @@ func (p *PluginStore) SyncPlugins(storeType pluginstorepb.StoreType) error {
 		return err
 	}
 	defer os.RemoveAll(pluginStoreDir)
+
+	if storeType == pluginstorepb.StoreType_DEFAULT_STORE {
+		actualPluginFileName := p.cfg.PluginFileName
+		p.cfg.PluginFileName = defaultPluginListFileName
+		defer func() {
+			p.cfg.PluginFileName = actualPluginFileName
+		}()
+	}
 
 	pluginListFilePath := p.getPluginListFilePath(pluginStoreDir)
 	p.log.Infof("Loading plugin data from %s", pluginListFilePath)
@@ -296,6 +286,10 @@ func (p *PluginStore) getPluginConfig(pluginStoreDir, pluginName, version string
 		return nil, errors.WithMessage(err, "no deployment found")
 	}
 	return pluginConfig, nil
+}
+
+func (p *PluginStore) GetClusterPluginData(pluginName string) (*clusterpluginspb.Plugin, error) {
+	return p.dbStore.GetClusterPluginConfig(pluginName)
 }
 
 func (p *PluginStore) DeployPlugin(storeType pluginstorepb.StoreType,

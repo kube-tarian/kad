@@ -20,7 +20,6 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/pluginstorepb"
-	pluginstore "github.com/kube-tarian/kad/capten/common-pkg/plugin-store"
 	dbinit "github.com/kube-tarian/kad/capten/common-pkg/postgres/db-init"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -132,7 +131,7 @@ func configurePostgresDB() error {
 func initializeJobScheduler(
 	cfg *config.SericeConfig,
 	as *captenstore.Store,
-	handler pluginstore.PluginDeployHandler,
+	handler *agentapi.Agent,
 ) (*job.Scheduler, error) {
 	s := job.NewScheduler(log)
 	if cfg.CrossplaneSyncJobEnabled {
@@ -147,7 +146,7 @@ func initializeJobScheduler(
 	}
 
 	// Add Default plugin deployer job
-	addDefualtPluginsDeployerJob(s, as, handler)
+	addDefualtPluginsDeployerJob(s, handler)
 
 	log.Info("successfully initialized job scheduler")
 	return s, nil
@@ -155,10 +154,9 @@ func initializeJobScheduler(
 
 func addDefualtPluginsDeployerJob(
 	s *job.Scheduler,
-	as *captenstore.Store,
-	handler pluginstore.PluginDeployHandler,
+	handler *agentapi.Agent,
 ) {
-	dpd, err := defaultplugindeployer.NewDefaultPluginsDeployer(log, "@every 10m", as, handler)
+	dpd, err := defaultplugindeployer.NewDefaultPluginsDeployer(log, "@every 10m", handler)
 	if err != nil {
 		log.Fatal("failed to init default plugins deployer job", err)
 	}
