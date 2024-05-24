@@ -131,7 +131,7 @@ func configurePostgresDB() error {
 func initializeJobScheduler(
 	cfg *config.SericeConfig,
 	as *captenstore.Store,
-	handler *agentapi.Agent,
+	agentHandler *agentapi.Agent,
 ) (*job.Scheduler, error) {
 	s := job.NewScheduler(log)
 	if cfg.CrossplaneSyncJobEnabled {
@@ -146,7 +146,7 @@ func initializeJobScheduler(
 	}
 
 	// Add Default plugin deployer job
-	addDefualtPluginsDeployerJob(s, handler)
+	addDefualtPluginsDeployerJob(s, agentHandler)
 
 	log.Info("successfully initialized job scheduler")
 	return s, nil
@@ -154,9 +154,9 @@ func initializeJobScheduler(
 
 func addDefualtPluginsDeployerJob(
 	s *job.Scheduler,
-	handler *agentapi.Agent,
+	agentHandler *agentapi.Agent,
 ) {
-	dpd, err := defaultplugindeployer.NewDefaultPluginsDeployer(log, "@every 10m", handler)
+	dpd, err := defaultplugindeployer.NewDefaultPluginsDeployer(log, "@every 10m", agentHandler)
 	if err != nil {
 		log.Fatal("failed to init default plugins deployer job", err)
 	}
