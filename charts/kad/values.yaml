@@ -54,7 +54,7 @@ vaultCred:
 
 postgres:
   host: postgres
-  port: 9042
+  port: 5432
   userName: capten
   entityName: postgres
   dbName: capten
