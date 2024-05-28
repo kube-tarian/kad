@@ -2,11 +2,13 @@
 package postgresdb
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 
 	"gorm.io/driver/postgres"
@@ -28,9 +30,10 @@ const (
 
 type Config struct {
 	Username     string `envconfig:"PG_DB_SERVICE_USERNAME" required:"true"`
-	Password     string `envconfig:"PG_DB_SERVICE_USERPASSWORD" required:"true"`
+	Password     string `envconfig:"PG_DB_SERVICE_USERPASSWORD" required:"false"`
 	DBHost       string `envconfig:"PG_DB_HOST" required:"true"`
 	DBPort       string `envconfig:"PG_DB_PORT" required:"true"`
+	EntityName   string `envconfig:"PG_DB_ENTITY_NAME" default:"postgres"`
 	DatabaseName string `envconfig:"PG_DB_NAME" required:"true"`
 	IsTLSEnabled bool   `envconfig:"PG_DB_TLS_ENABLED" default:"false"`
 }
@@ -44,6 +47,15 @@ func NewDBFromENV(logger logging.Logger) (*gorm.DB, error) {
 	conf := Config{}
 	if err := envconfig.Process("", &conf); err != nil {
 		return nil, err
+	}
+
+	if len(conf.Password) == 0 {
+		serviceCredential, err := credential.GetServiceUserCredential(context.Background(),
+			conf.EntityName, conf.Username)
+		if err != nil {
+			return nil, err
+		}
+		conf.Password = serviceCredential.Password
 	}
 
 	return NewDB(&conf, logger)
@@ -68,7 +80,7 @@ func NewDBClient(logger logging.Logger) (store *DBClient, err error) {
 	logger.Debug("Getting db connection for ...")
 	session, err := NewDBFromENV(logger)
 	if err != nil {
-		return nil, fmt.Errorf("error while creating mariadb client session, %v", err)
+		return nil, fmt.Errorf("error while creating postgres client session, %v", err)
 	}
 	store = &DBClient{
 		session: session,

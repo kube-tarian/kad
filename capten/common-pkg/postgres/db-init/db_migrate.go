@@ -1,6 +1,7 @@
 package dbinit
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -12,6 +13,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/pkg/errors"
 )
 
@@ -26,12 +28,13 @@ const (
 var log = logging.NewLogger()
 
 type DBConfig struct {
-	DBAddr    string `envconfig:"PG_DB_HOST" required:"true"`
-	DBPort    string `envconfig:"PG_DB_PORT" default:"5432"`
-	DBName    string `envconfig:"PG_DB_NAME" required:"true"`
-	Username  string `envconfig:"PG_DB_SERVICE_USERNAME" required:"true"`
-	Password  string `envconfig:"PG_DB_SERVICE_USERPASSWORD" required:"false"`
-	SourceURI string `envconfig:"PG_SOURCE_URI" default:"file:///postgres/migrations"`
+	DBAddr     string `envconfig:"PG_DB_HOST" required:"true"`
+	DBPort     string `envconfig:"PG_DB_PORT" default:"5432"`
+	DBName     string `envconfig:"PG_DB_NAME" required:"true"`
+	EntityName string `envconfig:"PG_DB_ENTITY_NAME" default:"postgres"`
+	Username   string `envconfig:"PG_DB_SERVICE_USERNAME" required:"true"`
+	Password   string `envconfig:"PG_DB_SERVICE_USERPASSWORD" required:"false"`
+	SourceURI  string `envconfig:"PG_SOURCE_URI" default:"file:///postgres/migrations"`
 }
 
 func RunMigrations(mode Mode) error {
@@ -40,6 +43,14 @@ func RunMigrations(mode Mode) error {
 		return err
 	}
 
+	if len(conf.Password) == 0 {
+		serviceCredential, err := credential.GetServiceUserCredential(context.Background(),
+			conf.EntityName, conf.Username)
+		if err != nil {
+			return errors.WithMessage(err, "DB user credential fetching failed")
+		}
+		conf.Password = serviceCredential.Password
+	}
 	return RunMigrationsWithConfig(conf, mode)
 }
 
