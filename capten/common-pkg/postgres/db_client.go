@@ -28,7 +28,7 @@ const (
 
 type Config struct {
 	Username     string `envconfig:"PG_DB_SERVICE_USERNAME" required:"true"`
-	Password     string `envconfig:"PG_DB_SERVICE_USERPASSWORD" required:"true"`
+	Password     string `envconfig:"PG_DB_SERVICE_USERPASSWORD" required:"false"`
 	DBHost       string `envconfig:"PG_DB_HOST" required:"true"`
 	DBPort       string `envconfig:"PG_DB_PORT" required:"true"`
 	DatabaseName string `envconfig:"PG_DB_NAME" required:"true"`
@@ -68,7 +68,7 @@ func NewDBClient(logger logging.Logger) (store *DBClient, err error) {
 	logger.Debug("Getting db connection for ...")
 	session, err := NewDBFromENV(logger)
 	if err != nil {
-		return nil, fmt.Errorf("error while creating mariadb client session, %v", err)
+		return nil, fmt.Errorf("error while creating postgres client session, %v", err)
 	}
 	store = &DBClient{
 		session: session,
