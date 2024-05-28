@@ -15,7 +15,7 @@ FROM scratch
 COPY --from=builder ./build/agent agent
 COPY --from=builder ./server.cert server.cert
 COPY --from=builder ./server.key server.key
-COPY ./capten/database/cassandra/ cassandra/
+COPY ./capten/database/postgres/ postgres/
 
 USER 65532:65532
 ENTRYPOINT ["./agent"]
