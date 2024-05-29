@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"net/url"
 
 	"github.com/intelops/go-common/credentials"
 	"github.com/intelops/go-common/logging"
@@ -58,8 +59,9 @@ func CreatedDatabaseWithConfig(log logging.Logger, conf *Config) (err error) {
 		}
 	}
 
+	password := url.QueryEscape(adminCredential.Password)
 	dbAddress := conf.DBHost + ":" + conf.DBPort
-	adminClient, err := NewPostgresAdmin(log, dbAddress, adminCredential.UserName, adminCredential.Password)
+	adminClient, err := NewPostgresAdmin(log, dbAddress, adminCredential.UserName, password)
 	if err != nil {
 		return
 	}

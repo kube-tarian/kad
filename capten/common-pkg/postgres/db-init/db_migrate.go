@@ -3,6 +3,7 @@ package dbinit
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"time"
 
@@ -28,7 +29,7 @@ const (
 var log = logging.NewLogger()
 
 type DBConfig struct {
-	DBAddr     string `envconfig:"PG_DB_HOST" required:"true"`
+	DBHost     string `envconfig:"PG_DB_HOST" required:"true"`
 	DBPort     string `envconfig:"PG_DB_PORT" default:"5432"`
 	DBName     string `envconfig:"PG_DB_NAME" required:"true"`
 	EntityName string `envconfig:"PG_DB_ENTITY_NAME" default:"postgres"`
@@ -55,20 +56,17 @@ func RunMigrations(mode Mode) error {
 }
 
 func RunMigrationsWithConfig(conf *DBConfig, mode Mode) error {
-	dbConnectionString, err := getDbConnectionURLFromDbType(conf, conf.Password)
-	if err != nil {
-		return errors.WithMessage(err, "DB connection Url create failed")
-	}
-
+	password := url.QueryEscape(conf.Password)
+	dbConnectionString := getDbConnectionURLFromDbType(conf, password)
 	if err := runMigrations(conf.SourceURI, dbConnectionString, conf.DBName, mode); err != nil {
 		return err
 	}
 	return nil
 }
 
-func getDbConnectionURLFromDbType(conf *DBConfig, password string) (string, error) {
-	return fmt.Sprintf("postgres://%s:%s@%s:%v/%s?sslmode=disable",
-		conf.Username, password, conf.DBAddr, conf.DBPort, conf.DBName), nil
+func getDbConnectionURLFromDbType(conf *DBConfig, password string) string {
+	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		conf.Username, password, conf.DBHost, conf.DBPort, conf.DBName)
 }
 
 func runMigrations(sourceURL, databaseURL, dbName string, mode Mode) (err error) {

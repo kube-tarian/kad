@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kelseyhightower/envconfig"
@@ -62,7 +63,8 @@ func NewDBFromENV(logger logging.Logger) (*gorm.DB, error) {
 }
 
 func NewDB(conf *Config, logger logging.Logger) (*gorm.DB, error) {
-	db, err := gorm.Open(postgres.Open(DataSourceName(conf.Username, conf.Password, fmt.Sprintf("%s:%s", conf.DBHost, conf.DBPort), conf.DatabaseName, conf.IsTLSEnabled)), &gorm.Config{})
+	password := url.QueryEscape(conf.Password)
+	db, err := gorm.Open(postgres.Open(DataSourceName(conf.Username, password, fmt.Sprintf("%s:%s", conf.DBHost, conf.DBPort), conf.DatabaseName, conf.IsTLSEnabled)), &gorm.Config{})
 	if err != nil {
 		return nil, gerrors.NewFromError(DBConnectError, err)
 	}
