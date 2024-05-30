@@ -8,6 +8,17 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 )
 
+func (a *Store) AddContainerRegistry(config *captenpluginspb.ContainerRegistry) error {
+	registry := ContainerRegistry{
+		ID:             uuid.MustParse(config.Id),
+		RegistryURL:    config.RegistryUrl,
+		RegistryType:   config.RegistryType,
+		Labels:         config.Labels,
+		LastUpdateTime: time.Now(),
+	}
+	return a.dbClient.Create(&registry)
+}
+
 func (a *Store) UpsertContainerRegistry(config *captenpluginspb.ContainerRegistry) error {
 	if config.Id == "" {
 		registry := ContainerRegistry{

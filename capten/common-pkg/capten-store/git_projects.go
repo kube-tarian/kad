@@ -8,6 +8,16 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 )
 
+func (a *Store) AddGitProject(config *captenpluginspb.GitProject) error {
+	project := GitProject{
+		ID:             uuid.MustParse(config.Id),
+		ProjectURL:     config.ProjectUrl,
+		Labels:         config.Labels,
+		LastUpdateTime: time.Now(),
+	}
+	return a.dbClient.Create(&project)
+}
+
 func (a *Store) UpsertGitProject(config *captenpluginspb.GitProject) error {
 	if config.Id == "" {
 		project := GitProject{

@@ -50,7 +50,7 @@ func (a *Agent) AddGitProject(ctx context.Context, request *captenpluginspb.AddG
 		ProjectUrl: request.ProjectUrl,
 		Labels:     request.Labels,
 	}
-	if err := a.as.UpsertGitProject(&gitProject); err != nil {
+	if err := a.as.AddGitProject(&gitProject); err != nil {
 		a.log.Errorf("failed to store git project to DB, %v", err)
 		return &captenpluginspb.AddGitProjectResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,

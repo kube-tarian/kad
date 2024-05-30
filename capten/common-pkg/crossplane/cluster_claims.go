@@ -199,9 +199,11 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 		managedCluster := &captenpluginspb.ManagedCluster{}
 		managedCluster.ClusterName = clusterCliam.Metadata.Name
 
+		createCluster := false
 		clusterObj, ok := clusters[managedCluster.ClusterName]
 		if !ok {
 			managedCluster.Id = uuid.New().String()
+			createCluster = true
 		} else {
 			h.log.Infof("found existing managed clusterId %s, updating", clusterObj.Id)
 			managedCluster.Id = clusterObj.Id
@@ -221,10 +223,18 @@ func (h *ClusterClaimSyncHandler) updateManagedClusters(clusterCliams []model.Cl
 		}
 
 		managedCluster.ClusterEndpoint = k8sEndpoint
-		err = h.dbStore.UpsertManagedCluster(managedCluster)
-		if err != nil {
-			h.log.Info("failed to update information to db, %v", err)
-			continue
+		if createCluster {
+			err = h.dbStore.AddManagedCluster(managedCluster)
+			if err != nil {
+				h.log.Info("failed to update information to db, %v", err)
+				continue
+			}
+		} else {
+			err = h.dbStore.UpsertManagedCluster(managedCluster)
+			if err != nil {
+				h.log.Info("failed to update information to db, %v", err)
+				continue
+			}
 		}
 
 		err = vaultcred.RegisterClusterVaultAuth(managedCluster.Id, managedCluster.ClusterName)
