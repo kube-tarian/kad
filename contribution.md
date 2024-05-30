@@ -99,7 +99,17 @@ kad/
 
 ## How to Contribute 
 
-You can contribute by adding additional features in agent ,config-worker,deployment-worker and server.You can also add additional rpcs  in the proto files in `./proto` for adding additional feature
+You can generally contribute capten in 4 ways,that is given below:
+
+1. Additional features in Capten
+
+2. Capten database store
+
+3. Capten workers
+
+## Additional features in Capten
+
+You can contribute by adding additional features in agent, config-worker, deployment-worker and server. You can also add additional rpcs in the proto files in `./proto` for adding additional feature
 
 We provide a [Makefile](./Makefile) with a few targets that helps build all the parts in a development configuration without a lot of intervention. The more common used targets are:
 
@@ -115,6 +125,92 @@ We provide a [Makefile](./Makefile) with a few targets that helps build all the 
 
 6. **make docker-build**: This command builds the Docker images for the entire project, including server, agent, deployment-worker, and config-worker.
 
+## Capten database store
+
+Capten components uses postgres Database for persisting data. Below are the few areas to be taken care while contributing.
+
+### Managing existing or new schema tables
+
+1. Database schema and tables are managed manually using migrations package.
+
+2. Migration scripts are maintained [here](https://github.com/kube-tarian/kad/tree/main/capten/database/postgres/migrations)
+
+3. Enhancements to be added in this directory. Refer [migrate pckage](https://github.com/golang-migrate/migrate/tree/master) documentation for doing further enhancements.
+
+4. CRUD operations on newly introduced tables or modifications to the existing tables to be incorporated in [capten-store](https://github.com/kube-tarian/kad/tree/main/capten/common-pkg/capten-store) package.
+
+## Capten workers
+
+Capten components include 2 workers. For introducing new features more types of workers can be introduced.
+
+1. [Deployement worker](https://github.com/kube-tarian/kad/tree/main/capten/deployment-worker)
+2. [Configuration worker](https://github.com/kube-tarian/kad/tree/main/capten/config-worker)
+
+### Deployment worker
+
+1. Deployment worker listens to application deployment and pluginment deployment workflows tasks.
+
+2. You can add new workflows and corresponding activities for new features.
+
+3. The new enhancements to be introduced for workflows in [workflows](https://github.com/kube-tarian/kad/tree/main/capten/deployment-worker/internal/workflows) directory and activities in [activities](https://github.com/kube-tarian/kad/tree/main/capten/deployment-worker/internal/activities) directory.
+
+4. Newly introduced workflows to be registred in [app](https://github.com/kube-tarian/kad/blob/main/capten/deployment-worker/internal/app/app.go) below code snippet.
+
+```golang
+func Start() {
+	logger := logging.NewLogger()
+	logger.Infof("Started deployment worker\n")
+
+	worker, err := workerframework.NewWorkerV2(WorkflowTaskQueueName, logger)
+	if err != nil {
+		logger.Fatalf("Worker initialization failed, Reason: %v", err)
+	}
+
+	worker.RegisterWorkflows([]interface{}{workflows.Workflow, workflows.PluginWorkflow}...)
+
+	pluginAcitivies, err := activities.NewPluginActivities()
+	if err != nil {
+		logger.Fatalf("Plugin acitivities initialization failed: %v", err)
+	}
+	worker.RegisterActivities([]interface{}{&activities.Activities{}, pluginAcitivies}...)
+
+	logger.Infof("Running deployment worker..\n")
+	if err := worker.Run(); err != nil {
+		logger.Fatalf("failed to start the deployment-worker, err: %v", err)
+	}
+
+	logger.Infof("Exiting deployment worker\n")
+}
+```
+
+### Configuraiton worker
+
+1. Configuration worker listens to configuraiton workflow tasks.
+
+2. You can add new workflows and corresponding activities for new features.
+
+3. The new enhancements to be introduced for workflows in [workflows](https://github.com/kube-tarian/kad/tree/main/capten/config-worker/internal/workflows) directory and activities in [activities](https://github.com/kube-tarian/kad/tree/main/capten/config-worker/internal/activities) directory.
+
+4. Newly introduced workflows to be registred in [app](https://github.com/kube-tarian/kad/blob/main/capten/config-worker/internal/app/app.go) below code snippet.
+
+```golang
+func Start() {
+	logger := logging.NewLogger()
+	logger.Infof("Starting config worker..\n")
+
+	worker, err := workerframework.NewWorker(WorkflowTaskQueueName, workflows.Workflow, &activities.Activities{}, logger)
+	if err != nil {
+		logger.Fatalf("Worker initialization failed, Reason: %v\n", err)
+	}
+
+	logger.Infof("Running config worker..\n")
+	if err := worker.Run(); err != nil {
+		logger.Fatalf("failed to start the config-worker, err: %v", err)
+	}
+
+	logger.Infof("Exiting config worker\n")
+}
+```
 
 > **A note on go builds:**
 > When running **make docker-build**, the go binaries are built to be run inside a docker container.
