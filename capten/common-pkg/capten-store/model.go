@@ -189,7 +189,7 @@ func (CrossplaneProject) TableName() string {
 }
 
 type PluginStoreConfig struct {
-	StoreType      int       `json:"id" gorm:"column:store_type;primaryKey"`
+	StoreType      int       `json:"store_type" gorm:"column:store_type;primaryKey"`
 	GitProjectID   uuid.UUID `json:"git_project_id" gorm:"column:git_project_id"`
 	GitProjectURL  string    `json:"git_project_url" gorm:"column:git_project_url"`
 	Status         string    `json:"status" gorm:"column:status"`
@@ -201,7 +201,7 @@ func (PluginStoreConfig) TableName() string {
 }
 
 type PluginStoreData struct {
-	StoreType      int         `json:"id" gorm:"column:store_type;primaryKey"`
+	StoreType      int         `json:"store_type" gorm:"column:store_type;primaryKey"`
 	GitProjectID   uuid.UUID   `json:"git_project_id" gorm:"column:git_project_id"`
 	PluginName     string      `json:"plugin_name" gorm:"column:plugin_name"`
 	Category       string      `json:"category" gorm:"column:category"`

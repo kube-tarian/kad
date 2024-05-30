@@ -47,7 +47,7 @@ func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenplugins
 		Status:          string(model.CrossPlaneProviderOutofSynch),
 	}
 
-	if err := a.as.UpsertCrossplaneProvider(&provider); err != nil {
+	if err := a.as.AddCrossplaneProvider(&provider); err != nil {
 		a.log.Errorf("failed to store crossplane provider to DB, %v", err)
 		return &captenpluginspb.AddCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,

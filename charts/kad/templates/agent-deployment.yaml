@@ -30,6 +30,9 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       serviceAccountName: {{ include "kad.serviceAccountName" . }}
+      volumes:
+        - name: plugin-store-clone-dir
+          emptyDir: {}
       containers:
         - name: {{ .Chart.Name }}-agent
           securityContext:
@@ -88,8 +91,13 @@ spec:
                   key: clusterIssuerName
             - name: PG_DB_ADMIN_CRED_IDENTIFIER 
               value: {{ .Values.postgres.adminCredIdentifer }}
+            - name: PLUGIN_STORE_PROJECT_MOUNT
+              value: {{ .Values.env.pluginsStoreProjectMount }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+          - name: plugin-store-clone-dir
+            mountPath: {{ .Values.env.pluginsStoreProjectMount }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

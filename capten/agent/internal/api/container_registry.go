@@ -63,7 +63,7 @@ func (a *Agent) AddContainerRegistry(ctx context.Context, request *captenplugins
 		Labels:       request.Labels,
 		RegistryType: request.RegistryType,
 	}
-	if err := a.as.UpsertContainerRegistry(&ContainerRegistry); err != nil {
+	if err := a.as.AddContainerRegistry(&ContainerRegistry); err != nil {
 		a.log.Errorf("failed to store Container registry to DB, %v", err)
 		return &captenpluginspb.AddContainerRegistryResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,

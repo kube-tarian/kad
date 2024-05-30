@@ -109,7 +109,7 @@ func (p *PluginStore) SyncPlugins(storeType pluginstorepb.StoreType) error {
 
 	addedPlugins := map[string]bool{}
 	for _, pluginName := range plugins.Plugins {
-		err := p.addPluginApp(config.GitProjectId, pluginStoreDir, pluginName)
+		err := p.addPluginApp(config.GitProjectId, pluginStoreDir, pluginName, storeType)
 		if err != nil {
 			p.log.Errorf("%v", err)
 			continue
@@ -161,7 +161,7 @@ func (p *PluginStore) clonePluginStoreProject(projectURL, projectId string,
 	return
 }
 
-func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName string) error {
+func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName string, storeType pluginstorepb.StoreType) error {
 	appData, err := os.ReadFile(p.getPluginFilePath(pluginStoreDir, pluginName))
 	if err != nil {
 		return errors.WithMessagef(err, "failed to read store plugin %s", pluginName)
@@ -185,6 +185,7 @@ func (p *PluginStore) addPluginApp(gitProjectId, pluginStoreDir, pluginName stri
 	}
 
 	plugin := &pluginstorepb.PluginData{
+		StoreType:   storeType,
 		PluginName:  pluginData.PluginName,
 		Description: pluginData.Description,
 		Category:    pluginData.Category,

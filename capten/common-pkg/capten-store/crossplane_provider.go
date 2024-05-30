@@ -11,6 +11,18 @@ import (
 	"github.com/kube-tarian/kad/capten/model"
 )
 
+func (a *Store) AddCrossplaneProvider(crossplaneProvider *model.CrossplaneProvider) error {
+	provider := CrossplaneProvider{
+		ID:              uuid.MustParse(crossplaneProvider.Id),
+		ProviderName:    crossplaneProvider.ProviderName,
+		CloudProviderID: crossplaneProvider.CloudProviderId,
+		CloudType:       crossplaneProvider.CloudType,
+		Status:          crossplaneProvider.Status,
+		LastUpdateTime:  time.Now(),
+	}
+	return a.dbClient.Create(&provider)
+}
+
 func (a *Store) UpsertCrossplaneProvider(crossplaneProvider *model.CrossplaneProvider) error {
 	if crossplaneProvider.Id == "" {
 		provider := CrossplaneProvider{

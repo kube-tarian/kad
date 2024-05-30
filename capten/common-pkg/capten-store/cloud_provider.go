@@ -8,6 +8,16 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 )
 
+func (a *Store) AddCloudProvider(config *captenpluginspb.CloudProvider) error {
+	provider := CloudProvider{
+		ID:             uuid.MustParse(config.Id),
+		CloudType:      config.CloudType,
+		Labels:         config.Labels,
+		LastUpdateTime: time.Now(),
+	}
+	return a.dbClient.Create(&provider)
+}
+
 func (a *Store) UpsertCloudProvider(config *captenpluginspb.CloudProvider) error {
 	if config.Id == "" {
 		provider := CloudProvider{

@@ -37,6 +37,7 @@ securityContext:
 
 env:
   logLevel: info
+  pluginsStoreProjectMount: /plugins-store
 
 service:
   type: ClusterIP

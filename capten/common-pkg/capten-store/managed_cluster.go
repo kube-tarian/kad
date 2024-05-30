@@ -8,6 +8,18 @@ import (
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 )
 
+func (a *Store) AddManagedCluster(managedCluster *captenpluginspb.ManagedCluster) error {
+	cluster := ManagedCluster{
+		ID:                  uuid.MustParse(managedCluster.Id),
+		ClusterName:         managedCluster.ClusterName,
+		ClusterEndpoint:     managedCluster.ClusterEndpoint,
+		ClusterDeployStatus: managedCluster.ClusterDeployStatus,
+		AppDeployStatus:     managedCluster.AppDeployStatus,
+		LastUpdateTime:      time.Now(),
+	}
+	return a.dbClient.Create(&cluster)
+}
+
 func (a *Store) UpsertManagedCluster(managedCluster *captenpluginspb.ManagedCluster) error {
 	if managedCluster.Id == "" {
 		cluster := ManagedCluster{

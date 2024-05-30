@@ -36,7 +36,7 @@ func (a *Agent) AddCloudProvider(ctx context.Context, request *captenpluginspb.A
 		CloudType: request.CloudType,
 		Labels:    request.Labels,
 	}
-	if err := a.as.UpsertCloudProvider(&CloudProvider); err != nil {
+	if err := a.as.AddCloudProvider(&CloudProvider); err != nil {
 		a.log.Errorf("failed to store cloud provider to DB, %v", err)
 		return &captenpluginspb.AddCloudProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
