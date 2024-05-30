@@ -16,6 +16,8 @@ type SericeConfig struct {
 	TektonSyncJobInterval     string `envconfig:"TEKTON_SYNC_JOB_INTERVAL" default:"@every 1h"`
 	DomainName                string `envconfig:"DOMAIN_NAME" default:"example.com"`
 	ClusterCAIssuerName       string `envconfig:"AGENT_CLUSTER_CA_ISSUER_NAME" default:"agent-ca-issuer"`
+	CertFileName              string `envconfig:"CERT_FILE_NAME" default:"/tmp/certs/tls.crt"`
+	KeyFileName               string `envconfig:"KEY_FILE_NAME" default:"/tmp/certs/tls.key"`
 }
 
 func GetServiceConfig() (*SericeConfig, error) {

@@ -10,11 +10,11 @@ import (
 	"github.com/intelops/go-common/logging"
 	ginapiserver "github.com/kube-tarian/kad/capten/agent/gin-api-server"
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
-	"github.com/kube-tarian/kad/capten/agent/internal/clusterissuer"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
 	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/common-pkg/crossplane"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
@@ -82,7 +82,7 @@ func Start() {
 		}
 	}()
 
-	err = clusterissuer.SetupCACertIssuser(cfg.ClusterCAIssuerName, log)
+	err = k8s.SetupCACertIssuser(cfg.ClusterCAIssuerName, log)
 	if err != nil {
 		log.Fatalf("Failed to setupt CA Cert Issuer in cert-manager %v", err)
 	}

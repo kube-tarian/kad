@@ -96,8 +96,17 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
-          - name: plugin-store-clone-dir
-            mountPath: {{ .Values.env.pluginsStoreProjectMount }}
+            - name: plugin-store-clone-dir
+              mountPath: {{ .Values.env.pluginsStoreProjectMount }}
+            - name: server-certificate
+              mountPath: "/tmp/certs"
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: server-certificate
+          secret:
+            secretName: {{ include "kad.fullname" . }}-agent-server-mtls
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

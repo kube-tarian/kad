@@ -6,6 +6,7 @@ import (
 
 	"github.com/intelops/go-common/logging"
 	"github.com/kube-tarian/kad/capten/common-pkg/cert"
+	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/pkg/errors"
 
 	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
@@ -17,6 +18,38 @@ import (
 )
 
 var log = logging.NewLogger()
+
+func SetupCACertIssuser(clusterIssuerName string, log logging.Logger) error {
+	k8sclient, err := NewK8SClient(log)
+	if err != nil {
+		log.Errorf("failed to initalize k8s client, %v", err)
+		return err
+	}
+
+	err = setupCertificateIssuer(k8sclient, clusterIssuerName, log)
+	if err != nil {
+		log.Errorf("Setup Certificates Issuer failed, %v", err)
+		return err
+	}
+	return nil
+}
+
+// Setup agent certificate issuer
+func setupCertificateIssuer(k8sClient *K8SClient, clusterIssuerName string, log logging.Logger) error {
+	// Create Agent Cluster Issuer
+	certsData, err := CreateOrUpdateClusterIssuer(clusterIssuerName, k8sClient, false)
+	if err != nil {
+		return fmt.Errorf("failed to create/update CA Issuer %s in cert-manager: %v", clusterIssuerName, err)
+	}
+
+	// Update Vault
+	err = credential.PutClusterCerts(context.TODO(), "kad-agent", "kad-agent", string(certsData.CaChainCertData), string(certsData.RootKey.KeyData), string(certsData.RootCert.CertData))
+	if err != nil {
+		log.Errorf("Failed to write to vault, %v", err)
+		log.Infof("Continued to start the agent as these certs from vault are not used...")
+	}
+	return nil
+}
 
 func CreateOrUpdateClusterIssuer(clusterCAIssuer string, k8sclient *K8SClient, forceUpdate bool) (*cert.CertificatesData, error) {
 	config, err := rest.InClusterConfig()
