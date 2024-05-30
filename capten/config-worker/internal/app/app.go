@@ -15,10 +15,14 @@ func Start() {
 	logger := logging.NewLogger()
 	logger.Infof("Starting config worker..\n")
 
-	worker, err := workerframework.NewWorker(WorkflowTaskQueueName, workflows.Workflow, &activities.Activities{}, logger)
+	worker, err := workerframework.NewWorkerV2(WorkflowTaskQueueName, logger)
 	if err != nil {
-		logger.Fatalf("Worker initialization failed, Reason: %v\n", err)
+		logger.Fatalf("Worker initialization failed, Reason: %v", err)
 	}
+
+	worker.RegisterWorkflows([]interface{}{workflows.Workflow}...)
+
+	worker.RegisterActivities([]interface{}{&activities.Activities{}}...)
 
 	logger.Infof("Running config worker..\n")
 	if err := worker.Run(); err != nil {
