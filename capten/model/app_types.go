@@ -31,6 +31,15 @@ type DeployRequest interface {
 	String() string
 }
 
+
+type PluginDeployRequest struct {
+    Data string
+}
+
+func (p *PluginDeployRequest) String() string {
+    return p.Data
+}
+
 type AppConfig struct {
 	AppName             string `json:"AppName,omitempty"`
 	Version             string `json:"Version,omitempty"`
