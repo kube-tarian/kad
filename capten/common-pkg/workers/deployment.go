@@ -95,7 +95,7 @@ func (d *Deployment) SendEventV2(
 		return nil, err
 	}
 
-	d.log.Infof("Sending event to temporal: workflow: %s, action: %s", workflowName, action)
+	d.log.Infof("Sending event to temporal: workflow: %s, action: %s, payload: %s", workflowName, action, string(deployPayloadJSON))
 	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
 	if err != nil {
 		d.log.Errorf("failed to send event to workflow for plugin %s, %v", deployPayload.String(), err)

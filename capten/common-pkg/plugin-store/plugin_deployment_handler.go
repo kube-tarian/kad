@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"text/template"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
@@ -81,7 +80,7 @@ func (p *PluginStore) deployPluginWithWorkflow(pluginData *clusterpluginspb.Plug
 	pluginDeployRequest := &model.PluginDeployRequest{
 		Data: string(pluginDataJSON),
 	}
-	log.Println("Plugin Deploy Req", pluginDeployRequest)
+	//log.Println("Plugin Deploy Req", pluginDeployRequest.String())
 
 	// Ensure the payload is a model.DeployRequest
 	_, err = wd.SendEventV2(context.TODO(), wd.GetPluginWorkflowName(), string(model.AppInstallAction), pluginDeployRequest)
