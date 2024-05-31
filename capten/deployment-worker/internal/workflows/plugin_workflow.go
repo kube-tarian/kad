@@ -20,9 +20,35 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-func PluginWorkflow(ctx workflow.Context, action string, payload json.RawMessage) (model.ResponsePayload, error) {
-	result := &model.ResponsePayload{}
+type WorkflowHeader struct {
+	Action string `json:"action"`
+}
+
+func PluginWorkflow(ctx workflow.Context, payload json.RawMessage) (model.ResponsePayload, error) {
 	logger := logging.NewLogger()
+	logger.Infof("plugin deployment workflow started. header payload: %s", string(payload))
+
+	workflowData := []interface{}{}
+	err := json.Unmarshal(payload, &workflowData)
+	if err != nil {
+		return model.ResponsePayload{
+			Status:  "error",
+			Message: []byte(err.Error()),
+		}, err
+	}
+	logger.Infof("plugin deployment workflow started. header payload: %+v", workflowData)
+
+	req := &WorkflowHeader{}
+	err = json.Unmarshal(workflowData[0].(json.RawMessage), req)
+	if err != nil {
+		return model.ResponsePayload{
+			Status:  "error",
+			Message: []byte(err.Error()),
+		}, err
+	}
+
+	action := req.Action
+	result := &model.ResponsePayload{}
 
 	as, err := captenstore.NewStore(logger)
 	if err != nil {
@@ -60,6 +86,7 @@ func setContext(ctx workflow.Context, timeInSeconds int, log logging.Logger) wor
 }
 
 func hanldeDeployWorkflow(ctx workflow.Context, payload json.RawMessage, log logging.Logger, pas *captenstore.Store) (*model.ResponsePayload, error) {
+	log.Info("Starting deploy plugin workflow")
 	var a *activities.PluginActivities
 	result := &model.ResponsePayload{}
 	ctx = setContext(ctx, 600, log)

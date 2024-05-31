@@ -16,6 +16,7 @@ func (a *Agent) GetClusterPlugins(ctx context.Context, request *clusterpluginspb
 		}, nil
 	}
 
+	a.log.Infof("pluginConfigList: %+v", pluginConfigList)
 	clusterPlugins := []*clusterpluginspb.ClusterPlugin{}
 	for idx, pluginConfig := range pluginConfigList {
 		clusterPlugins[idx] = &clusterpluginspb.ClusterPlugin{

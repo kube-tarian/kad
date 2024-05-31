@@ -63,13 +63,11 @@ func NewPluginActivities() (*PluginActivities, error) {
 
 	as, err := captenstore.NewStore(logger)
 	if err != nil {
-		logger.Errorf("failed to initialize plugin app store, %v", err)
 		return nil, err
 	}
 
 	k8sclient, err := k8s.NewK8SClient(logger)
 	if err != nil {
-		logger.Errorf("failed to get k8s client, %v", err)
 		return nil, err
 	}
 

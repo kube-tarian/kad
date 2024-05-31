@@ -19,6 +19,10 @@ const (
 	DeploymentWorkerTaskQueue          = "Deployment"
 )
 
+type WorkflowHeader struct {
+	Action string `json:"action"`
+}
+
 type Deployment struct {
 	client *temporalclient.Client
 	log    logging.Logger
@@ -95,8 +99,18 @@ func (d *Deployment) SendEventV2(
 		return nil, err
 	}
 
+	header := WorkflowHeader{
+		Action: action,
+	}
+
+	headerJSON, err := json.Marshal(header)
+	if err != nil {
+		return nil, err
+	}
+
 	d.log.Infof("Sending event to temporal: workflow: %s, action: %s", workflowName, action)
-	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, action, json.RawMessage(deployPayloadJSON))
+	d.log.Infof("deployPayload: %+v", string(headerJSON))
+	run, err := d.client.ExecuteWorkflow(ctx, options, workflowName, json.RawMessage(headerJSON), json.RawMessage(deployPayloadJSON))
 	if err != nil {
 		d.log.Errorf("failed to send event to workflow for plugin %s, %v", deployPayload.String(), err)
 		return nil, err
