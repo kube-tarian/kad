@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kelseyhightower/envconfig"
 	"github.com/intelops/go-common/logging"
+	"github.com/kelseyhightower/envconfig"
 
 	"go.temporal.io/api/workflowservice/v1"
 	"go.temporal.io/sdk/client"
@@ -78,7 +78,7 @@ func (c *Client) ExecuteWorkflow(
 	workflowName string,
 	args ...interface{},
 ) (client.WorkflowRun, error) {
-	return c.TemporalClient.ExecuteWorkflow(ctx, options, workflowName, args)
+	return c.TemporalClient.ExecuteWorkflow(ctx, options, workflowName, args...)
 }
 
 func fetchConfiguration() (*Configuration, error) {
