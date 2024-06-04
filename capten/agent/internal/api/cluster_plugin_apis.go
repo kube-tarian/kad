@@ -17,8 +17,8 @@ func (a *Agent) GetClusterPlugins(ctx context.Context, request *clusterpluginspb
 	}
 
 	clusterPlugins := []*clusterpluginspb.ClusterPlugin{}
-	for idx, pluginConfig := range pluginConfigList {
-		clusterPlugins[idx] = &clusterpluginspb.ClusterPlugin{
+	for _, pluginConfig := range pluginConfigList {
+		clusterPlugins = append(clusterPlugins, &clusterpluginspb.ClusterPlugin{
 			StoreType:     pluginConfig.StoreType,
 			PluginName:    pluginConfig.PluginName,
 			Description:   pluginConfig.Description,
@@ -26,7 +26,7 @@ func (a *Agent) GetClusterPlugins(ctx context.Context, request *clusterpluginspb
 			Icon:          pluginConfig.Icon,
 			Version:       pluginConfig.Version,
 			InstallStatus: pluginConfig.InstallStatus,
-		}
+		})
 	}
 	return &clusterpluginspb.GetClusterPluginsResponse{
 		Status:  clusterpluginspb.StatusCode_OK,

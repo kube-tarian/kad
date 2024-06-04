@@ -15,29 +15,25 @@ const (
 
 func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpluginspb.RegisterCrossplaneProjectRequest) (
 	*captenpluginspb.RegisterCrossplaneProjectResponse, error) {
+	a.log.Infof("Register Crossplane Git project request recieved")
 
-	if err := validateArgs(request.Id); err != nil {
-		a.log.Infof("request validation failed", err)
+	crossplaneProject, err := a.as.GetCrossplaneProject()
+	if err != nil {
+		a.log.Infof("failed to get git project, %v", err)
 		return &captenpluginspb.RegisterCrossplaneProjectResponse{
 			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
 			StatusMessage: "request validation failed",
 		}, nil
 	}
-	a.log.Infof("Register Crossplane Git project %s request recieved", request.Id)
 
-	crossplaneProject, err := a.as.GetCrossplaneProjectForID(request.Id)
-	if err != nil {
-		a.log.Infof("failed to get git project %s, %v", request.Id, err)
-		return &captenpluginspb.RegisterCrossplaneProjectResponse{
-			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
-			StatusMessage: "request validation failed",
-		}, nil
+	if crossplaneProject.Status == "" {
+		crossplaneProject.Status = string(model.CrossplaneProjectAvailable)
 	}
 
 	if crossplaneProject.Status != string(model.CrossplaneProjectConfigurationFailed) &&
 		crossplaneProject.Status != string(model.CrossplaneProjectAvailable) &&
 		crossplaneProject.Status != string(model.CrossplaneProjectConfigured) {
-		a.log.Infof("currently the Crossplane project configuration on-going %s, %v", request.Id, crossplaneProject.Status)
+		a.log.Infof("currently the Crossplane project configuration on-going %s, %v", crossplaneProject.Id, crossplaneProject.Status)
 		return &captenpluginspb.RegisterCrossplaneProjectResponse{
 			Status:        captenpluginspb.StatusCode_OK,
 			StatusMessage: "Crossplane configuration on-going",
