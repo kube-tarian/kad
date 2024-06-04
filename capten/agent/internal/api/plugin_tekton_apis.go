@@ -11,13 +11,6 @@ import (
 func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenpluginspb.RegisterTektonProjectRequest) (
 	*captenpluginspb.RegisterTektonProjectResponse, error) {
 	a.log.Infof("registering the tekton project")
-	if err := validateArgs(request.Id); err != nil {
-		a.log.Infof("request validation failed", err)
-		return &captenpluginspb.RegisterTektonProjectResponse{
-			Status:        captenpluginspb.StatusCode_INVALID_ARGUMENT,
-			StatusMessage: "request validation failed",
-		}, err
-	}
 
 	project, err := a.as.GetTektonProject()
 	if err != nil {
@@ -28,10 +21,14 @@ func (a *Agent) RegisterTektonProject(ctx context.Context, request *captenplugin
 		}, err
 	}
 
+	if project.Status == "" {
+		project.Status = string(model.TektonProjectAvailable)
+	}
+
 	if project.Status != string(model.TektonProjectConfigurationFailed) &&
 		project.Status != string(model.TektonProjectAvailable) &&
 		project.Status != string(model.TektonProjectConfigured) {
-		a.log.Infof("currently the Tekton project configuration on-going %s, %v", request.Id, project.Status)
+		a.log.Infof("currently the Tekton project configuration on-going %s, %v", project.Id, project.Status)
 		return &captenpluginspb.RegisterTektonProjectResponse{
 			Status:        captenpluginspb.StatusCode_OK,
 			StatusMessage: "Tekton configuration on-going",

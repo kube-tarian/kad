@@ -102,7 +102,7 @@ func (a *Store) GetAllClusterPluginConfigs() ([]*clusterpluginspb.Plugin, error)
 		return nil, fmt.Errorf("failed to fetch plugins: %v", err.Error())
 	}
 
-	var pluginConfigs []*clusterpluginspb.Plugin
+	pluginConfigs := []*clusterpluginspb.Plugin{}
 	for _, p := range plugins {
 		values, _ := base64.StdEncoding.DecodeString(p.Values)
 		overrideValues, _ := base64.StdEncoding.DecodeString(p.OverrideValues)
