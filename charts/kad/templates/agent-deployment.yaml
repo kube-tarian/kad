@@ -33,6 +33,9 @@ spec:
       volumes:
         - name: plugin-store-clone-dir
           emptyDir: {}
+        - name: server-certificate
+          secret:
+            secretName: {{ include "kad.fullname" . }}-agent-server-mtls
       containers:
         - name: {{ .Chart.Name }}-agent
           securityContext:
@@ -103,10 +106,6 @@ spec:
               readOnly: true
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      volumes:
-        - name: server-certificate
-          secret:
-            secretName: {{ include "kad.fullname" . }}-agent-server-mtls
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
