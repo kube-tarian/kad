@@ -1,0 +1,18 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "kad.fullname" . }}-agent-server-mtls
+spec:
+  commonName: {{ include "kad.fullname" . }}-agent-server-mtls
+  issuerRef:
+    kind: ClusterIssuer
+    name: {{ .Values.agent.clusterIssuerReference }}
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    size: 2048
+  secretName: {{ include "kad.fullname" . }}-agent-server-mtls
+  usages:
+  - digital signature
+  - key encipherment
+  - server auth

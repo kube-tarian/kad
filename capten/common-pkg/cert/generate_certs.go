@@ -51,7 +51,7 @@ func GenerateRootCerts() (*CertificatesData, error) {
 	}, nil
 }
 
-func generateCACert() (*Key, *Cert, error) { //(rootKey *rsa.PrivateKey, rootCertTemplate *x509.Certificate, err error) {
+func generateCACert() (*Key, *Cert, error) {
 	rootKey, err := rsa.GenerateKey(rand.Reader, caBitSize)
 	if err != nil {
 		err = errors.WithMessage(err, "failed to generate RSA key for root certificate")

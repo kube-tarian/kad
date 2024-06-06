@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/kube-tarian/kad/capten/common-pkg/gerrors"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
+	postgresdb "github.com/kube-tarian/kad/capten/common-pkg/postgres"
 	"github.com/kube-tarian/kad/capten/model"
 )
 
@@ -23,15 +25,15 @@ func (a *Agent) AddCrossplanProvider(ctx context.Context, request *captenplugins
 	}
 	a.log.Infof("Add Crossplane Provider type %s with cloud provider %s request recieved", request.CloudType, request.CloudProviderId)
 
-	project, err := a.as.GetCrossplanProviderByCloudType(request.CloudType)
-	if err != nil {
+	existingProvider, err := a.as.GetCrossplanProviderByCloudType(request.CloudType)
+	if err != nil && gerrors.GetErrorType(err) != postgresdb.ObjectNotExist {
 		a.log.Infof("failed to get crossplane provider", err)
 		return &captenpluginspb.AddCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to get crossplane provider for " + request.CloudType,
 		}, nil
 	}
-	if project != nil {
+	if existingProvider != nil {
 		return &captenpluginspb.AddCrossplanProviderResponse{
 			Status:        captenpluginspb.StatusCode_NOT_FOUND,
 			StatusMessage: "Crossplane provider is already available",

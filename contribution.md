@@ -125,6 +125,41 @@ We provide a [Makefile](./Makefile) with a few targets that helps build all the 
 
 6. **make docker-build**: This command builds the Docker images for the entire project, including server, agent, deployment-worker, and config-worker.
 
+## Capten onboarding resources
+
+Capten support onboarding external resource configuration and credential that can be used acorss plugins deployed on capten cluster.
+Currently supports reposurces like Git Projects, Cloud Providers and Container Registries. 
+Support for different type of resources can be contributed with extending this functionality
+
+Refer proto/capten_plugins.proto for onboarding resource APIs
+Refer capten/agent/internal/api package for onboarding resource implementation
+
+## Capten plugin Store
+
+Capten plugin store functonality manage plugins from [central capten plugin store](https://github.com/intelops/capten-plugins) and local plugin store.
+Capten plgin store also supports integrating local plugin store with user own git repository.
+Currently capten pliugin store functionality has basic framework to synch plugins from plugin store to capten database, deploy/undeploy plugins on cluster. 
+
+Plugin deployment supports capabilities like plugin data storage, vault credential data storage. 
+Contribution can be done to plugin store functionality extend plugins with new capabilities.
+
+Refer proto/plugin_store.proto for onboarding resource APIs
+Refer capten/agent/common-pkg/plugin-store package for onboarding resource implementation
+
+## Capten plugin configurations
+
+Capten plguins can be configured throguh API endpoint for supported plugins. Capten CLI has provides options to configure the plugins using plugin API endpoint.
+Plugin supported configuration actions to be provided with plugin metadata in plugin store.
+
+Capten built-in support for crossplane and tekton plugins to perform configuration actions, some configuration actions integrated with configuration-worker workflows.
+- crossplane plugin: supports configuration actions to deploy cloud infra applications using argo-cd to create and manages business clusters
+- tekton plugin: supports configuration actions to deploy CI/CD enabler applications
+
+Refer proto/capten_plugins.proto for Capten built-in plugin configuration action APIs
+Refer capten/agent/internal/api, capten/config-worker/intenal packages for Capten built-in plugin configuration action implementation
+
+Capten plugin configuration functionality can be extended with contributions.
+
 ## Capten database store
 
 Capten components uses postgres Database for persisting data. Below are the few areas to be taken care while contributing.

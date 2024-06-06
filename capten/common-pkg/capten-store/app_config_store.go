@@ -112,7 +112,7 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 		return nil, fmt.Errorf("failed to fetch apps: %v", err.Error())
 	}
 
-	var appData []*agentpb.SyncAppData
+	appData := []*agentpb.SyncAppData{}
 	for _, ac := range appConfigs {
 		overrideValues, err := base64.StdEncoding.DecodeString(ac.OverrideValues)
 		if err != nil {

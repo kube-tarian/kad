@@ -154,7 +154,7 @@ func (a *Agent) DeployDefaultApps(ctx context.Context, request *agentpb.DeployDe
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (a *Agent) GetClusterDefaultApps(ctx context.Context, request *agentpb.GetDefaultAppsStatusRequest) (
+func (a *Agent) GetDefaultAppsStatus(ctx context.Context, request *agentpb.GetDefaultAppsStatusRequest) (
 	*agentpb.GetDefaultAppsStatusResponse, error) {
 	return nil, fmt.Errorf("not implemented")
 }
