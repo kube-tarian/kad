@@ -21,6 +21,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	defaultPluginListFileName = "default-plugin-list.yaml"
+)
+
 type captenStore interface {
 	GetGitProjects() ([]*captenpluginspb.GitProject, error)
 
@@ -61,24 +65,27 @@ func (p *PluginStore) ConfigureStore(config *pluginstorepb.PluginStoreConfig) er
 }
 
 func (p *PluginStore) GetStoreConfig(storeType pluginstorepb.StoreType) (*pluginstorepb.PluginStoreConfig, error) {
-	if storeType == pluginstorepb.StoreType_LOCAL_STORE {
+	switch storeType {
+	case pluginstorepb.StoreType_DEFAULT_STORE, pluginstorepb.StoreType_LOCAL_STORE:
 		config, err := p.dbStore.GetPluginStoreConfig(storeType)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
 				return &pluginstorepb.PluginStoreConfig{
-					StoreType: pluginstorepb.StoreType_LOCAL_STORE,
+					StoreType: storeType,
 				}, nil
 			}
 			return nil, err
 		}
 		return config, nil
-	} else if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
+
+	case pluginstorepb.StoreType_CENTRAL_STORE:
 		return &pluginstorepb.PluginStoreConfig{
 			StoreType:     pluginstorepb.StoreType_CENTRAL_STORE,
 			GitProjectId:  p.cfg.PluginStoreProjectID,
 			GitProjectURL: p.cfg.PluginStoreProjectURL,
 		}, nil
-	} else {
+
+	default:
 		return nil, fmt.Errorf("not supported store type")
 	}
 }
@@ -94,6 +101,14 @@ func (p *PluginStore) SyncPlugins(storeType pluginstorepb.StoreType) error {
 		return err
 	}
 	defer os.RemoveAll(pluginStoreDir)
+
+	if storeType == pluginstorepb.StoreType_DEFAULT_STORE {
+		actualPluginFileName := p.cfg.PluginFileName
+		p.cfg.PluginFileName = defaultPluginListFileName
+		defer func() {
+			p.cfg.PluginFileName = actualPluginFileName
+		}()
+	}
 
 	pluginListFilePath := p.getPluginListFilePath(pluginStoreDir)
 	p.log.Infof("Loading plugin data from %s", pluginListFilePath)
@@ -273,6 +288,10 @@ func (p *PluginStore) getPluginConfig(pluginStoreDir, pluginName, version string
 	return pluginConfig, nil
 }
 
+func (p *PluginStore) GetClusterPluginData(pluginName string) (*clusterpluginspb.Plugin, error) {
+	return p.dbStore.GetClusterPluginConfig(pluginName)
+}
+
 func (p *PluginStore) DeployPlugin(storeType pluginstorepb.StoreType,
 	pluginName, version string, values []byte) error {
 	config, err := p.GetStoreConfig(storeType)
@@ -372,7 +391,7 @@ func stringContains(arr []string, target string) bool {
 }
 
 func (p *PluginStore) getGitProjectAccessToken(projectId string, storeType pluginstorepb.StoreType) (string, error) {
-	if storeType == pluginstorepb.StoreType_CENTRAL_STORE {
+	if storeType == pluginstorepb.StoreType_CENTRAL_STORE || storeType == pluginstorepb.StoreType_DEFAULT_STORE {
 		return p.cfg.PluginStoreProjectAccess, nil
 	}
 

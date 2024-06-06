@@ -27,6 +27,7 @@ type pluginStore interface {
 	DeployPlugin(storeType pluginstorepb.StoreType, pluginName, version string, values []byte) error
 	UnDeployPlugin(storeType pluginstorepb.StoreType, pluginName string) error
 
+	GetClusterPluginData(pluginName string) (*clusterpluginspb.Plugin, error)
 	DeployClusterPlugin(ctx context.Context, pluginData *clusterpluginspb.Plugin) error
 	UnDeployClusterPlugin(ctx context.Context, request *clusterpluginspb.UnDeployClusterPluginRequest) error
 }
@@ -44,17 +45,14 @@ type Agent struct {
 	createPr bool
 }
 
-func NewAgent(log logging.Logger, cfg *config.SericeConfig,
-	as *captenstore.Store) (*Agent, error) {
-	var tc *temporalclient.Client
-	var err error
-
-	tc, err = temporalclient.NewClient(log)
+func NewAgent(log logging.Logger, cfg *config.SericeConfig, as *captenstore.Store) (agent *Agent, err error) {
+	tc, err := temporalclient.NewClient(log)
 	if err != nil {
-		return nil, err
+		log.Errorf("failed to initialize temporal client, %v", err)
+		return
 	}
 
-	agent := &Agent{
+	agent = &Agent{
 		tc:  tc,
 		as:  as,
 		cfg: cfg,
@@ -62,6 +60,16 @@ func NewAgent(log logging.Logger, cfg *config.SericeConfig,
 	}
 
 	agent.plugin, err = pluginstore.NewPluginStore(log, as, tc)
+	if err != nil {
+		return nil, err
+	}
+
+	// add default plugins configuration to plugin store
+	err = agent.plugin.ConfigureStore(&pluginstorepb.PluginStoreConfig{
+		StoreType:     pluginstorepb.StoreType_DEFAULT_STORE,
+		GitProjectId:  "1cf5201d-5f35-4d5b-afe0-4b9d0e0d4cd2",
+		GitProjectURL: "https://github.com/intelops/capten-plugins",
+	})
 	if err != nil {
 		return nil, err
 	}

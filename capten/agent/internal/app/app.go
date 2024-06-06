@@ -12,6 +12,7 @@ import (
 	agentapi "github.com/kube-tarian/kad/capten/agent/internal/api"
 	"github.com/kube-tarian/kad/capten/agent/internal/config"
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
+	"github.com/kube-tarian/kad/capten/agent/internal/job/defaultplugindeployer"
 	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/common-pkg/crossplane"
 	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
@@ -99,7 +100,7 @@ func Start() {
 		log.Fatalf("Failed to initialize k8s watchers %v", err)
 	}
 
-	jobScheduler, err := initializeJobScheduler(cfg, as)
+	jobScheduler, err := initializeJobScheduler(cfg, as, rpcapi)
 	if err != nil {
 		log.Fatalf("Failed to create cron job: %v", err)
 		return
@@ -127,7 +128,11 @@ func configurePostgresDB() error {
 	return nil
 }
 
-func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*job.Scheduler, error) {
+func initializeJobScheduler(
+	cfg *config.SericeConfig,
+	as *captenstore.Store,
+	agentHandler *agentapi.Agent,
+) (*job.Scheduler, error) {
 	s := job.NewScheduler(log)
 	if cfg.CrossplaneSyncJobEnabled {
 		cs, err := job.NewCrossplaneResourcesSync(log, cfg.CrossplaneSyncJobInterval, as)
@@ -140,8 +145,25 @@ func initializeJobScheduler(cfg *config.SericeConfig, as *captenstore.Store) (*j
 		}
 	}
 
+	// Add Default plugin deployer job
+	addDefualtPluginsDeployerJob(s, agentHandler)
+
 	log.Info("successfully initialized job scheduler")
 	return s, nil
+}
+
+func addDefualtPluginsDeployerJob(
+	s *job.Scheduler,
+	agentHandler *agentapi.Agent,
+) {
+	dpd, err := defaultplugindeployer.NewDefaultPluginsDeployer(log, "@every 10m", agentHandler)
+	if err != nil {
+		log.Fatal("failed to init default plugins deployer job", err)
+	}
+	err = s.AddJob("default-plugsin-deployer", dpd)
+	if err != nil {
+		log.Fatal("failed to add defualt plugins deployer job", err)
+	}
 }
 
 func registerK8SWatcher(dbStore *captenstore.Store) error {

@@ -3,8 +3,14 @@ package api
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
+	"github.com/kube-tarian/kad/capten/common-pkg/pb/pluginstorepb"
+)
+
+const (
+	deployedStatus = "deployed"
 )
 
 func (a *Agent) SyncApp(ctx context.Context, request *agentpb.SyncAppRequest) (
@@ -151,10 +157,89 @@ func (a *Agent) GetClusterAppValues(ctx context.Context, request *agentpb.GetClu
 
 func (a *Agent) DeployDefaultApps(ctx context.Context, request *agentpb.DeployDefaultAppsRequest) (
 	*agentpb.DeployDefaultAppsResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+	if err := a.plugin.SyncPlugins(pluginstorepb.StoreType_DEFAULT_STORE); err != nil {
+		a.log.Errorf("failed to synch providers, %v", err)
+	}
+
+	plugins, err := a.plugin.GetPlugins(pluginstorepb.StoreType_DEFAULT_STORE)
+	if err != nil {
+		a.log.Errorf("failed to get plugins, %v", err)
+	}
+
+	failedPlugins := []string{}
+	for _, plugin := range plugins {
+		if err := a.plugin.DeployPlugin(pluginstorepb.StoreType_DEFAULT_STORE, plugin.PluginName, plugin.Versions[0], []byte{}); err != nil {
+			a.log.Errorf("failed to deploy plugin, %v", err)
+			failedPlugins = append(failedPlugins, plugin.PluginName)
+		}
+	}
+
+	if len(failedPlugins) == len(plugins) {
+		return &agentpb.DeployDefaultAppsResponse{
+			Status:        agentpb.StatusCode_INTERNRAL_ERROR,
+			StatusMessage: fmt.Sprintf("failed to deploy all default apps: %s", strings.Join(failedPlugins, ",")),
+		}, nil
+	}
+
+	statusMessage := agentpb.StatusCode_name[int32(agentpb.StatusCode_OK)]
+	if len(failedPlugins) != 0 {
+		statusMessage = fmt.Sprintf("failed to deploy default apps: %s", strings.Join(failedPlugins, ","))
+	}
+
+	return &agentpb.DeployDefaultAppsResponse{
+		Status:        agentpb.StatusCode_OK,
+		StatusMessage: statusMessage,
+	}, nil
 }
 
 func (a *Agent) GetDefaultAppsStatus(ctx context.Context, request *agentpb.GetDefaultAppsStatusRequest) (
 	*agentpb.GetDefaultAppsStatusResponse, error) {
-	return nil, fmt.Errorf("not implemented")
+	plugins, err := a.plugin.GetPlugins(pluginstorepb.StoreType_DEFAULT_STORE)
+	if err != nil {
+		a.log.Errorf("failed to get plugins, %v", err)
+	}
+
+	overallStatus := agentpb.DeploymentStatus_SUCCESS
+	anyPluginFailed := false
+	resp := []*agentpb.ApplicationStatus{}
+	for _, plugin := range plugins {
+		pluginData, err := a.plugin.GetClusterPluginData(plugin.PluginName)
+		if err != nil {
+			a.log.Errorf("failed to fetch plugin status, %v", err)
+			resp = append(resp, &agentpb.ApplicationStatus{
+				AppName:       plugin.PluginName,
+				Version:       plugin.Versions[0],
+				Category:      plugin.Category,
+				InstallStatus: "failed to fetch status",
+				RuntimeStatus: "Unknown",
+			})
+			continue
+		}
+
+		if !strings.Contains(pluginData.InstallStatus, "failed") {
+			anyPluginFailed = true
+		} else if pluginData.InstallStatus != deployedStatus {
+			overallStatus = agentpb.DeploymentStatus_ONGOING
+		}
+
+		resp = append(resp, &agentpb.ApplicationStatus{
+			AppName:       pluginData.PluginName,
+			Version:       pluginData.Version,
+			Category:      pluginData.Category,
+			InstallStatus: pluginData.InstallStatus,
+			RuntimeStatus: pluginData.InstallStatus,
+		})
+	}
+
+	// if any plugin failed and other plugins status is success, set overall status will be failed
+	if anyPluginFailed && overallStatus == agentpb.DeploymentStatus_SUCCESS {
+		overallStatus = agentpb.DeploymentStatus_FAILED
+	}
+
+	return &agentpb.GetDefaultAppsStatusResponse{
+		Status:            agentpb.StatusCode_OK,
+		StatusMessage:     agentpb.StatusCode_name[int32(agentpb.StatusCode_OK)],
+		DeploymentStatus:  overallStatus,
+		DefaultAppsStatus: resp,
+	}, nil
 }
