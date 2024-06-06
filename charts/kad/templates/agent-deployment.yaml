@@ -46,6 +46,9 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+            - name: https
+              containerPort: {{ .Values.service.sdkRestServer.port }}
+              protocol: TCP
           # livenessProbe:
           #   httpGet:
           #     path: /status
