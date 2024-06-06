@@ -14,6 +14,7 @@ import (
 	"github.com/kube-tarian/kad/capten/agent/internal/job"
 	captenstore "github.com/kube-tarian/kad/capten/common-pkg/capten-store"
 	"github.com/kube-tarian/kad/capten/common-pkg/crossplane"
+	"github.com/kube-tarian/kad/capten/common-pkg/k8s"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/captenpluginspb"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/clusterpluginspb"
@@ -81,11 +82,17 @@ func Start() {
 		}
 	}()
 
-	err = setupCACertIssuser(cfg.ClusterCAIssuerName)
+	err = k8s.SetupCACertIssuser(cfg.ClusterCAIssuerName, log)
 	if err != nil {
 		log.Fatalf("Failed to setupt CA Cert Issuer in cert-manager %v", err)
 	}
-	go ginapiserver.StartRestServer(rpcapi, cfg)
+
+	go func() {
+		err := ginapiserver.StartRestServer(rpcapi, cfg, log)
+		if err != nil {
+			log.Errorf("Failed to start REST server, %v", err)
+		}
+	}()
 
 	err = registerK8SWatcher(as)
 	if err != nil {

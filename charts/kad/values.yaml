@@ -134,3 +134,6 @@ temporal:
 
 argocd:
   serviceURL: argocd-server.default.svc.cluster.local
+
+agent:
+  clusterIssuerReference: "capten-issuer"

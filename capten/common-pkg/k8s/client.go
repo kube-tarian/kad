@@ -172,6 +172,10 @@ func (k *K8SClient) GetSecretData(namespace, secretName string) (*SecretData, er
 	}, nil
 }
 
+func (k *K8SClient) GetSecretObject(namespace, secretName string) (*v1.Secret, error) {
+	return k.Clientset.CoreV1().Secrets(namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+}
+
 func (k *K8SClient) CreateOrUpdateSecret(
 	ctx context.Context,
 	namespace, secretName string,
