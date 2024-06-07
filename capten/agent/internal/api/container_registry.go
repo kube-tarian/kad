@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/google/uuid"
 	"github.com/intelops/go-common/credentials"
@@ -272,6 +273,11 @@ func (a *Agent) deleteContainerRegCredential(ctx context.Context, id string) err
 func parseAndPrepareDockerConfigJSONContent(credMap map[string]string, server string) ([]byte, error) {
 	userName := credMap["username"]
 	password := credMap["password"]
+	res, err := prepareDockerConfigJSONContent(userName, password, server)
+	log.Println("Result", string(res))
+	if err != nil {
+		log.Println("Error is", err)
+	}
 	return prepareDockerConfigJSONContent(userName, password, server)
 }
 
@@ -290,5 +296,9 @@ func prepareDockerConfigJSONContent(username, password, server string) ([]byte, 
 
 func encodeDockerConfigFieldAuth(username, password string) string {
 	fieldValue := username + ":" + password
+
+	log.Println("Field Value", fieldValue)
+	res := base64.StdEncoding.EncodeToString([]byte(fieldValue))
+	log.Println("Result", res)
 	return base64.StdEncoding.EncodeToString([]byte(fieldValue))
 }
