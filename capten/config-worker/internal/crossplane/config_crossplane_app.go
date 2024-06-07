@@ -273,21 +273,21 @@ func (cp *CrossPlaneApp) createProviderConfigResource(provider agentmodel.Crossp
 	secretPath := fmt.Sprintf("%s/%s/%s", credentials.GenericCredentialType, cp.cfg.CloudProviderEntityName, provider.CloudProviderId)
 
 	switch provider.CloudType {
-	case "AWS":
+	case "AWS", "aws":
 		providerConfigString := fmt.Sprintf(
 			crossplaneAWSProviderTemplate,
 			cloudType, secretPath, secretPath,
 			cloudType, pkg, cloudType,
 		)
 		return providerConfigString, nil
-	case "GCP":
+	case "GCP", "gcp":
 		providerConfigString := fmt.Sprintf(
 			crossplaneGCPProviderTemplate,
 			cloudType, secretPath, secretPath,
 			cloudType, pkg, cloudType,
 		)
 		return providerConfigString, nil
-	case "AZURE":
+	case "AZURE", "azure":
 		providerConfigString := fmt.Sprintf(
 			crossplaneAzureProviderTemplate,
 			cloudType, pkg,
