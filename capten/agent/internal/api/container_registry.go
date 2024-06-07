@@ -270,8 +270,8 @@ func (a *Agent) deleteContainerRegCredential(ctx context.Context, id string) err
 }
 
 func parseAndPrepareDockerConfigJSONContent(credMap map[string]string, server string) ([]byte, error) {
-	userName := credMap["username"]
-	password := credMap["password"]
+	userName := credMap["registry-username"]
+	password := credMap["registry-password"]
 	return prepareDockerConfigJSONContent(userName, password, server)
 }
 
