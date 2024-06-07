@@ -42,6 +42,8 @@ env:
 service:
   type: ClusterIP
   port: 8080
+  sdkRestServer:
+    port: 8443
 
 DomainName: capten
 
