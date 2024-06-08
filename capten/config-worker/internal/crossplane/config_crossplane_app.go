@@ -192,7 +192,7 @@ func (cp *CrossPlaneApp) syncArgoCDChildApps(ctx context.Context, namespace stri
 func (cp *CrossPlaneApp) createProviderConfigs(dir string, req *model.CrossplaneUseCase) error {
 	logger.Infof("processing %d crossplane providers to generate provider config", len(req.CrossplaneProviders))
 	for _, provider := range req.CrossplaneProviders {
-		providerName := strings.ToLower(provider.ProviderName)
+		providerName := strings.ToLower(provider.CloudType)
 		providerFile := filepath.Join(dir, fmt.Sprintf("%s-provider.yaml", providerName))
 		dir := filepath.Dir(providerFile)
 		if err := os.MkdirAll(dir, os.ModePerm); err != nil {
