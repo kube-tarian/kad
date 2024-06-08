@@ -86,6 +86,7 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 				ID:             1,
 				GitProjectID:   gitProjectUUID,
 				GitProjectURL:  crosplaneGitProject.ProjectUrl,
+				Status:         string(model.CrossplaneProjectAvailable),
 				LastUpdateTime: time.Now(),
 			}
 			err = a.dbClient.Create(&project)
@@ -106,7 +107,7 @@ func (a *Store) updateCrossplaneProject() (*model.CrossplaneProject, error) {
 
 	project := CrossplaneProject{GitProjectID: gitProjectUUID,
 		GitProjectURL:  crosplaneGitProject.ProjectUrl,
-		Status:         crossplaneProject.Status,
+		Status:         string(model.CrossplaneProjectAvailable),
 		LastUpdateTime: time.Now()}
 	err = a.dbClient.Update(&project, CrossplaneProject{ID: 1})
 	if err != nil {

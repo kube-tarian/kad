@@ -85,6 +85,7 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 				ID:             1,
 				GitProjectID:   gitProjectUUID,
 				GitProjectURL:  tektonGitProject.ProjectUrl,
+				Status:         string(model.TektonProjectAvailable),
 				LastUpdateTime: time.Now(),
 			}
 			err = a.dbClient.Create(&project)
@@ -104,7 +105,7 @@ func (a *Store) updateTektonProject() (*model.TektonProject, error) {
 
 	project := TektonProject{GitProjectID: gitProjectUUID,
 		GitProjectURL:  tektonGitProject.ProjectUrl,
-		Status:         tektonProject.Status,
+		Status:         string(model.TektonProjectAvailable),
 		LastUpdateTime: time.Now()}
 	err = a.dbClient.Update(&project, TektonProject{ID: 1})
 	if err != nil {

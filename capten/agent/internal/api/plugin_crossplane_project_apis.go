@@ -40,15 +40,6 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 		}, nil
 	}
 
-	crossplaneProject.Status = string(model.CrossplaneProjectConfigurationOngoing)
-	if err := a.as.UpsertCrossplaneProject(crossplaneProject); err != nil {
-		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
-		return &captenpluginspb.RegisterCrossplaneProjectResponse{
-			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
-			StatusMessage: "inserting data to Crossplane db got failed",
-		}, err
-	}
-
 	if ok, err := a.isProjectRegisteredWithArgoCD(ctx, crossplaneProject.GitProjectUrl); !ok && err == nil {
 		accessToken, userID, _, _, err := a.getGitProjectCredential(ctx, crossplaneProject.GitProjectId)
 		if err != nil {
@@ -81,6 +72,15 @@ func (a *Agent) RegisterCrossplaneProject(ctx context.Context, request *captenpl
 			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
 			StatusMessage: "failed to fetch provider info",
 		}, nil
+	}
+
+	crossplaneProject.Status = string(model.CrossplaneProjectConfigurationOngoing)
+	if err := a.as.UpsertCrossplaneProject(crossplaneProject); err != nil {
+		a.log.Errorf("failed to Set Cluster Gitopts Project, %v", err)
+		return &captenpluginspb.RegisterCrossplaneProjectResponse{
+			Status:        captenpluginspb.StatusCode_INTERNAL_ERROR,
+			StatusMessage: "inserting data to Crossplane db got failed",
+		}, err
 	}
 
 	a.configureCrossplaneGitRepo(crossplaneProject, providers)
