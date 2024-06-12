@@ -20,8 +20,8 @@ import (
 )
 
 type Configurations struct {
-	ServiceName  string `envconfig:"APPLICATION_NAME" default:"Applications"`
-	CollectorURL string `envconfig:"OPTE_URL" default:"otelcollector.awsagent.optimizor.app:80"`
+	ServiceName  string `envconfig:"APPLICATION_NAME" default:"kad-server"`
+	CollectorURL string `envconfig:"OPTE_URL" default:"qualitytrace-otelcollector.awsdemo.optimizor.app:80"`
 	IsInsecure   bool   `envconfig:"IS_OPTEL_INSECURE" default:"true"`
 	IsEnabled    bool   `envconfig:"IS_OPTEL_ENABLED" default:"true"`
 }
