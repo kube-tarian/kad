@@ -55,6 +55,7 @@ func (a *Agent) ConfigureAppSSO(ctx context.Context,
 
 	ssoOverwriteBytes, _ := yaml.Marshal(ssoOverwriteMapping)
 	overrideValuesBytes, _ := yaml.Marshal(overrideValuesMapping)
+	appConfig.Config.RepoName = "tools"
 	updateAppConfig, marshaledOverrideValues, err := populateTemplateValues(appConfig, overrideValuesBytes, ssoOverwriteBytes, a.log)
 	if err != nil {
 		a.log.Errorf("failed to populate template values for app %s, %v", req.ReleaseName, err)
