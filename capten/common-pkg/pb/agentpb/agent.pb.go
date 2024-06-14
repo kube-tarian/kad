@@ -1692,6 +1692,7 @@ type AppConfig struct {
 	Category            string          `protobuf:"bytes,4,opt,name=category,proto3" json:"category,omitempty"`
 	Description         string          `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"`
 	ChartName           string          `protobuf:"bytes,6,opt,name=chartName,proto3" json:"chartName,omitempty"`
+	RepoName            string          `protobuf:"bytes,7,opt,name=repoName,proto3" json:"repoName,omitempty"`
 	RepoURL             string          `protobuf:"bytes,8,opt,name=repoURL,proto3" json:"repoURL,omitempty"`
 	Namespace           string          `protobuf:"bytes,9,opt,name=namespace,proto3" json:"namespace,omitempty"`
 	CreateNamespace     bool            `protobuf:"varint,10,opt,name=createNamespace,proto3" json:"createNamespace,omitempty"`
