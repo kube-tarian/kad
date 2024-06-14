@@ -92,6 +92,7 @@ type ClusterAppConfig struct {
 	PluginStoreType     int       `json:"plugin_store_type" gorm:"column:plugin_store_type"`
 	Category            string    `json:"category" gorm:"column:category"`
 	Description         string    `json:"description" gorm:"column:description"`
+	RepoName            string    `json:"repo_name" gorm:"column:repo_name"`
 	RepoURL             string    `json:"repo_url" gorm:"column:repo_url"`
 	Version             string    `json:"version" gorm:"column:version"`
 	Namespace           string    `json:"namespace" gorm:"column:namespace"`
