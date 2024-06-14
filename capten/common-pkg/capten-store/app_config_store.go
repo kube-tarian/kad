@@ -35,7 +35,6 @@ func (a *Store) UpsertAppConfig(appData *agentpb.SyncAppData) error {
 	appConfig.Description = appData.Config.Description
 	appConfig.Icon = appData.Config.Icon
 	appConfig.AppName = appData.Config.ChartName
-	appConfig.RepoName = appData.Config.RepoName
 	appConfig.RepoURL = appData.Config.RepoURL
 	appConfig.Namespace = appData.Config.Namespace
 	appConfig.PrivilegedNamespace = appData.Config.PrivilegedNamespace
@@ -87,7 +86,6 @@ func (a *Store) GetAppConfig(appReleaseName string) (*agentpb.SyncAppData, error
 			Description:         appConfig.Description,
 			Icon:                appConfig.Icon,
 			ChartName:           appConfig.AppName,
-			RepoName:            appConfig.RepoName,
 			RepoURL:             appConfig.RepoURL,
 			Namespace:           appConfig.Namespace,
 			PrivilegedNamespace: appConfig.PrivilegedNamespace,
@@ -138,7 +136,6 @@ func (a *Store) GetAllApps() ([]*agentpb.SyncAppData, error) {
 				Description:         ac.Description,
 				Icon:                ac.Icon,
 				ChartName:           ac.AppName,
-				RepoName:            ac.RepoName,
 				RepoURL:             ac.RepoURL,
 				Namespace:           ac.Namespace,
 				PrivilegedNamespace: ac.PrivilegedNamespace,

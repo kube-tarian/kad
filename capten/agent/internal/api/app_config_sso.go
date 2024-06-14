@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"strings"
 
 	"github.com/kube-tarian/kad/capten/common-pkg/credential"
 	"github.com/kube-tarian/kad/capten/common-pkg/pb/agentpb"
@@ -24,8 +23,6 @@ func (a *Agent) ConfigureAppSSO(ctx context.Context,
 			StatusMessage: errors.WithMessage(err, "failed to read app config data").Error(),
 		}, nil
 	}
-
-	a.prepareRepoName(appConfig)
 
 	if err := credential.StoreAppOauthCredential(ctx, req.ReleaseName, req.ClientId, req.ClientSecret); err != nil {
 		a.log.Errorf("failed to store oauth credential for app %s, %v", req.ReleaseName, err)
@@ -84,16 +81,6 @@ func (a *Agent) ConfigureAppSSO(ctx context.Context,
 		Status:        agentpb.StatusCode_OK,
 		StatusMessage: "Triggerred app upgrade",
 	}, nil
-}
-
-func (a *Agent) prepareRepoName(appConfig *agentpb.SyncAppData) {
-	repoInfo := strings.Split(appConfig.Config.AppName, "/")
-
-	if len(repoInfo) != 2 {
-		a.log.Infof("App don't have repo name %s, using chartName as repoName", appConfig.Config.AppName)
-		repoInfo = []string{appConfig.Config.ChartName, appConfig.Config.AppName}
-	}
-	appConfig.Config.RepoName = repoInfo[0]
 }
 
 func (a *Agent) upgradeAppWithWorkflow(req *model.ApplicationInstallRequest,

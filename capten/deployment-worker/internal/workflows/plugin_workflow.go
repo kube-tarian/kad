@@ -232,7 +232,6 @@ func executeAppDeployment(
 			Category:            req.Category,
 			Description:         req.Description,
 			ChartName:           req.ChartName + "/" + req.ChartName,
-			RepoName:            req.ChartName,
 			RepoURL:             req.ChartRepo,
 			Namespace:           req.DefaultNamespace,
 			CreateNamespace:     true,
