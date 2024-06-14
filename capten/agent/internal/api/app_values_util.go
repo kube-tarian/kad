@@ -270,11 +270,11 @@ func prepareAppDeployRequestFromSyncApp(data *agentpb.SyncAppData, values []byte
 }
 
 func prepareRepoName(appConfig *agentpb.SyncAppData) string {
-	repoInfo := strings.Split(appConfig.Config.AppName, "/")
+	repoInfo := strings.Split(appConfig.Config.ChartName, "/")
 
 	if len(repoInfo) != 2 {
 		// AppName don't have repo name, so using chartName as repoName
-		repoInfo = []string{appConfig.Config.ChartName, appConfig.Config.AppName}
+		repoInfo = []string{appConfig.Config.ChartName, appConfig.Config.ChartName}
 	}
 	return repoInfo[0]
 }
